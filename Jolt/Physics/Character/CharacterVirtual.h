@@ -387,6 +387,24 @@ public:
 	/// Access to the internal list of contacts that the character has found.
 	const ContactList &					GetActiveContacts() const								{ return mActiveContacts; }
 
+	/// Check if the character is currently in contact with or has collided with another body in the last time step
+	bool								HasCollidedWith(const BodyID &inBody) const
+	{
+		for (const CharacterVirtual::Contact &c : mActiveContacts)
+			if (c.mHadCollision && c.mBodyB == inBody)
+				return true;
+		return false;
+	}
+
+	/// Check if the character is currently in contact with or has collided with another character in the last time step
+	bool								HasCollidedWith(const CharacterVirtual *inCharacter) const
+	{
+		for (const CharacterVirtual::Contact &c : mActiveContacts)
+			if (c.mHadCollision && c.mCharacterB == inCharacter)
+				return true;
+		return false;
+	}
+
 private:
 	// Sorting predicate for making contact order deterministic
 	struct ContactOrderingPredicate

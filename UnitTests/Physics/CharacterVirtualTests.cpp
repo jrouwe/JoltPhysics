@@ -35,9 +35,12 @@ TEST_SUITE("CharacterVirtualTests")
 			mCharacter->SetCharacterVsCharacterCollision(&mCharacterVsCharacter);
 		}
 
-		// Step the character only
-		void					StepCharacterOnly()
+		// Step the character and the world
+		void					Step()
 		{
+			// Step the world
+			mContext.SimulateSingleStep();
+
 			// Determine new basic velocity
 			Vec3 current_vertical_velocity = Vec3(0, mCharacter->GetLinearVelocity().GetY(), 0);
 			Vec3 ground_velocity = mCharacter->GetGroundVelocity();
@@ -83,30 +86,30 @@ TEST_SUITE("CharacterVirtualTests")
 			mEffectiveVelocity = Vec3(GetPosition() - start_pos) / delta_time;
 		}
 
-		// Simulate the character only for a longer period of time
-		void					SimulateCharacterOnly(float inTime)
-		{
-			int num_steps = (int)round(inTime / mContext.GetDeltaTime());
-			for (int step = 0; step < num_steps; ++step)
-				StepCharacterOnly();
-		}
-
-		// Step the character and the world
-		void					Step()
-		{
-			// Step the world
-			mContext.SimulateSingleStep();
-
-			// Step the character
-			StepCharacterOnly();
-		}
-
-		// Simulate the character and the world for a longer period of time
+		// Simulate a longer period of time
 		void					Simulate(float inTime)
 		{
 			int num_steps = (int)round(inTime / mContext.GetDeltaTime());
 			for (int step = 0; step < num_steps; ++step)
 				Step();
+		}
+
+		// Get the number of active contacts
+		size_t					GetNumContacts() const
+		{
+			return mCharacter->GetActiveContacts().size();
+		}
+
+		// Check if the character is in contact with another body
+		bool					HasCollidedWith(const BodyID &inBody) const
+		{
+			return mCharacter->HasCollidedWith(inBody);
+		}
+
+		// Check if the character is in contact with another character
+		bool					HasCollidedWith(const CharacterVirtual *inCharacter) const
+		{
+			return mCharacter->HasCollidedWith(inCharacter);
 		}
 
 		// Get position of character
@@ -583,7 +586,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() <= character.mCharacter->GetMaxNumHits());
+			CHECK(character.GetNumContacts() <= character.mCharacter->GetMaxNumHits());
 			CHECK(character.mCharacter->GetGroundBodyID() == cylinder_id);
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
@@ -595,7 +598,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() <= character.mCharacter->GetMaxNumHits());
+			CHECK(character.GetNumContacts() <= character.mCharacter->GetMaxNumHits());
 			CHECK(character.mCharacter->GetGroundBodyID() == cylinder_id);
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
@@ -610,7 +613,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() == character.mCharacter->GetMaxNumHits());
+			CHECK(character.GetNumContacts() == character.mCharacter->GetMaxNumHits());
 		}
 		RVec3 cur_pos = character.GetPosition();
 		CHECK((pos_end - cur_pos).Length() > 0.01_r);
@@ -621,7 +624,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() == character.mCharacter->GetMaxNumHits());
+			CHECK(character.GetNumContacts() == character.mCharacter->GetMaxNumHits());
 		}
 		CHECK(cur_pos.IsClose(character.GetPosition(), 1.0e-6f));
 
@@ -634,7 +637,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(!character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() == 1); // We should only hit the floor
+			CHECK(character.GetNumContacts() == 1); // We should only hit the floor
 			CHECK(character.mCharacter->GetGroundBodyID() == floor.GetID());
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
@@ -706,38 +709,94 @@ TEST_SUITE("CharacterVirtualTests")
 	TEST_CASE("TestCharacterVsCharacter")
 	{
 		PhysicsTestContext c;
-		c.CreateFloor();
+		BodyID floor_id = c.CreateFloor().GetID();
 
-		// Create characters
+		// Create characters with different radii and padding
 		Character character1(c);
 		character1.mInitialPosition = RVec3::sZero();
+		character1.mRadiusStanding = 0.2f;
+		character1.mCharacterSettings.mCharacterPadding = 0.04f;
 		character1.Create();
 
 		Character character2(c);
 		character2.mInitialPosition = RVec3(1, 0, 0);
+		character2.mRadiusStanding = 0.3f;
+		character2.mCharacterSettings.mCharacterPadding = 0.03f;
 		character2.Create();
 
 		// Make both collide
 		character1.mCharacterVsCharacter.Add(character2.mCharacter);
 		character2.mCharacterVsCharacter.Add(character1.mCharacter);
 
-		// Move character 1 towards character 2 so that character 1 will move through character 2 in 1 delta step unless cast shape successfully detects the collision
+		// Add a box behind character 2, we should never hit this
+		Vec3 box_extent(0.1f, 1.0f, 1.0f);
+		c.CreateBox(RVec3(1.5f, 0, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, box_extent, EActivation::DontActivate);
+
+		// Move character 1 towards character 2 so that in 1 step it will hit both character 2 and the box
 		character1.mHorizontalSpeed = Vec3(600.0f, 0, 0);
-		character1.StepCharacterOnly();
+		character1.Step();
 
 		// Character 1 should have stopped at character 2
-		float separation = character1.mRadiusStanding + character1.mCharacterSettings.mCharacterPadding
-							+ character2.mRadiusStanding + character2.mCharacterSettings.mCharacterPadding;
-		RVec3 expected_position = character2.mInitialPosition - Vec3(separation, 0, 0);
-		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_position, 1.0e-3f);
+		float character1_radius = character1.mRadiusStanding + character1.mCharacterSettings.mCharacterPadding;
+		float character2_radius = character2.mRadiusStanding + character2.mCharacterSettings.mCharacterPadding;
+		float separation = character1_radius + character2_radius;
+		RVec3 expected_colliding_with_character = character2.mInitialPosition - Vec3(separation, 0, 0);
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_character, 1.0e-3f);
+		CHECK(character1.GetNumContacts() == 2);
+		CHECK(character1.HasCollidedWith(floor_id));
+		CHECK(character1.HasCollidedWith(character2.mCharacter));
 
-		// Move character 1 back and now move slowly so that we will detect the collision during the normal collide shape step
+		// Move character 1 back to its initial position
 		character1.mCharacter->SetPosition(character1.mInitialPosition);
 		character1.mCharacter->SetLinearVelocity(Vec3::sZero());
-		character1.mHorizontalSpeed = Vec3(1.0f, 0, 0);
-		character1.SimulateCharacterOnly(1.0f);
 
-		// We should end up in the same position
-		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_position, 1.0e-3f);
+		// Now move slowly so that we will detect the collision during the normal collide shape step
+		character1.mHorizontalSpeed = Vec3(1.0f, 0, 0);
+		character1.Step();
+		CHECK(character1.GetNumContacts() == 1);
+		CHECK(character1.HasCollidedWith(floor_id));
+		character1.Simulate(1.0f);
+
+		// Character 1 should have stopped at character 2
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_character, 1.0e-3f);
+		CHECK(character1.GetNumContacts() == 2);
+		CHECK(character1.HasCollidedWith(floor_id));
+		CHECK(character1.HasCollidedWith(character2.mCharacter));
+
+		// Move character 1 back to its initial position
+		character1.mCharacter->SetPosition(character1.mInitialPosition);
+		character1.mCharacter->SetLinearVelocity(Vec3::sZero());
+
+		// Add a box in between the characters
+		RVec3 box_position(0.5f, 0, 0);
+		BodyID box_id = c.CreateBox(box_position, Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, box_extent, EActivation::DontActivate).GetID();
+
+		// Move character 1 so that it will step through both the box and the character in 1 time step
+		character1.mHorizontalSpeed = Vec3(600.0f, 0, 0);
+		character1.Step();
+
+		// Expect that it ends up at the box
+		RVec3 expected_colliding_with_box = box_position - Vec3(character1_radius + box_extent.GetX(), 0, 0);
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_box, 1.0e-3f);
+		CHECK(character1.GetNumContacts() == 2);
+		CHECK(character1.HasCollidedWith(floor_id));
+		CHECK(character1.HasCollidedWith(box_id));
+
+		// Move character 1 back to its initial position
+		character1.mCharacter->SetPosition(character1.mInitialPosition);
+		character1.mCharacter->SetLinearVelocity(Vec3::sZero());
+
+		// Now move slowly so that we will detect the collision during the normal collide shape step
+		character1.mHorizontalSpeed = Vec3(1.0f, 0, 0);
+		character1.Step();
+		CHECK(character1.GetNumContacts() == 1);
+		CHECK(character1.HasCollidedWith(floor_id));
+		character1.Simulate(1.0f);
+
+		// Expect that it ends up at the box
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_box, 1.0e-3f);
+		CHECK(character1.GetNumContacts() == 2);
+		CHECK(character1.HasCollidedWith(floor_id));
+		CHECK(character1.HasCollidedWith(box_id));
 	}
 }
