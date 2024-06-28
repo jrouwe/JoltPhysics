@@ -29,18 +29,54 @@ void CharacterVsCharacterCollisionSimple::Remove(const CharacterVirtual *inChara
 
 void CharacterVsCharacterCollisionSimple::CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const
 {
+	// Make shape 1 relative to inBaseOffset
 	Mat44 transform1 = inCenterOfMassTransform.PostTranslated(-inBaseOffset).ToMat44();
+	
 	const Shape *shape = inCharacter->GetShape();
+	CollideShapeSettings settings = inCollideShapeSettings;
+
+	// Collision collector that adds character padding
+	class AddPaddingCollector : public CollideShapeCollector
+	{
+	public:
+								AddPaddingCollector(const CharacterVirtual *inCharacterVirtual, CollideShapeCollector &ioCollector) : mCharacterVirtual(inCharacterVirtual), mCollector(ioCollector) { }
+
+		virtual void			AddHit(const CollideShapeResult &inResult) override
+		{
+			// Collector needs to know which character we're colliding with
+			mCollector.SetUserData(reinterpret_cast<uint64>(mCharacterVirtual));
+
+			// Add character padding to penetration depth
+			CollideShapeResult result = inResult;
+			result.mPenetrationDepth += mCharacterVirtual->GetCharacterPadding();
+
+			// Pass on the hit
+			mCollector.AddHit(result);
+		}
+
+	private:
+		const CharacterVirtual *mCharacterVirtual;
+		CollideShapeCollector &	mCollector;
+	};
 
 	// Iterate over all characters
 	for (const CharacterVirtual *c : mCharacters)
 		if (c != inCharacter
 			&& !ioCollector.ShouldEarlyOut())
 		{
-			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
+			// Make shape 2 relative to inBaseOffset
 			Mat44 transform2 = c->GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
-			CollisionDispatch::sCollideShapeVsShape(shape, c->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, SubShapeIDCreator(), SubShapeIDCreator(), inCollideShapeSettings, ioCollector);
+
+			// We need to add the padding of character 2 so that we will detect collision with its outer shell
+			settings.mMaxSeparationDistance = inCollideShapeSettings.mMaxSeparationDistance + c->GetCharacterPadding();
+
+			// We need to add the character padding to the penetration depth of any hit
+			AddPaddingCollector collector(c, ioCollector);
+
+			CollisionDispatch::sCollideShapeVsShape(shape, c->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
 		}
+
+	// Reset the user data
 	ioCollector.SetUserData(0);
 }
 
@@ -59,6 +95,8 @@ void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *
 			Mat44 transform2 = c->GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
 			CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, inShapeCastSettings, c->GetShape(), Vec3::sReplicate(1.0f), { }, transform2, SubShapeIDCreator(), SubShapeIDCreator(), ioCollector);
 		}
+
+	// Reset the user data
 	ioCollector.SetUserData(0);
 }
 
