@@ -31,7 +31,7 @@ void CharacterVsCharacterCollisionSimple::CollideCharacter(const CharacterVirtua
 {
 	// Make shape 1 relative to inBaseOffset
 	Mat44 transform1 = inCenterOfMassTransform.PostTranslated(-inBaseOffset).ToMat44();
-	
+
 	const Shape *shape = inCharacter->GetShape();
 	CollideShapeSettings settings = inCollideShapeSettings;
 
