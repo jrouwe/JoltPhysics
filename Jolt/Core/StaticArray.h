@@ -26,8 +26,8 @@ public:
 	explicit			StaticArray(std::initializer_list<T> inList)
 	{
 		JPH_ASSERT(inList.size() <= N);
-		for (typename std::initializer_list<T>::iterator i = inList.begin(); i != inList.end(); ++i)
-			::new (reinterpret_cast<T *>(&mElements[mSize++])) T(*i);
+		for (const T &v : inList)
+			::new (reinterpret_cast<T *>(&mElements[mSize++])) T(v);
 	}
 
 	/// Copy constructor
