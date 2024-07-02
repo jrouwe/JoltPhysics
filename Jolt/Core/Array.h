@@ -194,8 +194,8 @@ public:
 		clear();
 		reserve(size_type(inList.size()));
 
-		for (typename std::initializer_list<T>::iterator i = inList.begin(); i != inList.end(); ++i)
-			::new (&mElements[mSize++]) T(*i);
+		for (const T &v : inList)
+			::new (&mElements[mSize++]) T(v);
 	}
 
 	/// Default constructor
