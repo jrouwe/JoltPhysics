@@ -20,10 +20,12 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added HeightFieldShape::GetMinHeightValue/GetMaxHeightValue that can be used to know which range of heights are accepted by SetHeights.
 * Allowing negative stride when getting/setting height field shape heights or materials. This improves performance if your data happens to be layed out the wrong way around.
 * Added HeightFieldShapeSettings::mMaterialsCapacity which can enlarge the internal materials array capacity to avoid resizing when HeightFieldShape::SetMaterials is called with materials that weren't in use by the height field yet.
+* Added Clone function to HeightFieldShape. This allows creating a copy before modifying the shape.
 
 #### Character
 
 * Added CharacterBaseSettings::mEnhancedInternalEdgeRemoval (default false) that allows smoother movement for both the Character and CharacterVirtual class.
+* Added ability for a CharacterVirtual to collide with another CharacterVirtual by using the new CharacterVsCharacterCollision interface.
 
 #### Vehicles
 
@@ -39,6 +41,9 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * The OVERRIDE_CXX_FLAGS cmake flag will now also work for MSVC and allow you to specify your own CMAKE_CXX_FLAGS_DEBUG/CMAKE_CXX_FLAGS_RELEASE flags
 * BodyInterface::AddForce/Torque functions now take an optional EActivation parameter that makes it optional to activate the body. This can be used e.g. to not let the body wake up if you're applying custom gravity to a body.
 * Activating bodies now resets the sleep timer when the body is already active. This prevents the body from going to sleep in the next frame and can avoid quick 1 frame naps.
+* Added Clone function to MutableCompoundShape. This allows creating a copy before modifying the shape.
+* QuadTree / FixedSizeFreeList: Reorder variable layout to reduce false sharing & thread syncs to reduce simulation time by approximately 5%.
+* Generate a CMake config file when the project is installed. Allows for other projects to import Jolt using the find_package() functionality.
 
 ### Bug fixes
 
@@ -54,6 +59,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed -Wunused-parameter warning on GCC when building in Release mode with -Wextra.
 * Fixed tolerance in assert in GetPenetrationDepthStepEPA.
 * Due to a difference between the used instructions in NEON and SSE -Vec3::sZero() returned different binary results on ARM vs x86. When JPH_CROSS_PLATFORM_DETERMINISTIC is defined, we ensure that the calculation is the same now.
+* Forgot to free a temporary allocation on an early out in HeightFieldShape::SetMaterials.
+* Fix SSE not being enabled on x86 32-bits.
 
 ## v5.0.0
 
