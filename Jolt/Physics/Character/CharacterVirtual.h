@@ -105,7 +105,7 @@ public:
 /// Interface class that allows a CharacterVirtual to check collision with other CharacterVirtual instances.
 /// Since CharacterVirtual instances are not registered anywhere, it is up to the application to test collision against relevant characters.
 /// The characters could be stored in a tree structure to make this more efficient.
-class JPH_EXPORT CharacterVsCharacterCollision
+class JPH_EXPORT CharacterVsCharacterCollision : public NonCopyable
 {
 public:
 	virtual								~CharacterVsCharacterCollision() = default;
