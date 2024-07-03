@@ -492,8 +492,7 @@ private:
 	// Helper function to convert a Jolt collision result into a contact
 	template <class taCollector>
 	inline static void					sFillContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, const Body &inBody, Vec3Arg inUp, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult);
-	template <class taCollector>
-	inline static void					sFillCharacterContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, CharacterVirtual *inOtherCharacter, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult);
+	inline static void					sFillCharacterContactProperties(Contact &outContact, CharacterVirtual *inOtherCharacter, RVec3Arg inBaseOffset, const CollideShapeResult &inResult);
 
 	// Move the shape from ioPosition and try to displace it by inVelocity * inDeltaTime, this will try to slide the shape along the world geometry
 	void								MoveShape(RVec3 &ioPosition, Vec3Arg inVelocity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator

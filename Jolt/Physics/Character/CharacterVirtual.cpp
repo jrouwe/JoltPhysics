@@ -166,8 +166,7 @@ void CharacterVirtual::sFillContactProperties(const CharacterVirtual *inCharacte
 	outContact.mMaterial = inCollector.GetContext()->GetMaterial(inResult.mSubShapeID2);
 }
 
-template <class taCollector>
-void CharacterVirtual::sFillCharacterContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, CharacterVirtual *inOtherCharacter, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult)
+void CharacterVirtual::sFillCharacterContactProperties(Contact &outContact, CharacterVirtual *inOtherCharacter, RVec3Arg inBaseOffset, const CollideShapeResult &inResult)
 {
 	outContact.mPosition = inBaseOffset + inResult.mContactPointOn2;
 	outContact.mLinearVelocity = inOtherCharacter->GetLinearVelocity();
@@ -245,7 +244,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 		// Create contact with other character
 		mContacts.emplace_back();
 		Contact &contact = mContacts.back();
-		sFillCharacterContactProperties(mCharacter, contact, mOtherCharacter, mBaseOffset, *this, inResult);
+		sFillCharacterContactProperties(contact, mOtherCharacter, mBaseOffset, inResult);
 		contact.mFraction = 0.0f;
 	}
 	else
@@ -281,7 +280,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 			JPH_ASSERT(mOtherCharacter != nullptr);
 
 			// Create contact with other character
-			sFillCharacterContactProperties(mCharacter, contact, mOtherCharacter, mBaseOffset, *this, inResult);
+			sFillCharacterContactProperties(contact, mOtherCharacter, mBaseOffset, inResult);
 		}
 		else
 		{
