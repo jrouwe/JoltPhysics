@@ -239,8 +239,10 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 		ioSettings.mCanReceiveImpulses = (index & 2) != 0;
 	}
 
-	// If we encounter an object that can push us, enable sliding
-	if (ioSettings.mCanPushCharacter && mPhysicsSystem->GetBodyInterface().GetMotionType(inBodyID2) != EMotionType::Static)
+	// If we encounter an object that can push the player, enable sliding
+	if (inCharacter == mCharacter
+		&& ioSettings.mCanPushCharacter
+		&& mPhysicsSystem->GetBodyInterface().GetMotionType(inBodyID2) != EMotionType::Static)
 		mAllowSliding = true;
 }
 
@@ -253,10 +255,18 @@ void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCha
 		ioSettings.mCanPushCharacter = inCharacter == mCharacter;
 	else
 		ioSettings.mCanPushCharacter = false;
+
+	// If the player can be pushed by the other virtual character, we allow sliding
+	if (inCharacter == mCharacter && ioSettings.mCanPushCharacter)
+		mAllowSliding = true;
 }
 
 void CharacterVirtualTest::OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity)
 {
+	// Ignore callbacks for other characters than the player
+	if (inCharacter != mCharacter)
+		return;
+
 	// Don't allow the player to slide down static not-too-steep surfaces when not actively moving and when not on a moving platform
 	if (!mAllowSliding && inContactVelocity.IsNearZero() && !inCharacter->IsSlopeTooSteep(inContactNormal))
 		ioNewCharacterVelocity = Vec3::sZero();

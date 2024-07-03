@@ -82,8 +82,8 @@ static const int cMeshWallSegments = 25;
 static const RVec3 cHalfCylinderPosition(5.0f, 0, 8.0f);
 static const RVec3 cMeshBoxPosition(30.0f, 1.5f, 5.0f);
 static const RVec3 cSensorPosition(30, 0.9f, -5);
-static const RVec3 cCharacterPosition(2.0f, 0, 0);
-static const RVec3 cCharacterVirtualPosition(3.0f, 0, 0);
+static const RVec3 cCharacterPosition(-4.0f, 0, 3.0f);
+static const RVec3 cCharacterVirtualPosition(-6.0f, 0, 3.0f);
 static const Vec3 cCharacterVelocity(0, 0, 2);
 
 CharacterBaseTest::~CharacterBaseTest()
@@ -627,8 +627,20 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		mDebugRenderer->DrawCapsule(mAnimatedCharacterVirtual->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding + mAnimatedCharacterVirtual->GetCharacterPadding(), Color::sOrange, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 	#endif // JPH_DEBUG_RENDERER
 
-		mAnimatedCharacterVirtual->SetLinearVelocity(Sin(mTime) * cCharacterVelocity);
-		mAnimatedCharacterVirtual->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(),
+		// Update velocity and apply gravity
+		Vec3 velocity;
+		if (mAnimatedCharacterVirtual->GetGroundState() == CharacterVirtual::EGroundState::OnGround)
+			velocity = Vec3::sZero();
+		else
+			velocity = mAnimatedCharacterVirtual->GetLinearVelocity() * mAnimatedCharacter->GetUp() + mPhysicsSystem->GetGravity() * inParams.mDeltaTime;
+		velocity += Sin(mTime) * cCharacterVelocity;
+		mAnimatedCharacterVirtual->SetLinearVelocity(velocity);
+
+		// Move character
+		CharacterVirtual::ExtendedUpdateSettings update_settings;
+		mAnimatedCharacterVirtual->ExtendedUpdate(inParams.mDeltaTime,
+			mPhysicsSystem->GetGravity(),
+			update_settings,
 			mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 			mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING),
 			{ },
