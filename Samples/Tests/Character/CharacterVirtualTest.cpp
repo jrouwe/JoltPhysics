@@ -32,9 +32,12 @@ void CharacterVirtualTest::Initialize()
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
 	settings->mEnhancedInternalEdgeRemoval = sEnhancedInternalEdgeRemoval;
 	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
-	mCharacter->SetListener(this);
 	mCharacter->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
 	mCharacterVsCharacterCollision.Add(mCharacter);
+
+	// Install contact listener for all characters
+	for (CharacterVirtual *character : mCharacterVsCharacterCollision.mCharacters)
+		character->SetListener(this);
 }
 
 void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -165,6 +168,8 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 void CharacterVirtualTest::AddCharacterMovementSettings(DebugUI* inUI, UIElement* inSubMenu)
 {
 	inUI->CreateCheckBox(inSubMenu, "Enable Character Inertia", sEnableCharacterInertia, [](UICheckBox::EState inState) { sEnableCharacterInertia = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Player Can Push Other Virtual Characters", sPlayerCanPushOtherCharacters, [](UICheckBox::EState inState) { sPlayerCanPushOtherCharacters = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Other Virtual Characters Can Push Player", sOtherCharactersCanPushPlayer, [](UICheckBox::EState inState) { sOtherCharactersCanPushPlayer = inState == UICheckBox::STATE_CHECKED; });
 }
 
 void CharacterVirtualTest::AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu)
@@ -237,6 +242,17 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 	// If we encounter an object that can push us, enable sliding
 	if (ioSettings.mCanPushCharacter && mPhysicsSystem->GetBodyInterface().GetMotionType(inBodyID2) != EMotionType::Static)
 		mAllowSliding = true;
+}
+
+void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+{
+	// Characters can only be pushed in their own update
+	if (sPlayerCanPushOtherCharacters)
+		ioSettings.mCanPushCharacter = sOtherCharactersCanPushPlayer || inOtherCharacter == mCharacter;
+	else if (sOtherCharactersCanPushPlayer)
+		ioSettings.mCanPushCharacter = inCharacter == mCharacter;
+	else
+		ioSettings.mCanPushCharacter = false;
 }
 
 void CharacterVirtualTest::OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity)

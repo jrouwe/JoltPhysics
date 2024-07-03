@@ -645,7 +645,7 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	if (mListener != nullptr)
 	{
 		if (contact.mCharacterB != nullptr)
-			mListener->OnCharacterContactAdded(this, contact.mCharacterB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal);
+			mListener->OnCharacterContactAdded(this, contact.mCharacterB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
 		else
 			mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
 	}

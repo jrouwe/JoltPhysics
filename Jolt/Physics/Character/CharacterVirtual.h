@@ -48,8 +48,13 @@ public:
 class CharacterContactSettings
 {
 public:
-	bool								mCanPushCharacter = true;								///< True when the object can push the virtual character
-	bool								mCanReceiveImpulses = true;								///< True when the virtual character can apply impulses (push) the body
+	/// True when the object can push the virtual character.
+	bool								mCanPushCharacter = true;
+
+	/// True when the virtual character can apply impulses (push) the body.
+	/// Note that this only works against rigid bodies. Other CharacterVirtual objects can only be moved in their own update,
+	/// so you must ensure that in their OnCharacterContactAdded mCanPushCharacter is true.
+	bool								mCanReceiveImpulses = true;
 };
 
 /// This class receives callbacks when a virtual character hits something.
@@ -79,7 +84,7 @@ public:
 	virtual void						OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
 
 	/// Same as OnContactAdded but when colliding with a CharacterVirtual
-	virtual void						OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal) { /* Default do nothing */ }
+	virtual void						OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
 
 	/// Called whenever a contact is being used by the solver. Allows the listener to override the resulting character velocity (e.g. by preventing sliding along certain surfaces).
 	/// @param inCharacter Character that is being solved
