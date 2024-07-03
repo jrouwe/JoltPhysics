@@ -624,7 +624,7 @@ else()
   		# On 32-bit builds we need to default to using SSE instructions, the x87 FPU instructions have higher intermediate precision
 		# which will cause problems in the collision detection code (the effect is similar to leaving FMA on, search for
 		# JPH_PRECISE_MATH_ON for the locations where this is a problem).
-  
+
 		if (USE_AVX512)
 			target_compile_options(Jolt PUBLIC -mavx512f -mavx512vl -mavx512dq -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c)
 		elseif (USE_AVX2)
