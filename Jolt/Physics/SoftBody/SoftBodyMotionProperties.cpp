@@ -117,6 +117,11 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 		{
 		}
 
+		// GCC righfully detects that mInvMass, mInvInertia, mLinearVelocity, mAngularVelocity, mOriginalLinearVelocity and mOriginalAngularVelocity are uninitialized.
+		// But the values are never read when the motion type is not dynamic, so we suppress the warning.
+		JPH_SUPPRESS_WARNING_PUSH
+		JPH_GCC_SUPPRESS_WARNING("-Wmaybe-uninitialized")
+
 		virtual void				AddHit(const BodyID &inResult) override
 		{
 			BodyLockRead lock(mBodyLockInterface, inResult);
@@ -171,6 +176,8 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 				}
 			}
 		}
+
+		JPH_SUPPRESS_WARNING_POP
 
 	private:
 		const SoftBodyUpdateContext &mContext;
