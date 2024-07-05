@@ -54,6 +54,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed bug where the the skinned position of a soft body would update in the first sub-iteration, causing a large velocity spike and jittery behavior.
 * Fixed bug where the velocity of soft body vertices would increase indefinitely when resting on the back stop of a skinned constraint.
 * Fixed bug when SkinVertices for a soft body is not called every frame, the previous position of the skin was still used causing a replay of the motion of the previous frame.
+* Fixed bug in cast ray vs soft body which caused missed collisions in case a back facing triangle was hit.
 * Fixed handling of mass override from SoftBodyContactListener. Previously if the inverse mass of both of the soft body and the colliding body were set to 0, the soft body would still react.
 * Fixed crash in Ragdoll::DriveToPoseUsingMotors when using constraints other than SwingTwistConstraint.
 * Fixed -Wunused-parameter warning on GCC when building in Release mode with -Wextra.
@@ -61,6 +62,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Due to a difference between the used instructions in NEON and SSE -Vec3::sZero() returned different binary results on ARM vs x86. When JPH_CROSS_PLATFORM_DETERMINISTIC is defined, we ensure that the calculation is the same now.
 * Forgot to free a temporary allocation on an early out in HeightFieldShape::SetMaterials.
 * Fix SSE not being enabled on x86 32-bits.
+* Fixed a bug in the enhanced internal edge removal that could cause rigid bodies and characters to be affected by internal edges.
 
 ## v5.0.0
 
