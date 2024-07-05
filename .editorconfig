@@ -2,12 +2,14 @@ root = true
 
 [*.{cpp,h,inl,cmake,sh,bat,hlsl}]
 indent_style = tab
+indent_size = 4
 tab_width = 4
 trim_trailing_whitespace = true
 insert_final_newline = true
 
 [CMakeLists.txt]
 indent_style = tab
+indent_size = 4
 tab_width = 4
 trim_trailing_whitespace = true
 insert_final_newline = true
