@@ -111,4 +111,49 @@ void EnhancedInternalEdgeRemovalTest::Initialize()
 			z += 4.0f;
 		}
 	}
+
+	// Create a flat plane
+	MeshShapeSettings plane_mesh({
+		{
+			Float3(-10, 0, -10),
+			Float3(-10, 0, 10),
+			Float3(10, 0, 10)
+		},
+		{
+			Float3(-10, 0, -10),
+			Float3(10, 0, 10),
+			Float3(10, 0, -10)
+		},
+	});
+	plane_mesh.SetEmbedded();
+	BodyCreationSettings level_plane(&plane_mesh, RVec3(-10, 0, 50), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+	level_plane.mFriction = 1;
+	mBodyInterface->CreateAndAddBody(level_plane, EActivation::DontActivate);
+
+	// Roll a ball over it
+	BodyCreationSettings level_ball(new SphereShape(0.5f), RVec3(-10, 1, 41), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	level_ball.mEnhancedInternalEdgeRemoval = true;
+	level_ball.mFriction = 1;
+	level_ball.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+	level_ball.mMassPropertiesOverride.mMass = 1;
+	mLevelBall = mBodyInterface->CreateAndAddBody(level_ball, EActivation::Activate);
+
+	// Create a sloped plane
+	BodyCreationSettings slope_plane(&plane_mesh, RVec3(10, 0, 50), Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(45)), EMotionType::Static, Layers::NON_MOVING);
+	slope_plane.mFriction = 1;
+	mBodyInterface->CreateAndAddBody(slope_plane, EActivation::DontActivate);
+
+	// Roll a ball over it
+	BodyCreationSettings slope_ball(new SphereShape(0.5f), RVec3(10, 8, 44), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	slope_ball.mEnhancedInternalEdgeRemoval = true;
+	slope_ball.mFriction = 1;
+	slope_ball.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+	slope_ball.mMassPropertiesOverride.mMass = 1;
+	mBodyInterface->CreateAndAddBody(slope_ball, EActivation::Activate);
+}
+
+void EnhancedInternalEdgeRemovalTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	// Increase rotation speed of the ball on the flat plane
+	mBodyInterface->AddTorque(mLevelBall, Vec3(JPH_PI * 4, 0, 0));
 }
