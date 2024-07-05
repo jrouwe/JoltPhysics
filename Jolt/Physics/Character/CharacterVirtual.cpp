@@ -317,7 +317,6 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 
 	// Settings for collide shape
 	CollideShapeSettings settings;
-	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
 	settings.mBackFaceMode = mBackFaceMode;
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
 	settings.mMaxSeparationDistance = mCharacterPadding + inMaxSeparationDistance;
@@ -326,6 +325,7 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 	if (mEnhancedInternalEdgeRemoval)
 	{
 		// Version that does additional work to remove internal edges
+		settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
 		settings.mCollectFacesMode = ECollectFacesMode::CollectFaces;
 
 		// This is a copy of NarrowPhaseQuery::CollideShape with additional logic to wrap the collector in an InternalEdgeRemovingCollector and flushing that collector after every body
@@ -389,7 +389,12 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 		mSystem->GetBroadPhaseQuery().CollideAABox(bounds, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 	}
 	else
+	{
+		// Version that uses the cached active edges
+		settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
+
 		mSystem->GetNarrowPhaseQuery().CollideShape(inShape, Vec3::sReplicate(1.0f), transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+	}
 
 	// Also collide with other characters
 	if (mCharacterVsCharacterCollision != nullptr)
