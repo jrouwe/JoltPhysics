@@ -13,9 +13,22 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
-#ifdef JPH_PROFILE_ENABLED
-
 JPH_NAMESPACE_BEGIN
+
+#if defined(JPH_EXTERNAL_PROFILE) && defined(JPH_SHARED_LIBRARY)
+
+static void DummyStartMeasurement(const char *inName, uint32 inColor, uint8 *inUserData)
+{
+}
+
+static void DummyEndMeasurement(uint8 *inUserData)
+{
+}
+
+StartMeasurementFunction StartMeasurement = DummyStartMeasurement;
+EndMeasurementFunction EndMeasurement = DummyEndMeasurement;
+
+#elif defined(JPH_PROFILE_ENABLED)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Profiler
@@ -341,6 +354,6 @@ void Profiler::DumpChart(const char *inTag, const Threads &inThreads, const KeyT
 </tbody></table></body></html>)";
 }
 
-JPH_NAMESPACE_END
-
 #endif // JPH_PROFILE_ENABLED
+
+JPH_NAMESPACE_END
