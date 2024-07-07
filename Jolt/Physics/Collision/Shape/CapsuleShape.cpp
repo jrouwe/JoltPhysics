@@ -385,7 +385,7 @@ void CapsuleShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedS
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
 	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
-	ts.SetShapeScale(ScaleHelpers::MakeUniformScale(scale.Abs()));
+	ts.SetShapeScale(MakeScaleValid(scale));
 	ioCollector.AddHit(ts);
 }
 
@@ -434,6 +434,14 @@ void CapsuleShape::RestoreBinaryState(StreamIn &inStream)
 bool CapsuleShape::IsValidScale(Vec3Arg inScale) const
 {
 	return ConvexShape::IsValidScale(inScale) && ScaleHelpers::IsUniformScale(inScale.Abs());
+}
+
+Vec3 CapsuleShape::MakeScaleValid(Vec3Arg inScale) const
+{
+	if (inScale.IsNearZero())
+		return Vec3::sReplicate(1.0e-6f);
+		
+	return inScale.GetSign() * ScaleHelpers::MakeUniformScale(inScale.Abs());
 }
 
 void CapsuleShape::sRegister()

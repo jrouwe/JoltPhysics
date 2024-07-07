@@ -365,9 +365,7 @@ void CylinderShape::TransformShape(Mat44Arg inCenterOfMassTransform, Transformed
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
 	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
-	Vec3 abs_scale = scale.Abs();
-	float xz = 0.5f * (abs_scale.GetX() + abs_scale.GetZ());
-	ts.SetShapeScale(Vec3(xz, abs_scale.GetY(), xz));
+	ts.SetShapeScale(MakeScaleValid(scale));
 	ioCollector.AddHit(ts);
 }
 
@@ -405,6 +403,15 @@ bool CylinderShape::IsValidScale(Vec3Arg inScale) const
 	// X and Z need same scale
 	Vec3 abs_scale = inScale.Abs();
 	return ConvexShape::IsValidScale(inScale) && abs_scale.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>().IsClose(abs_scale, ScaleHelpers::cScaleToleranceSq);
+}
+
+Vec3 CylinderShape::MakeScaleValid(Vec3Arg inScale) const
+{
+	if (inScale.IsNearZero())
+		return Vec3::sReplicate(1.0e-6f);
+	
+	Vec3 abs_scale = inScale.Abs();
+	return inScale.GetSign() * 0.5f * (abs_scale + abs_scale.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>());
 }
 
 void CylinderShape::sRegister()

@@ -388,6 +388,17 @@ bool CompoundShape::IsValidScale(Vec3Arg inScale) const
 	return true;
 }
 
+Vec3 CompoundShape::MakeScaleValid(Vec3Arg inScale) const
+{
+	if (inScale.IsNearZero())
+		return Vec3::sReplicate(1.0e-6f);
+
+	if (Shape::IsValidScale(inScale))
+		return inScale;
+		
+	return inScale.GetSign() * ScaleHelpers::MakeUniformScale(inScale.Abs());
+}
+
 void CompoundShape::sRegister()
 {
 	for (EShapeSubType s1 : sCompoundSubShapeTypes)

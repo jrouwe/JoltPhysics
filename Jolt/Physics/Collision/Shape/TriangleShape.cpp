@@ -318,7 +318,7 @@ void TriangleShape::TransformShape(Mat44Arg inCenterOfMassTransform, Transformed
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
 	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
-	ts.SetShapeScale(mConvexRadius == 0.0f? scale : scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs()));
+	ts.SetShapeScale(MakeScaleValid(scale));
 	ioCollector.AddHit(ts);
 }
 
@@ -391,6 +391,17 @@ void TriangleShape::RestoreBinaryState(StreamIn &inStream)
 bool TriangleShape::IsValidScale(Vec3Arg inScale) const
 {
 	return ConvexShape::IsValidScale(inScale) && (mConvexRadius == 0.0f || ScaleHelpers::IsUniformScale(inScale.Abs()));
+}
+
+Vec3 TriangleShape::MakeScaleValid(Vec3Arg inScale) const
+{
+	if (inScale.IsNearZero())
+		return Vec3::sReplicate(1.0e-6f);
+
+	if (mConvexRadius == 0.0f)
+		return inScale;
+
+	return inScale.GetSign() * ScaleHelpers::MakeUniformScale(inScale.Abs());
 }
 
 void TriangleShape::sRegister()

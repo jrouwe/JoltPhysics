@@ -308,7 +308,7 @@ void SphereShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedSh
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
 	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
-	ts.SetShapeScale(ScaleHelpers::MakeUniformScale(scale.Abs()));
+	ts.SetShapeScale(MakeScaleValid(scale));
 	ioCollector.AddHit(ts);
 }
 
@@ -340,6 +340,14 @@ void SphereShape::RestoreBinaryState(StreamIn &inStream)
 bool SphereShape::IsValidScale(Vec3Arg inScale) const
 {
 	return ConvexShape::IsValidScale(inScale) && ScaleHelpers::IsUniformScale(inScale.Abs());
+}
+
+Vec3 SphereShape::MakeScaleValid(Vec3Arg inScale) const
+{
+	if (inScale.IsNearZero())
+		return Vec3::sReplicate(1.0e-6f);
+		
+	return inScale.GetSign() * ScaleHelpers::MakeUniformScale(inScale.Abs());
 }
 
 void SphereShape::sRegister()
