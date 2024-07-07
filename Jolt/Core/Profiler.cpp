@@ -17,16 +17,8 @@ JPH_NAMESPACE_BEGIN
 
 #if defined(JPH_EXTERNAL_PROFILE) && defined(JPH_SHARED_LIBRARY)
 
-static void DummyStartMeasurement(const char *inName, uint32 inColor, uint8 *inUserData)
-{
-}
-
-static void DummyEndMeasurement(uint8 *inUserData)
-{
-}
-
-StartMeasurementFunction StartMeasurement = DummyStartMeasurement;
-EndMeasurementFunction EndMeasurement = DummyEndMeasurement;
+ProfileStartMeasurementFunction ProfileStartMeasurement = [](const char *, uint32, uint8 *) { };
+ProfileEndMeasurementFunction ProfileEndMeasurement = [](uint8 *) { };
 
 #elif defined(JPH_PROFILE_ENABLED)
 
