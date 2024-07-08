@@ -215,6 +215,16 @@ Shape::Stats Shape::GetStatsRecursive(VisitedShapes &ioVisitedShapes) const
 	return stats;
 }
 
+bool Shape::IsValidScale(Vec3Arg inScale) const
+{
+	return !ScaleHelpers::IsZeroScale(inScale);
+}
+
+Vec3 Shape::MakeScaleValid(Vec3Arg inScale) const
+{
+	return ScaleHelpers::MakeNonZeroScale(inScale);
+}
+
 Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 {
 	const Vec3 unit_scale = Vec3::sReplicate(1.0f);

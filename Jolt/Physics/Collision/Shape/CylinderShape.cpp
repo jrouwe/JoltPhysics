@@ -407,11 +407,11 @@ bool CylinderShape::IsValidScale(Vec3Arg inScale) const
 
 Vec3 CylinderShape::MakeScaleValid(Vec3Arg inScale) const
 {
-	if (inScale.IsNearZero())
-		return Vec3::sReplicate(1.0e-6f);
-	
-	Vec3 abs_scale = inScale.Abs();
-	return inScale.GetSign() * 0.5f * (abs_scale + abs_scale.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>());
+	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
+
+	// Average X and Z
+	Vec3 abs_scale = scale.Abs();
+	return 0.5f * scale.GetSign() * (abs_scale + abs_scale.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>());
 }
 
 void CylinderShape::sRegister()

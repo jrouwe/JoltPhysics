@@ -296,16 +296,15 @@ bool RotatedTranslatedShape::IsValidScale(Vec3Arg inScale) const
 
 Vec3 RotatedTranslatedShape::MakeScaleValid(Vec3Arg inScale) const
 {
-	if (inScale.IsNearZero())
-		return Vec3::sReplicate(1.0e-6f);
+	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
 
-	if (mIsRotationIdentity || ScaleHelpers::IsUniformScale(inScale))
-		return mInnerShape->MakeScaleValid(inScale);
+	if (mIsRotationIdentity || ScaleHelpers::IsUniformScale(scale))
+		return mInnerShape->MakeScaleValid(scale);
 
-	if (!ScaleHelpers::CanScaleBeRotated(mRotation, inScale))
-		return inScale.GetSign() * ScaleHelpers::MakeUniformScale(inScale.Abs());
+	if (!ScaleHelpers::CanScaleBeRotated(mRotation, scale))
+		return scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs());
 
-	return ScaleHelpers::RotateScale(mRotation.Conjugated(), mInnerShape->MakeScaleValid(ScaleHelpers::RotateScale(mRotation, inScale)));
+	return ScaleHelpers::RotateScale(mRotation.Conjugated(), mInnerShape->MakeScaleValid(ScaleHelpers::RotateScale(mRotation, scale)));
 }
 
 void RotatedTranslatedShape::sRegister()

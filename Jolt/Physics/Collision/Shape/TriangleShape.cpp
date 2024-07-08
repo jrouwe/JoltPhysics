@@ -395,13 +395,12 @@ bool TriangleShape::IsValidScale(Vec3Arg inScale) const
 
 Vec3 TriangleShape::MakeScaleValid(Vec3Arg inScale) const
 {
-	if (inScale.IsNearZero())
-		return Vec3::sReplicate(1.0e-6f);
-
+	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
+		
 	if (mConvexRadius == 0.0f)
-		return inScale;
+		return scale;
 
-	return inScale.GetSign() * ScaleHelpers::MakeUniformScale(inScale.Abs());
+	return scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs());
 }
 
 void TriangleShape::sRegister()

@@ -450,10 +450,9 @@ bool TaperedCapsuleShape::IsValidScale(Vec3Arg inScale) const
 
 Vec3 TaperedCapsuleShape::MakeScaleValid(Vec3Arg inScale) const
 {
-	if (inScale.IsNearZero())
-		return Vec3::sReplicate(1.0e-6f);
+	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
 		
-	return inScale.GetSign() * ScaleHelpers::MakeUniformScale(inScale.Abs());
+	return scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs());
 }
 
 void TaperedCapsuleShape::sRegister()
