@@ -810,18 +810,10 @@ void SamplesApp::TakeAndReloadSnapshot()
 
 RefConst<Shape> SamplesApp::CreateProbeShape()
 {
-	// Get the scale
-	Vec3 scale = mScaleShape? mShapeScale : Vec3::sReplicate(1.0f);
-
-	// Make it minimally -0.1 or 0.1 depending on the sign
-	Vec3 clamped_value = Vec3::sSelect(Vec3::sReplicate(-0.1f), Vec3::sReplicate(0.1f), Vec3::sGreaterOrEqual(scale, Vec3::sZero()));
-	scale = Vec3::sSelect(scale, clamped_value, Vec3::sLess(scale.Abs(), Vec3::sReplicate(0.1f)));
-
 	RefConst<Shape> shape;
 	switch (mProbeShape)
 	{
 	case EProbeShape::Sphere:
-		scale = scale.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(); // Only uniform scale supported
 		shape = new SphereShape(0.2f);
 		break;
 
@@ -842,27 +834,22 @@ RefConst<Shape> SamplesApp::CreateProbeShape()
 		break;
 
 	case EProbeShape::Capsule:
-		scale = scale.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(); // Only uniform scale supported
 		shape = new CapsuleShape(0.2f, 0.1f);
 		break;
 
 	case EProbeShape::TaperedCapsule:
-		scale = scale.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(); // Only uniform scale supported
 		shape = TaperedCapsuleShapeSettings(0.2f, 0.1f, 0.2f).Create().Get();
 		break;
 
 	case EProbeShape::Cylinder:
-		scale = scale.Swizzle<SWIZZLE_X, SWIZZLE_Y, SWIZZLE_X>(); // Scale X must be same as Z
 		shape = new CylinderShape(0.2f, 0.1f);
 		break;
 
 	case EProbeShape::Triangle:
-		scale = scale.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(); // Only uniform scale supported
 		shape = new TriangleShape(Vec3(0.1f, 0.9f, 0.3f), Vec3(-0.9f, -0.5f, 0.2f), Vec3(0.7f, -0.3f, -0.1f));
 		break;
 
 	case EProbeShape::RotatedTranslated:
-		scale = scale.Swizzle<SWIZZLE_X, SWIZZLE_Y, SWIZZLE_X>(); // Can freely scale around y but x and z must be the same
 		shape = new RotatedTranslatedShape(Vec3(0.1f, 0.2f, 0.3f), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI), new BoxShape(Vec3(0.1f, 0.2f, 0.3f)));
 		break;
 
@@ -883,7 +870,6 @@ RefConst<Shape> SamplesApp::CreateProbeShape()
 
 	case EProbeShape::StaticCompound2:
 		{
-			scale = scale.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(); // Only uniform scale supported
 			Ref<StaticCompoundShapeSettings> compound = new StaticCompoundShapeSettings();
 			compound->AddShape(Vec3(0, 0.5f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new BoxShape(Vec3(0.5f, 0.15f, 0.1f)));
 			compound->AddShape(Vec3(0.5f, 0, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new CylinderShape(0.5f, 0.1f));
@@ -918,7 +904,9 @@ RefConst<Shape> SamplesApp::CreateProbeShape()
 	JPH_ASSERT(shape != nullptr);
 
 	// Scale the shape
-	if (scale != Vec3::sReplicate(1.0f))
+	Vec3 scale = mScaleShape? shape->MakeScaleValid(mShapeScale) : Vec3::sReplicate(1.0f);
+	JPH_ASSERT(shape->IsValidScale(scale)); // Double check the MakeScaleValid function
+	if (!ScaleHelpers::IsNotScaled(scale))
 		shape = new ScaledShape(shape, scale);
 
 	return shape;
