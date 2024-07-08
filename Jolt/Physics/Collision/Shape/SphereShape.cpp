@@ -303,15 +303,6 @@ void SphereShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3
 		}
 }
 
-void SphereShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
-{
-	Vec3 scale;
-	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
-	ts.SetShapeScale(MakeScaleValid(scale));
-	ioCollector.AddHit(ts);
-}
-
 void SphereShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const
 {
 	float scaled_radius = GetScaledRadius(inScale);
