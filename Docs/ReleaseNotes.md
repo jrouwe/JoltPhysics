@@ -64,6 +64,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Forgot to free a temporary allocation on an early out in HeightFieldShape::SetMaterials.
 * Fix SSE not being enabled on x86 32-bits.
 * Fixed a bug in the enhanced internal edge removal that could cause rigid bodies and characters to be affected by internal edges.
+* Fixed a bug in MutableCompoundShape::AdjustCenterOfMass which would fail to update the bounding box of the shape.
 
 ## v5.0.0
 
