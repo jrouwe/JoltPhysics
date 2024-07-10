@@ -36,12 +36,6 @@ class alignas(JPH_RVECTOR_ALIGNMENT) JPH_EXPORT_GCC_BUG_WORKAROUND Body : public
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
-	/// Default constructor
-							Body() = default;
-
-	/// Destructor
-							~Body()															{ JPH_ASSERT(mMotionProperties == nullptr); }
-
 	/// Get the id of this body
 	inline const BodyID &	GetID() const													{ return mID; }
 
@@ -336,8 +330,14 @@ public:
 
 private:
 	friend class BodyManager;
+	friend class BodyWithMotionProperties;
+	friend class SoftBodyWithMotionPropertiesAndShape;
+
+							Body() = default;												///< Bodies must be created through BodyInterface::CreateBody
 
 	explicit				Body(bool);														///< Alternative constructor that initializes all members
+
+							~Body()															{ JPH_ASSERT(mMotionProperties == nullptr); } ///< Bodies must be destroyed through BodyInterface::DestroyBody
 
 	inline void				GetSleepTestPoints(RVec3 *outPoints) const;						///< Determine points to test for checking if body is sleeping: COM, COM + largest bounding box axis, COM + second largest bounding box axis
 
