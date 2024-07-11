@@ -305,6 +305,22 @@ TEST_SUITE("ShapeTests")
 		CHECK(!mutable_compound4->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(mutable_compound4->IsValidScale(Vec3(1, 1, 2))); // We're rotation around Z, so non-uniform in the Z direction is ok
 
+		// Test a cylinder rotated by 90 degrees around Z rotating Y to X, meaning that Y and Z should be scaled uniformly
+		MutableCompoundShapeSettings mutable_compound_settings5;
+		mutable_compound_settings5.AddShape(Vec3(1, 2, 3), Quat::sRotation(Vec3::sAxisZ(), -0.5f * JPH_PI), new CylinderShape(1.0f, 0.5f));
+		Ref<Shape> mutable_compound5 = mutable_compound_settings5.Create().Get();
+		CHECK(mutable_compound5->IsValidScale(Vec3::sReplicate(2)));
+		CHECK(mutable_compound5->IsValidScale(Vec3(1, 2, 2)));
+		CHECK(mutable_compound5->IsValidScale(Vec3(1, 2, -2)));
+		CHECK(!mutable_compound5->IsValidScale(Vec3(2, 1, 2)));
+		CHECK(!mutable_compound5->IsValidScale(Vec3(2, 2, 1)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3::sReplicate(2)).IsClose(Vec3::sReplicate(2)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3::sReplicate(-2)).IsClose(Vec3::sReplicate(-2)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3(1, 2, 2)).IsClose(Vec3(1, 2, 2)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3(1, 2, -2)).IsClose(Vec3(1, 2, -2)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3(2, 1, 2)).IsClose(Vec3::sReplicate(5.0f / 3.0f))); // Not the best solution, but we don't have logic to average over YZ only
+		CHECK(mutable_compound5->MakeScaleValid(Vec3(2, 2, 1)).IsClose(Vec3::sReplicate(5.0f / 3.0f))); // Not the best solution, but we don't have logic to average over YZ only
+
 		// Test a rotated translated shape that can only be scaled uniformly
 		RotatedTranslatedShapeSettings rt_settings(Vec3(1, 2, 3), Quat::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI), sphere);
 		Ref<Shape> rt_shape = rt_settings.Create().Get();
@@ -344,6 +360,21 @@ TEST_SUITE("ShapeTests")
 		CHECK(!rt_shape4->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!rt_shape4->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(rt_shape4->IsValidScale(Vec3(1, 1, 2))); // We're rotation around Z, so non-uniform in the Z direction is ok
+
+		// Test a cylinder rotated by 90 degrees around Z rotating Y to X, meaning that Y and Z should be scaled uniformly
+		RotatedTranslatedShapeSettings rt_settings5(Vec3(1, 2, 3), Quat::sRotation(Vec3::sAxisZ(), -0.5f * JPH_PI), new CylinderShape(1.0f, 0.5f));
+		Ref<Shape> rt_shape5 = rt_settings5.Create().Get();
+		CHECK(rt_shape5->IsValidScale(Vec3::sReplicate(2)));
+		CHECK(rt_shape5->IsValidScale(Vec3(1, 2, 2)));
+		CHECK(rt_shape5->IsValidScale(Vec3(1, 2, -2)));
+		CHECK(!rt_shape5->IsValidScale(Vec3(2, 1, 2)));
+		CHECK(!rt_shape5->IsValidScale(Vec3(2, 2, 1)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3::sReplicate(2)).IsClose(Vec3::sReplicate(2)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3::sReplicate(-2)).IsClose(Vec3::sReplicate(-2)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3(1, 2, 2)).IsClose(Vec3(1, 2, 2)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3(1, 2, -2)).IsClose(Vec3(1, 2, -2)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3(2, 1, 2)).IsClose(Vec3(2, 1.5f, 1.5f))); // YZ will be averaged here
+		CHECK(rt_shape5->MakeScaleValid(Vec3(2, 2, 1)).IsClose(Vec3(2, 1.5f, 1.5f))); // YZ will be averaged here
 	}
 
 	// Test embedded shape
