@@ -31,7 +31,7 @@ public:
 private:
 	bool					mActivateAfterSwitch = true;
 	BodyID					mBodyID;
-	Array<RefConst<Shape>> 	mShapes;
+	Array<RefConst<Shape>>	mShapes;
 	float					mTime = 0.0f;
 	int						mShapeIdx = 0;
 };

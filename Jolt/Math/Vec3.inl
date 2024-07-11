@@ -57,9 +57,9 @@ Vec3::Vec3(const Float3 &inV)
 	Type xy = _mm_unpacklo_ps(x, y);
 	mValue = _mm_shuffle_ps(xy, z, _MM_SHUFFLE(0, 0, 1, 0)); // Assure Z and W are the same
 #elif defined(JPH_USE_NEON)
-    float32x2_t xy = vld1_f32(&inV.x);
-    float32x2_t zz = vdup_n_f32(inV.z); // Assure Z and W are the same
-    mValue = vcombine_f32(xy, zz);
+	float32x2_t xy = vld1_f32(&inV.x);
+	float32x2_t zz = vdup_n_f32(inV.z); // Assure Z and W are the same
+	mValue = vcombine_f32(xy, zz);
 #else
 	mF32[0] = inV[0];
 	mF32[1] = inV[1];
@@ -591,18 +591,18 @@ Vec3 Vec3::Cross(Vec3Arg inV2) const
 {
 #if defined(JPH_USE_SSE)
 	Type t1 = _mm_shuffle_ps(inV2.mValue, inV2.mValue, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
-    t1 = _mm_mul_ps(t1, mValue);
-    Type t2 = _mm_shuffle_ps(mValue, mValue, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
-    t2 = _mm_mul_ps(t2, inV2.mValue);
-    Type t3 = _mm_sub_ps(t1, t2);
-    return _mm_shuffle_ps(t3, t3, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
+	t1 = _mm_mul_ps(t1, mValue);
+	Type t2 = _mm_shuffle_ps(mValue, mValue, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
+	t2 = _mm_mul_ps(t2, inV2.mValue);
+	Type t3 = _mm_sub_ps(t1, t2);
+	return _mm_shuffle_ps(t3, t3, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
 #elif defined(JPH_USE_NEON)
 	Type t1 = JPH_NEON_SHUFFLE_F32x4(inV2.mValue, inV2.mValue, 1, 2, 0, 0); // Assure Z and W are the same
-    t1 = vmulq_f32(t1, mValue);
-    Type t2 = JPH_NEON_SHUFFLE_F32x4(mValue, mValue, 1, 2, 0, 0); // Assure Z and W are the same
-    t2 = vmulq_f32(t2, inV2.mValue);
-    Type t3 = vsubq_f32(t1, t2);
-    return JPH_NEON_SHUFFLE_F32x4(t3, t3, 1, 2, 0, 0); // Assure Z and W are the same
+	t1 = vmulq_f32(t1, mValue);
+	Type t2 = JPH_NEON_SHUFFLE_F32x4(mValue, mValue, 1, 2, 0, 0); // Assure Z and W are the same
+	t2 = vmulq_f32(t2, inV2.mValue);
+	Type t3 = vsubq_f32(t1, t2);
+	return JPH_NEON_SHUFFLE_F32x4(t3, t3, 1, 2, 0, 0); // Assure Z and W are the same
 #else
 	return Vec3(mF32[1] * inV2.mF32[2] - mF32[2] * inV2.mF32[1],
 				mF32[2] * inV2.mF32[0] - mF32[0] * inV2.mF32[2],
@@ -615,9 +615,9 @@ Vec3 Vec3::DotV(Vec3Arg inV2) const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_dp_ps(mValue, inV2.mValue, 0x7f);
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
+	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
-    return vdupq_n_f32(vaddvq_f32(mul));
+	return vdupq_n_f32(vaddvq_f32(mul));
 #else
 	float dot = 0.0f;
 	for (int i = 0; i < 3; i++)
@@ -631,9 +631,9 @@ Vec4 Vec3::DotV4(Vec3Arg inV2) const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_dp_ps(mValue, inV2.mValue, 0x7f);
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
+	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
-    return vdupq_n_f32(vaddvq_f32(mul));
+	return vdupq_n_f32(vaddvq_f32(mul));
 #else
 	float dot = 0.0f;
 	for (int i = 0; i < 3; i++)
@@ -647,9 +647,9 @@ float Vec3::Dot(Vec3Arg inV2) const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_cvtss_f32(_mm_dp_ps(mValue, inV2.mValue, 0x7f));
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
+	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
-    return vaddvq_f32(mul);
+	return vaddvq_f32(mul);
 #else
 	float dot = 0.0f;
 	for (int i = 0; i < 3; i++)
@@ -663,9 +663,9 @@ float Vec3::LengthSq() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_cvtss_f32(_mm_dp_ps(mValue, mValue, 0x7f));
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, mValue);
+	float32x4_t mul = vmulq_f32(mValue, mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
-    return vaddvq_f32(mul);
+	return vaddvq_f32(mul);
 #else
 	float len_sq = 0.0f;
 	for (int i = 0; i < 3; i++)
@@ -679,10 +679,10 @@ float Vec3::Length() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(mValue, mValue, 0x7f)));
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, mValue);
+	float32x4_t mul = vmulq_f32(mValue, mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
-    float32x2_t sum = vdup_n_f32(vaddvq_f32(mul));
-    return vget_lane_f32(vsqrt_f32(sum), 0);
+	float32x2_t sum = vdup_n_f32(vaddvq_f32(mul));
+	return vget_lane_f32(vsqrt_f32(sum), 0);
 #else
 	return sqrt(LengthSq());
 #endif
@@ -704,10 +704,10 @@ Vec3 Vec3::Normalized() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_div_ps(mValue, _mm_sqrt_ps(_mm_dp_ps(mValue, mValue, 0x7f)));
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, mValue);
+	float32x4_t mul = vmulq_f32(mValue, mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
-    float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
-    return vdivq_f32(mValue, vsqrtq_f32(sum));
+	float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
+	return vdivq_f32(mValue, vsqrtq_f32(sum));
 #else
 	return *this / Length();
 #endif
@@ -727,12 +727,12 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	return _mm_blendv_ps(_mm_div_ps(mValue, _mm_sqrt_ps(len_sq)), inZeroValue.mValue, is_zero);
 #endif // JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, mValue);
+	float32x4_t mul = vmulq_f32(mValue, mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
-    float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
+	float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
 	float32x4_t len = vsqrtq_f32(sum);
 	float32x4_t is_zero = vceqq_f32(len, vdupq_n_f32(0));
-    return vbslq_f32(is_zero, inZeroValue.mValue, vdivq_f32(mValue, len));
+	return vbslq_f32(is_zero, inZeroValue.mValue, vdivq_f32(mValue, len));
 #else
 	float len_sq = LengthSq();
 	if (len_sq == 0.0f)
@@ -771,9 +771,9 @@ void Vec3::StoreFloat3(Float3 *outV) const
 	t = t.Swizzle<SWIZZLE_Y, SWIZZLE_UNUSED, SWIZZLE_UNUSED>();
 	_mm_store_ss(&outV->z, t.mValue);
 #elif defined(JPH_USE_NEON)
-    float32x2_t xy = vget_low_f32(mValue);
-    vst1_f32(&outV->x, xy);
-    vst1q_lane_f32(&outV->z, mValue, 2);
+	float32x2_t xy = vget_low_f32(mValue);
+	vst1_f32(&outV->x, xy);
+	vst1q_lane_f32(&outV->z, mValue, 2);
 #else
 	outV->x = mF32[0];
 	outV->y = mF32[1];

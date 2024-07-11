@@ -3,7 +3,7 @@
 struct VS_INPUT
 {
 	// Per vertex data
-    float3 vPos   : POSITION;
+	float3 vPos	  : POSITION;
 	float3 vNorm  : NORMAL;
 	float2 vTex	  : TEXCOORD0;
 	float4 vCol	  : COLOR;
@@ -16,12 +16,12 @@ struct VS_INPUT
 
 struct VS_OUTPUT
 {
-    float4 Position : SV_POSITION;
+	float4 Position : SV_POSITION;
 };
 
 VS_OUTPUT main(VS_INPUT input)
 {
-    VS_OUTPUT output;
+	VS_OUTPUT output;
 
 	// Check if the alpha = 0
 	if (input.vCol.a * input.iCol.a == 0.0)
@@ -39,5 +39,5 @@ VS_OUTPUT main(VS_INPUT input)
 		output.Position = pos;
 	}
 	
-    return output;
+	return output;
 }

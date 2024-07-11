@@ -3,7 +3,7 @@
 struct VS_INPUT
 {
 	// Per vertex data
-    float3 vPos   : POSITION;
+	float3 vPos	  : POSITION;
 	float3 vNorm  : NORMAL;
 	float2 vTex	  : TEXCOORD0;
 	float4 vCol	  : COLOR;
@@ -16,26 +16,26 @@ struct VS_INPUT
 
 struct VS_OUTPUT
 {
-    float4 Position  : SV_POSITION;
-    float3 Normal    : TEXCOORD0;
+	float4 Position	 : SV_POSITION;
+	float3 Normal	 : TEXCOORD0;
 	float3 WorldPos	 : TEXCOORD1;
-	float2 Tex       : TEXCOORD2;
+	float2 Tex		 : TEXCOORD2;
 	float4 PositionL : TEXCOORD3;
 	float4 Color	 : COLOR0;
 };
 
 VS_OUTPUT main(VS_INPUT input)
 {
-    VS_OUTPUT output;
+	VS_OUTPUT output;
 
 	// Get world position
 	float4 pos = float4(input.vPos, 1.0f);
 	float4 world_pos = mul(input.iModel, pos);
 
-    // Transform the position from world space to homogeneous projection space
-    float4 proj_pos = mul(View, world_pos);
-    proj_pos = mul(Projection, proj_pos);
-    output.Position = proj_pos;
+	// Transform the position from world space to homogeneous projection space
+	float4 proj_pos = mul(View, world_pos);
+	proj_pos = mul(Projection, proj_pos);
+	output.Position = proj_pos;
 
 	// Transform the position from world space to projection space of the light
 	float4 proj_lpos = mul(LightView, world_pos);
@@ -55,5 +55,5 @@ VS_OUTPUT main(VS_INPUT input)
 	// output color
 	output.Color = input.vCol * input.iCol;
 
-    return output;
+	return output;
 }

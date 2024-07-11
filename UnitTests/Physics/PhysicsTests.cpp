@@ -1593,7 +1593,7 @@ TEST_SUITE("PhysicsTests")
 			Vec3 gravity = c.GetSystem()->GetGravity();
 			Vec3 upside_down_gravity = -gravity;
 
-  			// Create the ground.
+			// Create the ground.
 			Body &ground = c.CreateFloor();
 
 			// Create two sets of bodies that each overlap

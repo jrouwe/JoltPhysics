@@ -33,11 +33,11 @@ private:
 		JPH_OVERRIDE_NEW_DELETE
 
 		/// Default constructor does not initialize
-		inline 					NodeID() = default;
+		inline					NodeID() = default;
 
 		/// Construct a node ID
 		static inline NodeID	sInvalid()							{ return NodeID(cInvalidNodeIndex); }
-		static inline NodeID	sFromBodyID(BodyID inID) 			{ NodeID node_id(inID.GetIndexAndSequenceNumber()); JPH_ASSERT(node_id.IsBody()); return node_id; }
+		static inline NodeID	sFromBodyID(BodyID inID)			{ NodeID node_id(inID.GetIndexAndSequenceNumber()); JPH_ASSERT(node_id.IsBody()); return node_id; }
 		static inline NodeID	sFromNodeIndex(uint32 inIdx)		{ NodeID node_id(inIdx | cIsNode); JPH_ASSERT(node_id.IsNode()); return node_id; }
 
 		/// Check what type of ID it is

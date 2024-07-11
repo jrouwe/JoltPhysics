@@ -17,8 +17,8 @@ Texture::Texture(Renderer *inRenderer, const Surface *inSurface) :
 	mHeight = inSurface->GetHeight();
 
 	// Create description
-    D3D12_RESOURCE_DESC desc = {};
-    desc.MipLevels = 1;
+	D3D12_RESOURCE_DESC desc = {};
+	desc.MipLevels = 1;
 	ESurfaceFormat format = inSurface->GetFormat();
 	switch (format)
 	{
@@ -33,20 +33,20 @@ Texture::Texture(Renderer *inRenderer, const Surface *inSurface) :
 	case ESurfaceFormat::A4R4G4B4:		desc.Format = DXGI_FORMAT_B4G4R4A4_UNORM;	break;
 	case ESurfaceFormat::R8G8B8:		desc.Format = DXGI_FORMAT_B8G8R8X8_UNORM;	format = ESurfaceFormat::X8R8G8B8;	break;
 	case ESurfaceFormat::B8G8R8:		desc.Format = DXGI_FORMAT_B8G8R8X8_UNORM;	format = ESurfaceFormat::X8R8G8B8;	break;
-	case ESurfaceFormat::X8R8G8B8: 		desc.Format = DXGI_FORMAT_B8G8R8X8_UNORM;	break;
+	case ESurfaceFormat::X8R8G8B8:		desc.Format = DXGI_FORMAT_B8G8R8X8_UNORM;	break;
 	case ESurfaceFormat::X8B8G8R8:		desc.Format = DXGI_FORMAT_B8G8R8X8_UNORM;	format = ESurfaceFormat::X8R8G8B8;	break;
 	case ESurfaceFormat::A8R8G8B8:		desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;	break;
 	case ESurfaceFormat::A8B8G8R8:		desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;	format = ESurfaceFormat::A8R8G8B8;	break;
 	case ESurfaceFormat::Invalid:
 	default:							JPH_ASSERT(false);							break;
 	}
-    desc.Width = mWidth;
-    desc.Height = mHeight;
-    desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-    desc.DepthOrArraySize = 1;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	desc.Width = mWidth;
+	desc.Height = mHeight;
+	desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	desc.DepthOrArraySize = 1;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
 	// Blit the surface to another temporary surface if the format changed
 	const Surface *surface = inSurface;
@@ -62,20 +62,20 @@ Texture::Texture(Renderer *inRenderer, const Surface *inSurface) :
 	D3D12_HEAP_PROPERTIES heap_properties = {};
 	heap_properties.Type = D3D12_HEAP_TYPE_DEFAULT;
 	heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-    heap_properties.CreationNodeMask = 1;
-    heap_properties.VisibleNodeMask = 1;
-    FatalErrorIfFailed(inRenderer->GetDevice()->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&mTexture)));
+	heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	heap_properties.CreationNodeMask = 1;
+	heap_properties.VisibleNodeMask = 1;
+	FatalErrorIfFailed(inRenderer->GetDevice()->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&mTexture)));
 	JPH_IF_DEBUG(mTexture->SetName(L"Texture");)
 
 	// Determine required size of data to copy
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
-    UINT64 row_size_in_bytes;
-    UINT64 required_size = 0;
-    inRenderer->GetDevice()->GetCopyableFootprints(&desc, 0, 1, 0, &footprint, nullptr, &row_size_in_bytes, &required_size);
+	UINT64 row_size_in_bytes;
+	UINT64 required_size = 0;
+	inRenderer->GetDevice()->GetCopyableFootprints(&desc, 0, 1, 0, &footprint, nullptr, &row_size_in_bytes, &required_size);
 
 	// Create the GPU upload buffer
-    ComPtr<ID3D12Resource> upload_resource = mRenderer->CreateD3DResourceOnUploadHeap(required_size);
+	ComPtr<ID3D12Resource> upload_resource = mRenderer->CreateD3DResourceOnUploadHeap(required_size);
 	JPH_IF_DEBUG(upload_resource->SetName(L"Texture Upload");)
 
 	// Copy data to upload texture
@@ -103,23 +103,23 @@ Texture::Texture(Renderer *inRenderer, const Surface *inSurface) :
 	list->CopyTextureRegion(&copy_dst, 0, 0, 0, &copy_src, nullptr);
 
 	// Indicate that the texture is now ready to be used by a pixel shader
-    D3D12_RESOURCE_BARRIER barrier;
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrier.Transition.pResource = mTexture.Get();
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    list->ResourceBarrier(1, &barrier);
+	D3D12_RESOURCE_BARRIER barrier;
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = mTexture.Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	list->ResourceBarrier(1, &barrier);
 
-    // Create a SRV for the texture
+	// Create a SRV for the texture
 	mSRV = inRenderer->GetSRVHeap().Allocate();
-    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
-    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srv_desc.Format = desc.Format;
-    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srv_desc.Texture2D.MipLevels = 1;
-    inRenderer->GetDevice()->CreateShaderResourceView(mTexture.Get(), &srv_desc, mSRV);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
+	srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srv_desc.Format = desc.Format;
+	srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srv_desc.Texture2D.MipLevels = 1;
+	inRenderer->GetDevice()->CreateShaderResourceView(mTexture.Get(), &srv_desc, mSRV);
 
 	// Wait for copying to finish so we can destroy the upload texture
 	inRenderer->GetUploadQueue().ExecuteAndWait();
@@ -144,9 +144,9 @@ Texture::Texture(Renderer *inRenderer, int inWidth, int inHeight) :
 	D3D12_HEAP_PROPERTIES heap_properties = {};
 	heap_properties.Type = D3D12_HEAP_TYPE_DEFAULT;
 	heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-    heap_properties.CreationNodeMask = 1;
-    heap_properties.VisibleNodeMask = 1;
+	heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	heap_properties.CreationNodeMask = 1;
+	heap_properties.VisibleNodeMask = 1;
 
 	D3D12_RESOURCE_DESC depth_stencil_desc = {};
 	depth_stencil_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -174,12 +174,12 @@ Texture::Texture(Renderer *inRenderer, int inWidth, int inHeight) :
 
 	// Create a SRV for the texture
 	mSRV = inRenderer->GetSRVHeap().Allocate();
-    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
-    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
-    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srv_desc.Texture2D.MipLevels = 1;
-    inRenderer->GetDevice()->CreateShaderResourceView(mTexture.Get(), &srv_desc, mSRV);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
+	srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
+	srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srv_desc.Texture2D.MipLevels = 1;
+	inRenderer->GetDevice()->CreateShaderResourceView(mTexture.Get(), &srv_desc, mSRV);
 }
 
 Texture::~Texture()

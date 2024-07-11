@@ -730,11 +730,11 @@ DVec3 DVec3::Cross(DVec3Arg inV2) const
 {
 #if defined(JPH_USE_AVX2)
 	__m256d t1 = _mm256_permute4x64_pd(inV2.mValue, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
-    t1 = _mm256_mul_pd(t1, mValue);
-    __m256d t2 = _mm256_permute4x64_pd(mValue, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
-    t2 = _mm256_mul_pd(t2, inV2.mValue);
-    __m256d t3 = _mm256_sub_pd(t1, t2);
-    return _mm256_permute4x64_pd(t3, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
+	t1 = _mm256_mul_pd(t1, mValue);
+	__m256d t2 = _mm256_permute4x64_pd(mValue, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
+	t2 = _mm256_mul_pd(t2, inV2.mValue);
+	__m256d t3 = _mm256_sub_pd(t1, t2);
+	return _mm256_permute4x64_pd(t3, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
 #else
 	return DVec3(mF64[1] * inV2.mF64[2] - mF64[2] * inV2.mF64[1],
 				 mF64[2] * inV2.mF64[0] - mF64[0] * inV2.mF64[2],
@@ -746,10 +746,10 @@ double DVec3::Dot(DVec3Arg inV2) const
 {
 #if defined(JPH_USE_AVX)
 	__m256d mul = _mm256_mul_pd(mValue, inV2.mValue);
-    __m128d xy = _mm256_castpd256_pd128(mul);
+	__m128d xy = _mm256_castpd256_pd128(mul);
 	__m128d yx = _mm_shuffle_pd(xy, xy, 1);
 	__m128d sum = _mm_add_pd(xy, yx);
-    __m128d zw = _mm256_extractf128_pd(mul, 1);
+	__m128d zw = _mm256_extractf128_pd(mul, 1);
 	sum = _mm_add_pd(sum, zw);
 	return _mm_cvtsd_f64(sum);
 #elif defined(JPH_USE_SSE)
@@ -760,9 +760,9 @@ double DVec3::Dot(DVec3Arg inV2) const
 	sum = _mm_add_pd(sum, z);
 	return _mm_cvtsd_f64(sum);
 #elif defined(JPH_USE_NEON)
-    float64x2_t mul_low = vmulq_f64(mValue.val[0], inV2.mValue.val[0]);
-    float64x2_t mul_high = vmulq_f64(mValue.val[1], inV2.mValue.val[1]);
-    return vaddvq_f64(mul_low) + vgetq_lane_f64(mul_high, 0);
+	float64x2_t mul_low = vmulq_f64(mValue.val[0], inV2.mValue.val[0]);
+	float64x2_t mul_high = vmulq_f64(mValue.val[1], inV2.mValue.val[1]);
+	return vaddvq_f64(mul_low) + vgetq_lane_f64(mul_high, 0);
 #else
 	double dot = 0.0;
 	for (int i = 0; i < 3; i++)

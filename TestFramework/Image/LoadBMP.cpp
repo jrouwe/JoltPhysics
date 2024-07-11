@@ -12,27 +12,27 @@
 
 struct BitmapFileHeader
 {
-    char			mTypeB;
+	char			mTypeB;
 	char			mTypeM;
-    uint32			mSize;
-    uint16			mReserved1;
-    uint16			mReserved2;
-    uint32			mOffBits;
+	uint32			mSize;
+	uint16			mReserved1;
+	uint16			mReserved2;
+	uint32			mOffBits;
 };
 
 struct BitmapInfoHeader
 {
-    uint32			mSize;
-    uint32			mWidth;
-    uint32			mHeight;
-    uint16			mPlanes;
-    uint16			mBitCount;
-    uint32			mCompression;
-    uint32			mSizeImage;
-    uint32			mXPelsPerMeter;
-    uint32			mYPelsPerMeter;
-    uint32			mClrUsed;
-    uint32			mClrImportant;
+	uint32			mSize;
+	uint32			mWidth;
+	uint32			mHeight;
+	uint16			mPlanes;
+	uint16			mBitCount;
+	uint32			mCompression;
+	uint32			mSizeImage;
+	uint32			mXPelsPerMeter;
+	uint32			mYPelsPerMeter;
+	uint32			mClrUsed;
+	uint32			mClrImportant;
 };
 
 #pragma pack ()
@@ -163,22 +163,22 @@ bool SaveBMP(RefConst<Surface> inSurface, ostream &inStream)
 	// Fill in headers
 	bfh.mTypeB				= 'B';
 	bfh.mTypeM				= 'M';
-    bfh.mSize				= sizeof(bfh) + sizeof(bih) + src->GetHeight() * src->GetStride();
-    bfh.mReserved1			= 0;
-    bfh.mReserved2			= 0;
-    bfh.mOffBits			= sizeof(bfh) + sizeof(bih);
+	bfh.mSize				= sizeof(bfh) + sizeof(bih) + src->GetHeight() * src->GetStride();
+	bfh.mReserved1			= 0;
+	bfh.mReserved2			= 0;
+	bfh.mOffBits			= sizeof(bfh) + sizeof(bih);
 
-    bih.mSize				= sizeof(bih);
-    bih.mWidth				= src->GetWidth();
-    bih.mHeight				= src->GetHeight();
-    bih.mPlanes				= 1;
-    bih.mBitCount			= 24;
-    bih.mCompression		= 0;
-    bih.mSizeImage			= src->GetHeight() * src->GetStride();
-    bih.mXPelsPerMeter		= 300;
-    bih.mYPelsPerMeter		= 300;
-    bih.mClrUsed			= 0;
-    bih.mClrImportant		= 0;
+	bih.mSize				= sizeof(bih);
+	bih.mWidth				= src->GetWidth();
+	bih.mHeight				= src->GetHeight();
+	bih.mPlanes				= 1;
+	bih.mBitCount			= 24;
+	bih.mCompression		= 0;
+	bih.mSizeImage			= src->GetHeight() * src->GetStride();
+	bih.mXPelsPerMeter		= 300;
+	bih.mYPelsPerMeter		= 300;
+	bih.mClrUsed			= 0;
+	bih.mClrImportant		= 0;
 
 	// Write headers
 	inStream.write((char *)&bfh, sizeof(bfh));

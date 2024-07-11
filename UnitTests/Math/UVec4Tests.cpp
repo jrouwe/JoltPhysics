@@ -46,7 +46,7 @@ TEST_SUITE("UVec4Tests")
 		CHECK(i4_out2[2] == 3);
 		CHECK(i4_out2[3] == 4);
 
-		uint32 si[] = { 0, 0,  1, 0,  0, 0,  2, 0,  0, 0,  0, 0,  0, 0,  0, 0,  3, 0, 4, 0 };
+		uint32 si[] = { 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 4, 0 };
 		CHECK(UVec4::sGatherInt4<2 * sizeof(uint32)>(si, UVec4(1, 3, 8, 9)) == UVec4(1, 2, 3, 4));
 	}
 
@@ -497,8 +497,8 @@ TEST_SUITE("UVec4Tests")
 		uint16 ints[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
 		UVec4 vector = UVec4::sLoadInt4((const uint32 *)ints);
 
-		CHECK(vector.Expand4Uint16Lo()  == UVec4(1, 2, 3, 4));
-		CHECK(vector.Expand4Uint16Hi()  == UVec4(5, 6, 7, 8));
+		CHECK(vector.Expand4Uint16Lo() == UVec4(1, 2, 3, 4));
+		CHECK(vector.Expand4Uint16Hi() == UVec4(5, 6, 7, 8));
 	}
 
 	TEST_CASE("TestUVec4ExtractBytes")

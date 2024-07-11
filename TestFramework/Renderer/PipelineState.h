@@ -43,5 +43,5 @@ private:
 	friend class Renderer;
 
 	Renderer *							mRenderer;
-    ComPtr<ID3D12PipelineState>			mPSO;
+	ComPtr<ID3D12PipelineState>			mPSO;
 };

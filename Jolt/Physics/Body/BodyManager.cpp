@@ -188,7 +188,7 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 	}
 	else
 	{
-	 	body = new Body;
+		body = new Body;
 	}
 	body->mBodyType = EBodyType::RigidBody;
 	body->mShape = inBodyCreationSettings.GetShape();

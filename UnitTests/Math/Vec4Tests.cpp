@@ -40,7 +40,7 @@ TEST_SUITE("Vec4Tests")
 		CHECK(f4_out[2] == 3);
 		CHECK(f4_out[3] == 4);
 
-		float sf[] = { 0, 0,  1, 0,  0, 0,  2, 0,  0, 0,  0, 0,  0, 0,  0, 0,  3, 0, 4, 0 };
+		float sf[] = { 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 4, 0 };
 		CHECK(Vec4::sGatherFloat4<2 * sizeof(float)>(sf, UVec4(1, 3, 8, 9)) == Vec4(1, 2, 3, 4));
 	}
 

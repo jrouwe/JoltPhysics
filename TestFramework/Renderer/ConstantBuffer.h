@@ -27,6 +27,6 @@ private:
 	void *								MapInternal();
 
 	Renderer *							mRenderer;
-    ComPtr<ID3D12Resource>				mBuffer;
+	ComPtr<ID3D12Resource>				mBuffer;
 	uint64								mBufferSize;
 };
