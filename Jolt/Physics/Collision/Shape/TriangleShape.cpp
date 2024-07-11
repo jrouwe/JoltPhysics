@@ -387,7 +387,7 @@ bool TriangleShape::IsValidScale(Vec3Arg inScale) const
 Vec3 TriangleShape::MakeScaleValid(Vec3Arg inScale) const
 {
 	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
-		
+
 	if (mConvexRadius == 0.0f)
 		return scale;
 

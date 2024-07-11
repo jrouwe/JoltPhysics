@@ -336,7 +336,7 @@ bool SphereShape::IsValidScale(Vec3Arg inScale) const
 Vec3 SphereShape::MakeScaleValid(Vec3Arg inScale) const
 {
 	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
-		
+
 	return scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs());
 }
 

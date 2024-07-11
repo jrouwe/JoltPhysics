@@ -179,7 +179,7 @@ bool ScaledShape::IsValidScale(Vec3Arg inScale) const
 Vec3 ScaledShape::MakeScaleValid(Vec3Arg inScale) const
 {
 	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
-		
+
 	return mInnerShape->MakeScaleValid(mScale * scale) / scale;
 }
 
