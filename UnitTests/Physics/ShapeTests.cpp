@@ -120,6 +120,8 @@ TEST_SUITE("ShapeTests")
 	// Test IsValidScale function
 	TEST_CASE("TestIsValidScale")
 	{
+		constexpr float cMinScaleToleranceSq = Square(1.0e-6f * ScaleHelpers::cMinScale);
+
 		// Test simple shapes
 		Ref<Shape> sphere = new SphereShape(2.0f);
 		CHECK(!sphere->IsValidScale(Vec3::sZero()));
@@ -128,7 +130,7 @@ TEST_SUITE("ShapeTests")
 		CHECK(!sphere->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!sphere->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!sphere->IsValidScale(Vec3(1, 1, 2)));
-		CHECK(sphere->MakeScaleValid(Vec3::sZero()) == Vec3::sReplicate(ScaleHelpers::cMinScale));
+		CHECK(sphere->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq)); // Averaging can cause a slight error
 		CHECK(sphere->MakeScaleValid(Vec3(-2, 3, 4)) == Vec3(-3, 3, 3));
 
 		Ref<Shape> capsule = new CapsuleShape(2.0f, 0.5f);
@@ -140,7 +142,7 @@ TEST_SUITE("ShapeTests")
 		CHECK(!capsule->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!capsule->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!capsule->IsValidScale(Vec3(1, 1, 2)));
-		CHECK(capsule->MakeScaleValid(Vec3::sZero()) == Vec3::sReplicate(ScaleHelpers::cMinScale));
+		CHECK(capsule->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
 		CHECK(capsule->MakeScaleValid(Vec3(-2, 3, 4)) == Vec3(-3, 3, 3));
 
 		Ref<Shape> tapered_capsule = TaperedCapsuleShapeSettings(2.0f, 0.5f, 0.7f).Create().Get();
@@ -150,7 +152,7 @@ TEST_SUITE("ShapeTests")
 		CHECK(!tapered_capsule->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!tapered_capsule->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!tapered_capsule->IsValidScale(Vec3(1, 1, 2)));
-		CHECK(tapered_capsule->MakeScaleValid(Vec3::sZero()) == Vec3::sReplicate(ScaleHelpers::cMinScale));
+		CHECK(tapered_capsule->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
 		CHECK(tapered_capsule->MakeScaleValid(Vec3(2, -3, 4)) == Vec3(3, -3, 3));
 
 		Ref<Shape> cylinder = new CylinderShape(0.5f, 2.0f);
@@ -162,7 +164,7 @@ TEST_SUITE("ShapeTests")
 		CHECK(!cylinder->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(cylinder->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!cylinder->IsValidScale(Vec3(1, 1, 2)));
-		CHECK(cylinder->MakeScaleValid(Vec3::sZero()) == Vec3::sReplicate(ScaleHelpers::cMinScale));
+		CHECK(cylinder->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
 		CHECK(cylinder->MakeScaleValid(Vec3(-1.0e-10f, 1, 1.0e-10f)) == Vec3(-ScaleHelpers::cMinScale, 1, ScaleHelpers::cMinScale));
 		CHECK(cylinder->MakeScaleValid(Vec3(2, 5, -4)) == Vec3(3, 5, -3));
 
@@ -176,7 +178,7 @@ TEST_SUITE("ShapeTests")
 		CHECK(triangle->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(triangle->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(triangle->IsValidScale(Vec3(1, 1, 2)));
-		CHECK(triangle->MakeScaleValid(Vec3::sZero()) == Vec3::sReplicate(ScaleHelpers::cMinScale));
+		CHECK(triangle->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
 		CHECK(triangle->MakeScaleValid(Vec3(2, 5, -4)) == Vec3(2, 5, -4));
 
 		Ref<Shape> triangle2 = new TriangleShape(Vec3(1, 2, 3), Vec3(4, 5, 6), Vec3(7, 8, 9), 0.01f); // With convex radius
@@ -189,7 +191,7 @@ TEST_SUITE("ShapeTests")
 		CHECK(!triangle2->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!triangle2->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!triangle2->IsValidScale(Vec3(1, 1, 2)));
-		CHECK(triangle2->MakeScaleValid(Vec3::sZero()) == Vec3::sReplicate(ScaleHelpers::cMinScale));
+		CHECK(triangle2->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
 		CHECK(triangle2->MakeScaleValid(Vec3(2, 6, -4)) == Vec3(4, 4, -4));
 
 		Ref<Shape> scaled = new ScaledShape(sphere, Vec3(1, 2, 1));
