@@ -19,7 +19,18 @@ Moving bodies have a [MotionProperties](@ref MotionProperties) object that conta
 
 ## Creating Bodies {#creating-bodies}
 
-Bodies are inserted into the [PhysicsSystem](@ref PhysicsSystem) and interacted with through the [BodyInterface](@ref BodyInterface). 
+Bodies are inserted into the [PhysicsSystem](@ref PhysicsSystem) and interacted with through the [BodyInterface](@ref BodyInterface).
+
+The general life cycle of a body is:
+
+- BodyInterface::CreateBody - Construct a Body object and initialize it. You cannot use `new` to create a Body.
+- BodyInterface::AddBody - Add the body to the PhysicsSystem and make it participate in the simulation.
+- BodyInterface::RemoveBody - Remove it from the PhysicsSystem.
+- BodyInterface::DestroyBody - Deinitialize and destruct the Body. You cannot use `delete` to delete a Body. This function will not automatically remove the Body from the PhysicsSystem.
+
+The BodyInterface also contains functionality to add many bodies to the simulation at the same time. It is important to use these functions when inserting many Bodies, you get a performance penalty if you don't.
+
+You can call AddBody, RemoveBody, AddBody, RemoveBody to temporarily remove and later reinsert a body into the simulation.
 
 ## Multithreaded Access 
 
