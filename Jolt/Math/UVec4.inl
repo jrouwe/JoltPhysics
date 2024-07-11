@@ -369,7 +369,7 @@ int UVec4::CountTrues() const
 #if defined(JPH_USE_SSE)
 	return CountBits(_mm_movemask_ps(_mm_castsi128_ps(mValue)));
 #elif defined(JPH_USE_NEON)
-    return vaddvq_u32(vshrq_n_u32(mValue, 31));
+	return vaddvq_u32(vshrq_n_u32(mValue, 31));
 #else
 	return (mU32[0] >> 31) + (mU32[1] >> 31) + (mU32[2] >> 31) + (mU32[3] >> 31);
 #endif
@@ -380,8 +380,8 @@ int UVec4::GetTrues() const
 #if defined(JPH_USE_SSE)
 	return _mm_movemask_ps(_mm_castsi128_ps(mValue));
 #elif defined(JPH_USE_NEON)
-    int32x4_t shift = JPH_NEON_INT32x4(0, 1, 2, 3);
-    return vaddvq_u32(vshlq_u32(vshrq_n_u32(mValue, 31), shift));
+	int32x4_t shift = JPH_NEON_INT32x4(0, 1, 2, 3);
+	return vaddvq_u32(vshlq_u32(vshrq_n_u32(mValue, 31), shift));
 #else
 	return (mU32[0] >> 31) | ((mU32[1] >> 31) << 1) | ((mU32[2] >> 31) << 2) | ((mU32[3] >> 31) << 3);
 #endif

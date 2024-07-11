@@ -619,8 +619,8 @@ Vec4 Vec4::DotV(Vec4Arg inV2) const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_dp_ps(mValue, inV2.mValue, 0xff);
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
-    return vdupq_n_f32(vaddvq_f32(mul));
+	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
+	return vdupq_n_f32(vaddvq_f32(mul));
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
 	return Vec4::sReplicate((mF32[0] * inV2.mF32[0] + mF32[1] * inV2.mF32[1]) + (mF32[2] * inV2.mF32[2] + mF32[3] * inV2.mF32[3]));
@@ -632,8 +632,8 @@ float Vec4::Dot(Vec4Arg inV2) const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_cvtss_f32(_mm_dp_ps(mValue, inV2.mValue, 0xff));
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
-    return vaddvq_f32(mul);
+	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
+	return vaddvq_f32(mul);
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
 	return (mF32[0] * inV2.mF32[0] + mF32[1] * inV2.mF32[1]) + (mF32[2] * inV2.mF32[2] + mF32[3] * inV2.mF32[3]);
@@ -645,8 +645,8 @@ float Vec4::LengthSq() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_cvtss_f32(_mm_dp_ps(mValue, mValue, 0xff));
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, mValue);
-    return vaddvq_f32(mul);
+	float32x4_t mul = vmulq_f32(mValue, mValue);
+	return vaddvq_f32(mul);
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
 	return (mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]);
@@ -658,9 +658,9 @@ float Vec4::Length() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(mValue, mValue, 0xff)));
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, mValue);
-    float32x2_t sum = vdup_n_f32(vaddvq_f32(mul));
-    return vget_lane_f32(vsqrt_f32(sum), 0);
+	float32x4_t mul = vmulq_f32(mValue, mValue);
+	float32x2_t sum = vdup_n_f32(vaddvq_f32(mul));
+	return vget_lane_f32(vsqrt_f32(sum), 0);
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
 	return sqrt((mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]));
@@ -704,9 +704,9 @@ Vec4 Vec4::Normalized() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_div_ps(mValue, _mm_sqrt_ps(_mm_dp_ps(mValue, mValue, 0xff)));
 #elif defined(JPH_USE_NEON)
-    float32x4_t mul = vmulq_f32(mValue, mValue);
-    float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
-    return vdivq_f32(mValue, vsqrtq_f32(sum));
+	float32x4_t mul = vmulq_f32(mValue, mValue);
+	float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
+	return vdivq_f32(mValue, vsqrtq_f32(sum));
 #else
 	return *this / Length();
 #endif
@@ -717,7 +717,7 @@ void Vec4::StoreFloat4(Float4 *outV) const
 #if defined(JPH_USE_SSE)
 	_mm_storeu_ps(&outV->x, mValue);
 #elif defined(JPH_USE_NEON)
-    vst1q_f32(&outV->x, mValue);
+	vst1q_f32(&outV->x, mValue);
 #else
 	for (int i = 0; i < 4; ++i)
 		(&outV->x)[i] = mF32[i];
@@ -751,8 +751,8 @@ int Vec4::GetSignBits() const
 #if defined(JPH_USE_SSE)
 	return _mm_movemask_ps(mValue);
 #elif defined(JPH_USE_NEON)
-    int32x4_t shift = JPH_NEON_INT32x4(0, 1, 2, 3);
-    return vaddvq_u32(vshlq_u32(vshrq_n_u32(vreinterpretq_u32_f32(mValue), 31), shift));
+	int32x4_t shift = JPH_NEON_INT32x4(0, 1, 2, 3);
+	return vaddvq_u32(vshlq_u32(vshrq_n_u32(vreinterpretq_u32_f32(mValue), 31), shift));
 #else
 	return (signbit(mF32[0])? 1 : 0) | (signbit(mF32[1])? 2 : 0) | (signbit(mF32[2])? 4 : 0) | (signbit(mF32[3])? 8 : 0);
 #endif

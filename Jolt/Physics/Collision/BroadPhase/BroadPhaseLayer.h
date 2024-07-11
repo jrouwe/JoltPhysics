@@ -19,7 +19,7 @@ class BroadPhaseLayer
 public:
 	using Type = uint8;
 
-	JPH_INLINE 						BroadPhaseLayer() = default;
+	JPH_INLINE						BroadPhaseLayer() = default;
 	JPH_INLINE explicit constexpr	BroadPhaseLayer(Type inValue) : mValue(inValue) { }
 	JPH_INLINE constexpr			BroadPhaseLayer(const BroadPhaseLayer &) = default;
 	JPH_INLINE BroadPhaseLayer &	operator = (const BroadPhaseLayer &) = default;

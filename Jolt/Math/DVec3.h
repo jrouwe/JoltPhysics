@@ -73,7 +73,7 @@ public:
 	/// Prepare to convert to float vector 3 rounding towards zero (returns DVec3 that can be converted to a Vec3 to get the rounding)
 	JPH_INLINE DVec3			PrepareRoundToZero() const;
 
-	/// Prepare to convert to float vector 3 rounding towards positive/negative inf  (returns DVec3 that can be converted to a Vec3 to get the rounding)
+	/// Prepare to convert to float vector 3 rounding towards positive/negative inf (returns DVec3 that can be converted to a Vec3 to get the rounding)
 	JPH_INLINE DVec3			PrepareRoundToInf() const;
 
 	/// Convert to float vector 3 rounding down

@@ -44,11 +44,11 @@ Font::Create(const char *inFontName, int inCharHeight)
 	font_desc.lfPitchAndFamily	= VARIABLE_PITCH;
 	strcpy_s(font_desc.lfFaceName, mFontName.c_str());
 	HFONT font = CreateFontIndirectA(&font_desc);
-    if (font == nullptr)
+	if (font == nullptr)
 		return false;
 
 	// Create a DC for the font
-    HDC dc = CreateCompatibleDC(nullptr);
+	HDC dc = CreateCompatibleDC(nullptr);
 	if (dc == nullptr)
 	{
 		DeleteObject(font);
@@ -57,7 +57,7 @@ Font::Create(const char *inFontName, int inCharHeight)
 
 	// Select the font
 	SelectObject(dc, font);
-    SetMapMode(dc, MM_TEXT);
+	SetMapMode(dc, MM_TEXT);
 
 	// Get text metrics
 	TEXTMETRICA textmetric;
@@ -192,8 +192,8 @@ Font::Create(const char *inFontName, int inCharHeight)
 	surface->UnLock();
 
 	// Release GDI objects
-    DeleteObject(font);
-    DeleteDC(dc);
+	DeleteObject(font);
+	DeleteDC(dc);
 
 	// Create input layout
 	const D3D12_INPUT_ELEMENT_DESC vertex_desc[] =

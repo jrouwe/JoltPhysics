@@ -517,7 +517,7 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	vs = mVertexShaderConstantBufferOrtho[mFrameIndex]->Map<VertexShaderConstantBuffer>();
 
 	// Camera ortho projection and view
-    vs->mProjection = Mat44(Vec4(2.0f / mWindowWidth, 0.0f, 0.0f, 0.0f), Vec4(0.0f, -2.0f / mWindowHeight, 0.0f, 0.0f), Vec4(0.0f, 0.0f, -1.0f, 0.0f), Vec4(-1.0f, 1.0f, 0.0f, 1.0f));
+	vs->mProjection = Mat44(Vec4(2.0f / mWindowWidth, 0.0f, 0.0f, 0.0f), Vec4(0.0f, -2.0f / mWindowHeight, 0.0f, 0.0f), Vec4(0.0f, 0.0f, -1.0f, 0.0f), Vec4(-1.0f, 1.0f, 0.0f, 1.0f));
 	vs->mView = Mat44::sIdentity();
 
 	// Light projection and view are unused in ortho mode

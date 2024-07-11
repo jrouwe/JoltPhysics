@@ -131,9 +131,9 @@ public:
 	}
 
 private:
-	int 					mNumPilesPerAxis;
-	int 					mPileSize;
-	float 					mVerticalSeparation;
+	int						mNumPilesPerAxis;
+	int						mPileSize;
+	float					mVerticalSeparation;
 	Ref<RagdollSettings>	mRagdollSettings;
 	Ref<SkeletalAnimation>	mAnimation;
 	SkeletonPose			mPose;

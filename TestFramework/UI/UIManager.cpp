@@ -83,8 +83,8 @@ void UIManager::Update(float inDeltaTime)
 	case STATE_ACTIVE:
 	case STATE_DEACTIVE:
 	case STATE_INVALID:
-    default:
-        break;
+	default:
+		break;
 	}
 }
 
@@ -179,8 +179,8 @@ void UIManager::SwitchToState(EState inState)
 	case STATE_ACTIVE:
 	case STATE_DEACTIVE:
 	case STATE_INVALID:
-    default:
-        break;
+	default:
+		break;
 	}
 
 	// Store new state
@@ -214,8 +214,8 @@ void UIManager::SwitchToState(EState inState)
 
 	case STATE_ACTIVE:
 	case STATE_INVALID:
-    default:
-        break;
+	default:
+		break;
 	}
 }
 

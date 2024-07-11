@@ -86,12 +86,12 @@
 #elif defined(__FreeBSD__)
 	#define JPH_PLATFORM_FREEBSD
 #elif defined(__APPLE__)
-    #include <TargetConditionals.h>
-    #if defined(TARGET_OS_IPHONE) && !TARGET_OS_IPHONE
-        #define JPH_PLATFORM_MACOS
-    #else
-        #define JPH_PLATFORM_IOS
-    #endif
+	#include <TargetConditionals.h>
+	#if defined(TARGET_OS_IPHONE) && !TARGET_OS_IPHONE
+		#define JPH_PLATFORM_MACOS
+	#else
+		#define JPH_PLATFORM_IOS
+	#endif
 #elif defined(__EMSCRIPTEN__)
 	#define JPH_PLATFORM_WASM
 #endif

@@ -106,7 +106,7 @@ bool Mouse::Initialize(Renderer *inRenderer)
 	dipdw.diph.dwObj = 0;
 	dipdw.diph.dwHow = DIPH_DEVICE;
 	dipdw.dwData = BUFFERSIZE;
-    if (FAILED(mMouse->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph)))
+	if (FAILED(mMouse->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph)))
 	{
 		Trace("Unable to set mouse buffer size");
 		return false;
@@ -198,8 +198,8 @@ void Mouse::Poll()
 	}
 
 	// Check for double clicks
-    for (DWORD d = 0; d < mDODLength; d++)
-    {
+	for (DWORD d = 0; d < mDODLength; d++)
+	{
 		// Check if this means left button is pressed
 		if (mDOD[d].dwOfs == DIMOFS_BUTTON0)
 		{

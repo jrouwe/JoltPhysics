@@ -296,7 +296,7 @@ endif()
 source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 
 # Create Samples executable
-add_executable(Samples  ${SAMPLES_SRC_FILES})
+add_executable(Samples ${SAMPLES_SRC_FILES})
 target_include_directories(Samples PUBLIC ${SAMPLES_ROOT})
 target_link_libraries(Samples LINK_PUBLIC TestFramework d3d12.lib shcore.lib)
 

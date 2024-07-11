@@ -145,28 +145,28 @@ private:
 	Frustum							mCameraFrustum;
 	Frustum							mLightFrustum;
 
-    // DirectX interfaces
-    ComPtr<IDXGIFactory4>			mDXGIFactory;
-    ComPtr<ID3D12Device>			mDevice;
+	// DirectX interfaces
+	ComPtr<IDXGIFactory4>			mDXGIFactory;
+	ComPtr<ID3D12Device>			mDevice;
 	DescriptorHeap					mRTVHeap;							///< Render target view heap
 	DescriptorHeap					mDSVHeap;							///< Depth stencil view heap
 	DescriptorHeap					mSRVHeap;							///< Shader resource view heap
-    ComPtr<IDXGISwapChain3>			mSwapChain;
-    ComPtr<ID3D12Resource>			mRenderTargets[cFrameCount];		///< Two render targets (we're double buffering in order for the CPU to continue while the GPU is rendering)
+	ComPtr<IDXGISwapChain3>			mSwapChain;
+	ComPtr<ID3D12Resource>			mRenderTargets[cFrameCount];		///< Two render targets (we're double buffering in order for the CPU to continue while the GPU is rendering)
 	D3D12_CPU_DESCRIPTOR_HANDLE		mRenderTargetViews[cFrameCount];	///< The two render views corresponding to the render targets
 	ComPtr<ID3D12Resource>			mDepthStencilBuffer;				///< The main depth buffer
 	D3D12_CPU_DESCRIPTOR_HANDLE		mDepthStencilView { 0 };			///< A view for binding the depth buffer
-    ComPtr<ID3D12CommandAllocator>	mCommandAllocators[cFrameCount];	///< Two command allocator lists (one per frame)
-    ComPtr<ID3D12CommandQueue>		mCommandQueue;						///< The command queue that will execute commands (there's only 1 since we want to finish rendering 1 frame before moving onto the next)
-    ComPtr<ID3D12GraphicsCommandList> mCommandList;						///< The command list
-    ComPtr<ID3D12RootSignature>		mRootSignature;						///< The root signature, we have a simple application so we only need 1, which is suitable for all our shaders
+	ComPtr<ID3D12CommandAllocator>	mCommandAllocators[cFrameCount];	///< Two command allocator lists (one per frame)
+	ComPtr<ID3D12CommandQueue>		mCommandQueue;						///< The command queue that will execute commands (there's only 1 since we want to finish rendering 1 frame before moving onto the next)
+	ComPtr<ID3D12GraphicsCommandList> mCommandList;						///< The command list
+	ComPtr<ID3D12RootSignature>		mRootSignature;						///< The root signature, we have a simple application so we only need 1, which is suitable for all our shaders
 	Ref<Texture>					mRenderTargetTexture;				///< When rendering to a texture, this is the active texture
 	CommandQueue					mUploadQueue;						///< Queue used to upload resources to GPU memory
 
 	// Synchronization objects used to finish rendering and swapping before reusing a command queue
-    uint							mFrameIndex;						///< Current frame index (0 or 1)
-    HANDLE							mFenceEvent;						///< Fence event to wait for the previous frame rendering to complete (in order to free 1 of the buffers)
-    ComPtr<ID3D12Fence>				mFence;								///< Fence object, used to signal the end of a frame
+	uint							mFrameIndex;						///< Current frame index (0 or 1)
+	HANDLE							mFenceEvent;						///< Fence event to wait for the previous frame rendering to complete (in order to free 1 of the buffers)
+	ComPtr<ID3D12Fence>				mFence;								///< Fence object, used to signal the end of a frame
 	UINT64							mFenceValues[cFrameCount] = {};		///< Values that were used to signal completion of one of the two frames
 
 	using ResourceCache = UnorderedMap<uint64, Array<ComPtr<ID3D12Resource>>>;
