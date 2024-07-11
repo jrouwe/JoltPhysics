@@ -45,7 +45,7 @@ public:
 									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(EShapeSubType::Scaled, inShape), mScale(inScale) { }
 
 	/// Get the scale
-	Vec3		 					GetScale() const										{ return mScale; }
+	Vec3							GetScale() const										{ return mScale; }
 
 	// See Shape::GetCenterOfMass
 	virtual Vec3					GetCenterOfMass() const override						{ return mScale * mInnerShape->GetCenterOfMass(); }

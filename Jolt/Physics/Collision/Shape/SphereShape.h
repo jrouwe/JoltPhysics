@@ -116,8 +116,8 @@ private:
 	inline float			GetScaledRadius(Vec3Arg inScale) const;
 
 	// Classes for GetSupportFunction
-	class 					SphereNoConvex;
-	class 					SphereWithConvex;
+	class					SphereNoConvex;
+	class					SphereWithConvex;
 
 	float					mRadius = 0.0f;
 };

@@ -105,7 +105,7 @@ void ShapeFilterTest::PostPhysicsUpdate(float inDeltaTime)
 		cast_point = cast_origin + cast_motion * cast_shape_collector.mHit.mFraction;
 		color = Color::sGreen;
 	}
-    else
+	else
 	{
 		cast_point = cast_origin + cast_motion;
 		color = Color::sRed;

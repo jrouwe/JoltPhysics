@@ -81,7 +81,7 @@ public:
 	JPH_INLINE Vec3				GetXYZ() const													{ return Vec3(mValue); }
 
 	/// Get the quaternion as a Vec4
-	JPH_INLINE Vec4 			GetXYZW() const													{ return mValue; }
+	JPH_INLINE Vec4				GetXYZW() const													{ return mValue; }
 
 	/// Set individual components
 	JPH_INLINE void				SetX(float inX)													{ mValue.SetX(inX); }

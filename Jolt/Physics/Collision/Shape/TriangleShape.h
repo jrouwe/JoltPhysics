@@ -126,7 +126,7 @@ private:
 	class					TSGetTrianglesContext;
 
 	// Classes for GetSupportFunction
-	class 					TriangleNoConvex;
+	class					TriangleNoConvex;
 	class					TriangleWithConvex;
 
 	Vec3					mV1;

@@ -170,7 +170,7 @@ public:
 	static inline ShapeFunctions &	sGet(EShapeSubType inSubType)										{ return sRegistry[int(inSubType)]; }
 
 private:
-	static ShapeFunctions 			sRegistry[NumSubShapeTypes];
+	static ShapeFunctions			sRegistry[NumSubShapeTypes];
 };
 
 /// Base class for all shapes (collision volume of a body). Defines a virtual interface for collision detection.
