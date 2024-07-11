@@ -391,11 +391,15 @@ bool CompoundShape::IsValidScale(Vec3Arg inScale) const
 Vec3 CompoundShape::MakeScaleValid(Vec3Arg inScale) const
 {
 	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
-
-	if (CompoundShape::IsValidScale(inScale))
+	if (CompoundShape::IsValidScale(scale))
 		return scale;
 		
-	return scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs());
+	Vec3 abs_uniform_scale = ScaleHelpers::MakeUniformScale(scale.Abs());
+	Vec3 uniform_scale = scale.GetSign() * abs_uniform_scale;
+	if (CompoundShape::IsValidScale(uniform_scale))
+		return uniform_scale;
+
+	return Sign(scale.GetX()) * abs_uniform_scale;
 }
 
 void CompoundShape::sRegister()
