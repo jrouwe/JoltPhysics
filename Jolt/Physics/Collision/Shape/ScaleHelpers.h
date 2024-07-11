@@ -30,7 +30,7 @@ namespace ScaleHelpers
 	inline bool				IsInsideOut(Vec3Arg inScale)									{ return (CountBits(Vec3::sLess(inScale, Vec3::sZero()).GetTrues() & 0x7) & 1) != 0; }
 
 	/// Test if any of the components of the scale have a value below cMinScale
-	inline bool				IsZeroScale(Vec3Arg inScale)									{ return Vec3::sLess(inScale.Abs(), Vec3::sReplicate(cMinScale)).TestAnyTrue(); }
+	inline bool				IsZeroScale(Vec3Arg inScale)									{ return Vec3::sLess(inScale.Abs(), Vec3::sReplicate(cMinScale)).TestAnyXYZTrue(); }
 
 	/// Ensure that the scale for each component is at least cMinScale
 	inline Vec3				MakeNonZeroScale(Vec3Arg inScale)								{ return inScale.GetSign() * Vec3::sMax(inScale.Abs(), Vec3::sReplicate(cMinScale)); }
