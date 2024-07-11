@@ -322,13 +322,13 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 		Store active edges. The triangles are organized like this:
 			x --->
 
-		y	+		+
+		y   +       +
 			| \ T1B | \ T2B
-		|  e0	e2	|	\
-		|	| T1A \ | T2A \
-		V	+--e1---+-------+
+		|  e0   e2  |   \
+		|   | T1A \ | T2A \
+		V   +--e1---+-------+
 			| \ T3B | \ T4B
-			|	\	|	\
+			|   \   |   \
 			| T3A \ | T4A \
 			+-------+-------+
 		We store active edges e0 .. e2 as bits 0 .. 2.
@@ -993,13 +993,13 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 		// We need to fill in the following areas:
 		//
 		// +-----------------+
-		// |		2		 |
+		// |        2        |
 		// |---+---------+---|
-		// |   |		 |	 |
-		// | 3 |	1	 | 4 |
-		// |   |		 |	 |
+		// |   |         |   |
+		// | 3 |    1    | 4 |
+		// |   |         |   |
 		// |---+---------+---|
-		// |		5		 |
+		// |        5        |
 		// +-----------------+
 		//
 		// 1. The area that is affected by the new heights (we just copy these)
