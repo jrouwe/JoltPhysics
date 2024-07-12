@@ -619,6 +619,8 @@ else()
 		# XCode builds for multiple architectures, we can't set global flags
 	elseif (CROSS_COMPILE_ARM OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
 		# ARM64 uses no special commandline flags
+	elseif (EMSCRIPTEN)
+		# Emscripten uses no special flags, if you want to turn on SIMD you should use -msimd128 -msse4.2
 	elseif ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i386")
 		# x86 and x86_64
 		# On 32-bit builds we need to default to using SSE instructions, the x87 FPU instructions have higher intermediate precision
