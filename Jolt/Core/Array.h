@@ -73,7 +73,7 @@ private:
 	}
 
 	/// Reallocate the data block to inNewCapacity
-	inline void				reallocate(size_type inNewCapacity)
+	inline void				reallocate(size_type inOldCapacity, size_type inNewCapacity)
 	{
 		JPH_ASSERT(inNewCapacity > 0 && inNewCapacity >= mSize);
 
@@ -111,7 +111,7 @@ public:
 	inline void				reserve(size_type inNewSize)
 	{
 		if (mCapacity < inNewSize)
-			reallocate(inNewSize);
+			reallocate(mCapacity, inNewSize);
 	}
 
 	/// Resize array to new length
@@ -334,7 +334,7 @@ public:
 			if (mSize == 0)
 				free();
 			else if (mCapacity > mSize)
-				reallocate(mSize);
+				reallocate(mCapacity, mSize);
 		}
 	}
 

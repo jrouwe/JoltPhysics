@@ -25,7 +25,7 @@ JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(Allocate)(size_t inSize)
 	return malloc(inSize);
 }
 
-JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(Reallocate)(void *inBlock, size_t inSize)
+JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(Reallocate)(void *inBlock, size_t inOldSize, size_t inSize)
 {
 	JPH_ASSERT(inSize > 0);
 	return realloc(inBlock, inSize);

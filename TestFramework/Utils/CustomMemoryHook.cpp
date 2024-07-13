@@ -63,11 +63,11 @@ static void *AllocateHook(size_t inSize)
 	return TagAllocation(malloc(inSize + 16), 16, 'U');
 }
 
-static void *ReallocateHook(void *inBlock, size_t inSize)
+static void *ReallocateHook(void *inBlock, size_t inOldSize, size_t inNewSize)
 {
-	JPH_ASSERT(inSize > 0);
+	JPH_ASSERT(inNewSize > 0);
 	InCustomAllocator ica;
-	return TagAllocation(realloc(UntagAllocation(inBlock, 16, 'U'), inSize + 16), 16, 'U');
+	return TagAllocation(realloc(UntagAllocation(inBlock, 16, 'U'), inNewSize + 16), 16, 'U');
 }
 
 static void FreeHook(void *inBlock)
