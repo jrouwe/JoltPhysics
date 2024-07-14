@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v5.0.0 and latest
 
+* 20240714 - The Reallocate function now takes an additional parameter 'old size' (6a7251d095f4c7e7c1c351d00829a20fa770246e)
 * 20240517 - *SBS* - Combined a number of allocations into 1 for HeightFieldShape. This changes the binary serialization format for this class. (bd32df12bb8ab77b37eeedc226f368268c32ae17)
 * 20240514 - Added macro JPH_OBJECT_STREAM that controls if ObjectStream is compiled or not. By default this is turned on, so you should not see a change, but if you compile without cmake you may need to define JPH_OBJECT_STREAM. (dc3ea787223d45855987e32b8bef7f9a59f6fcd2)
 * 20240504 - Replaced std::vector with a custom Array class. It can be turned off by enabling the JPH_USE_STD_VECTOR define (or the USE_STD_VECTOR cmake option). (bdc1695a643457db86b72119b1393ae69b9a182e)
