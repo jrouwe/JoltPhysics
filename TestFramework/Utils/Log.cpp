@@ -28,6 +28,7 @@ void FatalError [[noreturn]] (const char *inFMT, ...)
 	va_start(list, inFMT);
 	char buffer[1024];
 	vsnprintf(buffer, sizeof(buffer), inFMT, list);
+	va_end(list);
 
 	Trace("Fatal Error: %s", buffer);
 
