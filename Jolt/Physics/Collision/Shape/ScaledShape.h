@@ -42,7 +42,7 @@ public:
 									ScaledShape(const ScaledShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Constructor that decorates another shape with a scale
-									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(EShapeSubType::Scaled, inShape), mScale(inScale) { }
+									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(EShapeSubType::Scaled, inShape), mScale(inScale) { JPH_ASSERT(!mScale.IsNearZero()); }
 
 	/// Get the scale
 	Vec3							GetScale() const										{ return mScale; }
