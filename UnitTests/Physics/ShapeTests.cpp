@@ -202,6 +202,8 @@ TEST_SUITE("ShapeTests")
 		CHECK(!scaled->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!scaled->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!scaled->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(scaled->MakeScaleValid(Vec3(3, 3, 3)) == Vec3(4, 2, 4));
+		CHECK(scaled->MakeScaleValid(Vec3(4, 2, 4)) == Vec3(4, 2, 4));
 
 		Ref<Shape> scaled2 = new ScaledShape(scaled, Vec3(1, 0.5f, 1));
 		CHECK(!scaled2->IsValidScale(Vec3::sZero()));
@@ -210,6 +212,8 @@ TEST_SUITE("ShapeTests")
 		CHECK(!scaled2->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!scaled2->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!scaled2->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(scaled2->MakeScaleValid(Vec3(3, 3, 3)) == Vec3(3, 3, 3));
+		CHECK(scaled2->MakeScaleValid(Vec3(5, 2, 5)) == Vec3(4, 4, 4));
 
 		// Test a compound with shapes that can only be scaled uniformly
 		StaticCompoundShapeSettings compound_settings;
