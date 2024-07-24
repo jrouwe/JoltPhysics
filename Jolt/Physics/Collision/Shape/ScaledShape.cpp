@@ -37,6 +37,12 @@ ScaledShape::ScaledShape(const ScaledShapeSettings &inSettings, ShapeResult &out
 	if (outResult.HasError())
 		return;
 
+	if (ScaleHelpers::IsZeroScale(inSettings.mScale))
+	{
+		outResult.SetError("Can't use zero scale!");
+		return;
+	}
+
 	outResult.Set(this);
 }
 
@@ -178,9 +184,7 @@ bool ScaledShape::IsValidScale(Vec3Arg inScale) const
 
 Vec3 ScaledShape::MakeScaleValid(Vec3Arg inScale) const
 {
-	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
-
-	return mInnerShape->MakeScaleValid(mScale * scale) / scale;
+	return mInnerShape->MakeScaleValid(mScale * inScale) / mScale;
 }
 
 void ScaledShape::sCollideScaledVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
