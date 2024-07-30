@@ -692,10 +692,10 @@ Vec4 Vec4::GetSign() const
 	Type one = vdupq_n_f32(1.0f);
 	return vorrq_s32(vandq_s32(mValue, minus_one), one);
 #else
-	return Vec4(signbit(mF32[0])? -1.0f : 1.0f,
-				signbit(mF32[1])? -1.0f : 1.0f,
-				signbit(mF32[2])? -1.0f : 1.0f,
-				signbit(mF32[3])? -1.0f : 1.0f);
+	return Vec4(std::signbit(mF32[0])? -1.0f : 1.0f,
+				std::signbit(mF32[1])? -1.0f : 1.0f,
+				std::signbit(mF32[2])? -1.0f : 1.0f,
+				std::signbit(mF32[3])? -1.0f : 1.0f);
 #endif
 }
 
@@ -754,7 +754,7 @@ int Vec4::GetSignBits() const
 	int32x4_t shift = JPH_NEON_INT32x4(0, 1, 2, 3);
 	return vaddvq_u32(vshlq_u32(vshrq_n_u32(vreinterpretq_u32_f32(mValue), 31), shift));
 #else
-	return (signbit(mF32[0])? 1 : 0) | (signbit(mF32[1])? 2 : 0) | (signbit(mF32[2])? 4 : 0) | (signbit(mF32[3])? 8 : 0);
+	return (std::signbit(mF32[0])? 1 : 0) | (std::signbit(mF32[1])? 2 : 0) | (std::signbit(mF32[2])? 4 : 0) | (std::signbit(mF32[3])? 8 : 0);
 #endif
 }
 

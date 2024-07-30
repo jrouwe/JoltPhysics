@@ -844,9 +844,9 @@ Vec3 Vec3::GetSign() const
 	Type one = vdupq_n_f32(1.0f);
 	return vorrq_s32(vandq_s32(mValue, minus_one), one);
 #else
-	return Vec3(signbit(mF32[0])? -1.0f : 1.0f,
-				signbit(mF32[1])? -1.0f : 1.0f,
-				signbit(mF32[2])? -1.0f : 1.0f);
+	return Vec3(std::signbit(mF32[0])? -1.0f : 1.0f,
+				std::signbit(mF32[1])? -1.0f : 1.0f,
+				std::signbit(mF32[2])? -1.0f : 1.0f);
 #endif
 }
 
