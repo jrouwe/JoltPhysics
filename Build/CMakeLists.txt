@@ -83,6 +83,9 @@ option(USE_STD_VECTOR "Use std::vector instead of own Array class" OFF)
 # Setting this option will compile the ObjectStream class and RTTI attribute information
 option(ENABLE_OBJECT_STREAM "Compile the ObjectStream class and RTTI attribute information" ON)
 
+# Enable installation
+option(ENABLE_INSTALL "Generate installation target"  ON)
+
 include(CMakeDependentOption)
 
 # Ability to toggle between the static and DLL versions of the MSVC runtime library
@@ -247,25 +250,27 @@ if (XCODE)
 endif()
 
 # Install Jolt library and includes
-install(TARGETS Jolt
-	EXPORT JoltExport
-	DESTINATION lib)
-foreach(SRC_FILE ${JOLT_PHYSICS_SRC_FILES})
-	string(REPLACE ${PHYSICS_REPO_ROOT} "" RELATIVE_SRC_FILE ${SRC_FILE})
-	get_filename_component(DESTINATION_PATH ${RELATIVE_SRC_FILE} DIRECTORY)
-	if (NOT RELATIVE_SRC_FILE MATCHES "\.cpp")
-		install(FILES ${SRC_FILE} DESTINATION include/${DESTINATION_PATH})
-	endif()
-endforeach()
+if (ENABLE_INSTALL)
+	install(TARGETS Jolt
+		EXPORT JoltExport
+		DESTINATION lib)
+	foreach(SRC_FILE ${JOLT_PHYSICS_SRC_FILES})
+		string(REPLACE ${PHYSICS_REPO_ROOT} "" RELATIVE_SRC_FILE ${SRC_FILE})
+		get_filename_component(DESTINATION_PATH ${RELATIVE_SRC_FILE} DIRECTORY)
+		if (NOT RELATIVE_SRC_FILE MATCHES "\.cpp")
+			install(FILES ${SRC_FILE} DESTINATION include/${DESTINATION_PATH})
+		endif()
+	endforeach()
 
-# Export Jolt library
-export(TARGETS Jolt
-	NAMESPACE Jolt::
-	FILE JoltConfig.cmake)
-install(EXPORT JoltExport
-	DESTINATION lib/cmake/Jolt/
-	NAMESPACE Jolt::
-	FILE JoltConfig.cmake)
+	# Export Jolt library
+	export(TARGETS Jolt
+		NAMESPACE Jolt::
+		FILE JoltConfig.cmake)
+	install(EXPORT JoltExport
+		DESTINATION lib/cmake/Jolt/
+		NAMESPACE Jolt::
+		FILE JoltConfig.cmake)
+endif()
 
 # Check if we're the root CMakeLists.txt, if not we are included by another CMake file and we should disable everything except for the main library
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
