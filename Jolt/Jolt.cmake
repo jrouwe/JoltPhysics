@@ -651,7 +651,7 @@ else()
 			target_compile_options(Jolt PUBLIC -mfma)
 		endif()
 
-		if (NOT MSVC)
+		if (NOT MSVC AND NOT EMSCRIPTEN)
 			target_compile_options(Jolt PUBLIC -mfpmath=sse)
 		endif()
 
