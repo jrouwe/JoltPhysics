@@ -253,8 +253,7 @@ endif()
 if (ENABLE_INSTALL)
 	install(TARGETS Jolt
 		EXPORT JoltExport
-		DESTINATION lib
-	)
+		DESTINATION lib)
 	foreach(SRC_FILE ${JOLT_PHYSICS_SRC_FILES})
 		string(REPLACE ${PHYSICS_REPO_ROOT} "" RELATIVE_SRC_FILE ${SRC_FILE})
 		get_filename_component(DESTINATION_PATH ${RELATIVE_SRC_FILE} DIRECTORY)
@@ -266,13 +265,11 @@ if (ENABLE_INSTALL)
 	# Export Jolt library
 	export(TARGETS Jolt
 		NAMESPACE Jolt::
-		FILE JoltConfig.cmake
-	)
+		FILE JoltConfig.cmake)
 	install(EXPORT JoltExport
 		DESTINATION lib/cmake/Jolt/
 		NAMESPACE Jolt::
-		FILE JoltConfig.cmake
-	)
+		FILE JoltConfig.cmake)
 endif()
 
 # Check if we're the root CMakeLists.txt, if not we are included by another CMake file and we should disable everything except for the main library
