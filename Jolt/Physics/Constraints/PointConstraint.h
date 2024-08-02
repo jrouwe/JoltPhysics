@@ -66,10 +66,10 @@ public:
 	/// Update the attachment point for body 2
 	void						SetPoint2(EConstraintSpace inSpace, RVec3Arg inPoint2);
 
-	/// Get the attachment point for body 1 relative to body 1 COM
+	/// Get the attachment point for body 1 relative to body 1 COM (transform by Body::GetCenterOfMassTransform to take to world space)
 	inline Vec3					GetLocalSpacePoint1() const									{ return mLocalSpacePosition1; }
 
-	/// Get the attachment point for body 2 relative to body 2 COM
+	/// Get the attachment point for body 2 relative to body 2 COM (transform by Body::GetCenterOfMassTransform to take to world space)
 	inline Vec3					GetLocalSpacePoint2() const									{ return mLocalSpacePosition2; }
 
 	// See: TwoBodyConstraint
