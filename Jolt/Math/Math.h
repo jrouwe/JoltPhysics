@@ -115,11 +115,7 @@ inline uint CountTrailingZeros(uint32 inValue)
 		unsigned long result;
 		_BitScanForward(&result, inValue);
 		return result;
-	#elif defined(JPH_COMPILER_CLANG)
-		// Using __builtin_ctz creates a loop on ARM containing a rbit and clz instruction, the following only creates a single rbit and clz instruction
-		return __builtin_clz(__builtin_bitreverse32(inValue));
 	#else
-		// GCC doesn't have __builtin_bitreverse32 so we fall back to __builtin_ctz
 		if (inValue == 0)
 			return 32;
 		return __builtin_ctz(inValue);
