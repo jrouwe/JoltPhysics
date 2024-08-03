@@ -731,7 +731,7 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	mul = vsetq_lane_f32(0, mul, 3);
 	float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
 	float32x4_t len = vsqrtq_f32(sum);
-	float32x4_t is_zero = vceqq_f32(len, vdupq_n_f32(0));
+	uint32x4_t is_zero = vceqq_f32(len, vdupq_n_f32(0));
 	return vbslq_f32(is_zero, inZeroValue.mValue, vdivq_f32(mValue, len));
 #else
 	float len_sq = LengthSq();
