@@ -44,7 +44,7 @@ DVec3::DVec3(double inX, double inY, double inZ)
 	mValue.mLow = _mm_set_pd(inY, inX);
 	mValue.mHigh = _mm_set1_pd(inZ);
 #elif defined(JPH_USE_NEON)
-	mValue.val[0] = vcombine_f64(vcreate_f64(*reinterpret_cast<uint64 *>(&inX)), vcreate_f64(*reinterpret_cast<uint64 *>(&inY)));
+	mValue.val[0] = vcombine_f64(vcreate_f64(BitCast<uint64>(inX)), vcreate_f64(BitCast<uint64>(inY)));
 	mValue.val[1] = vdupq_n_f64(inZ);
 #else
 	mF64[0] = inX;

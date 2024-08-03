@@ -75,8 +75,8 @@ Vec3::Vec3(float inX, float inY, float inZ)
 #if defined(JPH_USE_SSE)
 	mValue = _mm_set_ps(inZ, inZ, inY, inX);
 #elif defined(JPH_USE_NEON)
-	uint32x2_t xy = vcreate_u32(static_cast<uint64>(*reinterpret_cast<uint32 *>(&inX)) | (static_cast<uint64>(*reinterpret_cast<uint32 *>(&inY)) << 32));
-	uint32x2_t zz = vcreate_u32(static_cast<uint64>(*reinterpret_cast<uint32* >(&inZ)) | (static_cast<uint64>(*reinterpret_cast<uint32 *>(&inZ)) << 32));
+	uint32x2_t xy = vcreate_u32(static_cast<uint64>(BitCast<uint32>(inX)) | (static_cast<uint64>(BitCast<uint32>(inY)) << 32));
+	uint32x2_t zz = vreinterpret_u32_f32(vdup_n_f32(inZ));
 	mValue = vreinterpretq_f32_u32(vcombine_u32(xy, zz));
 #else
 	mF32[0] = inX;
