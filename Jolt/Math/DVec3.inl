@@ -851,8 +851,8 @@ DVec3 DVec3::PrepareRoundToZero() const
 	__m128d mask = _mm_castsi128_pd(_mm_set1_epi64x(int64_t(~cDoubleToFloatMantissaLoss)));
 	return DVec3({ _mm_and_pd(mValue.mLow, mask), _mm_and_pd(mValue.mHigh, mask) });
 #elif defined(JPH_USE_NEON)
-	float64x2_t mask = vreinterpretq_f64_u64(vdupq_n_u64(~cDoubleToFloatMantissaLoss));
-	return DVec3({ vandq_s64(mValue.val[0], mask), vandq_s64(mValue.val[1], mask) });
+	uint64x2_t mask = vdupq_n_u64(~cDoubleToFloatMantissaLoss);
+	return DVec3({ vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[0]), mask)), vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[1]), mask)) });
 #else
 	double x = BitCast<double>(BitCast<uint64>(mF64[0]) & ~cDoubleToFloatMantissaLoss);
 	double y = BitCast<double>(BitCast<uint64>(mF64[1]) & ~cDoubleToFloatMantissaLoss);
