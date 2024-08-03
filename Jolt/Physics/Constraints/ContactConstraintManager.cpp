@@ -408,7 +408,7 @@ void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream,
 	}
 
 	// Write body pairs
-	size_t num_body_pairs = selected_bp.size();
+	uint32 num_body_pairs = uint32(selected_bp.size());
 	inStream.Write(num_body_pairs);
 	for (const BPKeyValue *bp_kv : selected_bp)
 	{
@@ -424,7 +424,7 @@ void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream,
 		GetAllManifoldsSorted(bp, all_m);
 
 		// Write num manifolds
-		size_t num_manifolds = all_m.size();
+		uint32 num_manifolds = uint32(all_m.size());
 		inStream.Write(num_manifolds);
 
 		// Write all manifolds
@@ -464,7 +464,7 @@ void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream,
 	}
 
 	// Write all CCD manifold keys
-	size_t num_manifolds = selected_m.size();
+	uint32 num_manifolds = uint32(selected_m.size());
 	inStream.Write(num_manifolds);
 	for (const MKeyValue *m_kv : selected_m)
 		inStream.Write(m_kv->GetKey());
@@ -485,13 +485,13 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 		inReadCache.GetAllBodyPairsSorted(all_bp);
 
 	// Read amount of body pairs
-	size_t num_body_pairs;
+	uint32 num_body_pairs;
 	if (inStream.IsValidating())
-		num_body_pairs = all_bp.size();
+		num_body_pairs = uint32(all_bp.size());
 	inStream.Read(num_body_pairs);
 
 	// Read entire cache
-	for (size_t i = 0; i < num_body_pairs; ++i)
+	for (uint32 i = 0; i < num_body_pairs; ++i)
 	{
 		// Read key
 		BodyPair body_pair_key;
@@ -521,13 +521,13 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 			inReadCache.GetAllManifoldsSorted(all_bp[i]->GetValue(), all_m);
 
 		// Read amount of manifolds
-		size_t num_manifolds;
+		uint32 num_manifolds;
 		if (inStream.IsValidating())
-			num_manifolds = all_m.size();
+			num_manifolds = uint32(all_m.size());
 		inStream.Read(num_manifolds);
 
 		uint32 handle = ManifoldMap::cInvalidHandle;
-		for (size_t j = 0; j < num_manifolds; ++j)
+		for (uint32 j = 0; j < num_manifolds; ++j)
 		{
 			// Read key
 			SubShapeIDPair sub_shape_key;
@@ -573,12 +573,12 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 		inReadCache.GetAllCCDManifoldsSorted(all_m);
 
 	// Read amount of CCD manifolds
-	size_t num_manifolds;
+	uint32 num_manifolds;
 	if (inStream.IsValidating())
-		num_manifolds = all_m.size();
+		num_manifolds = uint32(all_m.size());
 	inStream.Read(num_manifolds);
 
-	for (size_t j = 0; j < num_manifolds; ++j)
+	for (uint32 j = 0; j < num_manifolds; ++j)
 	{
 		// Read key
 		SubShapeIDPair sub_shape_key;
