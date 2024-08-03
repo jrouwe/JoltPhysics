@@ -323,7 +323,7 @@ DVec3 DVec3::sSelect(DVec3Arg inV1, DVec3Arg inV2, DVec3Arg inControl)
 	Type v = { _mm_blendv_pd(inV1.mValue.mLow, inV2.mValue.mLow, inControl.mValue.mLow), _mm_blendv_pd(inV1.mValue.mHigh, inV2.mValue.mHigh, inControl.mValue.mHigh) };
 	return sFixW(v);
 #elif defined(JPH_USE_NEON)
-	Type v = { vbslq_f64(vshrq_n_s64(inControl.mValue.val[0], 63), inV2.mValue.val[0], inV1.mValue.val[0]), vbslq_f64(vshrq_n_s64(inControl.mValue.val[1], 63), inV2.mValue.val[1], inV1.mValue.val[1]) };
+	Type v = { vbslq_f64(vshrq_n_s64(vreinterpretq_s64_f64(inControl.mValue.val[0]), 63), inV2.mValue.val[0], inV1.mValue.val[0]), vbslq_f64(vshrq_n_s64(vreinterpretq_s64_f64(inControl.mValue.val[1]), 63), inV2.mValue.val[1], inV1.mValue.val[1]) };
 	return sFixW(v);
 #else
 	DVec3 result;
