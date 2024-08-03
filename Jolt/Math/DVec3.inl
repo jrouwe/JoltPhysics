@@ -232,7 +232,7 @@ DVec3 DVec3::sEquals(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_cmpeq_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmpeq_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vreinterpretq_u64_f64(vceqq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_u64_f64(vceqq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
+	return DVec3({ vreinterpretq_f64_u64(vceqq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vceqq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #else
 	return DVec3(inV1.mF64[0] == inV2.mF64[0]? cTrue : cFalse,
 				 inV1.mF64[1] == inV2.mF64[1]? cTrue : cFalse,
