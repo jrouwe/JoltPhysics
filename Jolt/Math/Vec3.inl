@@ -77,7 +77,7 @@ Vec3::Vec3(float inX, float inY, float inZ)
 #elif defined(JPH_USE_NEON)
 	uint32x2_t xy = vcreate_u32(static_cast<uint64>(*reinterpret_cast<uint32 *>(&inX)) | (static_cast<uint64>(*reinterpret_cast<uint32 *>(&inY)) << 32));
 	uint32x2_t zz = vcreate_u32(static_cast<uint64>(*reinterpret_cast<uint32* >(&inZ)) | (static_cast<uint64>(*reinterpret_cast<uint32 *>(&inZ)) << 32));
-	mValue = vcombine_f32(xy, zz);
+	mValue = vreinterpretq_f32_u32(vcombine_u32(xy, zz));
 #else
 	mF32[0] = inX;
 	mF32[1] = inY;
