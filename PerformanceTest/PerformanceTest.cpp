@@ -370,14 +370,14 @@ int main(int argc, char** argv)
 
 						// Write to file
 						string data = recorder.GetData();
-						size_t size = data.size();
+						uint32 size = uint32(data.size());
 						record_state_file.write((char *)&size, sizeof(size));
 						record_state_file.write(data.data(), size);
 					}
 					else if (validate_state)
 					{
 						// Read state
-						size_t size = 0;
+						uint32 size = 0;
 						validate_state_file.read((char *)&size, sizeof(size));
 						string data;
 						data.resize(size);

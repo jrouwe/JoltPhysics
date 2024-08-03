@@ -491,7 +491,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 	inStream.Read(num_body_pairs);
 
 	// Read entire cache
-	for (size_t i = 0; i < num_body_pairs; ++i)
+	for (uint32 i = 0; i < num_body_pairs; ++i)
 	{
 		// Read key
 		BodyPair body_pair_key;
@@ -527,7 +527,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 		inStream.Read(num_manifolds);
 
 		uint32 handle = ManifoldMap::cInvalidHandle;
-		for (size_t j = 0; j < num_manifolds; ++j)
+		for (uint32 j = 0; j < num_manifolds; ++j)
 		{
 			// Read key
 			SubShapeIDPair sub_shape_key;
@@ -578,7 +578,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 		num_manifolds = uint32(all_m.size());
 	inStream.Read(num_manifolds);
 
-	for (size_t j = 0; j < num_manifolds; ++j)
+	for (uint32 j = 0; j < num_manifolds; ++j)
 	{
 		// Read key
 		SubShapeIDPair sub_shape_key;
