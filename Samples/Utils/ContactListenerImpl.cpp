@@ -109,7 +109,8 @@ void ContactListenerImpl::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
 void ContactListenerImpl::SaveState(StateRecorder &inStream) const
 {
 	// Write length
-	inStream.Write(mState.size());
+	uint32 length = uint32(mState.size());
+	inStream.Write(length);
 
 	// Get and sort keys
 	Array<SubShapeIDPair> keys;
@@ -136,9 +137,9 @@ void ContactListenerImpl::RestoreState(StateRecorder &inStream)
 	Trace("Restore Contact State");
 
 	// Read length
-	StateMap::size_type length;
+	uint32 length;
 	if (inStream.IsValidating())
-		length = mState.size();
+		length = uint32(mState.size());
 	inStream.Read(length);
 
 	Array<SubShapeIDPair> keys;
