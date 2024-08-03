@@ -301,7 +301,7 @@ Vec3 Vec3::sXor(Vec3Arg inV1, Vec3Arg inV2)
 #if defined(JPH_USE_SSE)
 	return _mm_xor_ps(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
-	return vreinterpretq_f32_u32(veorq_s32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
+	return vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
 #else
 	return Vec3(UVec4::sXor(inV1.ReinterpretAsInt(), inV2.ReinterpretAsInt()).ReinterpretAsFloat());
 #endif
@@ -312,7 +312,7 @@ Vec3 Vec3::sAnd(Vec3Arg inV1, Vec3Arg inV2)
 #if defined(JPH_USE_SSE)
 	return _mm_and_ps(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
-	return vreinterpretq_f32_u32(vandq_s32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
+	return vreinterpretq_f32_u32(vandq_u32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
 #else
 	return Vec3(UVec4::sAnd(inV1.ReinterpretAsInt(), inV2.ReinterpretAsInt()).ReinterpretAsFloat());
 #endif
@@ -842,7 +842,7 @@ Vec3 Vec3::GetSign() const
 #elif defined(JPH_USE_NEON)
 	Type minus_one = vdupq_n_f32(-1.0f);
 	Type one = vdupq_n_f32(1.0f);
-	return vreinterpretq_f32_u32(vorrq_s32(vandq_s32(vreinterpretq_u32_f32(mValue), vreinterpretq_u32_f32(minus_one)), vreinterpretq_u32_f32(one)));
+	return vreinterpretq_f32_u32(vorrq_u32(vandq_u32(vreinterpretq_u32_f32(mValue), vreinterpretq_u32_f32(minus_one)), vreinterpretq_u32_f32(one)));
 #else
 	return Vec3(std::signbit(mF32[0])? -1.0f : 1.0f,
 				std::signbit(mF32[1])? -1.0f : 1.0f,

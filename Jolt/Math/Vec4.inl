@@ -32,9 +32,9 @@ Vec4::Vec4(float inX, float inY, float inZ, float inW)
 #if defined(JPH_USE_SSE)
 	mValue = _mm_set_ps(inW, inZ, inY, inX);
 #elif defined(JPH_USE_NEON)
-	uint32x2_t xy = vcreate_f32(static_cast<uint64>(*reinterpret_cast<uint32 *>(&inX)) | (static_cast<uint64>(*reinterpret_cast<uint32 *>(&inY)) << 32));
-	uint32x2_t zw = vcreate_f32(static_cast<uint64>(*reinterpret_cast<uint32* >(&inZ)) | (static_cast<uint64>(*reinterpret_cast<uint32 *>(&inW)) << 32));
-	mValue = vcombine_f32(xy, zw);
+	uint32x2_t xy = vcreate_u32(static_cast<uint64>(*reinterpret_cast<uint32 *>(&inX)) | (static_cast<uint64>(*reinterpret_cast<uint32 *>(&inY)) << 32));
+	uint32x2_t zw = vcreate_u32(static_cast<uint64>(*reinterpret_cast<uint32* >(&inZ)) | (static_cast<uint64>(*reinterpret_cast<uint32 *>(&inW)) << 32));
+	mValue = vreinterpretq_f32_u32(vcombine_u32(xy, zw));
 #else
 	mF32[0] = inX;
 	mF32[1] = inY;
@@ -270,7 +270,7 @@ Vec4 Vec4::sOr(Vec4Arg inV1, Vec4Arg inV2)
 #if defined(JPH_USE_SSE)
 	return _mm_or_ps(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
-	return vorrq_s32(inV1.mValue, inV2.mValue);
+	return vreinterpretq_f32_u32(vorrq_u32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
 #else
 	return UVec4::sOr(inV1.ReinterpretAsInt(), inV2.ReinterpretAsInt()).ReinterpretAsFloat();
 #endif
@@ -281,7 +281,7 @@ Vec4 Vec4::sXor(Vec4Arg inV1, Vec4Arg inV2)
 #if defined(JPH_USE_SSE)
 	return _mm_xor_ps(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
-	return veorq_s32(inV1.mValue, inV2.mValue);
+	return vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
 #else
 	return UVec4::sXor(inV1.ReinterpretAsInt(), inV2.ReinterpretAsInt()).ReinterpretAsFloat();
 #endif
@@ -292,7 +292,7 @@ Vec4 Vec4::sAnd(Vec4Arg inV1, Vec4Arg inV2)
 #if defined(JPH_USE_SSE)
 	return _mm_and_ps(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
-	return vandq_s32(inV1.mValue, inV2.mValue);
+	return vreinterpretq_f32_u32(vandq_u32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
 #else
 	return UVec4::sAnd(inV1.ReinterpretAsInt(), inV2.ReinterpretAsInt()).ReinterpretAsFloat();
 #endif
@@ -690,7 +690,7 @@ Vec4 Vec4::GetSign() const
 #elif defined(JPH_USE_NEON)
 	Type minus_one = vdupq_n_f32(-1.0f);
 	Type one = vdupq_n_f32(1.0f);
-	return vorrq_s32(vandq_s32(mValue, minus_one), one);
+	return vreinterpretq_f32_u32(vorrq_u32(vandq_u32(vreinterpretq_u32_f32(mValue), vreinterpretq_u32_f32(minus_one)), vreinterpretq_u32_f32(one)));
 #else
 	return Vec4(std::signbit(mF32[0])? -1.0f : 1.0f,
 				std::signbit(mF32[1])? -1.0f : 1.0f,
