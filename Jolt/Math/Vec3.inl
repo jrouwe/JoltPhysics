@@ -842,7 +842,7 @@ Vec3 Vec3::GetSign() const
 #elif defined(JPH_USE_NEON)
 	Type minus_one = vdupq_n_f32(-1.0f);
 	Type one = vdupq_n_f32(1.0f);
-	return vorrq_s32(vandq_s32(mValue, minus_one), one);
+	return vreinterpretq_f32_u32(vorrq_s32(vandq_s32(vreinterpretq_u32_f32(mValue), vreinterpretq_u32_f32(minus_one)), vreinterpretq_u32_f32(one)));
 #else
 	return Vec3(std::signbit(mF32[0])? -1.0f : 1.0f,
 				std::signbit(mF32[1])? -1.0f : 1.0f,
