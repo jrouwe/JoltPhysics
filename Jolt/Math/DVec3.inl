@@ -343,7 +343,7 @@ DVec3 DVec3::sOr(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_or_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_or_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vorrq_s64(inV1.mValue.val[0], inV2.mValue.val[0]), vorrq_s64(inV1.mValue.val[1], inV2.mValue.val[1]) });
+	return DVec3({ vreinterpretq_f64_u64(vorrq_u64(vreinterpretq_u64_f64(inV1.mValue.val[0]), vreinterpretq_u64_f64(inV2.mValue.val[0]))), vreinterpretq_f64_u64(vorrq_u64(vreinterpretq_u64_f64(inV1.mValue.val[1]), vreinterpretq_u64_f64(inV2.mValue.val[1]))) });
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) | BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) | BitCast<uint64>(inV2.mF64[1])),
@@ -358,7 +358,7 @@ DVec3 DVec3::sXor(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_xor_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_xor_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ veorq_s64(inV1.mValue.val[0], inV2.mValue.val[0]), veorq_s64(inV1.mValue.val[1], inV2.mValue.val[1]) });
+	return DVec3({ vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(inV1.mValue.val[0]), vreinterpretq_u64_f64(inV2.mValue.val[0]))), vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(inV1.mValue.val[1]), vreinterpretq_u64_f64(inV2.mValue.val[1]))) });
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) ^ BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) ^ BitCast<uint64>(inV2.mF64[1])),
@@ -373,7 +373,7 @@ DVec3 DVec3::sAnd(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_and_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_and_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vandq_s64(inV1.mValue.val[0], inV2.mValue.val[0]), vandq_s64(inV1.mValue.val[1], inV2.mValue.val[1]) });
+	return DVec3({ vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(inV1.mValue.val[0]), vreinterpretq_u64_f64(inV2.mValue.val[0]))), vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(inV1.mValue.val[1]), vreinterpretq_u64_f64(inV2.mValue.val[1]))) });
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) & BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) & BitCast<uint64>(inV2.mF64[1])),
@@ -830,9 +830,9 @@ DVec3 DVec3::GetSign() const
 	__m128d one = _mm_set1_pd(1.0);
 	return DVec3({ _mm_or_pd(_mm_and_pd(mValue.mLow, minus_one), one), _mm_or_pd(_mm_and_pd(mValue.mHigh, minus_one), one) });
 #elif defined(JPH_USE_NEON)
-	float64x2_t minus_one = vdupq_n_f64(-1.0f);
-	float64x2_t one = vdupq_n_f64(1.0f);
-	return DVec3({ vorrq_s64(vandq_s64(mValue.val[0], minus_one), one), vorrq_s64(vandq_s64(mValue.val[1], minus_one), one) });
+	uint64x2_t minus_one = vreinterpretq_u64_f64(vdupq_n_f64(-1.0f));
+	uint64x2_t one = vreinterpretq_u64_f64(vdupq_n_f64(1.0f));
+	return DVec3({ vreinterpretq_f64_u64(vorrq_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[0]), minus_one), one)), vreinterpretq_f64_u64(vorrq_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[1]), minus_one), one)) });
 #else
 	return DVec3(std::signbit(mF64[0])? -1.0 : 1.0,
 				 std::signbit(mF64[1])? -1.0 : 1.0,
