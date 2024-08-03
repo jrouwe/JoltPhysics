@@ -64,7 +64,7 @@ private:
 	unsigned int mPrevState;
 };
 
-#elif defined(JPH_CPU_ARM) && defined(JPH_USE_NEON)
+#elif defined(JPH_CPU_ARM) && (defined(__aarch64__) || defined(_M_ARM64))
 
 /// Helper class that needs to be put on the stack to update the state of the floating point control word.
 /// This state is kept per thread.

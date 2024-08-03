@@ -172,7 +172,6 @@
 	#define JPH_CPU_ARM
 	#if defined(__aarch64__) || defined(_M_ARM64)
 		#define JPH_CPU_ADDRESS_BITS 64
-		#define JPH_USE_NEON
 		#define JPH_VECTOR_ALIGNMENT 16
 		#define JPH_DVECTOR_ALIGNMENT 32
 	#else
