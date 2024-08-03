@@ -179,7 +179,8 @@ else()
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		# Also disable -Wstringop-overflow or it will generate false positives that can't be disabled from code when link-time optimizations are enabled
 		# Also turn off automatic fused multiply add contractions, there doesn't seem to be a way to do this selectively through the macro JPH_PRECISE_MATH_OFF
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-stringop-overflow -ffp-contract=off")
+		# Also permit conversions between vectors with differing element types or numbers of subparts (clang doesn't care so the code is a bit sloppy)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-stringop-overflow -ffp-contract=off -flax-vector-conversions")
 	else()
 		# Do not use -ffast-math since it cannot be turned off in a single compilation unit under clang, see Core.h
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-model=precise")

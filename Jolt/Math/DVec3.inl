@@ -44,7 +44,7 @@ DVec3::DVec3(double inX, double inY, double inZ)
 	mValue.mLow = _mm_set_pd(inY, inX);
 	mValue.mHigh = _mm_set1_pd(inZ);
 #elif defined(JPH_USE_NEON)
-	mValue.val[0] = vcombine_f64(vcreate_f64(*reinterpret_cast<uint64 *>(&inX)), vcreate_f64(*reinterpret_cast<uint64 *>(&inY)));
+	mValue.val[0] = vcombine_f64(vcreate_f64(BitCast<uint64>(inX)), vcreate_f64(BitCast<uint64>(inY)));
 	mValue.val[1] = vdupq_n_f64(inZ);
 #else
 	mF64[0] = inX;
@@ -232,7 +232,7 @@ DVec3 DVec3::sEquals(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_cmpeq_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmpeq_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vreinterpretq_u64_f64(vceqq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_u64_f64(vceqq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
+	return DVec3({ vreinterpretq_f64_u64(vceqq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vceqq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #else
 	return DVec3(inV1.mF64[0] == inV2.mF64[0]? cTrue : cFalse,
 				 inV1.mF64[1] == inV2.mF64[1]? cTrue : cFalse,
@@ -247,7 +247,7 @@ DVec3 DVec3::sLess(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_cmplt_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmplt_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vreinterpretq_u64_f64(vcltq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_u64_f64(vcltq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
+	return DVec3({ vreinterpretq_f64_u64(vcltq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vcltq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #else
 	return DVec3(inV1.mF64[0] < inV2.mF64[0]? cTrue : cFalse,
 				 inV1.mF64[1] < inV2.mF64[1]? cTrue : cFalse,
@@ -262,7 +262,7 @@ DVec3 DVec3::sLessOrEqual(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_cmple_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmple_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vreinterpretq_u64_f64(vcleq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_u64_f64(vcleq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
+	return DVec3({ vreinterpretq_f64_u64(vcleq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vcleq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #else
 	return DVec3(inV1.mF64[0] <= inV2.mF64[0]? cTrue : cFalse,
 				 inV1.mF64[1] <= inV2.mF64[1]? cTrue : cFalse,
@@ -277,7 +277,7 @@ DVec3 DVec3::sGreater(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_cmpgt_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmpgt_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vreinterpretq_u64_f64(vcgtq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_u64_f64(vcgtq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
+	return DVec3({ vreinterpretq_f64_u64(vcgtq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vcgtq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #else
 	return DVec3(inV1.mF64[0] > inV2.mF64[0]? cTrue : cFalse,
 				 inV1.mF64[1] > inV2.mF64[1]? cTrue : cFalse,
@@ -292,7 +292,7 @@ DVec3 DVec3::sGreaterOrEqual(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_cmpge_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmpge_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vreinterpretq_u64_f64(vcgeq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_u64_f64(vcgeq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
+	return DVec3({ vreinterpretq_f64_u64(vcgeq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vcgeq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #else
 	return DVec3(inV1.mF64[0] >= inV2.mF64[0]? cTrue : cFalse,
 				 inV1.mF64[1] >= inV2.mF64[1]? cTrue : cFalse,
@@ -323,7 +323,7 @@ DVec3 DVec3::sSelect(DVec3Arg inV1, DVec3Arg inV2, DVec3Arg inControl)
 	Type v = { _mm_blendv_pd(inV1.mValue.mLow, inV2.mValue.mLow, inControl.mValue.mLow), _mm_blendv_pd(inV1.mValue.mHigh, inV2.mValue.mHigh, inControl.mValue.mHigh) };
 	return sFixW(v);
 #elif defined(JPH_USE_NEON)
-	Type v = { vbslq_f64(vshrq_n_s64(inControl.mValue.val[0], 63), inV2.mValue.val[0], inV1.mValue.val[0]), vbslq_f64(vshrq_n_s64(inControl.mValue.val[1], 63), inV2.mValue.val[1], inV1.mValue.val[1]) };
+	Type v = { vbslq_f64(vshrq_n_s64(vreinterpretq_s64_f64(inControl.mValue.val[0]), 63), inV2.mValue.val[0], inV1.mValue.val[0]), vbslq_f64(vshrq_n_s64(vreinterpretq_s64_f64(inControl.mValue.val[1]), 63), inV2.mValue.val[1], inV1.mValue.val[1]) };
 	return sFixW(v);
 #else
 	DVec3 result;
@@ -343,7 +343,7 @@ DVec3 DVec3::sOr(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_or_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_or_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vorrq_s64(inV1.mValue.val[0], inV2.mValue.val[0]), vorrq_s64(inV1.mValue.val[1], inV2.mValue.val[1]) });
+	return DVec3({ vreinterpretq_f64_u64(vorrq_u64(vreinterpretq_u64_f64(inV1.mValue.val[0]), vreinterpretq_u64_f64(inV2.mValue.val[0]))), vreinterpretq_f64_u64(vorrq_u64(vreinterpretq_u64_f64(inV1.mValue.val[1]), vreinterpretq_u64_f64(inV2.mValue.val[1]))) });
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) | BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) | BitCast<uint64>(inV2.mF64[1])),
@@ -358,7 +358,7 @@ DVec3 DVec3::sXor(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_xor_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_xor_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ veorq_s64(inV1.mValue.val[0], inV2.mValue.val[0]), veorq_s64(inV1.mValue.val[1], inV2.mValue.val[1]) });
+	return DVec3({ vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(inV1.mValue.val[0]), vreinterpretq_u64_f64(inV2.mValue.val[0]))), vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(inV1.mValue.val[1]), vreinterpretq_u64_f64(inV2.mValue.val[1]))) });
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) ^ BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) ^ BitCast<uint64>(inV2.mF64[1])),
@@ -373,7 +373,7 @@ DVec3 DVec3::sAnd(DVec3Arg inV1, DVec3Arg inV2)
 #elif defined(JPH_USE_SSE)
 	return DVec3({ _mm_and_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_and_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vandq_s64(inV1.mValue.val[0], inV2.mValue.val[0]), vandq_s64(inV1.mValue.val[1], inV2.mValue.val[1]) });
+	return DVec3({ vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(inV1.mValue.val[0]), vreinterpretq_u64_f64(inV2.mValue.val[0]))), vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(inV1.mValue.val[1]), vreinterpretq_u64_f64(inV2.mValue.val[1]))) });
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) & BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) & BitCast<uint64>(inV2.mF64[1])),
@@ -830,9 +830,9 @@ DVec3 DVec3::GetSign() const
 	__m128d one = _mm_set1_pd(1.0);
 	return DVec3({ _mm_or_pd(_mm_and_pd(mValue.mLow, minus_one), one), _mm_or_pd(_mm_and_pd(mValue.mHigh, minus_one), one) });
 #elif defined(JPH_USE_NEON)
-	float64x2_t minus_one = vdupq_n_f64(-1.0f);
-	float64x2_t one = vdupq_n_f64(1.0f);
-	return DVec3({ vorrq_s64(vandq_s64(mValue.val[0], minus_one), one), vorrq_s64(vandq_s64(mValue.val[1], minus_one), one) });
+	uint64x2_t minus_one = vreinterpretq_u64_f64(vdupq_n_f64(-1.0f));
+	uint64x2_t one = vreinterpretq_u64_f64(vdupq_n_f64(1.0f));
+	return DVec3({ vreinterpretq_f64_u64(vorrq_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[0]), minus_one), one)), vreinterpretq_f64_u64(vorrq_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[1]), minus_one), one)) });
 #else
 	return DVec3(std::signbit(mF64[0])? -1.0 : 1.0,
 				 std::signbit(mF64[1])? -1.0 : 1.0,
@@ -851,8 +851,8 @@ DVec3 DVec3::PrepareRoundToZero() const
 	__m128d mask = _mm_castsi128_pd(_mm_set1_epi64x(int64_t(~cDoubleToFloatMantissaLoss)));
 	return DVec3({ _mm_and_pd(mValue.mLow, mask), _mm_and_pd(mValue.mHigh, mask) });
 #elif defined(JPH_USE_NEON)
-	float64x2_t mask = vreinterpretq_f64_u64(vdupq_n_u64(~cDoubleToFloatMantissaLoss));
-	return DVec3({ vandq_s64(mValue.val[0], mask), vandq_s64(mValue.val[1], mask) });
+	uint64x2_t mask = vdupq_n_u64(~cDoubleToFloatMantissaLoss);
+	return DVec3({ vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[0]), mask)), vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[1]), mask)) });
 #else
 	double x = BitCast<double>(BitCast<uint64>(mF64[0]) & ~cDoubleToFloatMantissaLoss);
 	double y = BitCast<double>(BitCast<uint64>(mF64[1]) & ~cDoubleToFloatMantissaLoss);
@@ -889,15 +889,15 @@ DVec3 DVec3::PrepareRoundToInf() const
 	__m128d value_or_mantissa_loss_high = _mm_or_pd(mValue.mHigh, _mm_castsi128_pd(mantissa_loss));
 	return DVec3({ _mm_blendv_pd(value_or_mantissa_loss_low, mValue.mLow, is_zero_low), _mm_blendv_pd(value_or_mantissa_loss_high, mValue.mHigh, is_zero_high) });
 #elif defined(JPH_USE_NEON)
-	float64x2_t mantissa_loss = vreinterpretq_f64_u64(vdupq_n_u64(cDoubleToFloatMantissaLoss));
+	uint64x2_t mantissa_loss = vdupq_n_u64(cDoubleToFloatMantissaLoss);
 	float64x2_t zero = vdupq_n_f64(0.0);
-	float64x2_t value_and_mantissa_loss_low = vandq_s64(mValue.val[0], mantissa_loss);
-	float64x2_t is_zero_low = vceqq_f64(value_and_mantissa_loss_low, zero);
-	float64x2_t value_or_mantissa_loss_low = vorrq_s64(mValue.val[0], mantissa_loss);
-	float64x2_t value_and_mantissa_loss_high = vandq_s64(mValue.val[1], mantissa_loss);
+	float64x2_t value_and_mantissa_loss_low = vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[0]), mantissa_loss));
+	uint64x2_t is_zero_low = vceqq_f64(value_and_mantissa_loss_low, zero);
+	float64x2_t value_or_mantissa_loss_low = vreinterpretq_f64_u64(vorrq_u64(vreinterpretq_u64_f64(mValue.val[0]), mantissa_loss));
+	float64x2_t value_and_mantissa_loss_high = vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[1]), mantissa_loss));
 	float64x2_t value_low = vbslq_f64(is_zero_low, mValue.val[0], value_or_mantissa_loss_low);
-	float64x2_t is_zero_high = vceqq_f64(value_and_mantissa_loss_high, zero);
-	float64x2_t value_or_mantissa_loss_high = vorrq_s64(mValue.val[1], mantissa_loss);
+	uint64x2_t is_zero_high = vceqq_f64(value_and_mantissa_loss_high, zero);
+	float64x2_t value_or_mantissa_loss_high = vreinterpretq_f64_u64(vorrq_u64(vreinterpretq_u64_f64(mValue.val[1]), mantissa_loss));
 	float64x2_t value_high = vbslq_f64(is_zero_high, mValue.val[1], value_or_mantissa_loss_high);
 	return DVec3({ value_low, value_high });
 #else
