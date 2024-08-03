@@ -53,6 +53,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fix error in gcc 14. Using always_inline in debug mode causes error: "inlining failed in call to 'always_inline' 'XXX': function not considered for inlining"
 * Fixed clang-18 warning "LLVMgold.so: error loading plugin ... cannot open shared object file: No such file or directory", due to https://github.com/llvm/llvm-project/issues/84271 it currently doesn't support LTO.
 * Suppress GCC warning: 'XXX' may be used uninitialized in this function [-Werror=maybe-uninitialized].
+* Fixed compile errors when compiling with GCC for the ARM platform.
 * When calling CharacterVirtual::SetShape, a collision with a sensor would cause the function to abort as if the character was in collision.
 * Fixed bug where the the skinned position of a soft body would update in the first sub-iteration, causing a large velocity spike and jittery behavior.
 * Fixed bug where the velocity of soft body vertices would increase indefinitely when resting on the back stop of a skinned constraint.
@@ -67,6 +68,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fix SSE not being enabled on x86 32-bits.
 * Fixed a bug in the enhanced internal edge removal that could cause rigid bodies and characters to be affected by internal edges.
 * Fixed a bug in MutableCompoundShape::AdjustCenterOfMass which would fail to update the bounding box of the shape.
+* The 32 bit and 64 bit versions of the library now produce the same binary stream when serializing data to a StreamOut. Before some values would be stored as size_t which is platform dependent.
 
 ## v5.0.0
 
