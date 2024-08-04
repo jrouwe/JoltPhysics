@@ -154,7 +154,7 @@ UVec4 UVec4::sSelect(UVec4Arg inV1, UVec4Arg inV2, UVec4Arg inControl)
 #if defined(JPH_USE_SSE4_1)
 	return _mm_castps_si128(_mm_blendv_ps(_mm_castsi128_ps(inV1.mValue), _mm_castsi128_ps(inV2.mValue), _mm_castsi128_ps(inControl.mValue)));
 #elif defined(JPH_USE_NEON)
-	return vbslq_u32(vshrq_n_s32(inControl.mValue, 31), inV2.mValue, inV1.mValue);
+	return vbslq_u32(vreinterpretq_u32_s32(vshrq_n_s32(vreinterpretq_s32_u32(inControl.mValue), 31)), inV2.mValue, inV1.mValue);
 #else
 	UVec4 result;
 	for (int i = 0; i < 4; i++)
@@ -323,7 +323,7 @@ Vec4 UVec4::ToFloat() const
 #if defined(JPH_USE_SSE)
 	return _mm_cvtepi32_ps(mValue);
 #elif defined(JPH_USE_NEON)
-	return vcvtq_f32_s32(mValue);
+	return vcvtq_f32_u32(mValue);
 #else
 	return Vec4((float)mU32[0], (float)mU32[1], (float)mU32[2], (float)mU32[3]);
 #endif
@@ -334,7 +334,7 @@ Vec4 UVec4::ReinterpretAsFloat() const
 #if defined(JPH_USE_SSE)
 	return Vec4(_mm_castsi128_ps(mValue));
 #elif defined(JPH_USE_NEON)
-	return vreinterpretq_f32_s32(mValue);
+	return vreinterpretq_f32_u32(mValue);
 #else
 	return *reinterpret_cast<const Vec4 *>(this);
 #endif
@@ -443,7 +443,7 @@ UVec4 UVec4::ArithmeticShiftRight() const
 #if defined(JPH_USE_SSE)
 	return _mm_srai_epi32(mValue, Count);
 #elif defined(JPH_USE_NEON)
-	return vshrq_n_s32(mValue, Count);
+	return vreinterpretq_u32_s32(vshrq_n_s32(vreinterpretq_s32_u32(mValue), Count));
 #else
 	return UVec4(uint32(int32_t(mU32[0]) >> Count),
 				 uint32(int32_t(mU32[1]) >> Count),
@@ -457,9 +457,9 @@ UVec4 UVec4::Expand4Uint16Lo() const
 #if defined(JPH_USE_SSE)
 	return _mm_unpacklo_epi16(mValue, _mm_castps_si128(_mm_setzero_ps()));
 #elif defined(JPH_USE_NEON)
-	int16x4_t value = vget_low_s16(mValue);
-	int16x4_t zero = vdup_n_s16(0);
-	return vcombine_s16(vzip1_s16(value, zero), vzip2_s16(value, zero));
+	uint16x4_t value = vget_low_u16(vreinterpretq_u16_u32(mValue));
+	uint16x4_t zero = vdup_n_u16(0);
+	return vreinterpretq_u32_u16(vcombine_u16(vzip1_u16(value, zero), vzip2_u16(value, zero)));
 #else
 	return UVec4(mU32[0] & 0xffff,
 				 (mU32[0] >> 16) & 0xffff,
@@ -473,9 +473,9 @@ UVec4 UVec4::Expand4Uint16Hi() const
 #if defined(JPH_USE_SSE)
 	return _mm_unpackhi_epi16(mValue, _mm_castps_si128(_mm_setzero_ps()));
 #elif defined(JPH_USE_NEON)
-	int16x4_t value = vget_high_s16(mValue);
-	int16x4_t zero = vdup_n_s16(0);
-	return vcombine_s16(vzip1_s16(value, zero), vzip2_s16(value, zero));
+	uint16x4_t value = vget_high_u16(vreinterpretq_u16_u32(mValue));
+	uint16x4_t zero = vdup_n_u16(0);
+	return vreinterpretq_u32_u16(vcombine_u16(vzip1_u16(value, zero), vzip2_u16(value, zero)));
 #else
 	return UVec4(mU32[2] & 0xffff,
 				 (mU32[2] >> 16) & 0xffff,
@@ -489,7 +489,7 @@ UVec4 UVec4::Expand4Byte0() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff03), int(0xffffff02), int(0xffffff01), int(0xffffff00)));
 #elif defined(JPH_USE_NEON)
-	int8x16_t idx = JPH_NEON_INT8x16(0x00, 0x7f, 0x7f, 0x7f, 0x01, 0x7f, 0x7f, 0x7f, 0x02, 0x7f, 0x7f, 0x7f, 0x03, 0x7f, 0x7f, 0x7f);
+	uint8x16_t idx = JPH_NEON_UINT8x16(0x00, 0x7f, 0x7f, 0x7f, 0x01, 0x7f, 0x7f, 0x7f, 0x02, 0x7f, 0x7f, 0x7f, 0x03, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result;
@@ -504,7 +504,7 @@ UVec4 UVec4::Expand4Byte4() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff07), int(0xffffff06), int(0xffffff05), int(0xffffff04)));
 #elif defined(JPH_USE_NEON)
-	int8x16_t idx = JPH_NEON_INT8x16(0x04, 0x7f, 0x7f, 0x7f, 0x05, 0x7f, 0x7f, 0x7f, 0x06, 0x7f, 0x7f, 0x7f, 0x07, 0x7f, 0x7f, 0x7f);
+	uint8x16_t idx = JPH_NEON_UINT8x16(0x04, 0x7f, 0x7f, 0x7f, 0x05, 0x7f, 0x7f, 0x7f, 0x06, 0x7f, 0x7f, 0x7f, 0x07, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result;
@@ -519,7 +519,7 @@ UVec4 UVec4::Expand4Byte8() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff0b), int(0xffffff0a), int(0xffffff09), int(0xffffff08)));
 #elif defined(JPH_USE_NEON)
-	int8x16_t idx = JPH_NEON_INT8x16(0x08, 0x7f, 0x7f, 0x7f, 0x09, 0x7f, 0x7f, 0x7f, 0x0a, 0x7f, 0x7f, 0x7f, 0x0b, 0x7f, 0x7f, 0x7f);
+	uint8x16_t idx = JPH_NEON_UINT8x16(0x08, 0x7f, 0x7f, 0x7f, 0x09, 0x7f, 0x7f, 0x7f, 0x0a, 0x7f, 0x7f, 0x7f, 0x0b, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result;
@@ -534,7 +534,7 @@ UVec4 UVec4::Expand4Byte12() const
 #if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff0f), int(0xffffff0e), int(0xffffff0d), int(0xffffff0c)));
 #elif defined(JPH_USE_NEON)
-	int8x16_t idx = JPH_NEON_INT8x16(0x0c, 0x7f, 0x7f, 0x7f, 0x0d, 0x7f, 0x7f, 0x7f, 0x0e, 0x7f, 0x7f, 0x7f, 0x0f, 0x7f, 0x7f, 0x7f);
+	uint8x16_t idx = JPH_NEON_UINT8x16(0x0c, 0x7f, 0x7f, 0x7f, 0x0d, 0x7f, 0x7f, 0x7f, 0x0e, 0x7f, 0x7f, 0x7f, 0x0f, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result;

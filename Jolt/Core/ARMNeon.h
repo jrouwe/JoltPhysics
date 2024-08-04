@@ -13,6 +13,7 @@
 	#define JPH_NEON_INT32x4(v1, v2, v3, v4) { int64_t(v1) + (int64_t(v2) << 32), int64_t(v3) + (int64_t(v4) << 32) }
 	#define JPH_NEON_UINT32x4(v1, v2, v3, v4) { uint64_t(v1) + (uint64_t(v2) << 32), uint64_t(v3) + (uint64_t(v4) << 32) }
 	#define JPH_NEON_INT8x16(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16) { int64_t(v1) + (int64_t(v2) << 8) + (int64_t(v3) << 16) + (int64_t(v4) << 24) + (int64_t(v5) << 32) + (int64_t(v6) << 40) + (int64_t(v7) << 48) + (int64_t(v8) << 56), int64_t(v9) + (int64_t(v10) << 8) + (int64_t(v11) << 16) + (int64_t(v12) << 24) + (int64_t(v13) << 32) + (int64_t(v14) << 40) + (int64_t(v15) << 48) + (int64_t(v16) << 56) }
+	#define JPH_NEON_UINT8x16(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16) { uint64_t(v1) + (uint64_t(v2) << 8) + (uint64_t(v3) << 16) + (uint64_t(v4) << 24) + (uint64_t(v5) << 32) + (uint64_t(v6) << 40) + (uint64_t(v7) << 48) + (uint64_t(v8) << 56), uint64_t(v9) + (uint64_t(v10) << 8) + (uint64_t(v11) << 16) + (uint64_t(v12) << 24) + (uint64_t(v13) << 32) + (uint64_t(v14) << 40) + (uint64_t(v15) << 48) + (uint64_t(v16) << 56) }
 
 	// Generic shuffle vector template
 	template <unsigned I1, unsigned I2, unsigned I3, unsigned I4>
@@ -80,6 +81,7 @@
 	#define JPH_NEON_INT32x4(v1, v2, v3, v4) { v1, v2, v3, v4 }
 	#define JPH_NEON_UINT32x4(v1, v2, v3, v4) { v1, v2, v3, v4 }
 	#define JPH_NEON_INT8x16(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16) { v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16 }
+	#define JPH_NEON_UINT8x16(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16) { v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16 }
 
 	// Shuffle a vector
 	#define JPH_NEON_SHUFFLE_F32x4(vec1, vec2, index1, index2, index3, index4) __builtin_shufflevector(vec1, vec2, index1, index2, index3, index4)
