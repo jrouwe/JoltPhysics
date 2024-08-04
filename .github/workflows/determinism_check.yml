@@ -115,7 +115,7 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install gcc-aarch64-linux-gnu gcc-multilib g++-multilib libstdc++-12-dev-arm64-cross qemu-user -y
+      run: sudo apt-get install gcc-11-aarch64-linux-gnu gcc-11-multilib g++-11-multilib libstdc++-11-dev-arm64-cross qemu-user -y
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=clang++ Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
     - name: Build
@@ -139,9 +139,9 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-aarch64-linux-gnu gcc-multilib g++-multilib libstdc++-12-dev-arm64-cross qemu-user -y
+      run: sudo apt-get install g++-11-aarch64-linux-gnu gcc-11-multilib g++-11-multilib libstdc++-11-dev-arm64-cross qemu-user -y
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
+      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++-11 Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
     - name: Unit Tests
