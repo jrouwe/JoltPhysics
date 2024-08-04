@@ -130,7 +130,7 @@ jobs:
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
 
-arm_gcc:
+  arm_gcc:
     runs-on: ubuntu-latest
     name: ARM GCC Determinism Check
     steps:
