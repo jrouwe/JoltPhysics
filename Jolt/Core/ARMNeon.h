@@ -82,7 +82,7 @@
 
 	// Shuffle a vector
 	#define JPH_NEON_SHUFFLE_F32x4(vec1, vec2, index1, index2, index3, index4) NeonShuffleFloat32x4<index1, index2, index3, index4>(vec1, vec2)
-	#define JPH_NEON_SHUFFLE_U32x4(vec1, vec2, index1, index2, index3, index4) vreinterpretq_u32_f32(NeonShuffleFloat32x4<index1, index2, index3, index4>(vreinterpretq_f32_u32(vec1), vreinterpretq_f32_u32(vec2)))
+	#define JPH_NEON_SHUFFLE_U32x4(vec1, vec2, index1, index2, index3, index4) vreinterpretq_u32_f32((NeonShuffleFloat32x4<index1, index2, index3, index4>(vreinterpretq_f32_u32(vec1), vreinterpretq_f32_u32(vec2))))
 
 	JPH_NAMESPACE_END
 #else
