@@ -25,4 +25,4 @@ echo Generating Makefile for build type \"$BUILD_TYPE\" and compiler \"$COMPILER
 
 cmake -S . -B $BUILD_DIR -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER=$COMPILER "${@}"
 
-echo Compile by running \"make -j 8 \&\& ./UnitTests\" in folder \"$BUILD_DIR\"
+echo Compile by running \"make -j $(nproc) \&\& ./UnitTests\" in folder \"$BUILD_DIR\"

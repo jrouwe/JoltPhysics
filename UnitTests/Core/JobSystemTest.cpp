@@ -12,7 +12,12 @@ TEST_SUITE("JobSystemTest")
 		// Create job system
 		const int cMaxJobs = 128;
 		const int cMaxBarriers = 10;
-		const int cMaxThreads = 10;
+		#ifdef JPH_CPU_WASM
+			// At the moment, the WASM unit tests fail when using multiple threads because the thread pool is not working
+			const int cMaxThreads = 0;
+		#else
+			const int cMaxThreads = 10;
+		#endif
 		JobSystemThreadPool system(cMaxJobs, cMaxBarriers, cMaxThreads);
 
 		// Create array of zeros
