@@ -16,4 +16,4 @@ echo Generating Makefile for build type \"$BUILD_TYPE\" in folder \"$BUILD_DIR\"
 
 cmake -S . -B $BUILD_DIR -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=${EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake "${@}"
 
-echo Compile by running \"make -j 8 \&\& node UnitTests.js\" in folder \"$BUILD_DIR\"
+echo Compile by running \"make -j $(nproc) \&\& node UnitTests.js\" in folder \"$BUILD_DIR\"

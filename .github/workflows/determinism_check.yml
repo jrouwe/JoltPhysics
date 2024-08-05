@@ -27,7 +27,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=clang++ Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ctest --output-on-failure --verbose
@@ -95,7 +95,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ctest --output-on-failure --verbose
@@ -119,7 +119,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=clang++ Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./UnitTests
@@ -143,7 +143,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++-12 Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./UnitTests

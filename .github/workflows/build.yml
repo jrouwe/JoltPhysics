@@ -35,7 +35,7 @@ jobs:
         cd ${{github.workspace}}/Build/
         ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -56,7 +56,7 @@ jobs:
         cd ${{github.workspace}}/Build/
         ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DBUILD_SHARED_LIBS=YES
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -81,7 +81,7 @@ jobs:
         cd ${{github.workspace}}/Build/
         ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -103,7 +103,7 @@ jobs:
         cd ${{github.workspace}}/Build/
         ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}} -DUSE_STD_VECTOR=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -124,7 +124,7 @@ jobs:
         cd ${{github.workspace}}/Build/
         ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}}
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -145,7 +145,7 @@ jobs:
         cd ${{github.workspace}}/Build/
         ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}} -DBUILD_SHARED_LIBS=Yes
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -173,9 +173,9 @@ jobs:
     - name: Configure CMake
       run: |
         cd Build
-        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}}
+        ./cmake_linux_mingw.sh ${{matrix.build_type}}
     - name: Build
-      run: cmake --build Build/MinGW_${{matrix.build_type}} -j 2
+      run: cmake --build Build/MinGW_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: Build/MinGW_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -337,7 +337,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=clang++ Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -372,7 +372,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch x86_64
+      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch x86_64 -j $(nproc)
 
   emscripten:
     runs-on: ubuntu-latest
@@ -395,7 +395,7 @@ jobs:
           cd ${{github.workspace}}/Build/
           ./cmake_linux_emscripten.sh Distribution -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j 2      
+      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)      
     - name: Test
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
       run: node UnitTests.js
