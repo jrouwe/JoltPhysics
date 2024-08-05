@@ -372,7 +372,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch x86_64 -j $(nproc)
+      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch x86_64
 
   emscripten:
     runs-on: ubuntu-latest
