@@ -376,6 +376,7 @@ jobs:
 
   emscripten:
     runs-on: ubuntu-latest
+    name: Emscripten
 
     steps:
     - name: Checkout Code
