@@ -8,7 +8,7 @@ else
 	shift
 fi
 
-BUILD_DIR=Emscripten_$BUILD_TYPE
+BUILD_DIR=WASM_$BUILD_TYPE
 
 echo Usage: ./cmake_linux_emscripten.sh [Configuration]
 echo "Possible configurations: Debug (default), Release, Distribution"

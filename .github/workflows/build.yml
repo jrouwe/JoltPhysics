@@ -12,6 +12,11 @@ on:
       - 'Docs/**'
       - '**.md'
 
+env:
+  EMSCRIPTEN_VERSION: 3.1.62
+  UBUNTU_CLANG_VERSION: clang++-15
+  UBUNTU_GCC_VERSION: g++-12
+
 jobs:
   linux-clang:
     runs-on: ubuntu-latest
@@ -20,18 +25,19 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution, ReleaseASAN, ReleaseUBSAN]
-            clang_version: [clang++-13, clang++-14]
             double_precision: [No, Yes]
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DDOUBLE_PRECISION=${{matrix.double_precision}} Build
+      run: |
+        cd ${{github.workspace}}/Build/
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
     - name: Test
-      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
   linux-clang-so:
@@ -41,17 +47,18 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution]
-            clang_version: [clang++-14]
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DBUILD_SHARED_LIBS=Yes Build
+      run: |
+        cd ${{github.workspace}}/Build/
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DBUILD_SHARED_LIBS=YES
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
     - name: Test
-      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
   linux-clang-32-bit:
@@ -61,7 +68,6 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution]
-            clang_version: [clang++-14]
 
     steps:
     - name: Checkout Code
@@ -71,11 +77,13 @@ jobs:
     - name: Install G++-Multilib
       run: sudo apt -y install g++-multilib
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF Build
+      run: |
+        cd ${{github.workspace}}/Build/
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
     - name: Test
-      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
   linux-clang-use-std-vector:
@@ -85,18 +93,19 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, ReleaseASAN]
-            clang_version: [clang++-14]
             double_precision: [Yes]
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DDOUBLE_PRECISION=${{matrix.double_precision}} -DUSE_STD_VECTOR=ON Build
+      run: |
+        cd ${{github.workspace}}/Build/
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}} -DUSE_STD_VECTOR=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
     - name: Test
-      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
   linux-gcc:
@@ -106,17 +115,18 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution]
-            clang_version: [g++]
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} Build
+      run: |
+        cd ${{github.workspace}}/Build/
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}}
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
     - name: Test
-      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
   linux-gcc-so:
@@ -126,17 +136,18 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution]
-            clang_version: [g++]
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DBUILD_SHARED_LIBS=Yes Build
+      run: |
+        cd ${{github.workspace}}/Build/
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}} -DBUILD_SHARED_LIBS=Yes
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j 2
     - name: Test
-      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
   msys2_mingw_gcc:
@@ -160,11 +171,13 @@ jobs:
         install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
         update: true
     - name: Configure CMake
-      run: cmake -B Build/MSYS2_MinGW_GCC -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} Build
+      run: |
+        cd ${{github.workspace}}/Build/
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}}
     - name: Build
-      run: cmake --build Build/MSYS2_MinGW_GCC -j 2
+      run: cmake --build Build/MinGW_${{matrix.build_type}} -j 2
     - name: Test
-      working-directory: Build/MSYS2_MinGW_GCC
+      working-directory: Build/MinGW_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
       
   msvc_cl:
@@ -317,18 +330,16 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution]
-            clang_version: [clang++]
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      # github macos-latest runs on a 2013 Ivy Bridge CPU so doesn't have AVX2, LZCNT, TZCNT or FMADD
-      run: cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_FMADD=OFF Build
+      run: cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=clang++ Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+      run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -j 2
     - name: Test
-      working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}}
+      working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
   android:
@@ -362,3 +373,29 @@ jobs:
       run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch x86_64
+
+  emscripten:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    - name: Setup emsdk
+      uses: mymindstorm/setup-emsdk@v14
+      with:
+        version: ${{env.EMSCRIPTEN_VERSION}}
+    - name: Verify emsdk
+      run: emcc -v
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+    - name: Configure CMake
+      run: |
+          cd ${{github.workspace}}/Build/
+          ./cmake_linux_emscripten.sh Distribution -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j 2      
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node UnitTests.js
