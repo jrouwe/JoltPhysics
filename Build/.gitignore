@@ -1,4 +1,5 @@
 /Linux*
+/Emscripten*
 /VS20*
 /XCode*
 /MinGW*

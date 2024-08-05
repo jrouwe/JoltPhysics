@@ -665,3 +665,13 @@ else()
 		EMIT_X86_INSTRUCTION_SET_DEFINITIONS()
 	endif()
 endif()
+
+# On Unix flavors we need the pthread library
+if (NOT ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows"))
+	target_compile_options(Jolt PUBLIC -pthread)
+endif()
+
+# We need more than the default 64KB stack and 16MB memory
+if (EMSCRIPTEN)
+	target_link_options(Jolt PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=67108864)
+endif()
