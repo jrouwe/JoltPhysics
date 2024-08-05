@@ -172,7 +172,7 @@ jobs:
         update: true
     - name: Configure CMake
       run: |
-        cd ${{github.workspace}}/Build/
+        cd Build
         ./cmake_linux_clang_gcc.sh ${{matrix.build_type}}
     - name: Build
       run: cmake --build Build/MinGW_${{matrix.build_type}} -j 2
