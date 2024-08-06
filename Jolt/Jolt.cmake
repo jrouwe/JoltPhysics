@@ -674,5 +674,5 @@ endif()
 if (EMSCRIPTEN)
 	# We need more than the default 64KB stack and 16MB memory
 	# Also disable warning: running limited binaryen optimizations because DWARF info requested (or indirectly required)
-	target_link_options(Jolt PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=67108864 -Wno-limited-postlink-optimizations)
+	target_link_options(Jolt PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=134217728 -Wno-limited-postlink-optimizations)
 endif()

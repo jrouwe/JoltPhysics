@@ -213,4 +213,7 @@ jobs:
       run: node UnitTests.js
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node PerformanceTest.js -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: node PerformanceTest.js -q=LinearCast -t=1 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node PerformanceTest.js -q=LinearCast -t=1 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
