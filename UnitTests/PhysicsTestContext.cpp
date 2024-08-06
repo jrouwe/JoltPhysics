@@ -20,12 +20,7 @@ PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, 
 #else
 	mTempAllocator(new TempAllocatorImpl(4 * 1024 * 1024)),
 #endif
-#ifdef JPH_CPU_WASM
-	// At the moment, the WASM unit tests fail when using multiple threads because the thread pool is not working
-	mJobSystem(new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, 0)),
-#else
 	mJobSystem(new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, inWorkerThreads)),
-#endif
 	mDeltaTime(inDeltaTime),
 	mCollisionSteps(inCollisionSteps)
 {
