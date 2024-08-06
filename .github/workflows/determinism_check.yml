@@ -1,8 +1,12 @@
 name: Determinism Check
 
 env:
-    CONVEX_VS_MESH_HASH: '0x10139effe747511'
-    RAGDOLL_HASH: '0x777396947c3fff6a'
+  CONVEX_VS_MESH_HASH: '0x10139effe747511'
+  RAGDOLL_HASH: '0x777396947c3fff6a'
+  EMSCRIPTEN_VERSION: 3.1.64
+  UBUNTU_CLANG_VERSION: clang++-15
+  UBUNTU_GCC_VERSION: g++-12
+  UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-12
 
 on:
   push:
@@ -15,12 +19,6 @@ on:
     paths-ignore:
       - 'Docs/**'
       - '**.md'
-
-env:
-  EMSCRIPTEN_VERSION: 3.1.64
-  UBUNTU_CLANG_VERSION: clang++-15
-  UBUNTU_GCC_VERSION: g++-12
-  UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-12
 
 jobs:
   linux_clang:
