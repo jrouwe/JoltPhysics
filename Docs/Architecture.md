@@ -583,7 +583,7 @@ The physics simulation is deterministic provided that:
 
 If you want cross platform determinism then please turn on the CROSS_PLATFORM_DETERMINISTIC option in CMake. This will make the library approximately 8% slower but the simulation will be deterministic regardless of:
 
-* Compiler used to compile the library (tested MSVC2022 vs clang)
+* Compiler used to compile the library (tested MSVC2022, clang, gcc and emscripten)
 * Configuration (Debug, Release or Distribution)
 * OS (tested Windows, macOS, Linux)
 * Architecture (x86 or ARM).
@@ -597,9 +597,12 @@ It is quite difficult to verify cross platform determinism, so this feature is l
 
 * Windows MSVC x86 64-bit with AVX2
 * Windows MSVC x86 32-bit with SSE2
-* macOS clang x86 64-bit with AVX
+* macOS clang ARM 64-bit with NEON
 * Linux clang x86 64-bit with AVX2
 * Linux clang ARM 64-bit with NEON
+* Linux gcc x86 64-bit with AVX2
+* Linux gcc ARM 64-bit with NEON
+* WASM emscripten running in nodejs
 
 The most important things to look out for in your own application:
 
