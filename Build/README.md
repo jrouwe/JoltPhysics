@@ -194,8 +194,8 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 		<li>Install Emscripten (https://emscripten.org/docs/getting_started/downloads.html)</li>
 		<li>Install nodejs (apt-get install nodejs)</li>
 		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
-		<li>Run: ./cmake_linux_emscripten.sh Release (currently some unit tests fail in Debug for unknown reasons)</li>
-		<li>Go to the WASM_Release folder</li>
+		<li>Run: ./cmake_linux_emscripten.sh</li>
+		<li>Go to the WASM_Debug folder</li>
 		<li>Run: make -j$(nproc) && node UnitTests.js</li>
 	</ul>
 </details>
