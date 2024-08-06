@@ -76,7 +76,7 @@ jobs:
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: cmake_vs2022_cl.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_vs2022_cl.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=Distribution
     - name: Unit Tests
