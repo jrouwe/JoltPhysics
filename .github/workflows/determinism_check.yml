@@ -212,5 +212,5 @@ jobs:
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
       run: node UnitTests.js
     - name: Test ConvexVsMesh
-      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
       run: node PerformanceTest.js -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
