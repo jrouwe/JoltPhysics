@@ -56,6 +56,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Suppress GCC warning: 'XXX' may be used uninitialized in this function [-Werror=maybe-uninitialized].
 * Fixed compile errors when compiling with GCC for the ARM platform.
 * When calling CharacterVirtual::SetShape, a collision with a sensor would cause the function to abort as if the character was in collision.
+* CharacterVirtual stick to floor / stair walk did not trigger a contact added callback on the CharacterContactListener.
 * Fixed bug where the the skinned position of a soft body would update in the first sub-iteration, causing a large velocity spike and jittery behavior.
 * Fixed bug where the velocity of soft body vertices would increase indefinitely when resting on the back stop of a skinned constraint.
 * Fixed bug when SkinVertices for a soft body is not called every frame, the previous position of the skin was still used causing a replay of the motion of the previous frame.
