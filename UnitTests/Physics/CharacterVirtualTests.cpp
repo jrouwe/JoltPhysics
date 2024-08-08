@@ -4,6 +4,7 @@
 
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
+#include "LoggingCharacterContactListener.h"
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
@@ -138,8 +139,31 @@ TEST_SUITE("CharacterVirtualTests")
 		// Calculated effective velocity after a step
 		Vec3					mEffectiveVelocity = Vec3::sZero();
 
+		// Log of contact events
+		LoggingCharacterContactListener mContactLog;
+
 	private:
 		// CharacterContactListener callback
+		virtual bool			OnContactValidate(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) override
+		{
+			return mContactLog.OnContactValidate(inCharacter, inBodyID2, inSubShapeID2);
+		}
+
+		virtual bool			OnCharacterContactValidate(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2) override
+		{
+			return mContactLog.OnCharacterContactValidate(inCharacter, inOtherCharacter, inSubShapeID2);
+		}
+
+		virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+		{
+			mContactLog.OnContactAdded(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+		}
+
+		virtual void			OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+		{
+			mContactLog.OnCharacterContactAdded(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+		}
+
 		virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) override
 		{
 			// Don't allow sliding if the character doesn't want to move
@@ -283,7 +307,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Create sloped floor
 			PhysicsTestContext c;
 			Quat slope_rotation = Quat::sRotation(Vec3::sAxisZ(), cSlopeAngle);
-			c.CreateBox(RVec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
+			Body &floor = c.CreateBox(RVec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
 
 			// Create character so that it is touching the slope
 			Character character(c);
@@ -295,16 +319,45 @@ TEST_SUITE("CharacterVirtualTests")
 			// After 1 step we should be on the slope
 			character.Step();
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+			CHECK(character.mContactLog.GetEntryCount() == 2);
+			CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::ValidateBody, character.mCharacter, floor.GetID()));
+			CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::AddBody, character.mCharacter, floor.GetID()));
+			character.mContactLog.Clear();
 
 			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
 			character.mCharacter->SetLinearVelocity(Vec3::sZero());
 
 			RVec3 start_pos = character.GetPosition();
 
-			// Start moving down the slope at a speed high enough so that gravity will not keep us on the floor
-			character.mHorizontalSpeed = Vec3(-10.0f, 0, 0);
-			character.Simulate(cMovementTime);
-			CHECK(character.mCharacter->GetGroundState() == (stick_to_floor? CharacterBase::EGroundState::OnGround : CharacterBase::EGroundState::InAir));
+			float time_step = c.GetDeltaTime();
+			int num_steps = (int)round(cMovementTime / time_step);
+
+			for (int i = 0; i < num_steps; ++i)
+			{
+				// Start moving down the slope at a speed high enough so that gravity will not keep us on the floor
+				character.mHorizontalSpeed = Vec3(-10.0f, 0, 0);
+				character.Step();
+
+				if (stick_to_floor)
+				{
+					// Should stick to floor
+					CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+
+					// Should have received callbacks
+					CHECK(character.mContactLog.GetEntryCount() == 2);
+					CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::ValidateBody, character.mCharacter, floor.GetID()));
+					CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::AddBody, character.mCharacter, floor.GetID()));
+					character.mContactLog.Clear();
+				}
+				else
+				{
+					// Should be off ground
+					CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::InAir);
+
+					// No callbacks
+					CHECK(character.mContactLog.GetEntryCount() == 0);
+				}
+			}
 
 			// Calculate resulting translation
 			Vec3 translation = Vec3(character.GetPosition() - start_pos);
@@ -319,13 +372,10 @@ TEST_SUITE("CharacterVirtualTests")
 			}
 			else
 			{
-				Vec3 gravity = c.GetSystem()->GetGravity();
-				float time_step = c.GetDeltaTime();
-
 				// If too steep, we're just falling. Integrate using an Euler integrator.
 				Vec3 velocity = character.mHorizontalSpeed;
 				expected_translation = Vec3::sZero();
-				int num_steps = (int)round(cMovementTime / time_step);
+				Vec3 gravity = c.GetSystem()->GetGravity();
 				for (int i = 0; i < num_steps; ++i)
 				{
 					velocity += gravity * time_step;
