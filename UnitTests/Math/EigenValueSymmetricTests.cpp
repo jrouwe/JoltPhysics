@@ -5,7 +5,6 @@
 #include "UnitTestFramework.h"
 #include <Jolt/Math/EigenValueSymmetric.h>
 #include <Jolt/Math/Matrix.h>
-#include <Jolt/Core/StringTools.h>
 
 TEST_SUITE("EigenValueSymmetricTests")
 {
