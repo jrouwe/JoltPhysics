@@ -481,6 +481,17 @@ bool CharacterVirtual::ValidateContact(const Contact &inContact) const
 		return mListener->OnContactValidate(this, inContact.mBodyB, inContact.mSubShapeIDB);
 }
 
+void CharacterVirtual::ContactAdded(const Contact &inContact, CharacterContactSettings &ioSettings) const
+{
+	if (mListener != nullptr)
+	{
+		if (inContact.mCharacterB != nullptr)
+			mListener->OnCharacterContactAdded(this, inContact.mCharacterB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+		else
+			mListener->OnContactAdded(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+	}
+}
+
 template <class T>
 inline static bool sCorrectFractionForCharacterPadding(const Shape *inShape, Mat44Arg inStart, Vec3Arg inDisplacement, const T &inPolygon, float &ioFraction)
 {
@@ -646,13 +657,7 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 
 	// Send contact added event
 	CharacterContactSettings settings;
-	if (mListener != nullptr)
-	{
-		if (contact.mCharacterB != nullptr)
-			mListener->OnCharacterContactAdded(this, contact.mCharacterB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
-		else
-			mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
-	}
+	ContactAdded(contact, settings);
 	contact.mCanPushCharacter = settings.mCanPushCharacter;
 
 	// We don't have any further interaction with sensors beyond an OnContactAdded notification
@@ -1330,6 +1335,10 @@ void CharacterVirtual::MoveToContact(RVec3Arg inPosition, const Contact &inConta
 {
 	// Set the new position
 	SetPosition(inPosition);
+
+	// Trigger contact added callback
+	CharacterContactSettings dummy;
+	ContactAdded(inContact, dummy);
 
 	// Determine the contacts
 	TempContactList contacts(inAllocator);
