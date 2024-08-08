@@ -323,6 +323,12 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			if (MSVC)
 				target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
 			endif()
+			if (EMSCRIPTEN)
+				# Embed the assets for the RagdollScene
+				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/Human.tof@/Assets/Human.tof")
+				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose1.tof@/Assets/Human/dead_pose1.tof")
+				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/terrain2.bof@/Assets/terrain2.bof")
+			endif()
 			set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 
 			# Copy the assets folder

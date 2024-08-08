@@ -38,10 +38,10 @@ jobs:
       run: ctest --output-on-failure --verbose
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
 
   linux_gcc:
     runs-on: ubuntu-latest
@@ -60,10 +60,10 @@ jobs:
       run: ctest --output-on-failure --verbose
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
 
   msvc_cl:
     runs-on: windows-latest
@@ -84,10 +84,10 @@ jobs:
       run: ./UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
 
   msvc_cl_32:
     runs-on: windows-latest
@@ -108,10 +108,10 @@ jobs:
       run: ./UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
 
   macos:
     runs-on: macos-latest
@@ -130,10 +130,10 @@ jobs:
       run: ctest --output-on-failure --verbose
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
 
   arm_clang:
     runs-on: ubuntu-latest
@@ -155,10 +155,10 @@ jobs:
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./UnitTests
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
 
   arm_gcc:
     runs-on: ubuntu-latest
@@ -180,10 +180,10 @@ jobs:
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./UnitTests
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
 
   emscripten:
     runs-on: ubuntu-latest
@@ -213,4 +213,7 @@ jobs:
       run: node UnitTests.js
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node PerformanceTest.js -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}

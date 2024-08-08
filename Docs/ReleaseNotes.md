@@ -45,6 +45,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * QuadTree / FixedSizeFreeList: Reorder variable layout to reduce false sharing & thread syncs to reduce simulation time by approximately 5%.
 * Generate a CMake config file when the project is installed. Allows for other projects to import Jolt using the find_package() functionality.
 * Added USE_WASM_SIMD cmake option. This will enable SIMD on the emscripten WASM build.
+* Emscripten WASM build can now be compiled cross platform deterministic and deliver the same results as Windows, Linux etc.
 * Added Shape::MakeScaleValid function. This function will take a scale vector and check it against the scaling rules for the shape. If it is not valid, it will return a scale that is close to the provided scale which is valid.
 
 ### Bug fixes
