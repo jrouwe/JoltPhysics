@@ -70,9 +70,10 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 		for (uint ip = 0; ip < n - 1; ++ip)
 			for (uint iq = ip + 1; iq < n; ++iq)
 				sm += abs(a(ip, iq));
+		float avg_sm = sm / Square(n);
 
 		// Normal return, convergence to machine underflow
-		if (sm == 0.0f)
+		if (avg_sm < FLT_MIN) // Original code: sm == 0.0f, when the average is denormal, we also consider it machine underflow
 		{
 			// Sanity checks
 			#ifdef JPH_ENABLE_ASSERTS
@@ -93,7 +94,8 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 		}
 
 		// On the first three sweeps use a fraction of the sum of the off diagonal elements as threshold
-		float tresh = sweep < 4? 0.2f * sm / Square(n) : 0.0f;
+		// Note that we pick a minimum threshold of FLT_MIN because dividing by a denormalized number is likely to result in infinity.
+		float tresh = sweep < 4? 0.2f * avg_sm : FLT_MIN; // Original code: 0.0f instead of FLT_MIN
 
 		for (uint ip = 0; ip < n - 1; ++ip)
 			for (uint iq = ip + 1; iq < n; ++iq)
@@ -124,8 +126,8 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 					}
 					else
 					{
-						float theta = 0.5f * h / a_pq; // Warning: Can become inf if a(ip, iq) too small which may trigger an invalid float exception
-						t = 1.0f / (abs(theta) + sqrt(1.0f + theta * theta)); // If theta becomes inf, t will be 0 so the inf is not a problem
+						float theta = 0.5f * h / a_pq; // Warning: Can become infinite if a(ip, iq) is very small which may trigger an invalid float exception
+						t = 1.0f / (abs(theta) + sqrt(1.0f + theta * theta)); // If theta becomes inf, t will be 0 so the infinite is not a problem for the algorithm
 						if (theta < 0.0f) t = -t;
 					}
 
