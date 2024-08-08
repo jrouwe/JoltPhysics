@@ -504,6 +504,9 @@ private:
 	// Ask the callback if inContact is a valid contact point
 	bool								ValidateContact(const Contact &inContact) const;
 
+	// Trigger the contact callback for inContact and get the contact settings
+	void								ContactAdded(const Contact &inContact, CharacterContactSettings &ioSettings) const;
+
 	// Tests the shape for collision around inPosition
 	void								GetContactsAtPosition(RVec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const;
 
