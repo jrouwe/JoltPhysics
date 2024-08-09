@@ -2,12 +2,12 @@ name: Sonar Cloud
 
 on:
   push:
-    branches: [ master, 4.x ]
+    branches: [ master ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
   pull_request:
-    branches: [ master, 4.x ]
+    branches: [ master ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
-      CLANG_VERSION: 14
+      CLANG_VERSION: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,15 +39,13 @@ jobs:
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v3
       - name: Configure CMake
-        run: |
-            cd ${{github.workspace}}/Build/
-            ./cmake_linux_clang_gcc.sh ReleaseCoverage clang++-${{ env.CLANG_VERSION }}
+        working-directory: ${{github.workspace}}/Build
+        run: ./cmake_linux_clang_gcc.sh ReleaseCoverage clang++-${{ env.CLANG_VERSION }}
       - name: Run build-wrapper
-        run: |
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build ${{github.workspace}}/Build/Linux_ReleaseCoverage -j $(nproc)
+        run: build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build ${{github.workspace}}/Build/Linux_ReleaseCoverage -j $(nproc)
       - name: Run unit tests and create coverage report
+        working-directory: ${{github.workspace}}/Build/Linux_ReleaseCoverage
         run: |
-          cd ${{github.workspace}}/Build/Linux_ReleaseCoverage/
           cmake --build . --target test -j $(nproc)
           llvm-profdata-${{ env.CLANG_VERSION }} merge -sparse default.profraw -o default.profdata
           llvm-cov-${{ env.CLANG_VERSION }} show -format=text UnitTests -instr-profile=default.profdata > coverage.txt
@@ -56,4 +54,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}" --define sonar.cfamily.llvm-cov.reportPath="${{github.workspace}}/Build/Linux_ReleaseCoverage/coverage.txt"
+          sonar-scanner --define sonar.cfamily.compile-commands="${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json" --define sonar.cfamily.llvm-cov.reportPath="${{github.workspace}}/Build/Linux_ReleaseCoverage/coverage.txt"
