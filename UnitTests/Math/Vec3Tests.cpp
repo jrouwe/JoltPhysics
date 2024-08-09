@@ -84,6 +84,7 @@ TEST_SUITE("Vec3Tests")
 	{
 		Vec3 v1(1, 5, 3);
 		Vec3 v2(4, 2, 6);
+		Vec3 v3(6, 4, 2);
 
 		CHECK(Vec3::sMin(v1, v2) == Vec3(1, 2, 3));
 		CHECK(Vec3::sMax(v1, v2) == Vec3(4, 5, 6));
@@ -97,6 +98,8 @@ TEST_SUITE("Vec3Tests")
 		CHECK(v1.GetHighestComponentIndex() == 1);
 		CHECK(v2.GetLowestComponentIndex() == 1);
 		CHECK(v2.GetHighestComponentIndex() == 2);
+		CHECK(v3.GetLowestComponentIndex() == 2);
+		CHECK(v3.GetHighestComponentIndex() == 0);
 	}
 
 	TEST_CASE("TestVec3Clamp")

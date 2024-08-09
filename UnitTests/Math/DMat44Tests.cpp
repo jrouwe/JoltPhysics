@@ -7,6 +7,16 @@
 
 TEST_SUITE("DMat44Tests")
 {
+	TEST_CASE("TestDMat44Zero")
+	{
+		DMat44 zero = DMat44::sZero();
+
+		CHECK(zero.GetAxisX() == Vec3::sZero());
+		CHECK(zero.GetAxisY() == Vec3::sZero());
+		CHECK(zero.GetAxisZ() == Vec3::sZero());
+		CHECK(zero.GetTranslation() == DVec3::sZero());
+	}
+
 	TEST_CASE("TestDMat44Identity")
 	{
 		DMat44 identity = DMat44::sIdentity();
@@ -40,6 +50,15 @@ TEST_SUITE("DMat44Tests")
 	{
 		DMat44 mat(Vec4(1, 2, 3, 4), Vec4(5, 6, 7, 8), Vec4(9, 10, 11, 12), DVec3(13, 14, 15));
 		CHECK(mat.GetRotation() == Mat44(Vec4(1, 2, 3, 4), Vec4(5, 6, 7, 8), Vec4(9, 10, 11, 12), Vec4(0, 0, 0, 1)));
+	}
+
+	TEST_CASE("TestMat44SetRotation")
+	{
+		DMat44 mat(Vec4(1, 2, 3, 4), Vec4(5, 6, 7, 8), Vec4(9, 10, 11, 12), DVec3(13, 14, 15));
+		Mat44 mat2(Vec4(17, 18, 19, 20), Vec4(21, 22, 23, 24), Vec4(25, 26, 27, 28), Vec4(29, 30, 31, 32));
+
+		mat.SetRotation(mat2);
+		CHECK(mat == DMat44(Vec4(17, 18, 19, 20), Vec4(21, 22, 23, 24), Vec4(25, 26, 27, 28), DVec3(13, 14, 15)));
 	}
 
 	TEST_CASE("TestDMat44MultiplyMat44")
