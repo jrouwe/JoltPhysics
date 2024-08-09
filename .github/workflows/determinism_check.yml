@@ -10,12 +10,12 @@ env:
 
 on:
   push:
-    branches: [ master, 4.x ]
+    branches: [ master ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
   pull_request:
-    branches: [ master, 4.x ]
+    branches: [ master ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
@@ -203,9 +203,8 @@ jobs:
       with:
         node-version: 18.x
     - name: Configure CMake
-      run: |
-          cd ${{github.workspace}}/Build/
-          ./cmake_linux_emscripten.sh Distribution -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_emscripten.sh Distribution -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)      
     - name: Unit Tests
