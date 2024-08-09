@@ -2,12 +2,12 @@ name: Build
 
 on:
   push:
-    branches: [ master, 4.x ]
+    branches: [ master ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
   pull_request:
-    branches: [ master, 4.x ]
+    branches: [ master ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
@@ -31,9 +31,8 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: |
-        cd ${{github.workspace}}/Build/
-        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}}
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -52,9 +51,8 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: |
-        cd ${{github.workspace}}/Build/
-        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DBUILD_SHARED_LIBS=YES
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DBUILD_SHARED_LIBS=YES
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -77,9 +75,8 @@ jobs:
     - name: Install G++-Multilib
       run: sudo apt -y install g++-multilib
     - name: Configure CMake
-      run: |
-        cd ${{github.workspace}}/Build/
-        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -99,9 +96,8 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: |
-        cd ${{github.workspace}}/Build/
-        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}} -DUSE_STD_VECTOR=ON
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}} -DUSE_STD_VECTOR=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -120,9 +116,8 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: |
-        cd ${{github.workspace}}/Build/
-        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}}
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}}
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -141,9 +136,8 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: |
-        cd ${{github.workspace}}/Build/
-        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}} -DBUILD_SHARED_LIBS=Yes
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}} -DBUILD_SHARED_LIBS=Yes
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -171,9 +165,8 @@ jobs:
         install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
         update: true
     - name: Configure CMake
-      run: |
-        cd Build
-        ./cmake_linux_mingw.sh ${{matrix.build_type}}
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_mingw.sh ${{matrix.build_type}}
     - name: Build
       run: cmake --build Build/MinGW_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -392,9 +385,8 @@ jobs:
       with:
         node-version: 18.x
     - name: Configure CMake
-      run: |
-          cd ${{github.workspace}}/Build/
-          ./cmake_linux_emscripten.sh Distribution -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_emscripten.sh Distribution -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)      
     - name: Test
