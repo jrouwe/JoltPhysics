@@ -523,8 +523,7 @@ void CharacterBaseTest::Initialize()
 			mBodyInterface->CreateAndAddBody(box, EActivation::DontActivate);
 		}
 
-		// Create a sensor.
-		// Note that the CharacterVirtual doesn't interact with sensors, you should pair it with a Character object (see CharacterVirtual class comments)
+		// Create a sensor
 		{
 			BodyCreationSettings sensor(new BoxShape(Vec3::sReplicate(1.0f)), cSensorPosition, Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
 			sensor.mIsSensor = true;
