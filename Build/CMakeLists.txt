@@ -126,9 +126,6 @@ if (MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zi")
 	endif()
 
-	# Remove any existing compiler flag that enables RTTI
-	string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
 	# Set compiler flag for disabling RTTI
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
