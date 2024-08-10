@@ -126,6 +126,12 @@ if (MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zi")
 	endif()
 
+	# Remove any existing compiler flag that enables exceptions
+	string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
+	# Disable warning about STL and compiler-generated types using noexcept when exceptions are disabled
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4577")
+
 	# Set compiler flag for disabling RTTI
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
@@ -163,6 +169,9 @@ if (MSVC)
 		set(CMAKE_EXE_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LIBPATH:${CLANG_LIB_PATH}")
 	endif()
 else()
+	# Disable exception-handling
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+
 	# Enable warnings
 	if (ENABLE_ALL_WARNINGS)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
@@ -291,6 +300,18 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		if (XCODE)
 			# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
+		endif()
+
+		# doctest requires exception-handling for its REQUIRE macro, so we re-enable it
+		if (MSVC)
+			target_compile_options(UnitTests PUBLIC /EHsc)
+			# Disable cross-compiland inlining to prevent warnings about __forceinline not being inlined, which is to be expected when mixing exception-handling models
+			set_property(TARGET UnitTests PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE OFF)
+			set_property(TARGET UnitTests PROPERTY INTERPROCEDURAL_OPTIMIZATION_DISTRIBUTION OFF)
+			# Enable link-time code generation explicitly, since it'll be forced to do that anyway, due to the Jolt target using /GL
+			target_link_options(UnitTests PUBLIC /LTCG)
+		else()
+			target_compile_options(UnitTests PUBLIC -fexceptions)
 		endif()
 
 		# Register unit tests as a test so that it can be run with:
