@@ -531,7 +531,13 @@ CharacterVirtual has the following extra functionality:
 * Sticking to the ground when walking down a slope through the CharacterVirtual::ExtendedUpdate call
 * Support for specifying a local coordinate system that allows e.g. [walking around in a flying space ship](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Character/CharacterSpaceShipTest.cpp) that is equipped with 'inertial dampers' (a sci-fi concept often used in games).
 
-If you want CharacterVirtual to have presence in the world, it is recommended to pair it with a slightly smaller [Kinematic](@ref EMotionType) body (or Character). After each update, move this body using BodyInterface::MoveKinematic to the new location. This ensures that standard collision tests like ray casts are able to find the character in the world and that fast moving objects with motion quality [LinearCast](@ref EMotionQuality) will not pass through the character in 1 update. As an alternative to a Kinematic body, you can also use a regular Dynamic body with a [gravity factor](@ref BodyCreationSettings::mGravityFactor) of 0. Ensure that the character only collides with dynamic objects in this case. The advantage of this approach is that the paired body doesn't have infinite mass so is less strong.
+CharacterVirtual should provide everything that Character provides. Since it is not a rigid body, it requires some extra consideration:
+* Collision callbacks are passed through the CharacterContactListener instead of the ContactListener class
+* CharacterVirtual vs sensor contacts are also passed through this listener, so sensors are also supported
+* CharacterVirtual vs CharacterVirtual collisions can be handled through the CharacterVsCharacterCollision interface
+* Collision checks (e.g. CastRay) do not collide with CharacterVirtual. Use e.g. `NarrowPhaseQuery::CastRay(..., collector)` followed by `CharacterVirtual::GetTransformedShape().CastRay(..., collector)` to include the collision results.
+
+If you want to receive regular contact callbacks and do regular collision tests, consider setting CharacterVirtualSettings::mRigidBodyShape to create an inner rigid body that follows the movement of the CharacterVirtual.
 
 Characters are usually driven in a kinematic way (i.e. by calling Character::SetLinearVelocity or CharacterVirtual::SetLinearVelocity before their update).
 

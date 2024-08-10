@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Body/BodyFilter.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
 #include <Jolt/Core/STLTempAllocator.h>
 
 JPH_NAMESPACE_BEGIN
@@ -42,6 +43,15 @@ public:
 	uint								mMaxNumHits = 256;										///< Max num hits to collect in order to avoid excess of contact points collection
 	float								mHitReductionCosMaxAngle = 0.999f;						///< Cos(angle) where angle is the maximum angle between two hits contact normals that are allowed to be merged during hit reduction. Default is around 2.5 degrees. Set to -1 to turn off.
 	float								mPenetrationRecoverySpeed = 1.0f;						///< This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
+
+	/// This character can optionally have an inner rigid body. This rigid body can be used to give the character presence in the world. When set it means that:
+	/// - Regular collision checks (e.g. NarrowPhaseQuery::CastRay) will collide with the rigid body (they cannot collide with CharacterVirtual since it is not added to the broad phase)
+	/// - Regular contact callbacks will be called through the ContactListener (next to the ones that will be passed to the CharacterContactListener)
+	/// - Fast moving objects of motion quality LinearCast will not be able to pass through the CharacterVirtual in 1 time step
+	RefConst<Shape>						mInnerBodyShape;
+
+	/// Layer that the inner rigid body will be added to
+	ObjectLayer							mInnerBodyLayer = 0;
 };
 
 /// This class contains settings that allow you to override the behavior of a character's collision response
@@ -161,11 +171,14 @@ public:
 	/// @param inPosition Initial position for the character
 	/// @param inRotation Initial rotation for the character (usually only around the up-axis)
 	/// @param inUserData Application specific value
-	/// @param inSystem Physics system that this character will be added to later
+	/// @param inSystem Physics system that this character will be added to
 										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem);
 
 	/// Constructor without user data
 										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) : CharacterVirtual(inSettings, inPosition, inRotation, 0, inSystem) { }
+
+	/// Destructor
+	virtual								~CharacterVirtual();
 
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
@@ -186,13 +199,19 @@ public:
 	RVec3								GetPosition() const										{ return mPosition; }
 
 	/// Set the position of the character
-	void								SetPosition(RVec3Arg inPosition)						{ mPosition = inPosition; }
+	void								SetPosition(RVec3Arg inPosition)						{ mPosition = inPosition; UpdateInnerBodyTransform(); }
 
 	/// Get the rotation of the character
 	Quat								GetRotation() const										{ return mRotation; }
 
 	/// Set the rotation of the character
-	void								SetRotation(QuatArg inRotation)							{ mRotation = inRotation; }
+	void								SetRotation(QuatArg inRotation)							{ mRotation = inRotation; UpdateInnerBodyTransform(); }
+
+	// Get the center of mass position of the shape
+	inline RVec3						GetCenterOfMassPosition() const
+	{
+		return mPosition + (mRotation * (mShapeOffset + mShape->GetCenterOfMass()) + mCharacterPadding * mUp);
+	}
 
 	/// Calculate the world transform of the character
 	RMat44								GetWorldTransform() const								{ return RMat44::sRotationTranslation(mRotation, mPosition); }
@@ -235,11 +254,11 @@ public:
 
 	/// An extra offset applied to the shape in local space. This allows applying an extra offset to the shape in local space. Note that setting it on the fly can cause the shape to teleport into collision.
 	Vec3								GetShapeOffset() const									{ return mShapeOffset; }
-	void								SetShapeOffset(Vec3Arg inShapeOffset)					{ mShapeOffset = inShapeOffset; }
+	void								SetShapeOffset(Vec3Arg inShapeOffset)					{ mShapeOffset = inShapeOffset; UpdateInnerBodyTransform(); }
 
 	/// Access to the user data, can be used for anything by the application
 	uint64								GetUserData() const										{ return mUserData; }
-	void								SetUserData(uint64 inUserData)							{ mUserData = inUserData; }
+	void								SetUserData(uint64 inUserData);
 
 	/// This function can be called prior to calling Update() to convert a desired velocity into a velocity that won't make the character move further onto steep slopes.
 	/// This velocity can then be set on the character using SetLinearVelocity()
@@ -332,6 +351,12 @@ public:
 	/// @param inAllocator An allocator for temporary allocations. All memory will be freed by the time this function returns.
 	/// @return Returns true if the switch succeeded.
 	bool								SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator);
+
+	/// Updates the shape of the inner rigid body. Should be called after a successful call to SetShape.
+	void								SetInnerBodyShape(const Shape *inShape);
+
+	/// Get the transformed shape that represents the volume of the character, can be used for collision checks.
+	TransformedShape					GetTransformedShape() const								{ return TransformedShape(GetCenterOfMassPosition(), mRotation, mShape, BodyID()); }
 
 	/// @brief Get all contacts for the character at a particular location.
 	/// When colliding with another character virtual, this pointer will be provided through CollideShapeCollector::SetUserContext before adding a hit.
@@ -552,6 +577,15 @@ private:
 		return RMat44::sRotationTranslation(inRotation, inPosition).PreTranslated(mShapeOffset + inShape->GetCenterOfMass()).PostTranslated(mCharacterPadding * mUp);
 	}
 
+	// This function returns the position of the inner rigid body
+	inline RVec3						GetInnerBodyPosition() const
+	{
+		return mPosition + (mRotation * mShapeOffset + mCharacterPadding * mUp);
+	}
+
+	// Move the inner rigid body to the current position
+	void								UpdateInnerBodyTransform();
+
 	// Our main listener for contacts
 	CharacterContactListener *			mListener = nullptr;
 
@@ -600,6 +634,9 @@ private:
 
 	// User data, can be used for anything by the application
 	uint64								mUserData = 0;
+
+	// The inner rigid body that proxies the character in the world
+	BodyID								mInnerBodyID;
 };
 
 JPH_NAMESPACE_END
