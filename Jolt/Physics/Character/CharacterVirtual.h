@@ -178,7 +178,7 @@ public:
 										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) : CharacterVirtual(inSettings, inPosition, inRotation, 0, inSystem) { }
 
 	/// Destructor
-	virtual								~CharacterVirtual();
+	virtual								~CharacterVirtual() override;
 
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
