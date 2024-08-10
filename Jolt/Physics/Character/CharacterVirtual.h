@@ -183,11 +183,11 @@ public:
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
 
-	/// Set the character vs character collision interface
-	void								SetCharacterVsCharacterCollision(CharacterVsCharacterCollision *inCharacterVsCharacterCollision) { mCharacterVsCharacterCollision = inCharacterVsCharacterCollision; }
-
 	/// Get the current contact listener
 	CharacterContactListener *			GetListener() const										{ return mListener; }
+
+	/// Set the character vs character collision interface
+	void								SetCharacterVsCharacterCollision(CharacterVsCharacterCollision *inCharacterVsCharacterCollision) { mCharacterVsCharacterCollision = inCharacterVsCharacterCollision; }
 
 	/// Get the linear velocity of the character (m / s)
 	Vec3								GetLinearVelocity() const								{ return mLinearVelocity; }
@@ -208,10 +208,7 @@ public:
 	void								SetRotation(QuatArg inRotation)							{ mRotation = inRotation; UpdateInnerBodyTransform(); }
 
 	// Get the center of mass position of the shape
-	inline RVec3						GetCenterOfMassPosition() const
-	{
-		return mPosition + (mRotation * (mShapeOffset + mShape->GetCenterOfMass()) + mCharacterPadding * mUp);
-	}
+	inline RVec3						GetCenterOfMassPosition() const							{ return mPosition + (mRotation * (mShapeOffset + mShape->GetCenterOfMass()) + mCharacterPadding * mUp); }
 
 	/// Calculate the world transform of the character
 	RMat44								GetWorldTransform() const								{ return RMat44::sRotationTranslation(mRotation, mPosition); }
@@ -259,6 +256,9 @@ public:
 	/// Access to the user data, can be used for anything by the application
 	uint64								GetUserData() const										{ return mUserData; }
 	void								SetUserData(uint64 inUserData);
+
+	/// Optional inner rigid body that proxies the character in the world. Can be used to update body properties.
+	BodyID								GetInnerBodyID() const									{ return mInnerBodyID; }
 
 	/// This function can be called prior to calling Update() to convert a desired velocity into a velocity that won't make the character move further onto steep slopes.
 	/// This velocity can then be set on the character using SetLinearVelocity()
@@ -356,7 +356,7 @@ public:
 	void								SetInnerBodyShape(const Shape *inShape);
 
 	/// Get the transformed shape that represents the volume of the character, can be used for collision checks.
-	TransformedShape					GetTransformedShape() const								{ return TransformedShape(GetCenterOfMassPosition(), mRotation, mShape, BodyID()); }
+	TransformedShape					GetTransformedShape() const								{ return TransformedShape(GetCenterOfMassPosition(), mRotation, mShape, mInnerBodyID); }
 
 	/// @brief Get all contacts for the character at a particular location.
 	/// When colliding with another character virtual, this pointer will be provided through CollideShapeCollector::SetUserContext before adding a hit.

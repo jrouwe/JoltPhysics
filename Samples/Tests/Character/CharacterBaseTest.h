@@ -130,6 +130,7 @@ private:
 	// Moving characters
 	Ref<Character>			mAnimatedCharacter;
 	Ref<CharacterVirtual>	mAnimatedCharacterVirtual;
+	Ref<CharacterVirtual>	mAnimatedCharacterVirtualWithInnerBody;
 
 	// Player input
 	Vec3					mControlInput = Vec3::sZero();
