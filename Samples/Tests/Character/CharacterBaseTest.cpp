@@ -642,7 +642,7 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	#ifdef JPH_DEBUG_RENDERER
 		character->GetShape()->Draw(mDebugRenderer, character->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sOrange, false, true);
 	#else
-		mDebugRenderer->DrawCapsule(character->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding + c->GetCharacterPadding(), Color::sOrange, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+		mDebugRenderer->DrawCapsule(character->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding + character->GetCharacterPadding(), Color::sOrange, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 	#endif // JPH_DEBUG_RENDERER
 
 		// Update velocity and apply gravity
