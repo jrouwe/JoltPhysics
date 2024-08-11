@@ -319,7 +319,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		if (CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND MSVC)
 			# The Ninja Multi-Config generator errors out when selectively disabling precompiled headers for certain configurations.
 			# See: https://github.com/jrouwe/JoltPhysics/issues/1211
-			target_precompile_headers(Jolt PRIVATE "${JOLT_PHYSICS_ROOT}/Jolt.h")
+			target_precompile_headers(UnitTests PRIVATE "${JOLT_PHYSICS_ROOT}/Jolt.h")
 		else()
 			target_precompile_headers(UnitTests PRIVATE "$<$<NOT:$<CONFIG:ReleaseCoverage>>:${JOLT_PHYSICS_ROOT}/Jolt.h>")
 		endif()
