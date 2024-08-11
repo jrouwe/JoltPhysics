@@ -33,6 +33,10 @@ option(INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimizations" ON)
 # Note that this currently only works using MSVC. Clang turns Float2 into a SIMD vector sometimes causing floating point exceptions (the option is ignored).
 option(FLOATING_POINT_EXCEPTIONS_ENABLED "Enable floating point exceptions" ON)
 
+# When turning this on, the library will be compiled with C++ exceptions enabled.
+# This adds some overhead and Jolt doesn't use exceptions so by default it is off.
+option(CPP_EXCEPTIONS_ENABLED "Enable C++ exceptions" OFF)
+
 # Number of bits to use in ObjectLayer. Can be 16 or 32.
 option(OBJECT_LAYER_BITS "Number of bits in ObjectLayer" 16)
 
@@ -126,17 +130,17 @@ if (MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zi")
 	endif()
 
-	# Remove any existing compiler flag that enables exceptions
-	string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
-	# Disable warning about STL and compiler-generated types using noexcept when exceptions are disabled
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4577")
-
 	# Set compiler flag for disabling RTTI
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
-	if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")
-		# On ARM the exception handling flag is missing which causes warnings
+	if (NOT CPP_EXCEPTIONS_ENABLED)
+		# Remove any existing compiler flag that enables exceptions
+		string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
+		# Disable warning about STL and compiler-generated types using noexcept when exceptions are disabled
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4577")
+	else()
+		# Enable exceptions
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 	endif()
 
@@ -169,9 +173,6 @@ if (MSVC)
 		set(CMAKE_EXE_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LIBPATH:${CLANG_LIB_PATH}")
 	endif()
 else()
-	# Disable exception-handling
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
-
 	# Enable warnings
 	if (ENABLE_ALL_WARNINGS)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
@@ -180,6 +181,14 @@ else()
 	# Optionally generate debug symbols
 	if (GENERATE_DEBUG_SYMBOLS)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+	endif()
+
+	# Set compiler flag for disabling RTTI
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+
+	# Disable exception-handling
+	if (NOT CPP_EXCEPTIONS_ENABLED)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 	endif()
 
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
