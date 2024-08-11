@@ -134,9 +134,12 @@ if (MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zi")
 	endif()
 
-	# Set compiler flag for disabling RTTI
 	if (NOT CPP_RTTI_ENABLED)
+		# Set compiler flag for disabling RTTI
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+	else()
+		# Set compiler flag for enabling RTTI
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR")
 	endif()
 
 	if (NOT CPP_EXCEPTIONS_ENABLED)
@@ -189,14 +192,20 @@ else()
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 	endif()
 
-	# Set compiler flag for disabling RTTI
 	if (NOT CPP_RTTI_ENABLED)
+		# Set compiler flag for disabling RTTI
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+	else()
+		# Set compiler flag for enabling RTTI
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frtti")
 	endif()
 
-	# Disable exception-handling
 	if (NOT CPP_EXCEPTIONS_ENABLED)
+		# Set compiler flag for disabling exception-handling
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+	else()
+		# Set compiler flag for enabling exception-handling
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
 	endif()
 
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
