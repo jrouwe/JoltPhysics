@@ -37,6 +37,10 @@ option(FLOATING_POINT_EXCEPTIONS_ENABLED "Enable floating point exceptions" ON)
 # This adds some overhead and Jolt doesn't use exceptions so by default it is off.
 option(CPP_EXCEPTIONS_ENABLED "Enable C++ exceptions" OFF)
 
+# When turning this on, the library will be compiled with C++ RTTI enabled.
+# This adds some overhead and Jolt doesn't use RTTI so by default it is off.
+option(CPP_RTTI_ENABLED "Enable C++ RTTI" OFF)
+
 # Number of bits to use in ObjectLayer. Can be 16 or 32.
 option(OBJECT_LAYER_BITS "Number of bits in ObjectLayer" 16)
 
@@ -131,7 +135,9 @@ if (MSVC)
 	endif()
 
 	# Set compiler flag for disabling RTTI
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+	if (NOT CPP_RTTI_ENABLED)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+	endif()
 
 	if (NOT CPP_EXCEPTIONS_ENABLED)
 		# Remove any existing compiler flag that enables exceptions
@@ -184,7 +190,9 @@ else()
 	endif()
 
 	# Set compiler flag for disabling RTTI
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+	if (NOT CPP_RTTI_ENABLED)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+	endif()
 
 	# Disable exception-handling
 	if (NOT CPP_EXCEPTIONS_ENABLED)
