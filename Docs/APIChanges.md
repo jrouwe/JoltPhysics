@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v5.0.0 and latest
 
+* 20240811 - Added cmake options to toggle exception-handling and RTTI. CPP_EXCEPTIONS_ENABLED enables exceptions, CPP_RTTI_ENABLED enables RTTI. Before this change RTTI was off for MSVC and on for other compilers. Exceptions were on for all builds. You may need to set these options if your build relies on these C++ features. (760974d733ed24ea268a3bb9a8ef391b8ac503c7)
 * 20240803 - *SBS* - Removed the use of size_t when saving to binary. This means that the 32 and 64 bit versions of the lib can now read each others streams and that the 64 bit version has been adjusted to match the 32 bit version. (b54a0849e01f9f793fef3a219dfabdc7559f71ed)
 * 20240714 - The Reallocate function now takes an additional parameter 'old size' (6a7251d095f4c7e7c1c351d00829a20fa770246e)
 * 20240517 - *SBS* - Combined a number of allocations into 1 for HeightFieldShape. This changes the binary serialization format for this class. (bd32df12bb8ab77b37eeedc226f368268c32ae17)
