@@ -31,6 +31,8 @@ void CharacterVirtualTest::Initialize()
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
 	settings->mEnhancedInternalEdgeRemoval = sEnhancedInternalEdgeRemoval;
+	settings->mInnerBodyShape = sCreateInnerBody? mInnerStandingShape : nullptr;
+	settings->mInnerBodyLayer = Layers::MOVING;
 	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
 	mCharacterVsCharacterCollision.Add(mCharacter);
@@ -162,7 +164,15 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 	// Stance switch
 	if (inSwitchStance)
-		mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, { }, *mTempAllocator);
+	{
+		bool is_standing = mCharacter->GetShape() == mStandingShape;
+		const Shape *shape = is_standing? mCrouchingShape : mStandingShape;
+		if (mCharacter->SetShape(shape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, { }, *mTempAllocator))
+		{
+			const Shape *inner_shape = is_standing? mInnerCrouchingShape : mInnerStandingShape;
+			mCharacter->SetInnerBodyShape(inner_shape);
+		}
+	}
 }
 
 void CharacterVirtualTest::AddCharacterMovementSettings(DebugUI* inUI, UIElement* inSubMenu)
@@ -185,6 +195,7 @@ void CharacterVirtualTest::AddConfigurationSettings(DebugUI *inUI, UIElement *in
 	inUI->CreateCheckBox(inSubMenu, "Enable Walk Stairs", sEnableWalkStairs, [](UICheckBox::EState inState) { sEnableWalkStairs = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Enable Stick To Floor", sEnableStickToFloor, [](UICheckBox::EState inState) { sEnableStickToFloor = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Enhanced Internal Edge Removal", sEnhancedInternalEdgeRemoval, [](UICheckBox::EState inState) { sEnhancedInternalEdgeRemoval = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Create Inner Body", sCreateInnerBody, [](UICheckBox::EState inState) { sCreateInnerBody = inState == UICheckBox::STATE_CHECKED; });
 }
 
 void CharacterVirtualTest::SaveState(StateRecorder &inStream) const
@@ -208,7 +219,10 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 
 	bool is_standing = mCharacter->GetShape() == mStandingShape; // Initialize variable for validation mode
 	inStream.Read(is_standing);
-	mCharacter->SetShape(is_standing? mStandingShape : mCrouchingShape, FLT_MAX, { }, { }, { }, { }, *mTempAllocator);
+	const Shape *shape = is_standing? mStandingShape : mCrouchingShape;
+	mCharacter->SetShape(shape, FLT_MAX, { }, { }, { }, { }, *mTempAllocator);
+	const Shape *inner_shape = is_standing? mInnerStandingShape : mInnerCrouchingShape;
+	mCharacter->SetInnerBodyShape(inner_shape);
 
 	inStream.Read(mAllowSliding);
 	inStream.Read(mDesiredVelocity);

@@ -63,6 +63,7 @@ private:
 	static inline bool		sEnableWalkStairs = true;
 	static inline bool		sEnableStickToFloor = true;
 	static inline bool		sEnhancedInternalEdgeRemoval = false;
+	static inline bool		sCreateInnerBody = false;
 	static inline bool		sPlayerCanPushOtherCharacters = true;
 	static inline bool		sOtherCharactersCanPushPlayer = true;
 

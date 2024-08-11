@@ -521,6 +521,8 @@ The [Character](@ref Character) and [CharacterVirtual](@ref CharacterVirtual) cl
 
 The Character class is the simplest controller and is essentially a rigid body that has been configured to only allow translation (and no rotation so it stays upright). It is simulated together with the other rigid bodies so it properly reacts to them. Because it is simulated, it is usually not the best solution for a player as the player usually requires a lot of behavior that is non-physical. This character controller is cheap so it is recommended for e.g. simple AI characters. After every PhysicsSystem::Update call you must call Character::PostSimulation to update the ground contacts.
 
+Characters are usually driven in a kinematic way (i.e. by calling Character::SetLinearVelocity or CharacterVirtual::SetLinearVelocity before their update).
+
 The CharacterVirtual class is much more advanced. It is implemented using collision detection functionality only (through NarrowPhaseQuery) and is simulated when CharacterVirtual::Update is called. Since the character is not 'added' to the world, it is not visible to rigid bodies and it only interacts with them during the CharacterVirtual::Update function by applying impulses. This does mean there can be some update order artifacts, like the character slightly hovering above an elevator going down, because the characters moves at a different time than the other rigid bodies. Separating it has the benefit that the update can happen at the appropriate moment in the game code. Multiple CharacterVirtuals can update concurrently, so it is not an issue if the game code is parallelized.
 
 CharacterVirtual has the following extra functionality:
@@ -531,9 +533,13 @@ CharacterVirtual has the following extra functionality:
 * Sticking to the ground when walking down a slope through the CharacterVirtual::ExtendedUpdate call
 * Support for specifying a local coordinate system that allows e.g. [walking around in a flying space ship](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Character/CharacterSpaceShipTest.cpp) that is equipped with 'inertial dampers' (a sci-fi concept often used in games).
 
-If you want CharacterVirtual to have presence in the world, it is recommended to pair it with a slightly smaller [Kinematic](@ref EMotionType) body (or Character). After each update, move this body using BodyInterface::MoveKinematic to the new location. This ensures that standard collision tests like ray casts are able to find the character in the world and that fast moving objects with motion quality [LinearCast](@ref EMotionQuality) will not pass through the character in 1 update. As an alternative to a Kinematic body, you can also use a regular Dynamic body with a [gravity factor](@ref BodyCreationSettings::mGravityFactor) of 0. Ensure that the character only collides with dynamic objects in this case. The advantage of this approach is that the paired body doesn't have infinite mass so is less strong.
+CharacterVirtual should provide everything that Character provides. Since it is not a rigid body, it requires some extra consideration:
+* Collision callbacks are passed through the CharacterContactListener instead of the ContactListener class
+* CharacterVirtual vs sensor contacts are also passed through this listener, you will not receive them through the regular ContactListener
+* CharacterVirtual vs CharacterVirtual collisions can be handled through the CharacterVsCharacterCollision interface
+* Collision checks (e.g. CastRay) do not collide with CharacterVirtual. Use e.g. `NarrowPhaseQuery::CastRay(..., collector)` followed by `CharacterVirtual::GetTransformedShape().CastRay(..., collector)` to include the collision results.
 
-Characters are usually driven in a kinematic way (i.e. by calling Character::SetLinearVelocity or CharacterVirtual::SetLinearVelocity before their update).
+You can create a hybrid between these two by setting CharacterVirtualSettings::mInnerBodyShape. This will create an inner rigid body that follows the movement of the CharacterVirtual. This inner rigid body will be detected by sensors and regular collision tests.
 
 To get started take a look at the [Character](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Character/CharacterTest.cpp) and [CharacterVirtual](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Character/CharacterVirtualTest.cpp) examples.
 

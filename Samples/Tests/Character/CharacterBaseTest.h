@@ -68,6 +68,7 @@ protected:
 	static constexpr float	cCharacterRadiusStanding = 0.3f;
 	static constexpr float	cCharacterHeightCrouching = 0.8f;
 	static constexpr float	cCharacterRadiusCrouching = 0.3f;
+	static constexpr float	cInnerShapeFraction = 0.9f;
 
 	// Character movement properties
 	inline static bool		sControlMovementDuringJump = true;							///< If false the character cannot change movement direction in mid air
@@ -77,6 +78,8 @@ protected:
 	// The different stances for the character
 	RefConst<Shape>			mStandingShape;
 	RefConst<Shape>			mCrouchingShape;
+	RefConst<Shape>			mInnerCrouchingShape;
+	RefConst<Shape>			mInnerStandingShape;
 
 	// List of boxes on ramp
 	Array<BodyID>			mRampBlocks;
@@ -127,6 +130,7 @@ private:
 	// Moving characters
 	Ref<Character>			mAnimatedCharacter;
 	Ref<CharacterVirtual>	mAnimatedCharacterVirtual;
+	Ref<CharacterVirtual>	mAnimatedCharacterVirtualWithInnerBody;
 
 	// Player input
 	Vec3					mControlInput = Vec3::sZero();

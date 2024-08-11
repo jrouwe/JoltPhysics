@@ -26,6 +26,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 * Added CharacterBaseSettings::mEnhancedInternalEdgeRemoval (default false) that allows smoother movement for both the Character and CharacterVirtual class.
 * Added ability for a CharacterVirtual to collide with another CharacterVirtual by using the new CharacterVsCharacterCollision interface.
+* Added the option to add an inner rigid body to a CharacterVirtual. This allows it to interact with sensors through the regular ContactListener and to be found by normal collision checks.
 
 #### Vehicles
 
