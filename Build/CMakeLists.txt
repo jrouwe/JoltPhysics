@@ -302,18 +302,6 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
 		endif()
 
-		# doctest requires exception-handling for its REQUIRE macro, so we re-enable it
-		if (MSVC)
-			target_compile_options(UnitTests PUBLIC /EHsc)
-			# Disable cross-compiland inlining to prevent warnings about __forceinline not being inlined, which is to be expected when mixing exception-handling models
-			set_property(TARGET UnitTests PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE OFF)
-			set_property(TARGET UnitTests PROPERTY INTERPROCEDURAL_OPTIMIZATION_DISTRIBUTION OFF)
-			# Enable link-time code generation explicitly, since it'll be forced to do that anyway, due to the Jolt target using /GL
-			target_link_options(UnitTests PUBLIC /LTCG)
-		else()
-			target_compile_options(UnitTests PUBLIC -fexceptions)
-		endif()
-
 		# Register unit tests as a test so that it can be run with:
 		# ctest --output-on-failure
 		enable_testing()
