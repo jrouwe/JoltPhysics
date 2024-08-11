@@ -439,6 +439,7 @@ TEST_SUITE("ArrayTest")
 		CHECK(NonTriv::sNumDestructors == 0);
 	}
 
+#ifndef JPH_USE_STD_VECTOR // std::vector can choose to not shrink the array when calling shrink_to_fit so we can't test this
 	TEST_CASE("TestShrinkToFit")
 	{
 		Array<int> arr;
@@ -476,13 +477,12 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr.size() == 5);
 		for (int i = 0; i < 5; ++i)
 			CHECK(arr[i].Value() == i);
-#ifndef JPH_USE_STD_VECTOR
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 0);
 		CHECK(NonTriv::sNumMoveConstructors == 5);
 		CHECK(NonTriv::sNumDestructors == 5); // Switched to a new block, all old elements are destroyed after being moved
-#endif // JPH_USE_STD_VECTOR
 	}
+#endif // JPH_USE_STD_VECTOR
 
 	TEST_CASE("TestAssignIterator")
 	{
