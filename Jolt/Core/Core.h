@@ -406,6 +406,9 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <functional>
 #include <algorithm>
 #include <cstdint>
+#ifdef JPH_COMPILER_MSVC
+	#include <malloc.h> // for alloca
+#endif
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>
 #elif defined(JPH_USE_NEON)
