@@ -103,7 +103,12 @@ UVec4 UVec4::sGatherInt4(const uint32 *inBase, UVec4Arg inOffsets)
 #ifdef JPH_USE_AVX2
 	return _mm_i32gather_epi32(reinterpret_cast<const int *>(inBase), inOffsets.mValue, Scale);
 #else
-	return Vec4::sGatherFloat4<Scale>(reinterpret_cast<const float *>(inBase), inOffsets).ReinterpretAsInt();
+	const uint8 *base = reinterpret_cast<const uint8 *>(inBase);
+	uint32 x = *reinterpret_cast<const uint32 *>(base + inOffsets.GetX() * Scale);
+	uint32 y = *reinterpret_cast<const uint32 *>(base + inOffsets.GetY() * Scale);
+	uint32 z = *reinterpret_cast<const uint32 *>(base + inOffsets.GetZ() * Scale);
+	uint32 w = *reinterpret_cast<const uint32 *>(base + inOffsets.GetW() * Scale);
+	return UVec4(x, y, z, w);
 #endif
 }
 
