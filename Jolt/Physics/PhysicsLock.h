@@ -86,7 +86,7 @@ private:
 		PhysicsLockContext		mContext = nullptr;
 	};
 
-	static thread_local LockData sLocks[4];
+	JPH_EXPORT static thread_local LockData sLocks[4];
 
 	// Helper function to find the locked mutexes for a particular context
 	static uint32 &				sGetLockedMutexes(PhysicsLockContext inContext)
