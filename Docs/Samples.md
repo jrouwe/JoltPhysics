@@ -137,7 +137,7 @@ This category shows the various constraints that are supported. Constraints conn
 
 ### General
 
-This category contains general simulation tests. It demonstrates things like friction, restitution, damping, modifying gravity and continous collision detection. Some highlights:
+This category contains general simulation tests. It demonstrates things like friction, restitution, damping, modifying gravity and continuous collision detection. Some highlights:
 
 |[![Stable Box Stacking](https://img.youtube.com/vi/fTtjBLYBxco/hqdefault.jpg)](https://www.youtube.com/watch?v=fTtjBLYBxco)|
 |:-|
