@@ -80,6 +80,10 @@ public:
 	}
 
 private:
+#ifdef JPH_OBJECT_STREAM
+	friend void		CreateRTTIPlane(class RTTI &);										// For JPH_IMPLEMENT_SERIALIZABLE_OUTSIDE_CLASS
+#endif
+
 	Vec4			mNormalAndConstant;													///< XYZ = normal, W = constant, plane: x . normal + constant = 0
 };
 

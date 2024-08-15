@@ -212,7 +212,7 @@ void DebugRenderer::DrawCoordinateSystem(RMat44Arg inTransform, float inSize)
 	DrawArrow(inTransform.GetTranslation(), inTransform * Vec3(0, 0, inSize), Color::sBlue, 0.1f * inSize);
 }
 
-void DebugRenderer::DrawPlane(RVec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize)
+void DebugRenderer::DrawPlane(RVec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	// Create orthogonal basis
 	Vec3 perp1 = inNormal.Cross(Vec3::sAxisY()).NormalizedOr(Vec3::sAxisX());
@@ -225,18 +225,26 @@ void DebugRenderer::DrawPlane(RVec3Arg inPoint, Vec3Arg inNormal, ColorArg inCol
 	RVec3 corner3 = inPoint + inSize * (-perp1 - perp2);
 	RVec3 corner4 = inPoint + inSize * (-perp1 + perp2);
 
-	// Draw cross
-	DrawLine(corner1, corner3, inColor);
-	DrawLine(corner2, corner4, inColor);
+	if (inDrawMode == EDrawMode::Wireframe)
+	{
+		// Draw cross
+		DrawLine(corner1, corner3, inColor);
+		DrawLine(corner2, corner4, inColor);
 
-	// Draw square
-	DrawLine(corner1, corner2, inColor);
-	DrawLine(corner2, corner3, inColor);
-	DrawLine(corner3, corner4, inColor);
-	DrawLine(corner4, corner1, inColor);
+		// Draw square
+		DrawLine(corner1, corner2, inColor);
+		DrawLine(corner2, corner3, inColor);
+		DrawLine(corner3, corner4, inColor);
+		DrawLine(corner4, corner1, inColor);
 
-	// Draw normal
-	DrawArrow(inPoint, inPoint + inSize * inNormal, inColor, 0.1f * inSize);
+		// Draw normal
+		DrawArrow(inPoint, inPoint + inSize * inNormal, inColor, 0.1f * inSize);
+	}
+	else
+	{
+		DrawTriangle(corner1, corner2, corner3, inColor, inCastShadow);
+		DrawTriangle(corner1, corner3, corner4, inColor, inCastShadow);
+	}
 }
 
 void DebugRenderer::DrawWireTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor)
