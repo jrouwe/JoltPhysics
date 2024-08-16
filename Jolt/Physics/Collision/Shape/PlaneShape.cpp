@@ -40,6 +40,34 @@ ShapeSettings::ShapeResult PlaneShapeSettings::Create() const
 	return mCachedResult;
 }
 
+void PlaneShape::CalculateLocalBounds()
+{
+	// Project the corners of a bounding box of size [-mSize, mSize] onto the plane
+	Vec3 corners[] =
+	{
+		Vec3(+mSize, +mSize, +mSize),
+		Vec3(+mSize, +mSize, -mSize),
+		Vec3(+mSize, -mSize, +mSize),
+		Vec3(+mSize, -mSize, -mSize),
+		Vec3(-mSize, +mSize, +mSize),
+		Vec3(-mSize, +mSize, -mSize),
+		Vec3(-mSize, -mSize, +mSize),
+		Vec3(-mSize, -mSize, -mSize),
+	};
+	mLocalBounds = AABox();
+	Vec3 normal = mPlane.GetNormal();
+	for (Vec3 &c : corners)
+	{
+		Vec3 projected = mPlane.ProjectPointOnPlane(c);
+
+		// Encapsulate these points
+		mLocalBounds.Encapsulate(projected);
+
+		// And also encapsulate a point mSize behind that point
+		mLocalBounds.Encapsulate(projected - mSize * normal);
+	}
+}
+
 PlaneShape::PlaneShape(const PlaneShapeSettings &inSettings, ShapeResult &outResult) :
 	Shape(EShapeType::Plane, EShapeSubType::Plane, inSettings, outResult),
 	mPlane(inSettings.mPlane),
@@ -50,6 +78,8 @@ PlaneShape::PlaneShape(const PlaneShapeSettings &inSettings, ShapeResult &outRes
 		outResult.SetError("Plane normal needs to be normalized!");
 		return;
 	}
+
+	CalculateLocalBounds();
 
 	outResult.Set(this);
 }
@@ -63,11 +93,6 @@ MassProperties PlaneShape::GetMassProperties() const
 void PlaneShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
 {
 	JPH_ASSERT(false, "Cannot provide sensible supporting face for a plane");
-}
-
-AABox PlaneShape::GetLocalBounds() const
-{
-	return AABox(Vec3::sReplicate(-mSize), Vec3::sReplicate(mSize));
 }
 
 #ifdef JPH_DEBUG_RENDERER
@@ -239,6 +264,8 @@ void PlaneShape::RestoreBinaryState(StreamIn &inStream)
 
 	inStream.Read(mPlane);
 	inStream.Read(mSize);
+
+	CalculateLocalBounds();
 }
 
 void PlaneShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const

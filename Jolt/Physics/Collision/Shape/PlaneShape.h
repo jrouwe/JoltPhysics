@@ -46,7 +46,7 @@ public:
 
 	/// Constructor
 									PlaneShape() : Shape(EShapeType::Plane, EShapeSubType::Plane) { }
-									PlaneShape(const Plane &inPlane, const PhysicsMaterial *inMaterial = nullptr, float inSize = PlaneShapeSettings::cDefaultSize) : Shape(EShapeType::Plane, EShapeSubType::Plane), mPlane(inPlane), mMaterial(inMaterial), mSize(inSize) { };
+									PlaneShape(const Plane &inPlane, const PhysicsMaterial *inMaterial = nullptr, float inSize = PlaneShapeSettings::cDefaultSize) : Shape(EShapeType::Plane, EShapeSubType::Plane), mPlane(inPlane), mMaterial(inMaterial), mSize(inSize) { CalculateLocalBounds(); }
 									PlaneShape(const PlaneShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Get the plane
@@ -59,7 +59,7 @@ public:
 	virtual bool					MustBeStatic() const override								{ return true; }
 
 	// See Shape::GetLocalBounds
-	virtual AABox					GetLocalBounds() const override;
+	virtual AABox					GetLocalBounds() const override								{ return mLocalBounds; }
 
 	// See Shape::GetSubShapeIDBitsRecursive
 	virtual uint					GetSubShapeIDBitsRecursive() const override					{ return 0; }
@@ -124,6 +124,9 @@ protected:
 private:
 	struct							PSGetTrianglesContext;										///< Context class for GetTrianglesStart/Next
 
+	// Cache the local bounds
+	void							CalculateLocalBounds();
+
 	// Helper functions called by CollisionDispatch
 	static void						sCollideConvexVsPlane(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter);
 	static void						sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
@@ -131,6 +134,7 @@ private:
 	Plane							mPlane;
 	RefConst<PhysicsMaterial>		mMaterial;
 	float							mSize;
+	AABox							mLocalBounds;
 };
 
 JPH_NAMESPACE_END
