@@ -42,8 +42,19 @@ public:
 		return Plane(transformed_normal, GetConstant() - inTransform.GetTranslation().Dot(transformed_normal));
 	}
 
+	/// Transform the plane by a matrix with possible scaling
+	inline Plane	GetTransformedWithScaling(Mat44Arg inTransform) const
+	{
+		Vec3 transformed_normal = inTransform.GetDirectionPreservingMatrix().Multiply3x3(GetNormal()).Normalized();
+		Vec3 transformed_point = inTransform * (GetNormal() * -GetConstant());
+		return Plane::sFromPointAndNormal(transformed_point, transformed_normal);
+	}
+
 	/// Distance point to plane
 	float			SignedDistance(Vec3Arg inPoint) const									{ return inPoint.Dot(GetNormal()) + GetConstant(); }
+
+	/// Project inPoint onto the plane
+	Vec3			ProjectPointOnPlane(Vec3Arg inPoint) const								{ return inPoint - GetNormal() * SignedDistance(inPoint); }
 
 	/// Returns intersection point between 3 planes
 	static bool		sIntersectPlanes(const Plane &inP1, const Plane &inP2, const Plane &inP3, Vec3 &outPoint)

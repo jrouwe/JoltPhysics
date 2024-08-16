@@ -73,10 +73,10 @@ AABox PlaneShape::GetLocalBounds() const
 #ifdef JPH_DEBUG_RENDERER
 void PlaneShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
-	RMat44 com = inCenterOfMassTransform * Mat44::sScale(inScale);
+	RMat44 com = inCenterOfMassTransform.PreScaled(inScale);
 	
 	RVec3 point = com * (-mPlane.GetNormal() * mPlane.GetConstant());
-	Vec3 normal = (com.GetDirectionPreservingMatrix() * mPlane.GetNormal()).Normalized();
+	Vec3 normal = com.GetDirectionPreservingMatrix().Multiply3x3(mPlane.GetNormal()).Normalized();
 	inRenderer->DrawPlane(point, normal, inColor, mSize, DebugRenderer::ECastShadow::On, DebugRenderer::EDrawMode::Solid);
 }
 #endif // JPH_DEBUG_RENDERER
@@ -114,22 +114,18 @@ void PlaneShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3A
 {
 	JPH_PROFILE_FUNCTION();
 
-	JPH_ASSERT(ScaleHelpers::IsNotScaled(inScale));
-
-	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+	// Convert plane to world space
+	Plane plane = mPlane.GetTransformedWithScaling(inCenterOfMassTransform.PreScaled(inScale));
 
 	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
 		if (v->mInvMass > 0.0f)
 		{
-			// Convert to local space
-			Vec3 local_pos = inverse_transform * v->mPosition;
-
 			// Calculate penetration
-			float penetration = -mPlane.SignedDistance(local_pos);
+			float penetration = -plane.SignedDistance(v->mPosition);
 			if (penetration > v->mLargestPenetration)
 			{
 				v->mLargestPenetration = penetration;
-				v->mCollisionPlane = mPlane.GetTransformed(inCenterOfMassTransform);
+				v->mCollisionPlane = plane;
 				v->mCollidingShapeIndex = inCollidingShapeIndex;
 			}
 		}
@@ -160,7 +156,7 @@ void PlaneShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &
 	static_assert(sizeof(PSGetTrianglesContext) <= sizeof(GetTrianglesContext), "GetTrianglesContext too small");
 	JPH_ASSERT(IsAligned(&ioContext, alignof(PSGetTrianglesContext)));
 
-	new (&ioContext) PSGetTrianglesContext(this, Mat44::sRotationTranslation(inRotation, inPositionCOM) * Mat44::sScale(inScale));
+	new (&ioContext) PSGetTrianglesContext(this, Mat44::sRotationTranslation(inRotation, inPositionCOM).PreScaled(inScale));
 }
 
 int PlaneShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials) const
@@ -176,8 +172,57 @@ void PlaneShape::sCollideConvexVsPlane(const Shape *inShape1, const Shape *inSha
 	// Get the shapes
 	JPH_ASSERT(inShape1->GetType() == EShapeType::Convex);
 	JPH_ASSERT(inShape2->GetType() == EShapeType::Plane);
-	//const ConvexShape *shape1 = static_cast<const ConvexShape *>(inShape1);
-	//const PlaneShape *shape2 = static_cast<const PlaneShape *>(inShape2);
+	const ConvexShape *shape1 = static_cast<const ConvexShape *>(inShape1);
+	const PlaneShape *shape2 = static_cast<const PlaneShape *>(inShape2);
+
+	// Get transforms
+	Mat44 transform2 = inCenterOfMassTransform2.PreScaled(inScale2);
+	Mat44 inverse_transform1 = inCenterOfMassTransform1.InversedRotationTranslation();
+	Mat44 transform_2_to_1 = inverse_transform1 * transform2;
+
+	// Transform the plane to the space of the convex shape
+	Plane plane = shape2->mPlane.GetTransformedWithScaling(transform_2_to_1);
+	Vec3 normal = plane.GetNormal();
+
+	// Get support function
+	ConvexShape::SupportBuffer shape1_support_buffer;
+	const ConvexShape::Support *shape1_support = shape1->GetSupportFunction(ConvexShape::ESupportMode::Default, shape1_support_buffer, inScale1);
+
+	// Get the support point of the convex shape in the opposite direction of the plane normal
+	Vec3 support_point = shape1_support->GetSupport(-normal);
+	float signed_distance = plane.SignedDistance(support_point);
+	float convex_radius = shape1_support->GetConvexRadius();
+	float penetration_depth = -signed_distance + convex_radius;
+	if (penetration_depth > -inCollideShapeSettings.mMaxSeparationDistance)
+	{
+		// Get contact point
+		Vec3 point1 = inCenterOfMassTransform1 * (support_point - normal * convex_radius);
+		Vec3 point2 = inCenterOfMassTransform1 * (support_point - normal * signed_distance);
+		Vec3 penetration_axis_world = inCenterOfMassTransform1.Multiply3x3(-normal);
+
+		// Create collision result
+		CollideShapeResult result(point1, point2, penetration_axis_world, penetration_depth, inSubShapeIDCreator1.GetID(), inSubShapeIDCreator2.GetID(), TransformedShape::sGetBodyID(ioCollector.GetContext()));
+
+		// Gather faces
+		if (inCollideShapeSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
+		{
+			// Get supporting face of shape 1
+			shape1->GetSupportingFace(SubShapeID(), normal, inScale1, inCenterOfMassTransform1, result.mShape1Face);
+
+			// Project these points on the plane for shape 2 and reverse them
+			if (!result.mShape1Face.empty())
+			{
+				Plane world_plane = plane.GetTransformed(inCenterOfMassTransform1);
+				result.mShape2Face.resize(result.mShape1Face.size());
+				for (uint i = 0; i < result.mShape1Face.size(); ++i)
+					result.mShape2Face[i] = world_plane.ProjectPointOnPlane(result.mShape1Face[result.mShape1Face.size() - 1 - i]);
+			}
+		}
+
+		// Notify the collector
+		JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
+		ioCollector.AddHit(result);
+	}
 }
 
 void PlaneShape::SaveBinaryState(StreamOut &inStream) const

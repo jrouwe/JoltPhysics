@@ -49,6 +49,12 @@ public:
 									PlaneShape(const Plane &inPlane, const PhysicsMaterial *inMaterial = nullptr, float inSize = PlaneShapeSettings::cDefaultSize) : Shape(EShapeType::Plane, EShapeSubType::Plane), mPlane(inPlane), mMaterial(inMaterial), mSize(inSize) { };
 									PlaneShape(const PlaneShapeSettings &inSettings, ShapeResult &outResult);
 
+	/// Get the plane
+	const Plane &					GetPlane() const											{ return mPlane; }
+
+	/// Get the size of the bounding box of the plane
+	float							GetSize() const												{ return mSize; }
+
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override								{ return true; }
 
