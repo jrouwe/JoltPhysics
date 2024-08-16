@@ -40,31 +40,35 @@ ShapeSettings::ShapeResult PlaneShapeSettings::Create() const
 	return mCachedResult;
 }
 
+void PlaneShape::GetVertices(Vec3 *outVertices) const
+{
+	// Create orthogonal basis
+	Vec3 normal = mPlane.GetNormal();
+	Vec3 perp1 = normal.Cross(Vec3::sAxisY()).NormalizedOr(Vec3::sAxisX());
+	Vec3 perp2 = perp1.Cross(normal).Normalized();
+	perp1 = normal.Cross(perp2);
+
+	// Calculate corners
+	Vec3 point = -normal * mPlane.GetConstant();
+	outVertices[0] = point + mSize * ( perp1 + perp2);
+	outVertices[1] = point + mSize * ( perp1 - perp2);
+	outVertices[2] = point + mSize * (-perp1 - perp2);
+	outVertices[3] = point + mSize * (-perp1 + perp2);
+}
+
 void PlaneShape::CalculateLocalBounds()
 {
-	// Project the corners of a bounding box of size [-mSize, mSize] onto the plane
-	Vec3 corners[] =
-	{
-		Vec3(+mSize, +mSize, +mSize),
-		Vec3(+mSize, +mSize, -mSize),
-		Vec3(+mSize, -mSize, +mSize),
-		Vec3(+mSize, -mSize, -mSize),
-		Vec3(-mSize, +mSize, +mSize),
-		Vec3(-mSize, +mSize, -mSize),
-		Vec3(-mSize, -mSize, +mSize),
-		Vec3(-mSize, -mSize, -mSize),
-	};
+	// Get the vertices of the plane
+	Vec3 vertices[4];
+	GetVertices(vertices);
+
+	// Encapsulate the vertices and a point mSize behind the plane
 	mLocalBounds = AABox();
 	Vec3 normal = mPlane.GetNormal();
-	for (Vec3 &c : corners)
+	for (const Vec3 &v : vertices)
 	{
-		Vec3 projected = mPlane.ProjectPointOnPlane(c);
-
-		// Encapsulate these points
-		mLocalBounds.Encapsulate(projected);
-
-		// And also encapsulate a point mSize behind that point
-		mLocalBounds.Encapsulate(projected - mSize * normal);
+		mLocalBounds.Encapsulate(v);
+		mLocalBounds.Encapsulate(v - mSize * normal);
 	}
 }
 
@@ -92,17 +96,44 @@ MassProperties PlaneShape::GetMassProperties() const
 
 void PlaneShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
 {
-	JPH_ASSERT(false, "Cannot provide sensible supporting face for a plane");
+	// Get the vertices of the plane
+	Vec3 vertices[4];
+	GetVertices(vertices);
+
+	// Transform them to world space
+	outVertices.clear();
+	Mat44 com = inCenterOfMassTransform.PreScaled(inScale);
+	for (const Vec3 &v : vertices)
+		outVertices.push_back(com * v);
 }
 
 #ifdef JPH_DEBUG_RENDERER
 void PlaneShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
+	// Get the vertices of the plane
+	Vec3 local_vertices[4];
+	GetVertices(local_vertices);
+
+	// Transform them to world space
 	RMat44 com = inCenterOfMassTransform.PreScaled(inScale);
-	
-	RVec3 point = com * (-mPlane.GetNormal() * mPlane.GetConstant());
-	Vec3 normal = com.GetDirectionPreservingMatrix().Multiply3x3(mPlane.GetNormal()).Normalized();
-	inRenderer->DrawPlane(point, normal, inColor, mSize, DebugRenderer::ECastShadow::On, DebugRenderer::EDrawMode::Solid);
+	RVec3 vertices[4];
+	for (uint i = 0; i < 4; ++i)
+		vertices[i] = com * local_vertices[i];
+
+	// Determine the color
+	Color color = inUseMaterialColors? GetMaterial(SubShapeID())->GetDebugColor() : inColor;
+
+	// Draw the plane
+	if (inDrawWireframe)
+	{
+		inRenderer->DrawWireTriangle(vertices[0], vertices[1], vertices[2], color);
+		inRenderer->DrawWireTriangle(vertices[0], vertices[2], vertices[3], color);	
+	}
+	else
+	{
+		inRenderer->DrawTriangle(vertices[0], vertices[1], vertices[2], color);
+		inRenderer->DrawTriangle(vertices[0], vertices[2], vertices[3], color);
+	}
 }
 #endif // JPH_DEBUG_RENDERER
 
@@ -166,14 +197,8 @@ void PlaneShape::sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCas
 
 struct PlaneShape::PSGetTrianglesContext
 {
-	JPH_INLINE					PSGetTrianglesContext(const PlaneShape *inShape, Mat44Arg inCenterOfMassTransform) :
-		mShape(inShape),
-		mCenterOfMassTransform(inCenterOfMassTransform)
-	{
-	}
-
-	const PlaneShape *			mShape;
-	Mat44						mCenterOfMassTransform;
+	Float3	mVertices[4];
+	bool	mDone = false;
 };
 
 void PlaneShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const
@@ -181,13 +206,48 @@ void PlaneShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &
 	static_assert(sizeof(PSGetTrianglesContext) <= sizeof(GetTrianglesContext), "GetTrianglesContext too small");
 	JPH_ASSERT(IsAligned(&ioContext, alignof(PSGetTrianglesContext)));
 
-	new (&ioContext) PSGetTrianglesContext(this, Mat44::sRotationTranslation(inRotation, inPositionCOM).PreScaled(inScale));
+	PSGetTrianglesContext *context = new (&ioContext) PSGetTrianglesContext();
+
+	// Get the vertices of the plane
+	Vec3 vertices[4];
+	GetVertices(vertices);
+
+	// Transform them to world space
+	Mat44 com = Mat44::sRotationTranslation(inRotation, inPositionCOM).PreScaled(inScale);
+	for (uint i = 0; i < 4; ++i)
+		(com * vertices[i]).StoreFloat3(&context->mVertices[i]);
 }
 
 int PlaneShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials) const
 {
-	//PSGetTrianglesContext &context = (PSGetTrianglesContext &)ioContext;
-	return 0;
+	static_assert(cGetTrianglesMinTrianglesRequested >= 2, "cGetTrianglesMinTrianglesRequested is too small");
+	JPH_ASSERT(inMaxTrianglesRequested >= cGetTrianglesMinTrianglesRequested);
+
+	// Check if we're done
+	PSGetTrianglesContext &context = (PSGetTrianglesContext &)ioContext;
+	if (context.mDone)
+		return 0;
+	context.mDone = true;
+
+	// 1st triangle
+	outTriangleVertices[0] = context.mVertices[0];
+	outTriangleVertices[1] = context.mVertices[1];
+	outTriangleVertices[2] = context.mVertices[2];
+
+	// 2nd triangle
+	outTriangleVertices[3] = context.mVertices[0];
+	outTriangleVertices[4] = context.mVertices[2];
+	outTriangleVertices[5] = context.mVertices[3];
+
+	if (outMaterials != nullptr)
+	{
+		// Get material
+		const PhysicsMaterial *material = GetMaterial(SubShapeID());
+		outMaterials[0] = material;
+		outMaterials[1] = material;
+	}
+
+	return 2;
 }
 
 void PlaneShape::sCollideConvexVsPlane(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, [[maybe_unused]] const ShapeFilter &inShapeFilter)

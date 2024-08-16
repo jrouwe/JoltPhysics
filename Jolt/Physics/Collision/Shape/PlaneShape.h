@@ -124,6 +124,9 @@ protected:
 private:
 	struct							PSGetTrianglesContext;										///< Context class for GetTrianglesStart/Next
 
+	// Get 4 vertices that form the plane
+	void							GetVertices(Vec3 *outVertices) const;
+
 	// Cache the local bounds
 	void							CalculateLocalBounds();
 

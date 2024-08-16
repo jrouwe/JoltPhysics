@@ -72,6 +72,9 @@ public:
 	/// Draw coordinate system (3 arrows, x = red, y = green, z = blue)
 	void								DrawCoordinateSystem(RMat44Arg inTransform, float inSize = 1.0f);
 
+	/// Draw a plane through inPoint with normal inNormal
+	void								DrawPlane(RVec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize);
+
 	/// Draw wireframe triangle
 	void								DrawWireTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor);
 
@@ -99,9 +102,6 @@ public:
 
 	/// Draw a single back face culled triangle
 	virtual void						DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::Off) = 0;
-
-	/// Draw a plane through inPoint with normal inNormal
-	void								DrawPlane(RVec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize, ECastShadow inCastShadow = ECastShadow::Off, EDrawMode inDrawMode = EDrawMode::Wireframe);
 
 	/// Draw a box
 	void								DrawBox(const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
