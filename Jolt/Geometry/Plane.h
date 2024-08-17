@@ -42,14 +42,6 @@ public:
 		return Plane(transformed_normal, GetConstant() - inTransform.GetTranslation().Dot(transformed_normal));
 	}
 
-	/// Transform the plane by a matrix with possible scaling
-	inline Plane	GetTransformedWithScaling(Mat44Arg inTransform) const
-	{
-		Vec3 transformed_normal = inTransform.GetDirectionPreservingMatrix().Multiply3x3(GetNormal()).Normalized();
-		Vec3 transformed_point = inTransform * (GetNormal() * -GetConstant());
-		return Plane::sFromPointAndNormal(transformed_point, transformed_normal);
-	}
-
 	/// Scale the plane, can handle non-uniform and negative scaling
 	inline Plane	Scaled(Vec3Arg inScale) const
 	{

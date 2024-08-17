@@ -239,7 +239,7 @@ void PlaneShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3A
 	JPH_PROFILE_FUNCTION();
 
 	// Convert plane to world space
-	Plane plane = mPlane.GetTransformedWithScaling(inCenterOfMassTransform.PreScaled(inScale));
+	Plane plane = mPlane.Scaled(inScale).GetTransformed(inCenterOfMassTransform);
 
 	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
 		if (v->mInvMass > 0.0f)
@@ -427,13 +427,8 @@ void PlaneShape::sCollideConvexVsPlane(const Shape *inShape1, const Shape *inSha
 	const ConvexShape *shape1 = static_cast<const ConvexShape *>(inShape1);
 	const PlaneShape *shape2 = static_cast<const PlaneShape *>(inShape2);
 
-	// Get transforms
-	Mat44 transform2 = inCenterOfMassTransform2.PreScaled(inScale2);
-	Mat44 inverse_transform1 = inCenterOfMassTransform1.InversedRotationTranslation();
-	Mat44 transform_2_to_1 = inverse_transform1 * transform2;
-
 	// Transform the plane to the space of the convex shape
-	Plane plane = shape2->mPlane.GetTransformedWithScaling(transform_2_to_1);
+	Plane plane = shape2->mPlane.Scaled(inScale2).GetTransformed(inCenterOfMassTransform1.InversedRotationTranslation() * inCenterOfMassTransform2);
 	Vec3 normal = plane.GetNormal();
 
 	// Get support function
