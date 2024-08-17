@@ -141,6 +141,29 @@ bool PlaneShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubSha
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Test starting inside of negative half space
+	float distance = mPlane.SignedDistance(inRay.mOrigin);
+	if (distance <= 0.0f)
+	{
+		ioHit.mFraction = 0.0f;
+		ioHit.mSubShapeID2 = inSubShapeIDCreator.GetID();
+		return true;
+	}
+
+	// Test ray parallel to plane
+	float dot = inRay.mDirection.Dot(mPlane.GetNormal());
+	if (dot == 0.0f)
+		return false;
+
+	// Calculate hit fraction
+	float fraction = -distance / dot;
+	if (fraction >= 0.0f && fraction < ioHit.mFraction)
+	{
+		ioHit.mFraction = fraction;
+		ioHit.mSubShapeID2 = inSubShapeIDCreator.GetID();
+		return true;
+	}
+
 	return false;
 }
 
@@ -151,6 +174,36 @@ void PlaneShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastS
 	// Test shape filter
 	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
+
+	// Inside solid half space?
+	float distance = mPlane.SignedDistance(inRay.mOrigin);
+	if (inRayCastSettings.mTreatConvexAsSolid
+		&& distance <= 0.0f // Inside plane
+		&& ioCollector.GetEarlyOutFraction() > 0.0f) // Willing to accept hits at fraction 0
+	{
+		// Hit at fraction 0
+		RayCastResult hit;
+		hit.mBodyID = TransformedShape::sGetBodyID(ioCollector.GetContext());
+		hit.mFraction = 0.0f;
+		hit.mSubShapeID2 = inSubShapeIDCreator.GetID();
+		ioCollector.AddHit(hit);
+	}
+
+	float dot = inRay.mDirection.Dot(mPlane.GetNormal());
+	if (dot != 0.0f // Parallel ray will not hit plane
+		&& (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces || dot < 0.0f)) // Back face culling
+	{
+		// Calculate hit with plane
+		float fraction = -distance / dot;
+		if (fraction >= 0.0f && fraction < ioCollector.GetEarlyOutFraction())
+		{
+			RayCastResult hit;
+			hit.mBodyID = TransformedShape::sGetBodyID(ioCollector.GetContext());
+			hit.mFraction = fraction;
+			hit.mSubShapeID2 = inSubShapeIDCreator.GetID();
+			ioCollector.AddHit(hit);
+		}
+	}
 }
 
 void PlaneShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
