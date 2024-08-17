@@ -45,7 +45,7 @@ public:
 	/// Scale the plane, can handle non-uniform and negative scaling
 	inline Plane	Scaled(Vec3Arg inScale) const
 	{
-		Vec3 scaled_normal = inScale.Reciprocal() * GetNormal();
+		Vec3 scaled_normal = GetNormal() / inScale;
 		float scaled_normal_length = scaled_normal.Length();
 		return Plane(scaled_normal / scaled_normal_length, GetConstant() / scaled_normal_length);
 	}
