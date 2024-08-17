@@ -19,8 +19,10 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Geometry/Plane.h>
-#include <Jolt/Renderer/DebugRenderer.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
+#ifdef JPH_DEBUG_RENDERER
+	#include <Jolt/Renderer/DebugRenderer.h>
+#endif // JPH_DEBUG_RENDERER
 
 JPH_NAMESPACE_BEGIN
 
