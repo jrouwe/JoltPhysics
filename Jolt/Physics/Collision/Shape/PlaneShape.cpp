@@ -255,6 +255,18 @@ void PlaneShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3A
 		}
 }
 
+// Helper function to project a face onto a plane and reverse the points
+static void sProjectFaceOnPlane(const Plane &inPlane, const StaticArray<Vec3, 32> &inFace1, StaticArray<Vec3, 32> &outFace2)
+{
+	outFace2.resize(inFace1.size());
+	Vec3 *dest = outFace2.data() + inFace1.size() - 1;
+	for (const Vec3 &src : inFace1)
+	{
+		*dest = inPlane.ProjectPointOnPlane(src);
+		--dest;
+	}
+}
+
 void PlaneShape::sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
@@ -274,7 +286,8 @@ void PlaneShape::sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCas
 	const ConvexShape::Support *shape1_support = convex_shape->GetSupportFunction(ConvexShape::ESupportMode::Default, shape1_support_buffer, inShapeCast.mScale);
 
 	// Get the support point of the convex shape in the opposite direction of the plane normal in our local space
-	Vec3 support_point = inShapeCast.mCenterOfMassStart * shape1_support->GetSupport(inShapeCast.mCenterOfMassStart.Multiply3x3Transposed(-normal));
+	Vec3 normal_in_convex_shape_space = inShapeCast.mCenterOfMassStart.Multiply3x3Transposed(normal);
+	Vec3 support_point = inShapeCast.mCenterOfMassStart * shape1_support->GetSupport(-normal_in_convex_shape_space);
 	float signed_distance = plane.SignedDistance(support_point);
 	float convex_radius = shape1_support->GetConvexRadius();
 	float penetration_depth = -signed_distance + convex_radius;
@@ -333,15 +346,13 @@ void PlaneShape::sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCas
 	if (inShapeCastSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
 	{
 		// Get supporting face of shape 1
-		convex_shape->GetSupportingFace(SubShapeID(), normal, inShapeCast.mScale, com_hit * inShapeCast.mCenterOfMassStart, result.mShape1Face);
+		convex_shape->GetSupportingFace(SubShapeID(), normal_in_convex_shape_space, inShapeCast.mScale, com_hit * inShapeCast.mCenterOfMassStart, result.mShape1Face);
 
 		// Project these points on the plane for shape 2 and reverse them
 		if (!result.mShape1Face.empty())
 		{
 			Plane world_plane = plane.GetTransformed(inCenterOfMassTransform2);
-			result.mShape2Face.resize(result.mShape1Face.size());
-			for (uint i = 0; i < result.mShape1Face.size(); ++i)
-				result.mShape2Face[i] = world_plane.ProjectPointOnPlane(result.mShape1Face[result.mShape1Face.size() - 1 - i]);
+			sProjectFaceOnPlane(world_plane, result.mShape1Face, result.mShape2Face);
 		}
 	}
 
@@ -455,9 +466,7 @@ void PlaneShape::sCollideConvexVsPlane(const Shape *inShape1, const Shape *inSha
 			if (!result.mShape1Face.empty())
 			{
 				Plane world_plane = plane.GetTransformed(inCenterOfMassTransform1);
-				result.mShape2Face.resize(result.mShape1Face.size());
-				for (uint i = 0; i < result.mShape1Face.size(); ++i)
-					result.mShape2Face[i] = world_plane.ProjectPointOnPlane(result.mShape1Face[result.mShape1Face.size() - 1 - i]);
+				sProjectFaceOnPlane(world_plane, result.mShape1Face, result.mShape2Face);
 			}
 		}
 
