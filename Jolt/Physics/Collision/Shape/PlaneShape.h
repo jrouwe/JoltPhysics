@@ -22,7 +22,7 @@ public:
 									PlaneShapeSettings() = default;
 
 	/// Create a plane shape.
-									PlaneShapeSettings(const Plane &inPlane, const PhysicsMaterial *inMaterial = nullptr) : mPlane(inPlane), mMaterial(inMaterial) { }
+									PlaneShapeSettings(const Plane &inPlane, const PhysicsMaterial *inMaterial = nullptr, float inSize = cDefaultSize) : mPlane(inPlane), mMaterial(inMaterial), mSize(inSize) { }
 
 	// See: ShapeSettings
 	virtual ShapeResult				Create() const override;

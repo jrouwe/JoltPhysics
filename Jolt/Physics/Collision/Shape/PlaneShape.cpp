@@ -75,7 +75,8 @@ void PlaneShape::CalculateLocalBounds()
 PlaneShape::PlaneShape(const PlaneShapeSettings &inSettings, ShapeResult &outResult) :
 	Shape(EShapeType::Plane, EShapeSubType::Plane, inSettings, outResult),
 	mPlane(inSettings.mPlane),
-	mMaterial(inSettings.mMaterial)
+	mMaterial(inSettings.mMaterial),
+	mSize(inSettings.mSize)
 {
 	if (!mPlane.GetNormal().IsNormalized())
 	{
@@ -100,6 +101,13 @@ void PlaneShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDir
 	Vec3 vertices[4];
 	GetVertices(vertices);
 
+	// Reverse if scale is inside out
+	if (ScaleHelpers::IsInsideOut(inScale))
+	{
+		swap(vertices[0], vertices[3]);
+		swap(vertices[1], vertices[2]);
+	}
+
 	// Transform them to world space
 	outVertices.clear();
 	Mat44 com = inCenterOfMassTransform.PreScaled(inScale);
@@ -113,6 +121,13 @@ void PlaneShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransfo
 	// Get the vertices of the plane
 	Vec3 local_vertices[4];
 	GetVertices(local_vertices);
+
+	// Reverse if scale is inside out
+	if (ScaleHelpers::IsInsideOut(inScale))
+	{
+		swap(local_vertices[0], local_vertices[3]);
+		swap(local_vertices[1], local_vertices[2]);
+	}
 
 	// Transform them to world space
 	RMat44 com = inCenterOfMassTransform.PreScaled(inScale);
@@ -264,6 +279,13 @@ void PlaneShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &
 	// Get the vertices of the plane
 	Vec3 vertices[4];
 	GetVertices(vertices);
+
+	// Reverse if scale is inside out
+	if (ScaleHelpers::IsInsideOut(inScale))
+	{
+		swap(vertices[0], vertices[3]);
+		swap(vertices[1], vertices[2]);
+	}
 
 	// Transform them to world space
 	Mat44 com = Mat44::sRotationTranslation(inRotation, inPositionCOM).PreScaled(inScale);
