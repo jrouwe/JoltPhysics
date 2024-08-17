@@ -142,7 +142,7 @@ void PlaneShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransfo
 	if (inDrawWireframe)
 	{
 		inRenderer->DrawWireTriangle(vertices[0], vertices[1], vertices[2], color);
-		inRenderer->DrawWireTriangle(vertices[0], vertices[2], vertices[3], color);	
+		inRenderer->DrawWireTriangle(vertices[0], vertices[2], vertices[3], color);
 	}
 	else
 	{
