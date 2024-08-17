@@ -50,6 +50,14 @@ public:
 		return Plane::sFromPointAndNormal(transformed_point, transformed_normal);
 	}
 
+	/// Scale the plane, can handle non-uniform and negative scaling
+	inline Plane	Scaled(Vec3Arg inScale) const
+	{
+		Vec3 scaled_normal = inScale.Reciprocal() * GetNormal();
+		float scaled_normal_length = scaled_normal.Length();
+		return Plane(scaled_normal / scaled_normal_length, GetConstant() / scaled_normal_length);
+	}
+
 	/// Distance point to plane
 	float			SignedDistance(Vec3Arg inPoint) const									{ return inPoint.Dot(GetNormal()) + GetConstant(); }
 
