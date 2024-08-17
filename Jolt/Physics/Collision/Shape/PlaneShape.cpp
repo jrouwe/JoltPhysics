@@ -280,79 +280,74 @@ void PlaneShape::sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCas
 	float penetration_depth = -signed_distance + convex_radius;
 	float dot = inShapeCast.mDirection.Dot(normal);
 
+	// Collision output
+	Mat44 com_hit;
+	Vec3 point1, point2;
+	float fraction;
+
 	// Do we start in collision?
 	if (penetration_depth > 0.0f)
 	{
-		if ((inShapeCastSettings.mBackFaceModeConvex == EBackFaceMode::CollideWithBackFaces || dot < 0.0f) // Back face cull
-			&& penetration_depth > -ioCollector.GetEarlyOutFraction()) // Deeper hit than early out?
-		{
-			// Get contact point
-			Vec3 point1 = inCenterOfMassTransform2 * (support_point - normal * convex_radius);
-			Vec3 point2 = inCenterOfMassTransform2 * (support_point - normal * signed_distance);
-			Vec3 penetration_axis_world = inCenterOfMassTransform2.Multiply3x3(-normal);
-			bool back_facing = inShapeCast.mDirection.Dot(normal) > 0.0f;
+		// Back face culling?
+		if (inShapeCastSettings.mBackFaceModeConvex == EBackFaceMode::IgnoreBackFaces && dot > 0.0f)
+			return;
 
-			// Create cast result
-			ShapeCastResult result(0.0f, point1, point2, penetration_axis_world, back_facing, inSubShapeIDCreator1.GetID(), inSubShapeIDCreator2.GetID(), TransformedShape::sGetBodyID(ioCollector.GetContext()));
-		
-			// Gather faces
-			if (inShapeCastSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
-			{
-				// Get supporting face of shape 1
-				convex_shape->GetSupportingFace(SubShapeID(), normal, inShapeCast.mScale, inCenterOfMassTransform2 * inShapeCast.mCenterOfMassStart, result.mShape1Face);
+		// Shallower hit?
+		if (penetration_depth <= -ioCollector.GetEarlyOutFraction())
+			return;
 
-				// Project these points on the plane for shape 2 and reverse them
-				if (!result.mShape1Face.empty())
-				{
-					Plane world_plane = plane.GetTransformed(inCenterOfMassTransform2);
-					result.mShape2Face.resize(result.mShape1Face.size());
-					for (uint i = 0; i < result.mShape1Face.size(); ++i)
-						result.mShape2Face[i] = world_plane.ProjectPointOnPlane(result.mShape1Face[result.mShape1Face.size() - 1 - i]);
-				}
-			}
+		// We're hitting at fraction 0
+		fraction = 0.0f;
 
-			// Notify the collector
-			JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
-			ioCollector.AddHit(result);
-		}
+		// Get contact point
+		com_hit = inCenterOfMassTransform2;
+		point1 = inCenterOfMassTransform2 * (support_point - normal * convex_radius);
+		point2 = inCenterOfMassTransform2 * (support_point - normal * signed_distance);
 	}
-	else if (dot < 0.0f) // Are we moving towards the plane
+	else if (dot < 0.0f) // Moving towards the plane?
 	{
 		// Calculate hit fraction
-		float fraction = penetration_depth / dot;
+		fraction = penetration_depth / dot;
 		JPH_ASSERT(fraction >= 0.0f);
-		if (fraction < ioCollector.GetEarlyOutFraction())
+
+		// Further than early out fraction?
+		if (fraction >= ioCollector.GetEarlyOutFraction())
+			return;
+
+		// Get contact point
+		com_hit = inCenterOfMassTransform2.PostTranslated(fraction * inShapeCast.mDirection);
+		point1 = point2 = com_hit * (support_point - normal * convex_radius);
+	}
+	else
+	{
+		// Moving away from the plane
+		return;
+	}
+
+	// Create cast result
+	Vec3 penetration_axis_world = com_hit.Multiply3x3(-normal);
+	bool back_facing = dot > 0.0f;
+	ShapeCastResult result(fraction, point1, point2, penetration_axis_world, back_facing, inSubShapeIDCreator1.GetID(), inSubShapeIDCreator2.GetID(), TransformedShape::sGetBodyID(ioCollector.GetContext()));
+
+	// Gather faces
+	if (inShapeCastSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
+	{
+		// Get supporting face of shape 1
+		convex_shape->GetSupportingFace(SubShapeID(), normal, inShapeCast.mScale, com_hit * inShapeCast.mCenterOfMassStart, result.mShape1Face);
+
+		// Project these points on the plane for shape 2 and reverse them
+		if (!result.mShape1Face.empty())
 		{
-			// Get contact point
-			Mat44 com_hit = inCenterOfMassTransform2.PostTranslated(fraction * inShapeCast.mDirection);
-			Vec3 point = com_hit * (support_point - normal * convex_radius);
-			Vec3 penetration_axis_world = com_hit.Multiply3x3(-normal);
-			bool back_facing = dot > 0.0f;
-
-			// Create cast result
-			ShapeCastResult result(fraction, point, point, penetration_axis_world, back_facing, inSubShapeIDCreator1.GetID(), inSubShapeIDCreator2.GetID(), TransformedShape::sGetBodyID(ioCollector.GetContext()));
-
-			// Gather faces
-			if (inShapeCastSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
-			{
-				// Get supporting face of shape 1
-				convex_shape->GetSupportingFace(SubShapeID(), normal, inShapeCast.mScale, com_hit * inShapeCast.mCenterOfMassStart, result.mShape1Face);
-
-				// Project these points on the plane for shape 2 and reverse them
-				if (!result.mShape1Face.empty())
-				{
-					Plane world_plane = plane.GetTransformed(inCenterOfMassTransform2);
-					result.mShape2Face.resize(result.mShape1Face.size());
-					for (uint i = 0; i < result.mShape1Face.size(); ++i)
-						result.mShape2Face[i] = world_plane.ProjectPointOnPlane(result.mShape1Face[result.mShape1Face.size() - 1 - i]);
-				}
-			}
-
-			// Notify the collector
-			JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
-			ioCollector.AddHit(result);
+			Plane world_plane = plane.GetTransformed(inCenterOfMassTransform2);
+			result.mShape2Face.resize(result.mShape1Face.size());
+			for (uint i = 0; i < result.mShape1Face.size(); ++i)
+				result.mShape2Face[i] = world_plane.ProjectPointOnPlane(result.mShape1Face[result.mShape1Face.size() - 1 - i]);
 		}
 	}
+
+	// Notify the collector
+	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
+	ioCollector.AddHit(result);
 }
 
 struct PlaneShape::PSGetTrianglesContext
