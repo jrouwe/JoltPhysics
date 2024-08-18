@@ -260,6 +260,8 @@ void PlaneShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3A
 // Helper function to project a face onto a plane and reverse the points
 static void sProjectFaceOnPlane(const Plane &inPlane, const StaticArray<Vec3, 32> &inFace1, StaticArray<Vec3, 32> &outFace2)
 {
+	JPH_ASSERT(!inFace1.empty());
+
 	outFace2.resize(inFace1.size());
 	Vec3 *dest = outFace2.data() + inFace1.size() - 1;
 	for (const Vec3 &src : inFace1)
@@ -267,6 +269,22 @@ static void sProjectFaceOnPlane(const Plane &inPlane, const StaticArray<Vec3, 32
 		*dest = inPlane.ProjectPointOnPlane(src);
 		--dest;
 	}
+
+	// If we only have 2 points, add a third point in the plane to form a triangle.
+	// This way ManifoldBetweenTwoFaces will be able to process the manifold.
+	if (outFace2.size() == 2)
+		outFace2.push_back(outFace2[0] + inPlane.GetNormal().Cross(outFace2[1] - outFace2[0]));
+
+	// Get center point
+	Vec3 center = outFace2[0];
+	for (StaticArray<Vec3, 32>::size_type i = 1; i < outFace2.size(); ++i)
+		center += outFace2[i];
+	center /= float(outFace2.size());
+
+	// Shift all points away from the center
+	// We do this because our plane is infinite so we can't give a proper face, but we want the face to be at least bigger than the other shape
+	for (Vec3 &v : outFace2)
+		v += v - center;
 }
 
 void PlaneShape::sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
