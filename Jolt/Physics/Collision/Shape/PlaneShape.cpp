@@ -457,7 +457,8 @@ void PlaneShape::sCollideConvexVsPlane(const Shape *inShape1, const Shape *inSha
 	const PlaneShape *shape2 = static_cast<const PlaneShape *>(inShape2);
 
 	// Transform the plane to the space of the convex shape
-	Plane plane = shape2->mPlane.Scaled(inScale2).GetTransformed(inCenterOfMassTransform1.InversedRotationTranslation() * inCenterOfMassTransform2);
+	Plane scaled_plane = shape2->mPlane.Scaled(inScale2);
+	Plane plane = scaled_plane.GetTransformed(inCenterOfMassTransform1.InversedRotationTranslation() * inCenterOfMassTransform2);
 	Vec3 normal = plane.GetNormal();
 
 	// Get support function
@@ -487,7 +488,7 @@ void PlaneShape::sCollideConvexVsPlane(const Shape *inShape1, const Shape *inSha
 
 			// Get supporting face of shape 2
 			if (!result.mShape1Face.empty())
-				sGetSupportingFace(shape1, inCenterOfMassTransform1.GetTranslation(), plane, inCenterOfMassTransform1, result.mShape2Face);
+				sGetSupportingFace(shape1, inCenterOfMassTransform1.GetTranslation(), scaled_plane, inCenterOfMassTransform2, result.mShape2Face);
 		}
 
 		// Notify the collector
