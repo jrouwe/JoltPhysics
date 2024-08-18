@@ -42,20 +42,30 @@ ShapeSettings::ShapeResult PlaneShapeSettings::Create() const
 	return mCachedResult;
 }
 
+inline static void sPlaneGetOrthogonalBasis(Vec3Arg inNormal, Vec3 &outPerp1, Vec3 &outPerp2)
+{
+	outPerp1 = inNormal.Cross(Vec3::sAxisY()).NormalizedOr(Vec3::sAxisX());
+	outPerp2 = outPerp1.Cross(inNormal).Normalized();
+	outPerp1 = inNormal.Cross(outPerp2);
+}
+
 void PlaneShape::GetVertices(Vec3 *outVertices) const
 {
 	// Create orthogonal basis
 	Vec3 normal = mPlane.GetNormal();
-	Vec3 perp1 = normal.Cross(Vec3::sAxisY()).NormalizedOr(Vec3::sAxisX());
-	Vec3 perp2 = perp1.Cross(normal).Normalized();
-	perp1 = normal.Cross(perp2);
+	Vec3 perp1, perp2;
+	sPlaneGetOrthogonalBasis(normal, perp1, perp2);
+
+	// Scale basis
+	perp1 *= mSize;
+	perp2 *= mSize;
 
 	// Calculate corners
 	Vec3 point = -normal * mPlane.GetConstant();
-	outVertices[0] = point + mSize * ( perp1 + perp2);
-	outVertices[1] = point + mSize * ( perp1 - perp2);
-	outVertices[2] = point + mSize * (-perp1 - perp2);
-	outVertices[3] = point + mSize * (-perp1 + perp2);
+	outVertices[0] = point + perp1 + perp2;
+	outVertices[1] = point + perp1 - perp2;
+	outVertices[2] = point - perp1 - perp2;
+	outVertices[3] = point - perp1 + perp2;
 }
 
 void PlaneShape::CalculateLocalBounds()
@@ -257,34 +267,29 @@ void PlaneShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3A
 		}
 }
 
-// Helper function to project a face onto a plane and reverse the points
-static void sProjectFaceOnPlane(const Plane &inPlane, const StaticArray<Vec3, 32> &inFace1, StaticArray<Vec3, 32> &outFace2)
+// This is a version of GetSupportingFace that returns a face that is large enough to cover the shape we're colliding with but not as large as the regular GetSupportedFace to avoid numerical precision issues
+inline static void sGetSupportingFace(const ConvexShape *inShape, Vec3Arg inShapeCOM, const Plane &inPlane, Mat44Arg inPlaneToWorld, ConvexShape::SupportingFace &outPlaneFace)
 {
-	JPH_ASSERT(!inFace1.empty());
+	// Project COM of shape onto plane
+	Plane world_plane = inPlane.GetTransformed(inPlaneToWorld);
+	Vec3 center = world_plane.ProjectPointOnPlane(inShapeCOM);
 
-	outFace2.resize(inFace1.size());
-	Vec3 *dest = outFace2.data() + inFace1.size() - 1;
-	for (const Vec3 &src : inFace1)
-	{
-		*dest = inPlane.ProjectPointOnPlane(src);
-		--dest;
-	}
+	// Create orthogonal basis for the plane
+	Vec3 normal = world_plane.GetNormal();
+	Vec3 perp1, perp2;
+	sPlaneGetOrthogonalBasis(normal, perp1, perp2);
 
-	// If we only have 2 points, add a third point in the plane to form a triangle.
-	// This way ManifoldBetweenTwoFaces will be able to process the manifold.
-	if (outFace2.size() == 2)
-		outFace2.push_back(outFace2[0] + inPlane.GetNormal().Cross(outFace2[1] - outFace2[0]));
+	// Base the size of the face on the bounding box of the shape, ensuring that it is large enough to cover the entire shape
+	float size = inShape->GetLocalBounds().GetSize().Length();
+	perp1 *= size;
+	perp2 *= size;
 
-	// Get center point
-	Vec3 center = outFace2[0];
-	for (StaticArray<Vec3, 32>::size_type i = 1; i < outFace2.size(); ++i)
-		center += outFace2[i];
-	center /= float(outFace2.size());
-
-	// Shift all points away from the center
-	// We do this because our plane is infinite so we can't give a proper face, but we want the face to be at least bigger than the other shape
-	for (Vec3 &v : outFace2)
-		v += v - center;
+	// Emit the vertices
+	outPlaneFace.resize(4);
+	outPlaneFace[0] = center + perp1 + perp2;
+	outPlaneFace[1] = center + perp1 - perp2;
+	outPlaneFace[2] = center - perp1 - perp2;
+	outPlaneFace[3] = center - perp1 + perp2;
 }
 
 void PlaneShape::sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
@@ -365,15 +370,13 @@ void PlaneShape::sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCas
 	// Gather faces
 	if (inShapeCastSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
 	{
-		// Get supporting face of shape 1
-		convex_shape->GetSupportingFace(SubShapeID(), normal_in_convex_shape_space, inShapeCast.mScale, com_hit * inShapeCast.mCenterOfMassStart, result.mShape1Face);
+		// Get supporting face of convex shape
+		Mat44 shape_to_world = com_hit * inShapeCast.mCenterOfMassStart;
+		convex_shape->GetSupportingFace(SubShapeID(), normal_in_convex_shape_space, inShapeCast.mScale, shape_to_world, result.mShape1Face);
 
-		// Project these points on the plane for shape 2 and reverse them
+		// Get supporting face of plane
 		if (!result.mShape1Face.empty())
-		{
-			Plane world_plane = plane.GetTransformed(inCenterOfMassTransform2);
-			sProjectFaceOnPlane(world_plane, result.mShape1Face, result.mShape2Face);
-		}
+			sGetSupportingFace(convex_shape, shape_to_world.GetTranslation(), plane, inCenterOfMassTransform2, result.mShape2Face);
 	}
 
 	// Notify the collector
@@ -482,12 +485,9 @@ void PlaneShape::sCollideConvexVsPlane(const Shape *inShape1, const Shape *inSha
 			// Get supporting face of shape 1
 			shape1->GetSupportingFace(SubShapeID(), normal, inScale1, inCenterOfMassTransform1, result.mShape1Face);
 
-			// Project these points on the plane for shape 2 and reverse them
+			// Get supporting face of shape 2
 			if (!result.mShape1Face.empty())
-			{
-				Plane world_plane = plane.GetTransformed(inCenterOfMassTransform1);
-				sProjectFaceOnPlane(world_plane, result.mShape1Face, result.mShape2Face);
-			}
+				sGetSupportingFace(shape1, inCenterOfMassTransform1.GetTranslation(), plane, inCenterOfMassTransform1, result.mShape2Face);
 		}
 
 		// Notify the collector
