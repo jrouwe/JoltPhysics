@@ -38,6 +38,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 	* Tapered-capsule
 	* Cylinder
 	* Convex hull
+	* Plane
 	* Compound
 	* Mesh (triangle)
 	* Terrain (height field)
