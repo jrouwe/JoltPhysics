@@ -53,7 +53,7 @@ public:
 	const Plane &					GetPlane() const											{ return mPlane; }
 
 	/// Get the half-extent of the bounding box of the plane
-	float							GetHalfExtent() const												{ return mHalfExtent; }
+	float							GetHalfExtent() const										{ return mHalfExtent; }
 
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override								{ return true; }
