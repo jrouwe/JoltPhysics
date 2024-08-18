@@ -32,7 +32,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(PlaneShapeSettings)
 
 	JPH_ADD_ATTRIBUTE(PlaneShapeSettings, mPlane)
 	JPH_ADD_ATTRIBUTE(PlaneShapeSettings, mMaterial)
-	JPH_ADD_ATTRIBUTE(PlaneShapeSettings, mSize)
+	JPH_ADD_ATTRIBUTE(PlaneShapeSettings, mHalfExtent)
 }
 
 ShapeSettings::ShapeResult PlaneShapeSettings::Create() const
@@ -57,8 +57,8 @@ void PlaneShape::GetVertices(Vec3 *outVertices) const
 	sPlaneGetOrthogonalBasis(normal, perp1, perp2);
 
 	// Scale basis
-	perp1 *= mSize;
-	perp2 *= mSize;
+	perp1 *= mHalfExtent;
+	perp2 *= mHalfExtent;
 
 	// Calculate corners
 	Vec3 point = -normal * mPlane.GetConstant();
@@ -74,13 +74,13 @@ void PlaneShape::CalculateLocalBounds()
 	Vec3 vertices[4];
 	GetVertices(vertices);
 
-	// Encapsulate the vertices and a point mSize behind the plane
+	// Encapsulate the vertices and a point mHalfExtent behind the plane
 	mLocalBounds = AABox();
 	Vec3 normal = mPlane.GetNormal();
 	for (const Vec3 &v : vertices)
 	{
 		mLocalBounds.Encapsulate(v);
-		mLocalBounds.Encapsulate(v - mSize * normal);
+		mLocalBounds.Encapsulate(v - mHalfExtent * normal);
 	}
 }
 
@@ -88,7 +88,7 @@ PlaneShape::PlaneShape(const PlaneShapeSettings &inSettings, ShapeResult &outRes
 	Shape(EShapeType::Plane, EShapeSubType::Plane, inSettings, outResult),
 	mPlane(inSettings.mPlane),
 	mMaterial(inSettings.mMaterial),
-	mSize(inSettings.mSize)
+	mHalfExtent(inSettings.mHalfExtent)
 {
 	if (!mPlane.GetNormal().IsNormalized())
 	{
@@ -502,7 +502,7 @@ void PlaneShape::SaveBinaryState(StreamOut &inStream) const
 	Shape::SaveBinaryState(inStream);
 
 	inStream.Write(mPlane);
-	inStream.Write(mSize);
+	inStream.Write(mHalfExtent);
 }
 
 void PlaneShape::RestoreBinaryState(StreamIn &inStream)
@@ -510,7 +510,7 @@ void PlaneShape::RestoreBinaryState(StreamIn &inStream)
 	Shape::RestoreBinaryState(inStream);
 
 	inStream.Read(mPlane);
-	inStream.Read(mSize);
+	inStream.Read(mHalfExtent);
 
 	CalculateLocalBounds();
 }

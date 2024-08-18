@@ -22,7 +22,7 @@ public:
 									PlaneShapeSettings() = default;
 
 	/// Create a plane shape.
-									PlaneShapeSettings(const Plane &inPlane, const PhysicsMaterial *inMaterial = nullptr, float inSize = cDefaultSize) : mPlane(inPlane), mMaterial(inMaterial), mSize(inSize) { }
+									PlaneShapeSettings(const Plane &inPlane, const PhysicsMaterial *inMaterial = nullptr, float inHalfExtent = cDefaultHalfExtent) : mPlane(inPlane), mMaterial(inMaterial), mHalfExtent(inHalfExtent) { }
 
 	// See: ShapeSettings
 	virtual ShapeResult				Create() const override;
@@ -31,13 +31,13 @@ public:
 
 	RefConst<PhysicsMaterial>		mMaterial;													///< Surface material of the plane
 
-	static constexpr float			cDefaultSize = 1000.0f;										///< Default size of the plane
+	static constexpr float			cDefaultHalfExtent = 1000.0f;								///< Default half-extent of the plane (total size along 1 axis will be 2 * half-extent)
 
-	float							mSize = cDefaultSize;										///< The bounding box of this plane will run from [-size, size]. Keep this as low as possible for better broad phase performance.
+	float							mHalfExtent = cDefaultHalfExtent;							///< The bounding box of this plane will run from [-half_extent, half_extent]. Keep this as low as possible for better broad phase performance.
 };
 
 /// A plane shape. The negative half space is considered solid. Planes cannot be dynamic objects, only static or kinematic.
-/// The plane is considered an infinite shape, but testing collision outside of its bounding box (defined by the size parameter) will not return a collision result.
+/// The plane is considered an infinite shape, but testing collision outside of its bounding box (defined by the half-extent parameter) will not return a collision result.
 /// At the edge of the bounding box collision with the plane will be inconsistent. If you need something of a well defined size, a box shape may be better.
 class JPH_EXPORT PlaneShape final : public Shape
 {
@@ -46,14 +46,14 @@ public:
 
 	/// Constructor
 									PlaneShape() : Shape(EShapeType::Plane, EShapeSubType::Plane) { }
-									PlaneShape(const Plane &inPlane, const PhysicsMaterial *inMaterial = nullptr, float inSize = PlaneShapeSettings::cDefaultSize) : Shape(EShapeType::Plane, EShapeSubType::Plane), mPlane(inPlane), mMaterial(inMaterial), mSize(inSize) { CalculateLocalBounds(); }
+									PlaneShape(const Plane &inPlane, const PhysicsMaterial *inMaterial = nullptr, float inHalfExtent = PlaneShapeSettings::cDefaultHalfExtent) : Shape(EShapeType::Plane, EShapeSubType::Plane), mPlane(inPlane), mMaterial(inMaterial), mHalfExtent(inHalfExtent) { CalculateLocalBounds(); }
 									PlaneShape(const PlaneShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Get the plane
 	const Plane &					GetPlane() const											{ return mPlane; }
 
-	/// Get the size of the bounding box of the plane
-	float							GetSize() const												{ return mSize; }
+	/// Get the half-extent of the bounding box of the plane
+	float							GetHalfExtent() const												{ return mHalfExtent; }
 
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override								{ return true; }
@@ -136,7 +136,7 @@ private:
 
 	Plane							mPlane;
 	RefConst<PhysicsMaterial>		mMaterial;
-	float							mSize;
+	float							mHalfExtent;
 	AABox							mLocalBounds;
 };
 
