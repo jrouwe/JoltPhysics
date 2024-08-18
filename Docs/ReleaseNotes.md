@@ -4,6 +4,10 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ## Unreleased changes
 
+### New functionality
+
+* Added PlaneShape. An infinite plane. Negative half space is considered solid.
+
 ### Bug fixes
 
 * Fixed an issue where the bounding volume of a HeightFieldShape was not properly adjusted when calling SetHeights leading to missed collisions.

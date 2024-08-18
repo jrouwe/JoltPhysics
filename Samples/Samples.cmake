@@ -209,6 +209,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledHeightFieldShapeTest.h
 	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledMeshShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledMeshShapeTest.h
+	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledPlaneShapeTest.cpp
+	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledPlaneShapeTest.h
 	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledSphereShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledSphereShapeTest.h
 	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledTaperedCapsuleShapeTest.cpp
@@ -237,6 +239,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Shapes/MeshShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/SphereShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/Shapes/SphereShapeTest.h
+	${SAMPLES_ROOT}/Tests/Shapes/PlaneShapeTest.cpp
+	${SAMPLES_ROOT}/Tests/Shapes/PlaneShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/RotatedTranslatedShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/Shapes/RotatedTranslatedShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/TaperedCapsuleShapeTest.cpp

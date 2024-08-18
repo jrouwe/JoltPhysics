@@ -33,6 +33,7 @@
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
+#include <Jolt/Physics/Collision/Shape/PlaneShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
@@ -204,6 +205,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CylinderShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, StaticCompoundShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MutableCompoundShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TriangleShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PlaneShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConvexHullShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MeshShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HeightFieldShapeTest)
@@ -225,6 +227,7 @@ static TestNameAndRTTI sShapeTests[] =
 	{ "Static Compound Shape",				JPH_RTTI(StaticCompoundShapeTest) },
 	{ "Mutable Compound Shape",				JPH_RTTI(MutableCompoundShapeTest) },
 	{ "Triangle Shape",						JPH_RTTI(TriangleShapeTest) },
+	{ "Plane Shape",						JPH_RTTI(PlaneShapeTest) },
 	{ "Rotated Translated Shape",			JPH_RTTI(RotatedTranslatedShapeTest) },
 	{ "Offset Center Of Mass Shape",		JPH_RTTI(OffsetCenterOfMassShapeTest) }
 };
@@ -240,6 +243,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledHeightFieldShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledStaticCompoundShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledMutableCompoundShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledTriangleShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledPlaneShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledOffsetCenterOfMassShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DynamicScaledShape)
 
@@ -256,6 +260,7 @@ static TestNameAndRTTI sScaledShapeTests[] =
 	{ "Static Compound Shape",				JPH_RTTI(ScaledStaticCompoundShapeTest) },
 	{ "Mutable Compound Shape",				JPH_RTTI(ScaledMutableCompoundShapeTest) },
 	{ "Triangle Shape",						JPH_RTTI(ScaledTriangleShapeTest) },
+	{ "Plane Shape",						JPH_RTTI(ScaledPlaneShapeTest) },
 	{ "Offset Center Of Mass Shape",		JPH_RTTI(ScaledOffsetCenterOfMassShapeTest) },
 	{ "Dynamic Scaled Shape",				JPH_RTTI(DynamicScaledShape) }
 };
