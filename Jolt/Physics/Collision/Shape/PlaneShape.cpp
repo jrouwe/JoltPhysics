@@ -158,8 +158,8 @@ void PlaneShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransfo
 	}
 	else
 	{
-		inRenderer->DrawTriangle(vertices[0], vertices[1], vertices[2], color);
-		inRenderer->DrawTriangle(vertices[0], vertices[2], vertices[3], color);
+		inRenderer->DrawTriangle(vertices[0], vertices[1], vertices[2], color, DebugRenderer::ECastShadow::On);
+		inRenderer->DrawTriangle(vertices[0], vertices[2], vertices[3], color, DebugRenderer::ECastShadow::On);
 	}
 }
 #endif // JPH_DEBUG_RENDERER
