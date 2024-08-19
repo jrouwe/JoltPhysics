@@ -10,6 +10,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### Bug fixes
 
+* Fixed an issue where enhanced internal edge removal would throw away valid contacts when a dynamic compound shape is colliding with another mesh / box shape.
 * Fixed an issue where the bounding volume of a HeightFieldShape was not properly adjusted when calling SetHeights leading to missed collisions.
 * Workaround for CMake error 'CMake Error: No output files for WriteBuild!' when using the 'Ninja Multi-Config' generator.
 
