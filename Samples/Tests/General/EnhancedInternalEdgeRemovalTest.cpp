@@ -167,6 +167,25 @@ void EnhancedInternalEdgeRemovalTest::Initialize()
 		slope_ball.mMassPropertiesOverride.mMass = 1;
 		mBodyInterface->CreateAndAddBody(slope_ball, EActivation::Activate);
 	}
+
+	// This tests a previous bug where a compound shape will fall through a box because features are voided by accident.
+	// This is because both boxes of the compound shape collide with the top face of the static box. The big box will have a normal
+	// that is aligned with the face so will be processed immediately. This will void the top face of the static box. The small box,
+	// which collides with an edge of the top face will not be processed. This will cause the small box to penetrate the face.
+	{
+		// A box
+		BodyCreationSettings box_bcs(new BoxShape(Vec3::sReplicate(2.5f)), RVec3(0, 0, 70), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		mBodyInterface->CreateAndAddBody(box_bcs, EActivation::DontActivate);
+
+		// Compound
+		StaticCompoundShapeSettings compound;
+		compound.SetEmbedded();
+		compound.AddShape(Vec3(-2.5f, 0, 0), Quat::sIdentity(), new BoxShape(Vec3(2.5f, 0.1f, 0.1f)));
+		compound.AddShape(Vec3(0.1f, 0, 0), Quat::sIdentity(), new BoxShape(Vec3(0.1f, 1, 1)));
+		BodyCreationSettings compound_bcs(&compound, RVec3(2, 5, 70), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		compound_bcs.mEnhancedInternalEdgeRemoval = true;
+		mBodyInterface->CreateAndAddBody(compound_bcs, EActivation::Activate);
+	}
 }
 
 void EnhancedInternalEdgeRemovalTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
