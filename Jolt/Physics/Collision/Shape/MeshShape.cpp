@@ -54,6 +54,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaxTrianglesPerLeaf)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mActiveEdgeCosThresholdAngle)
+	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mPerTriangleUserData)
 }
 
 // Codecs this mesh shape is using
@@ -199,7 +200,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	// Convert to buffer
 	AABBTreeToBuffer<TriangleCodec, NodeCodec> buffer;
 	const char *error = nullptr;
-	if (!buffer.Convert(inSettings.mTriangleVertices, root, error))
+	if (!buffer.Convert(inSettings.mTriangleVertices, root, inSettings.mPerTriangleUserData, error))
 	{
 		outResult.SetError(error);
 		delete root;
@@ -1219,6 +1220,18 @@ Shape::Stats MeshShape::GetStats() const
 	WalkTree(visitor);
 
 	return Stats(sizeof(*this) + mMaterials.size() * sizeof(Ref<PhysicsMaterial>) + mTree.size() * sizeof(uint8), visitor.mNumTriangles);
+}
+
+uint32 MeshShape::GetTriangleUserData(const SubShapeID &inSubShapeID) const
+{
+	// Decode ID
+	const void *block_start;
+	uint32 triangle_idx;
+	DecodeSubShapeID(inSubShapeID, block_start, triangle_idx);
+
+	// Decode triangle
+	const TriangleCodec::DecodingContext triangle_ctx(sGetTriangleHeader(mTree));
+	return triangle_ctx.GetUserData(block_start, triangle_idx);
 }
 
 void MeshShape::sRegister()

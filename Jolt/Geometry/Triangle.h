@@ -27,6 +27,7 @@ public:
 	/// Vertices
 	Float3			mV[3];
 	uint32			mMaterialIndex = 0;			///< Follows mV[3] so that we can read mV as 4 vectors
+	uint32			mUserData = 0;				///< User data that can be used for anything by the application, e.g. for tracking the original index of the triangle
 };
 
 using TriangleList = Array<Triangle>;
