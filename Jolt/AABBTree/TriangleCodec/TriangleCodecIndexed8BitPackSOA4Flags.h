@@ -77,13 +77,6 @@ public:
 
 	static_assert(sizeof(TriangleBlock) == 16, "Compiler added padding");
 
-	struct TriangleUserData
-	{
-		uint32						mUserData[4];				///< User data for 4 triangles
-	};
-
-	static_assert(sizeof(TriangleUserData) == 16, "Compiler added padding");
-
 	enum ETriangleBlockHeaderFlags : uint32
 	{
 		OFFSET_TO_VERTICES_BITS = 29,							///< Offset from current block to start of vertices in bytes
