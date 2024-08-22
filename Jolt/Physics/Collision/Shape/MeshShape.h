@@ -63,6 +63,7 @@ public:
 	/// When true, we store the user data coming from Triangle::mUserData or IndexedTriangle::mUserData in the mesh shape.
 	/// This can be used to store additional data like the original index of the triangle in the mesh.
 	/// Can be retrieved using MeshShape::GetTriangleUserData.
+	/// Turning this on increases the memory used by the MeshShape by roughly 25%.
 	bool							mPerTriangleUserData = false;
 };
 
