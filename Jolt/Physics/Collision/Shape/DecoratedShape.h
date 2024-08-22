@@ -56,6 +56,9 @@ public:
 	// See Shape::GetSupportingFace
 	virtual void					GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const override;
 
+	// See Shape::GetSubShapeUserData
+	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
+
 	// See Shape
 	virtual void					SaveSubShapeState(ShapeList &outSubShapes) const override;
 	virtual void					RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes) override;

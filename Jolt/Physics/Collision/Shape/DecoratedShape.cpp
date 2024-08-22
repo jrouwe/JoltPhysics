@@ -54,6 +54,11 @@ void DecoratedShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg i
 	mInnerShape->GetSupportingFace(inSubShapeID, inDirection, inScale, inCenterOfMassTransform, outVertices);
 }
 
+uint64 DecoratedShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
+{
+	return mInnerShape->GetSubShapeUserData(inSubShapeID);
+}
+
 void DecoratedShape::SaveSubShapeState(ShapeList &outSubShapes) const
 {
 	outSubShapes.clear();

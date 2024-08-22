@@ -144,6 +144,18 @@ const Shape *CompoundShape::GetLeafShape(const SubShapeID &inSubShapeID, SubShap
 	return mSubShapes[index].mShape->GetLeafShape(remainder, outRemainder);
 }
 
+uint64 CompoundShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
+{
+	// Decode sub shape index
+	SubShapeID remainder;
+	uint32 index = GetSubShapeIndexFromID(inSubShapeID, remainder);
+	if (index >= mSubShapes.size())
+		return 0; // No longer valid index
+
+	// Pass call on
+	return mSubShapes[index].mShape->GetSubShapeUserData(remainder);
+}
+
 TransformedShape CompoundShape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
 {
 	// Get the sub shape

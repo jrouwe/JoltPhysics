@@ -82,6 +82,9 @@ public:
 	// See Shape::GetLeafShape
 	virtual const Shape *			GetLeafShape(const SubShapeID &inSubShapeID, SubShapeID &outRemainder) const override;
 
+	// See Shape::GetSubShapeUserData
+	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
+
 	// See Shape::GetSubShapeTransformedShape
 	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const override;
 
