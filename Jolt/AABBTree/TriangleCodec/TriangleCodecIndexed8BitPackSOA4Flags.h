@@ -220,7 +220,6 @@ public:
 			// Store user data
 			if (inStoreUserData)
 			{
-				ioBuffer.Align(4);
 				uint32 *user_data = ioBuffer.Allocate<uint32>(tri_count);
 				for (uint t = 0; t < tri_count; ++t)
 					user_data[t] = inTriangles[t].mUserData;
