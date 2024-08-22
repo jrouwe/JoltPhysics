@@ -92,7 +92,7 @@ public:
 		const TriangleBlock *		GetTriangleBlock() const	{ return reinterpret_cast<const TriangleBlock *>(reinterpret_cast<const uint8 *>(this) + sizeof(TriangleBlockHeader)); }
 		const uint32 *				GetUserData() const			{ uint32 offset = mFlags >> OFFSET_TO_VERTICES_BITS; return offset == 0? nullptr : reinterpret_cast<const uint32 *>(GetTriangleBlock() + offset); }
 
-		uint32						mFlags;			
+		uint32						mFlags;
 	};
 
 	static_assert(sizeof(TriangleBlockHeader) == 4, "Compiler added padding");
