@@ -237,6 +237,12 @@ public:
 	/// Calculate the mass and inertia of this shape
 	virtual MassProperties			GetMassProperties() const = 0;
 
+	/// Get the leaf shape for a particular sub shape ID.
+	/// @param inSubShapeID The full sub shape ID that indicates the path to the leaf shape
+	/// @param outRemainder What remains of the sub shape ID after removing the path to the leaf shape (could e.g. refer to a triangle within a MeshShape)
+	/// @return The shape or null if the sub shape ID is invalid
+	virtual const Shape *			GetLeafShape([[maybe_unused]] const SubShapeID &inSubShapeID, SubShapeID &outRemainder) const;
+
 	/// Get the material assigned to a particular sub shape ID
 	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const = 0;
 
@@ -257,7 +263,7 @@ public:
 	virtual void					GetSupportingFace([[maybe_unused]] const SubShapeID &inSubShapeID, [[maybe_unused]] Vec3Arg inDirection, [[maybe_unused]] Vec3Arg inScale, [[maybe_unused]] Mat44Arg inCenterOfMassTransform, [[maybe_unused]] SupportingFace &outVertices) const { /* Nothing */ }
 
 	/// Get the user data of a particular sub shape ID. Corresponds with the value stored in Shape::GetUserData of the leaf shape pointed to by inSubShapeID.
-	virtual uint64					GetSubShapeUserData([[maybe_unused]] const SubShapeID &inSubShapeID) const			{ return mUserData; }
+	uint64							GetSubShapeUserData([[maybe_unused]] const SubShapeID &inSubShapeID) const;
 
 	/// Get the direct child sub shape and its transform for a sub shape ID.
 	/// @param inSubShapeID Sub shape ID that indicates the path to the leaf shape

@@ -32,6 +32,19 @@ bool Shape::sDrawSubmergedVolumes = false;
 
 ShapeFunctions ShapeFunctions::sRegistry[NumSubShapeTypes];
 
+const Shape *Shape::GetLeafShape([[maybe_unused]] const SubShapeID &inSubShapeID, SubShapeID &outRemainder) const
+{
+	outRemainder = inSubShapeID;
+	return this;
+}
+
+uint64 Shape::GetSubShapeUserData([[maybe_unused]] const SubShapeID &inSubShapeID) const
+{
+	SubShapeID remainder;
+	const Shape *shape = GetLeafShape(inSubShapeID, remainder);
+	return shape != nullptr? shape->GetUserData() : 0;
+}
+
 TransformedShape Shape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
 {
 	// We have reached the leaf shape so there is no remainder

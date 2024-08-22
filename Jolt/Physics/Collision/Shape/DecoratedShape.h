@@ -47,14 +47,14 @@ public:
 	// See Shape::GetSubShapeIDBitsRecursive
 	virtual uint					GetSubShapeIDBitsRecursive() const override				{ return mInnerShape->GetSubShapeIDBitsRecursive(); }
 
+	// See Shape::GetLeafShape
+	virtual const Shape *			GetLeafShape(const SubShapeID &inSubShapeID, SubShapeID &outRemainder) const override { return mInnerShape->GetLeafShape(inSubShapeID, outRemainder); }
+
 	// See Shape::GetMaterial
 	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override;
 
 	// See Shape::GetSupportingFace
 	virtual void					GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const override;
-
-	// See Shape::GetSubShapeUserData
-	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
 
 	// See Shape
 	virtual void					SaveSubShapeState(ShapeList &outSubShapes) const override;
