@@ -13,6 +13,7 @@ JPH_NAMESPACE_BEGIN
 /// TriangleBlockHeader,
 /// TriangleBlock (4 triangles and their flags in 16 bytes),
 /// TriangleBlock...
+/// [Optional] UserData (4 bytes per triangle)
 ///
 /// Vertices are stored:
 ///
