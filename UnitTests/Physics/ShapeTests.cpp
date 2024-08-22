@@ -21,6 +21,7 @@
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Core/StreamWrapper.h>
 
 TEST_SUITE("ShapeTests")
@@ -806,6 +807,79 @@ TEST_SUITE("ShapeTests")
 			CHECK(mesh_shape->CastRay(ray, SubShapeIDCreator(), hit));
 			CHECK(hit.mFraction == 0.5f);
 			CHECK(mesh_shape->GetSurfaceNormal(hit.mSubShapeID2, ray.GetPointOnRay(hit.mFraction)) == Vec3::sAxisY());
+		}
+	}
+
+	TEST_CASE("TestMeshShapePerTriangleUserData")
+	{
+		UnitTestRandom random;
+
+		// Create regular grid of triangles
+		TriangleList triangles[2];
+		for (int x = 0; x < 20; ++x)
+			for (int z = 0; z < 20; ++z)
+			{
+				float x1 = 10.0f * x;
+				float z1 = 10.0f * z;
+				float x2 = x1 + 10.0f;
+				float z2 = z1 + 10.0f;
+
+				Float3 v1 = Float3(x1, 0, z1);
+				Float3 v2 = Float3(x2, 0, z1);
+				Float3 v3 = Float3(x1, 0, z2);
+				Float3 v4 = Float3(x2, 0, z2);
+
+				uint32 user_data = (x << 16) + z;
+				triangles[random() & 1].push_back(Triangle(v1, v3, v4, 0, user_data));
+				triangles[random() & 1].push_back(Triangle(v1, v4, v2, 0, user_data | 0x80000000));
+			}
+
+		// Create a compound with 2 meshes
+		StaticCompoundShapeSettings compound_settings;
+		compound_settings.SetEmbedded();
+		for (TriangleList &t : triangles)
+		{
+			// Shuffle the triangles
+			std::shuffle(t.begin(), t.end(), random);
+
+			// Create mesh
+			MeshShapeSettings mesh_settings(t);
+			mesh_settings.mPerTriangleUserData = true;
+			compound_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), mesh_settings.Create().Get());
+		}
+		RefConst<Shape> compound = compound_settings.Create().Get();
+
+		// Collide the compound with a box to get all triangles back
+		RefConst<Shape> box = new BoxShape(Vec3::sReplicate(100.0f));
+		AllHitCollisionCollector<CollideShapeCollector> collector;
+		CollideShapeSettings settings;
+		settings.mCollectFacesMode = ECollectFacesMode::CollectFaces;
+		CollisionDispatch::sCollideShapeVsShape(box, compound, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(100.0f, 0, 100.0f)), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+		CHECK(collector.mHits.size() == triangles[0].size() + triangles[1].size());
+		for (const CollideShapeResult &r : collector.mHits)
+		{
+			// Get average vertex
+			Vec3 avg = Vec3::sZero();
+			for (const Vec3 &v : r.mShape2Face)
+				avg += v;
+
+			// Calculate the expected user data
+			avg = avg / 30.0f;
+			uint x = uint(avg.GetX());
+			uint z = uint(avg.GetZ());
+			uint32 expected_user_data = (x << 16) + z;
+			if (avg.GetX() - float(x) > 0.5f)
+				expected_user_data |= 0x80000000;
+
+			// Get the leaf shape (mesh shape in this case)
+			SubShapeID remainder;
+			const Shape *shape = compound->GetLeafShape(r.mSubShapeID2, remainder);
+			JPH_ASSERT(shape->GetType() == EShapeType::Mesh);
+
+			// Get user data from the triangle that was hit
+			uint32 user_data = static_cast<const MeshShape *>(shape)->GetTriangleUserData(remainder);
+
+			CHECK(user_data == expected_user_data);
 		}
 	}
 
