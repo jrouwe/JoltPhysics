@@ -13,6 +13,7 @@
 #include <Jolt/Geometry/Triangle.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
+#include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(MeshShapeUserDataTest)
 {
