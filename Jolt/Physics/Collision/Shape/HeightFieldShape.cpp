@@ -1437,6 +1437,11 @@ void HeightFieldShape::DecodeSubShapeID(const SubShapeID &inSubShapeID, uint &ou
 	outY = id / mSampleCount;
 }
 
+void HeightFieldShape::GetSubShapeCoordinates(const SubShapeID &inSubShapeID, uint &outX, uint &outY, uint &outTriangleIndex) const
+{
+	DecodeSubShapeID(inSubShapeID, outX, outY, outTriangleIndex);
+}
+
 const PhysicsMaterial *HeightFieldShape::GetMaterial(const SubShapeID &inSubShapeID) const
 {
 	// Decode ID

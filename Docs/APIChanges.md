@@ -4,6 +4,10 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See [Saving Shapes](https://jrouwe.github.io/JoltPhysics/#saving-shapes) for further information.
 
+## Changes between v5.1.0 and latest
+
+* 20240823 - Added virtual function Shape::GetLeafShape. If you have custom shapes, you may need to override this function and provide an implementation. (d7f08b83670ea6d0842e231f50ad2a175f56f949)
+
 ## Changes between v5.0.0 and v5.1.0
 
 * 20240811 - Added cmake options to toggle exception-handling and RTTI. CPP_EXCEPTIONS_ENABLED enables exceptions, CPP_RTTI_ENABLED enables RTTI. Before this change RTTI was off for MSVC and on for other compilers. Exceptions were on for all builds. You may need to set these options if your build relies on these C++ features. (760974d733ed24ea268a3bb9a8ef391b8ac503c7)

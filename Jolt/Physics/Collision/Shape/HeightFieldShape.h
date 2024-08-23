@@ -193,6 +193,13 @@ public:
 	/// When there is no surface position (because of a hole or because the point is outside the heightfield) the function will return false.
 	bool							ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurfacePosition, SubShapeID &outSubShapeID) const;
 
+	/// Returns the coordinates of the triangle that a sub shape ID represents
+	/// @param inSubShapeID The sub shape ID to decode
+	/// @param outX X coordinate of the triangle (in the range [0, mSampleCount - 2])
+	/// @param outY Y coordinate of the triangle (in the range [0, mSampleCount - 2])
+	/// @param outTriangleIndex Triangle within the quad (0 = lower triangle or 1 = upper triangle)
+	void							GetSubShapeCoordinates(const SubShapeID &inSubShapeID, uint &outX, uint &outY, uint &outTriangleIndex) const;
+
 	/// Get the range of height values that this height field can encode. Can be used to determine the allowed range when setting the height values with SetHeights.
 	float							GetMinHeightValue() const					{ return mOffset.GetY(); }
 	float							GetMaxHeightValue() const					{ return mOffset.GetY() + mScale.GetY() * HeightFieldShapeConstants::cMaxHeightValue16; }
