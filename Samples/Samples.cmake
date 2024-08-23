@@ -237,6 +237,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Shapes/HeightFieldShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/MeshShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/Shapes/MeshShapeTest.h
+	${SAMPLES_ROOT}/Tests/Shapes/MeshShapeUserDataTest.cpp
+	${SAMPLES_ROOT}/Tests/Shapes/MeshShapeUserDataTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/SphereShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/Shapes/SphereShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/PlaneShapeTest.cpp

@@ -79,6 +79,9 @@ public:
 	// See Shape::GetMaterial
 	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override;
 
+	// See Shape::GetLeafShape
+	virtual const Shape *			GetLeafShape(const SubShapeID &inSubShapeID, SubShapeID &outRemainder) const override;
+
 	// See Shape::GetSubShapeUserData
 	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
 

@@ -59,6 +59,12 @@ public:
 	/// Setting this value too small can cause ghost collisions with edges, setting it too big can cause depenetration artifacts (objects not depenetrating quickly).
 	/// Valid ranges are between cos(0 degrees) and cos(90 degrees). The default value is cos(5 degrees).
 	float							mActiveEdgeCosThresholdAngle = 0.996195f;					// cos(5 degrees)
+
+	/// When true, we store the user data coming from Triangle::mUserData or IndexedTriangle::mUserData in the mesh shape.
+	/// This can be used to store additional data like the original index of the triangle in the mesh.
+	/// Can be retrieved using MeshShape::GetTriangleUserData.
+	/// Turning this on increases the memory used by the MeshShape by roughly 25%.
+	bool							mPerTriangleUserData = false;
 };
 
 /// A mesh shape, consisting of triangles. Mesh shapes are mostly used for static geometry.
@@ -140,6 +146,9 @@ public:
 
 	// See Shape::GetVolume
 	virtual float					GetVolume() const override									{ return 0; }
+
+	// When MeshShape::mPerTriangleUserData is true, this function can be used to retrieve the user data that was stored in the mesh shape.
+	uint32							GetTriangleUserData(const SubShapeID &inSubShapeID) const;
 
 #ifdef JPH_DEBUG_RENDERER
 	// Settings

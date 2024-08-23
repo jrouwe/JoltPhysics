@@ -128,6 +128,22 @@ const PhysicsMaterial *CompoundShape::GetMaterial(const SubShapeID &inSubShapeID
 	return mSubShapes[index].mShape->GetMaterial(remainder);
 }
 
+const Shape *CompoundShape::GetLeafShape(const SubShapeID &inSubShapeID, SubShapeID &outRemainder) const
+{
+	// Decode sub shape index
+	SubShapeID remainder;
+	uint32 index = GetSubShapeIndexFromID(inSubShapeID, remainder);
+	if (index >= mSubShapes.size())
+	{
+		// No longer valid index
+		outRemainder = SubShapeID();
+		return nullptr;
+	}
+
+	// Pass call on
+	return mSubShapes[index].mShape->GetLeafShape(remainder, outRemainder);
+}
+
 uint64 CompoundShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 {
 	// Decode sub shape index
