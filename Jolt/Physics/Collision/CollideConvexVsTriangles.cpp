@@ -52,7 +52,7 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 
 	// Backface check
 	bool back_facing = triangle_normal.Dot(v0) > 0.0f;
-	if (mCollideShapeSettings.mBackFaceModeTriangles == EBackFaceMode::IgnoreBackFaces && back_facing)
+	if (mCollideShapeSettings.mBackFaceMode == EBackFaceMode::IgnoreBackFaces && back_facing)
 		return;
 
 	// Get bounding box for triangle

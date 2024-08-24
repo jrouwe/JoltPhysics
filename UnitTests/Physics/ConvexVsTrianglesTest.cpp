@@ -190,15 +190,15 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		{
 			// Create settings
 			CollideShapeSettings settings;
-			settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
+			settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 
 			// Settings with ignore back faces
 			CollideShapeSettings settings_no_bf;
-			settings_no_bf.SetBackFaceMode(EBackFaceMode::IgnoreBackFaces);
+			settings_no_bf.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
 
 			// Settings with max separation distance
 			CollideShapeSettings settings_max_distance;
-			settings_max_distance.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
+			settings_max_distance.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 			settings_max_distance.mMaxSeparationDistance = cMaxSeparationDistance;
 
 			{

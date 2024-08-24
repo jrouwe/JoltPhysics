@@ -228,7 +228,7 @@ void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices,
 					// Collision settings
 					CollideShapeSettings settings;
 					settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
-					settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
+					settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 					settings.mMaxSeparationDistance = inMinSeparationDistance;
 
 					// Only check if one of the two bodies can become dynamic

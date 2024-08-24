@@ -1266,8 +1266,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			// Create settings
 			CollideShapeSettings settings;
 			settings.mActiveEdgeMode = mActiveEdgeMode;
-			settings.mBackFaceModeTriangles = mBackFaceModeTriangles;
-			settings.mBackFaceModeConvex = mBackFaceModeConvex;
+			settings.mBackFaceMode = mBackFaceModeTriangles;
 			settings.mCollectFacesMode = mCollectFacesMode;
 			settings.mMaxSeparationDistance = mMaxSeparationDistance;
 

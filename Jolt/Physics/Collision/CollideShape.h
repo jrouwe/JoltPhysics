@@ -73,15 +73,6 @@ class CollideSettingsBase
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
-	/// Set the backfacing mode for all shapes
-	void						SetBackFaceMode(EBackFaceMode inMode) { mBackFaceModeTriangles = mBackFaceModeConvex = inMode; }
-
-	/// How backfacing triangles should be treated (should we report moving from back to front for triangle based shapes, e.g. for MeshShape/HeightFieldShape?)
-	EBackFaceMode				mBackFaceModeTriangles		= EBackFaceMode::IgnoreBackFaces;
-
-	/// How backfacing convex objects should be treated (should we report starting inside an object and moving out?)
-	EBackFaceMode				mBackFaceModeConvex			= EBackFaceMode::IgnoreBackFaces;
-
 	/// How active edges (edges that a moving object should bump into) are handled
 	EActiveEdgeMode				mActiveEdgeMode				= EActiveEdgeMode::CollideOnlyWithActive;
 
@@ -106,6 +97,9 @@ public:
 
 	/// When > 0 contacts in the vicinity of the query shape can be found. All nearest contacts that are not further away than this distance will be found (unit: meter)
 	float						mMaxSeparationDistance		= 0.0f;
+
+	/// How backfacing triangles should be treated
+	EBackFaceMode				mBackFaceMode				= EBackFaceMode::IgnoreBackFaces;
 };
 
 JPH_NAMESPACE_END
