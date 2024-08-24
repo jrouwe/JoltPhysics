@@ -342,7 +342,7 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 
 	// Settings for collide shape
 	CollideShapeSettings settings;
-	settings.mBackFaceMode = mBackFaceMode;
+	settings.SetBackFaceMode(mBackFaceMode);
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
 	settings.mMaxSeparationDistance = mCharacterPadding + inMaxSeparationDistance;
 

@@ -100,7 +100,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::IgnoreBackFaces);
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -136,7 +136,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -183,7 +183,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::IgnoreBackFaces);
 			settings.mTreatConvexAsSolid = false;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -220,7 +220,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 			settings.mTreatConvexAsSolid = false;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -318,7 +318,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::IgnoreBackFaces);
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -352,7 +352,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;

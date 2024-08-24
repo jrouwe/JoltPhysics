@@ -83,7 +83,7 @@ void Character::CheckCollision(RMat44Arg inCenterOfMassTransform, Vec3Arg inMove
 	settings.mMaxSeparationDistance = inMaxSeparationDistance;
 	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
-	settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
+	settings.SetBackFaceMode(EBackFaceMode::IgnoreBackFaces);
 
 	sGetNarrowPhaseQuery(mSystem, inLockBodies).CollideShape(inShape, Vec3::sReplicate(1.0f), inCenterOfMassTransform, settings, inBaseOffset, ioCollector, broadphase_layer_filter, object_layer_filter, body_filter);
 }

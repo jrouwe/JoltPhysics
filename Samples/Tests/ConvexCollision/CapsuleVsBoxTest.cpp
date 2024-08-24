@@ -38,7 +38,7 @@ void CapsuleVsBoxTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Collision settings
 	CollideShapeSettings settings;
 	settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
-	settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+	settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 	settings.mCollectFacesMode = ECollectFacesMode::NoFaces;
 
 	// Collide the two shapes

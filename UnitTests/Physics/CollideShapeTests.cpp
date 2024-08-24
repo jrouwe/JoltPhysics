@@ -86,7 +86,7 @@ TEST_SUITE("CollideShapeTests")
 		// Set settings
 		CollideShapeSettings settings;
 		settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
-		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+		settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 
 		// Test against wrong layer
 		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
@@ -195,7 +195,7 @@ TEST_SUITE("CollideShapeTests")
 		// Set settings
 		CollideShapeSettings settings;
 		settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
-		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+		settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 
 		{
 			// Create sphere
@@ -253,7 +253,7 @@ TEST_SUITE("CollideShapeTests")
 		// Collision settings
 		CollideShapeSettings settings;
 		settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
-		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+		settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 		settings.mCollectFacesMode = ECollectFacesMode::NoFaces;
 
 		// Collide the two shapes

@@ -564,7 +564,8 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateSlider(probe_options, "Scale X", mShapeScale.GetX(), -5.0f, 5.0f, 0.1f, [this](float inValue) { mShapeScale.SetX(inValue); });
 			mDebugUI->CreateSlider(probe_options, "Scale Y", mShapeScale.GetY(), -5.0f, 5.0f, 0.1f, [this](float inValue) { mShapeScale.SetY(inValue); });
 			mDebugUI->CreateSlider(probe_options, "Scale Z", mShapeScale.GetZ(), -5.0f, 5.0f, 0.1f, [this](float inValue) { mShapeScale.SetZ(inValue); });
-			mDebugUI->CreateComboBox(probe_options, "Back Face Cull", { "On", "Off" }, (int)mBackFaceMode, [this](int inItem) { mBackFaceMode = (EBackFaceMode)inItem; });
+			mDebugUI->CreateComboBox(probe_options, "Back Face Cull Triangles", { "On", "Off" }, (int)mBackFaceModeTriangles, [this](int inItem) { mBackFaceModeTriangles = (EBackFaceMode)inItem; });
+			mDebugUI->CreateComboBox(probe_options, "Back Face Cull Convex", { "On", "Off" }, (int)mBackFaceModeConvex, [this](int inItem) { mBackFaceModeConvex = (EBackFaceMode)inItem; });
 			mDebugUI->CreateComboBox(probe_options, "Active Edge Mode", { "Only Active", "All" }, (int)mActiveEdgeMode, [this](int inItem) { mActiveEdgeMode = (EActiveEdgeMode)inItem; });
 			mDebugUI->CreateComboBox(probe_options, "Collect Faces Mode", { "Collect Faces", "No Faces" }, (int)mCollectFacesMode, [this](int inItem) { mCollectFacesMode = (ECollectFacesMode)inItem; });
 			mDebugUI->CreateSlider(probe_options, "Max Separation Distance", mMaxSeparationDistance, 0.0f, 5.0f, 0.1f, [this](float inValue) { mMaxSeparationDistance = inValue; });
@@ -1129,7 +1130,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 			// Create settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = mBackFaceMode;
+			settings.mBackFaceModeTriangles = mBackFaceModeTriangles;
+			settings.mBackFaceModeConvex = mBackFaceModeConvex;
 			settings.mTreatConvexAsSolid = mTreatConvexAsSolid;
 
 			// Cast ray
@@ -1264,7 +1266,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			// Create settings
 			CollideShapeSettings settings;
 			settings.mActiveEdgeMode = mActiveEdgeMode;
-			settings.mBackFaceMode = mBackFaceMode;
+			settings.mBackFaceModeTriangles = mBackFaceModeTriangles;
+			settings.mBackFaceModeConvex = mBackFaceModeConvex;
 			settings.mCollectFacesMode = mCollectFacesMode;
 			settings.mMaxSeparationDistance = mMaxSeparationDistance;
 
@@ -1353,8 +1356,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			ShapeCastSettings settings;
 			settings.mUseShrunkenShapeAndConvexRadius = mUseShrunkenShapeAndConvexRadius;
 			settings.mActiveEdgeMode = mActiveEdgeMode;
-			settings.mBackFaceModeTriangles = mBackFaceMode;
-			settings.mBackFaceModeConvex = mBackFaceMode;
+			settings.mBackFaceModeTriangles = mBackFaceModeTriangles;
+			settings.mBackFaceModeConvex = mBackFaceModeConvex;
 			settings.mReturnDeepestPoint = mReturnDeepestPoint;
 			settings.mCollectFacesMode = mCollectFacesMode;
 

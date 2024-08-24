@@ -2135,7 +2135,7 @@ void HeightFieldShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 			mRayOrigin(inRay.mOrigin),
 			mRayDirection(inRay.mDirection),
 			mRayInvDirection(inRay.mDirection),
-			mBackFaceMode(inRayCastSettings.mBackFaceMode),
+			mBackFaceMode(inRayCastSettings.mBackFaceModeTriangles),
 			mShape(inShape),
 			mSubShapeIDCreator(inSubShapeIDCreator)
 		{
