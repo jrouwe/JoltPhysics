@@ -10,6 +10,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Use MeshShapeSettings::mPerTriangleUserData at about 25% memory increase to get per triangle user data through MeshShape::GetTriangleUserData
 * Added Shape::GetLeafShape function to be able to get a leaf shape given a sub shape ID
 * Added HeightFieldShape::GetSubShapeCoordinates to get the triangle coordinates of a particular sub shape ID
+* Split back face mode between convex/triangles for ray casts. This allows you to e.g. have meshes that do give back face hits while convex shapes don't.
 
 ### Bug fixes
 

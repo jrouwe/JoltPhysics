@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v5.1.0 and latest
 
+* 20240825 - RayCastSettings::mBackFaceMode was split into mBackFaceModeTriangles and mBackFaceModeConvex. Replace `mBackFaceMode = ...` with `SetBackFaceMode(...)` (b3cd9f4846c52a84064b7e5e9a9a9fcbfdf286de)
 * 20240823 - Added virtual function Shape::GetLeafShape. If you have custom shapes, you may need to override this function and provide an implementation. (d7f08b83670ea6d0842e231f50ad2a175f56f949)
 
 ## Changes between v5.0.0 and v5.1.0
