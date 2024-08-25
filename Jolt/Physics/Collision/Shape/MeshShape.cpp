@@ -773,7 +773,7 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 	};
 
 	Visitor visitor(ioCollector);
-	visitor.mBackFaceMode = inRayCastSettings.mBackFaceMode;
+	visitor.mBackFaceMode = inRayCastSettings.mBackFaceModeTriangles;
 	visitor.mRayOrigin = inRay.mOrigin;
 	visitor.mRayDirection = inRay.mDirection;
 	visitor.mRayInvDirection.Set(inRay.mDirection);

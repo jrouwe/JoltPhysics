@@ -256,7 +256,7 @@ void SphereShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCast
 		}
 
 		// Check back side hit
-		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces
+		if (inRayCastSettings.mBackFaceModeConvex == EBackFaceMode::CollideWithBackFaces
 			&& num_results > 1 // Ray should have 2 intersections
 			&& max_fraction < ioCollector.GetEarlyOutFraction()) // End of ray should be before early out fraction
 		{

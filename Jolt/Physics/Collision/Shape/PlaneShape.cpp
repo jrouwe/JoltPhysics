@@ -218,7 +218,7 @@ void PlaneShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastS
 
 	float dot = inRay.mDirection.Dot(mPlane.GetNormal());
 	if (dot != 0.0f // Parallel ray will not hit plane
-		&& (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces || dot < 0.0f)) // Back face culling
+		&& (inRayCastSettings.mBackFaceModeConvex == EBackFaceMode::CollideWithBackFaces || dot < 0.0f)) // Back face culling
 	{
 		// Calculate hit with plane
 		float fraction = -distance / dot;

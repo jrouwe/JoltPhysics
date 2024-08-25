@@ -239,7 +239,7 @@ void TriangleShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCa
 		return;
 
 	// Back facing check
-	if (inRayCastSettings.mBackFaceMode == EBackFaceMode::IgnoreBackFaces && (mV2 - mV1).Cross(mV3 - mV1).Dot(inRay.mDirection) > 0.0f)
+	if (inRayCastSettings.mBackFaceModeTriangles == EBackFaceMode::IgnoreBackFaces && (mV2 - mV1).Cross(mV3 - mV1).Dot(inRay.mDirection) > 0.0f)
 		return;
 
 	// Test ray against triangle
