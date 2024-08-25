@@ -1,4 +1,4 @@
-<p align="center"><img width=500 src="Logos/logo_icon_simple.svg" alt="Jolt Physics"/></p>
+<p align="center" style="margin: 40px"><img width=500 src="Logos/logo_icon_simple.svg" alt="Jolt Physics"/></p>
 
 [![CLA assistant](https://cla-assistant.io/readme/badge/jrouwe/JoltPhysics)](https://cla-assistant.io/jrouwe/JoltPhysics)
 [![Build Status](https://github.com/jrouwe/JoltPhysics/actions/workflows/build.yml/badge.svg)](https://github.com/jrouwe/JoltPhysics/actions/)
