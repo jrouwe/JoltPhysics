@@ -26,8 +26,7 @@ void KinematicTest::Initialize()
 		for (int j = i / 2; j < 10 - (i + 1) / 2; ++j)
 		{
 			RVec3 position(-10.0f + j * 2.0f + (i & 1? 1.0f : 0.0f), 1.0f + i * 2.0f, 0);
-			Body &wall = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-			mBodyInterface->AddBody(wall.GetID(), EActivation::DontActivate);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::DontActivate);
 		}
 
 	// Kinematic object

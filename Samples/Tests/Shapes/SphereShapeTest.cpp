@@ -20,19 +20,13 @@ void SphereShapeTest::Initialize()
 	CreateFloor();
 
 	// Create different sized spheres
-	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new SphereShape(1.0f), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new SphereShape(1.0f), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
-	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(new SphereShape(2.0f), RVec3(0, 10, 10), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body2.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new SphereShape(2.0f), RVec3(0, 10, 10), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
-	Body &body3 = *mBodyInterface->CreateBody(BodyCreationSettings(new SphereShape(0.5f), RVec3(0, 10, 20), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body3.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new SphereShape(0.5f), RVec3(0, 10, 20), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
 	// Tower of spheres
 	for (int i = 0; i < 10; ++i)
-	{
-		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(new SphereShape(0.5f), RVec3(10, 10 + 1.5f * i, 0), Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
-		mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
-	}
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new SphereShape(0.5f), RVec3(10, 10 + 1.5f * i, 0), Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }
