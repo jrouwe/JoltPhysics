@@ -277,6 +277,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCapsuleShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCapsuleShape.gliffy
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCapsuleShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCylinderShape.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCylinderShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TriangleShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TriangleShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ShapeCast.h
