@@ -28,7 +28,14 @@ The general life cycle of a body is:
 - BodyInterface::RemoveBody - Remove it from the PhysicsSystem.
 - BodyInterface::DestroyBody - Deinitialize and destruct the Body. You cannot use `delete` to delete a Body. This function will not automatically remove the Body from the PhysicsSystem.
 
-The BodyInterface also contains functionality to add many bodies to the simulation at the same time. It is important to use these functions when inserting many Bodies, you get a performance penalty if you don't.
+If you need to add many bodies at the same time then use the batching functions:
+
+- BodyInterface::AddBodiesPrepare - Prepares bodies to be added to the PhysicsSystem. Doesn't affect simulation and can be done from a background thread.
+- BodyInterface::AddBodiesFinalize - Finalize insertion. This atomically adds all bodies to the PhysicsSystem.
+- BodyInterface::AddBodiesAbort - If you've called AddBodiesPrepare but changed your mind and no longer want to add the bodies to the PhysicsSystem. Useful when streaming in level sections and the player decides to go the other way.
+- BodyInterface::RemoveBodies - Batch remove a lot of bodies from the PhysicsSystem.
+
+Always use the batch adding functions when possible! Adding many bodies, one at a time, results in a really inefficient broadphase and in the worst case can lead to missed collisions (an assert will trigger if this is the case). If you cannot avoid adding many bodies one at a time, use PhysicsSystem::OptimizeBroadPhase to rebuild the tree.
 
 You can call AddBody, RemoveBody, AddBody, RemoveBody to temporarily remove and later reinsert a body into the simulation.
 
