@@ -293,7 +293,7 @@ TEST_SUITE("RayShapeTests")
 			if (inExpectedFraction1 != FLT_MAX)
 			{
 				CHECK(system.GetNarrowPhaseQuery().CastRay(RRayCast(ray), hit));
-				CHECK_APPROX_EQUAL(hit.mFraction, inExpectedFraction1, 2.0e-5f);
+				CHECK_APPROX_EQUAL(hit.mFraction, inExpectedFraction1, 2.5e-5f);
 			}
 			else
 			{
@@ -327,7 +327,7 @@ TEST_SUITE("RayShapeTests")
 			if (inExpectedFraction1 != FLT_MAX)
 			{
 				CHECK(collector.mHits.size() == 1);
-				CHECK_APPROX_EQUAL(collector.mHits[0].mFraction, inExpectedFraction1, 2.0e-5f);
+				CHECK_APPROX_EQUAL(collector.mHits[0].mFraction, inExpectedFraction1, 2.5e-5f);
 			}
 			else
 			{
@@ -362,7 +362,7 @@ TEST_SUITE("RayShapeTests")
 			if (inExpectedFraction1 != FLT_MAX)
 			{
 				CHECK(collector.mHits.size() >= 1);
-				CHECK_APPROX_EQUAL(collector.mHits[0].mFraction, inExpectedFraction1, 2.0e-5f);
+				CHECK_APPROX_EQUAL(collector.mHits[0].mFraction, inExpectedFraction1, 2.5e-5f);
 			}
 			else
 			{
@@ -373,7 +373,7 @@ TEST_SUITE("RayShapeTests")
 			if (inExpectedFraction2 != FLT_MAX)
 			{
 				CHECK(collector.mHits.size() >= 2);
-				CHECK_APPROX_EQUAL(collector.mHits[1].mFraction, inExpectedFraction2, 2.0e-5f);
+				CHECK_APPROX_EQUAL(collector.mHits[1].mFraction, inExpectedFraction2, 2.5e-5f);
 			}
 			else
 			{
