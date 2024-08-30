@@ -1723,6 +1723,10 @@ public:
 		if (mShape->mHeightSamplesSize == 0)
 			return;
 
+		// Assert that an inside-out bounding box does not collide
+		JPH_IF_ENABLE_ASSERTS(UVec4 dummy = UVec4::sReplicate(0);)
+		JPH_ASSERT(ioVisitor.VisitRangeBlock(Vec4::sReplicate(-1.0e6f), Vec4::sReplicate(1.0e6f), Vec4::sReplicate(-1.0e6f), Vec4::sReplicate(1.0e6f), Vec4::sReplicate(-1.0e6f), Vec4::sReplicate(1.0e6f), dummy, 0) == 0);
+
 		// Precalculate values relating to sample count
 		uint32 sample_count = mShape->mSampleCount;
 		UVec4 sample_count_min_1 = UVec4::sReplicate(sample_count - 1);
@@ -2219,6 +2223,9 @@ void HeightFieldShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform,
 		{
 			// Get distance to vertex
 			Vec4 dist_sq = AABox4DistanceSqToPoint(mLocalPosition, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
+
+			// Clear distance for invalid bounds
+			dist_sq = Vec4::sSelect(Vec4::sReplicate(FLT_MAX), dist_sq, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
 
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(dist_sq, mClosestDistanceSq, ioProperties, &mDistanceStack[inStackTop]);
