@@ -7,7 +7,6 @@
 #include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
-#include <Jolt/Physics/Collision/TransformedShape.h>
 #include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
@@ -139,10 +138,9 @@ public:
 		float o = sqrt(Square(x) + Square(z));
 		if (o > 0.0f)
 		{
-			if (y > 0.0f)
-				return Vec3((mTopRadius * x) / o, mHalfHeight, (mTopRadius * z) / o);
-			else
-				return Vec3((mBottomRadius * x) / o, -mHalfHeight, (mBottomRadius * z) / o);
+			Vec3 top_support((mTopRadius * x) / o, mHalfHeight, (mTopRadius * z) / o);
+			Vec3 bottom_support((mBottomRadius * x) / o, -mHalfHeight, (mBottomRadius * z) / o);
+			return inDirection.Dot(top_support) > inDirection.Dot(bottom_support)? top_support : bottom_support;
 		}
 		else
 			return Vec3(0, Sign(y) * mHalfHeight, 0);
