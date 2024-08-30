@@ -211,7 +211,7 @@ void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec
 
 	// Get the normal of the side of the cylinder
 	float tan_alpha = (bottom_radius - top_radius) / (2.0f * half_height);
-	Vec3 normal = Vec3(horizontal_normal.GetX(), -tan_alpha, horizontal_normal.GetZ()).Normalized();
+	Vec3 normal = Vec3(horizontal_normal.GetX(), tan_alpha, horizontal_normal.GetZ()).Normalized();
 
 	// Check if the normal is closer to the side than to the top or bottom
 	Vec3 half_height_3d(0, half_height, 0);
