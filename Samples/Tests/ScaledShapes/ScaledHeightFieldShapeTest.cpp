@@ -50,40 +50,30 @@ void ScaledHeightFieldShapeTest::Initialize()
 	RefConst<ShapeSettings> height_field = new HeightFieldShapeSettings(heights, Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n), Vec3(cell_size, 1.0f, cell_size), n);
 
 	// Original shape
-	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(height_field, RVec3(-60, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	mBodyInterface->AddBody(body1.GetID(), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(height_field, RVec3(-60, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Uniformly scaled shape < 1
-	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3::sReplicate(0.5f)), RVec3(-40, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	mBodyInterface->AddBody(body2.GetID(), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3::sReplicate(0.5f)), RVec3(-40, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Uniformly scaled shape > 1
-	Body &body3 = *mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3::sReplicate(1.5f)), RVec3(-20, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	mBodyInterface->AddBody(body3.GetID(), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3::sReplicate(1.5f)), RVec3(-20, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Non-uniform scaled shape
-	Body &body4 = *mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3(0.5f, 1.0f, 1.5f)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	mBodyInterface->AddBody(body4.GetID(), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3(0.5f, 1.0f, 1.5f)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Flipped in 2 axis
-	Body &body5 = *mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3(-0.5f, 1.0f, -1.5f)), RVec3(20, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	mBodyInterface->AddBody(body5.GetID(), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3(-0.5f, 1.0f, -1.5f)), RVec3(20, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Inside out
-	Body &body6 = *mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3(-0.5f, 1.0f, 1.5f)), RVec3(40, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	mBodyInterface->AddBody(body6.GetID(), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3(-0.5f, 1.0f, 1.5f)), RVec3(40, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Upside down
-	Body &body7 = *mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3(0.5f, -1.0f, 1.5f)), RVec3(60, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	mBodyInterface->AddBody(body7.GetID(), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(height_field, Vec3(0.5f, -1.0f, 1.5f)), RVec3(60, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Create a number of balls above the height fields
 	RefConst<Shape> sphere_shape = new SphereShape(0.2f);
 	RefConst<Shape> box_shape = new BoxShape(Vec3(0.2f, 0.2f, 0.4f), 0.01f);
 	for (int i = 0; i < 7; ++i)
 		for (int j = 0; j < 5; ++j)
-		{
-			Body &dynamic = *mBodyInterface->CreateBody(BodyCreationSettings((j & 1)? box_shape : sphere_shape, RVec3(-60.0f + 20.0f * i, 10.0f + max_height + 0.5f * j, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-			mBodyInterface->AddBody(dynamic.GetID(), EActivation::Activate);
-		}
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings((j & 1)? box_shape : sphere_shape, RVec3(-60.0f + 20.0f * i, 10.0f + max_height + 0.5f * j, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }

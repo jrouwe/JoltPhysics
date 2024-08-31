@@ -57,7 +57,6 @@ void StaticCompoundShapeTest::Initialize()
 				rotation = Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI);
 			else
 				rotation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
-			Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(shapes[j], RVec3(0, 10.0f + 4.0f * i, j * 20.0f), rotation, EMotionType::Dynamic, Layers::MOVING));
-			mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(shapes[j], RVec3(0, 10.0f + 4.0f * i, j * 20.0f), rotation, EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 		}
 }

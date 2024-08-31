@@ -147,8 +147,7 @@ void HighSpeedTest::CreateSimpleScene()
 		enclosing_settings.mMotionType = EMotionType::Kinematic;
 		enclosing_settings.mObjectLayer = Layers::MOVING;
 		enclosing_settings.mPosition = offset + Vec3(0, 1, 0);
-		Body &enclosing = *mBodyInterface->CreateBody(enclosing_settings);
-		mBodyInterface->AddBody(enclosing.GetID(), EActivation::Activate);
+		mBodyInterface->CreateAndAddBody(enclosing_settings, EActivation::Activate);
 
 		// Fast moving sphere in box
 		CreateDynamicObject(offset + Vec3(0, 0.5f, 0), Vec3(-speed, 0, -0.5f * speed), new SphereShape(radius));

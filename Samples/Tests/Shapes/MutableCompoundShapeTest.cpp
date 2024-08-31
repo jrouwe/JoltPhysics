@@ -22,8 +22,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(MutableCompoundShapeTest)
 void MutableCompoundShapeTest::Initialize()
 {
 	// Floor (extra thick because we can randomly add sub shapes that then may stick out underneath the floor and cause objects to be pushed through)
-	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(100.0f, 10.0f, 100.0f), 0.0f), RVec3(0.0f, -10.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(100.0f, 10.0f, 100.0f), 0.0f), RVec3(0.0f, -10.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Compound with sub compound and rotation
 	StaticCompoundShapeSettings sub_compound_settings;
@@ -40,9 +39,8 @@ void MutableCompoundShapeTest::Initialize()
 		compound_shape->AddShape(Vec3::sZero(), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI) * Quat::sRotation(Vec3::sAxisZ(), -0.75f * JPH_PI), mSubCompound);
 
 		// Create a body
-		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(compound_shape, RVec3(0, 10.0f + 5.0f * i, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-		mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
-		mBodyIDs.push_back(body.GetID());
+		BodyID body_id = mBodyInterface->CreateAndAddBody(BodyCreationSettings(compound_shape, RVec3(0, 10.0f + 5.0f * i, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+		mBodyIDs.push_back(body_id);
 	}
 }
 

@@ -26,7 +26,6 @@ void WallTest::Initialize()
 		for (int j = i / 2; j < 50 - (i + 1) / 2; ++j)
 		{
 			RVec3 position(-50 + j * 2.0f + (i & 1? 1.0f : 0.0f), 1.0f + i * 3.0f, 0);
-			Body &wall = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-			mBodyInterface->AddBody(wall.GetID(), EActivation::Activate);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 		}
 }
