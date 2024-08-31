@@ -234,6 +234,17 @@ const ConvexShape::Support *TaperedCylinderShape::GetSupportFunction(ESupportMod
 	return nullptr;
 }
 
+JPH_INLINE static Vec3 sCalculateSideNormalXZ(Vec3Arg inSurfacePosition)
+{
+	return (Vec3(1, 0, 1) * inSurfacePosition).NormalizedOr(Vec3::sAxisX());
+}
+
+JPH_INLINE static Vec3 sCalculateSideNormal(Vec3Arg inNormalXZ, float inTop, float inBottom, float inTopRadius, float inBottomRadius)
+{
+	float tan_alpha = (inBottomRadius - inTopRadius) / (inTop - inBottom);
+	return Vec3(inNormalXZ.GetX(), tan_alpha, inNormalXZ.GetZ()).Normalized();
+}
+
 void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
 {
 	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
@@ -243,12 +254,9 @@ void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec
 	float top, bottom, top_radius, bottom_radius, convex_radius;
 	GetScaled(inScale, top, bottom, top_radius, bottom_radius, convex_radius);
 
-	// Get the normal of the side of the cylinder in the horizontal plane
-	Vec3 horizontal_normal = (Vec3(-1, 0, -1) * inDirection).NormalizedOr(Vec3::sAxisX());
-
 	// Get the normal of the side of the cylinder
-	float tan_alpha = (bottom_radius - top_radius) / (top - bottom);
-	Vec3 normal = Vec3(horizontal_normal.GetX(), tan_alpha, horizontal_normal.GetZ()).Normalized();
+	Vec3 normal_xz = sCalculateSideNormalXZ(-inDirection);
+	Vec3 normal = sCalculateSideNormal(normal_xz, top, bottom, top_radius, bottom_radius);
 
 	constexpr float cMinRadius = 1.0e-3f;
 
@@ -256,8 +264,8 @@ void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec
 	if (abs(normal.Dot(inDirection)) > abs(inDirection.GetY()))
 	{		
 		// Return the side of the cylinder
-		outVertices.push_back(inCenterOfMassTransform * (horizontal_normal * top_radius + Vec3(0, top, 0)));
-		outVertices.push_back(inCenterOfMassTransform * (horizontal_normal * bottom_radius + Vec3(0, bottom, 0)));
+		outVertices.push_back(inCenterOfMassTransform * (normal_xz * top_radius + Vec3(0, top, 0)));
+		outVertices.push_back(inCenterOfMassTransform * (normal_xz * bottom_radius + Vec3(0, bottom, 0)));
 	}
 	else if (inDirection.GetY() < 0.0f)
 	{
@@ -275,8 +283,8 @@ void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec
 		if (bottom_radius > cMinRadius)
 		{
 			Vec3 bottom_3d(0, bottom, 0);
-			for (int i = int(std::size(cTaperedCapsuleFace)) - 1; i >= 0; --i)
-				outVertices.push_back(inCenterOfMassTransform * (bottom_radius * cTaperedCapsuleFace[i] + bottom_3d));
+			for (const Vec3 *v = cTaperedCapsuleFace + std::size(cTaperedCapsuleFace) - 1; v >= cTaperedCapsuleFace; --v)
+				outVertices.push_back(inCenterOfMassTransform * (bottom_radius * *v + bottom_3d));
 		}
 	}
 }
@@ -299,7 +307,14 @@ Vec3 TaperedCylinderShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3
 {
 	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
-	return Vec3::sAxisX();
+	constexpr float cEpsilon = 1.0e-5f;
+
+	if (inLocalSurfacePosition.GetY() > mTop - cEpsilon)
+		return Vec3(0, 1, 0);
+	else if (inLocalSurfacePosition.GetY() < mBottom + cEpsilon)
+		return Vec3(0, -1, 0);
+	else
+		return sCalculateSideNormal(sCalculateSideNormalXZ(inLocalSurfacePosition), mTop, mBottom, mTopRadius, mBottomRadius);
 }
 
 AABox TaperedCylinderShape::GetLocalBounds() const
@@ -312,7 +327,61 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 {
 	JPH_ASSERT(IsValidScale(inScale));
 
-	// TODO implement
+	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+
+	// Get scaled tapered cylinder
+	float top, bottom, top_radius, bottom_radius, convex_radius;
+	GetScaled(inScale, top, bottom, top_radius, bottom_radius, convex_radius);
+	Vec3 top_3d(0, top, 0);
+	Vec3 bottom_3d(0, bottom, 0);
+
+	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
+		if (v->mInvMass > 0.0f)
+		{
+			Vec3 local_pos = inverse_transform * v->mPosition;
+			bool is_top = local_pos.GetY() > 0.0f;
+
+			// Calculate penetration into side surface
+			Vec3 normal_xz = sCalculateSideNormalXZ(local_pos);
+			Vec3 side_normal = sCalculateSideNormal(normal_xz, top, bottom, top_radius, bottom_radius);
+			Vec3 support_point = is_top? normal_xz * top_radius + top_3d : normal_xz * bottom_radius + bottom_3d;
+			float side_penetration = (support_point - local_pos).Dot(side_normal);
+
+			// Calculate penetration into top or bottom plane
+			float top_penetration = is_top? top - local_pos.GetY() : local_pos.GetY() - bottom;
+
+			Vec3 point, normal;
+			if (side_penetration < 0.0f && top_penetration < 0.0f)
+			{
+				// We're outside the cylinder height and radius
+				point = support_point;
+				normal = (local_pos - point).NormalizedOr(Vec3::sAxisY());
+			}
+			else if (side_penetration < top_penetration)
+			{
+				// Side surface is closest
+				point = support_point;
+				normal = side_normal;
+			}
+			else
+			{
+				// Top or bottom plane is closest
+				point = is_top? top_3d : bottom_3d;
+				normal = is_top? Vec3(0, 1, 0) : Vec3(0, -1, 0);
+			}
+
+			// Calculate penetration
+			Plane plane = Plane::sFromPointAndNormal(point, normal);
+			float penetration = -plane.SignedDistance(local_pos);
+			if (penetration > v->mLargestPenetration)
+			{
+				v->mLargestPenetration = penetration;
+
+				// Store collision
+				v->mCollisionPlane = plane.GetTransformed(inCenterOfMassTransform);
+				v->mCollidingShapeIndex = inCollidingShapeIndex;
+			}
+		}
 }
 
 class TaperedCylinderShape::TCSGetTrianglesContext
