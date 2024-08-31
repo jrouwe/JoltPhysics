@@ -202,7 +202,7 @@ JPH_INLINE void TaperedCylinderShape::GetScaled(Vec3Arg inScale, float &outTop, 
 	outBottom = scale_y * mBottom;
 	outTopRadius = scale_xz * mTopRadius;
 	outBottomRadius = scale_xz * mBottomRadius;
-	outConvexRadius = scale_xz * mConvexRadius;
+	outConvexRadius = min(abs_scale.GetY(), scale_xz) * mConvexRadius;
 
 	// Negative Y-scale flips the top and bottom
 	if (outBottom > outTop)
@@ -477,14 +477,18 @@ float TaperedCylinderShape::GetVolume() const
 
 bool TaperedCylinderShape::IsValidScale(Vec3Arg inScale) const
 {
-	return ConvexShape::IsValidScale(inScale) && ScaleHelpers::IsUniformScale(inScale.Abs());
+	// X and Z need same scale
+	Vec3 abs_scale = inScale.Abs();
+	return ConvexShape::IsValidScale(inScale) && abs_scale.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>().IsClose(abs_scale, ScaleHelpers::cScaleToleranceSq);
 }
 
 Vec3 TaperedCylinderShape::MakeScaleValid(Vec3Arg inScale) const
 {
 	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
 
-	return scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs());
+	// Average X and Z
+	Vec3 abs_scale = scale.Abs();
+	return 0.5f * scale.GetSign() * (abs_scale + abs_scale.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>());
 }
 
 void TaperedCylinderShape::sRegister()

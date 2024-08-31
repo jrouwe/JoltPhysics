@@ -21,20 +21,20 @@ void ScaledTaperedCylinderShapeTest::Initialize()
 	CreateFloor();
 
 	// Create tapered cylinder
-	RefConst<ShapeSettings> tapered_cylinder_shape = new TaperedCylinderShapeSettings(2.0f, 0.75f, 1.25f);
+	RefConst<Shape> tapered_cylinder_shape = TaperedCylinderShapeSettings(2.0f, 0.75f, 1.25f).Create().Get();
 
 	// Original shape
 	mBodyInterface->CreateAndAddBody(BodyCreationSettings(tapered_cylinder_shape, RVec3(-20, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
-	// Uniformly scaled shape < 1
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(tapered_cylinder_shape, Vec3::sReplicate(0.25f)), RVec3(-10, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+	// Uniformly scaled shape
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShape(tapered_cylinder_shape, Vec3::sReplicate(0.25f)), RVec3(-10, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
-	// Uniformly scaled shape > 1
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(tapered_cylinder_shape, Vec3::sReplicate(2.0f)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+	// Non-uniform scaled shape
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShape(tapered_cylinder_shape, Vec3(0.25f, 0.5f, 0.25f)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
 	// Flipped in 2 axis
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(tapered_cylinder_shape, Vec3(-1.5f, -1.5f, 1.5f)), RVec3(10, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShape(tapered_cylinder_shape, Vec3(-1.5f, -0.5f, 1.5f)), RVec3(10, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
 	// Inside out
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShapeSettings(tapered_cylinder_shape, Vec3::sReplicate(-0.75f)), RVec3(20, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ScaledShape(tapered_cylinder_shape, Vec3(-0.25f, 1.5f, 0.25f)), RVec3(20, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }
