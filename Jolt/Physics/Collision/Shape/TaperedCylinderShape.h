@@ -43,7 +43,7 @@ public:
 							TaperedCylinderShape(const TaperedCylinderShapeSettings &inSettings, ShapeResult &outResult);
 
 	// See Shape::GetCenterOfMass
-	virtual Vec3			GetCenterOfMass() const override										{ return Vec3::sZero(); } // TODO incorrect
+	virtual Vec3			GetCenterOfMass() const override										{ return Vec3::sZero(); }
 
 	// See Shape::GetLocalBounds
 	virtual AABox			GetLocalBounds() const override;
@@ -98,9 +98,10 @@ private:
 	class					TaperedCylinder;
 
 	// Scale the cylinder
-	JPH_INLINE void			GetScaled(Vec3Arg inScale, float &outHalfHeight, float &outTopRadius, float &outBottomRadius, float &outConvexRadius) const;
+	JPH_INLINE void			GetScaled(Vec3Arg inScale, float &outTop, float &outBottom, float &outTopRadius, float &outBottomRadius, float &outConvexRadius) const;
 
-	float					mHalfHeight = 0.0f;
+	float					mTop = 0.0f;
+	float					mBottom = 0.0f;
 	float					mTopRadius = 0.0f;
 	float					mBottomRadius = 0.0f;
 	float					mConvexRadius = 0.0f;

@@ -31,6 +31,18 @@ void TaperedCylinderShapeTest::Initialize()
 	// Tapered cylinder on side
 	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_taperedcylinder, RVec3(20, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
+	RefConst<ShapeSettings> big_cone = new TaperedCylinderShapeSettings(2.0f, 0.0f, 3.0f, 0.0f);
+	RefConst<ShapeSettings> big_cone2 = new TaperedCylinderShapeSettings(2.0f, 3.0f, 0.0f, 0.0f);
+
+	// Cone on large radius
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_cone, RVec3(0, 10, 10), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+
+	// Cone on small radius
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_cone2, RVec3(10, 10, 10), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+
+	// Cone on side
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_cone, RVec3(20, 10, 10), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+
 	RefConst<ShapeSettings> long_taperedcylinder = new TaperedCylinderShapeSettings(5, 0.5f, 1.0f);
 
 	// Tower of tapered cylinders

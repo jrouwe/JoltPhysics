@@ -75,7 +75,6 @@ TaperedCylinderShapeSettings::TaperedCylinderShapeSettings(float inHalfHeightOfT
 
 TaperedCylinderShape::TaperedCylinderShape(const TaperedCylinderShapeSettings &inSettings, ShapeResult &outResult) :
 	ConvexShape(EShapeSubType::TaperedCylinder, inSettings, outResult),
-	mHalfHeight(inSettings.mHalfHeight),
 	mTopRadius(inSettings.mTopRadius),
 	mBottomRadius(inSettings.mBottomRadius),
 	mConvexRadius(inSettings.mConvexRadius)
@@ -98,22 +97,52 @@ TaperedCylinderShape::TaperedCylinderShape(const TaperedCylinderShapeSettings &i
 		return;
 	}
 
+	if (inSettings.mConvexRadius < 0.0f)
+	{
+		outResult.SetError("Invalid convex radius");
+		return;
+	}
+
 	if (inSettings.mTopRadius < inSettings.mConvexRadius)
 	{
-		outResult.SetError("Invalid top radius");
+		outResult.SetError("Convex radius must be smaller than convex radius");
 		return;
 	}
 
 	if (inSettings.mBottomRadius < inSettings.mConvexRadius)
 	{
-		outResult.SetError("Invalid bottom radius");
+		outResult.SetError("Convex radius must be smaller than bottom radius");
 		return;
 	}
 
-	if (inSettings.mConvexRadius < 0.0f)
+	// Calculate the center of mass (using wxMaxima).
+	// We define the cylinder with bottom at x=0 and radius b
+	// The top is at x=h width b + dr
+	// Radius as a function of x is: r(x):=b+x*dr/h;
+	// Area at x is: a(x):=%pi*r(x)^2;
+	// Volume of a cylinder x = [0, c]: v(c):=integrate(a(x),x,0,c);
+	// Solving for c: c(b,dr):=factor(rhs(ratsimp(solve(v(h)/2=v(c),c))[3]));
+	// Result: c(b,dr):=(((dr^3+3*(b*dr^2+b^2*dr)+2*b^3)^(1/3)-2^(1/3)*b)*h)/(2^(1/3)*dr)
+	float dr = mTopRadius - mBottomRadius;
+	if (abs(dr < 1.0e-4f))
 	{
-		outResult.SetError("Invalid convex radius");
-		return;
+		// If difference is small, just center the cylinder to avoid dividing by zero
+		mTop = inSettings.mHalfHeight;
+		mBottom = -inSettings.mHalfHeight;
+	}
+	else
+	{
+		constexpr float cOneThird = 1.0f / 3.0f;
+		const float cTwoToTheThird = std::pow(2.0f, cOneThird);
+		float h = 2.0f * inSettings.mHalfHeight;
+		float b = mBottomRadius;
+		float b2 = Square(b);
+		float b3 = b * b2;
+		float dr2 = Square(dr);
+		float dr3 = dr * dr2;
+		float c = ((std::pow(dr3 + 3.0f * (b * dr2 + b2 * dr) + 2.0f * b3, cOneThird) - cTwoToTheThird * b) * h) / (cTwoToTheThird * dr);
+		mTop = h - c;
+		mBottom = -c;
 	}
 
 	outResult.Set(this);
@@ -122,8 +151,9 @@ TaperedCylinderShape::TaperedCylinderShape(const TaperedCylinderShapeSettings &i
 class TaperedCylinderShape::TaperedCylinder final : public Support
 {
 public:
-					TaperedCylinder(float inHalfHeight, float inTopRadius, float inBottomRadius, float inConvexRadius) :
-		mHalfHeight(inHalfHeight),
+					TaperedCylinder(float inTop, float inBottom, float inTopRadius, float inBottomRadius, float inConvexRadius) :
+		mTop(inTop),
+		mBottom(inBottom),
 		mTopRadius(inTopRadius),
 		mBottomRadius(inBottomRadius),
 		mConvexRadius(inConvexRadius)
@@ -138,12 +168,17 @@ public:
 		float o = sqrt(Square(x) + Square(z));
 		if (o > 0.0f)
 		{
-			Vec3 top_support((mTopRadius * x) / o, mHalfHeight, (mTopRadius * z) / o);
-			Vec3 bottom_support((mBottomRadius * x) / o, -mHalfHeight, (mBottomRadius * z) / o);
+			Vec3 top_support((mTopRadius * x) / o, mTop, (mTopRadius * z) / o);
+			Vec3 bottom_support((mBottomRadius * x) / o, mBottom, (mBottomRadius * z) / o);
 			return inDirection.Dot(top_support) > inDirection.Dot(bottom_support)? top_support : bottom_support;
 		}
 		else
-			return Vec3(0, Sign(y) * mHalfHeight, 0);
+		{
+			if (y > 0.0f)
+				return Vec3(0, mTop, 0);
+			else
+				return Vec3(0, mBottom, 0);
+		}
 	}
 
 	virtual float	GetConvexRadius() const override
@@ -152,25 +187,31 @@ public:
 	}
 
 private:
-	float			mHalfHeight;
+	float			mTop;
+	float			mBottom;
 	float			mTopRadius;
 	float			mBottomRadius;
 	float			mConvexRadius;
 };
 
-JPH_INLINE void TaperedCylinderShape::GetScaled(Vec3Arg inScale, float &outHalfHeight, float &outTopRadius, float &outBottomRadius, float &outConvexRadius) const
+JPH_INLINE void TaperedCylinderShape::GetScaled(Vec3Arg inScale, float &outTop, float &outBottom, float &outTopRadius, float &outBottomRadius, float &outConvexRadius) const
 {
 	Vec3 abs_scale = inScale.Abs();
 	float scale_xz = abs_scale.GetX();
+	float scale_y = inScale.GetY();
 
-	outHalfHeight = abs_scale.GetY() * mHalfHeight;
+	outTop = scale_y * mTop;
+	outBottom = scale_y * mBottom;
 	outTopRadius = scale_xz * mTopRadius;
 	outBottomRadius = scale_xz * mBottomRadius;
 	outConvexRadius = scale_xz * mConvexRadius;
 
 	// Negative Y-scale flips the top and bottom
-	if (inScale.GetY() < 0.0f)
+	if (outBottom > outTop)
+	{
+		swap(outTop, outBottom);
 		swap(outTopRadius, outBottomRadius);
+	}
 }
 
 const ConvexShape::Support *TaperedCylinderShape::GetSupportFunction(ESupportMode inMode, SupportBuffer &inBuffer, Vec3Arg inScale) const
@@ -178,17 +219,17 @@ const ConvexShape::Support *TaperedCylinderShape::GetSupportFunction(ESupportMod
 	JPH_ASSERT(IsValidScale(inScale));
 
 	// Get scaled tapered cylinder
-	float half_height, top_radius, bottom_radius, convex_radius;
-	GetScaled(inScale, half_height, top_radius, bottom_radius, convex_radius);
+	float top, bottom, top_radius, bottom_radius, convex_radius;
+	GetScaled(inScale, top, bottom, top_radius, bottom_radius, convex_radius);
 
 	switch (inMode)
 	{
 	case ESupportMode::IncludeConvexRadius:
 	case ESupportMode::Default:
-		return new (&inBuffer) TaperedCylinder(half_height, top_radius, bottom_radius, 0.0f);
+		return new (&inBuffer) TaperedCylinder(top, bottom, top_radius, bottom_radius, 0.0f);
 
 	case ESupportMode::ExcludeConvexRadius:
-		return new (&inBuffer) TaperedCylinder(half_height - convex_radius, top_radius - convex_radius, bottom_radius - convex_radius, convex_radius);
+		return new (&inBuffer) TaperedCylinder(top - convex_radius, bottom + convex_radius, top_radius - convex_radius, bottom_radius - convex_radius, convex_radius);
 	}
 
 	JPH_ASSERT(false);
@@ -201,35 +242,44 @@ void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec
 	JPH_ASSERT(IsValidScale(inScale));
 
 	// Get scaled tapered cylinder
-	float half_height, top_radius, bottom_radius, convex_radius;
-	GetScaled(inScale, half_height, top_radius, bottom_radius, convex_radius);
+	float top, bottom, top_radius, bottom_radius, convex_radius;
+	GetScaled(inScale, top, bottom, top_radius, bottom_radius, convex_radius);
 
 	// Get the normal of the side of the cylinder in the horizontal plane
 	Vec3 horizontal_normal = (Vec3(-1, 0, -1) * inDirection).NormalizedOr(Vec3::sAxisX());
 
 	// Get the normal of the side of the cylinder
-	float tan_alpha = (bottom_radius - top_radius) / (2.0f * half_height);
+	float tan_alpha = (bottom_radius - top_radius) / (top - bottom);
 	Vec3 normal = Vec3(horizontal_normal.GetX(), tan_alpha, horizontal_normal.GetZ()).Normalized();
 
+	constexpr float cMinRadius = 1.0e-3f;
+
 	// Check if the normal is closer to the side than to the top or bottom
-	Vec3 half_height_3d(0, half_height, 0);
 	if (abs(normal.Dot(inDirection)) > abs(inDirection.GetY()))
 	{		
 		// Return the side of the cylinder
-		outVertices.push_back(inCenterOfMassTransform * (horizontal_normal * top_radius + half_height_3d));
-		outVertices.push_back(inCenterOfMassTransform * (horizontal_normal * bottom_radius - half_height_3d));
+		outVertices.push_back(inCenterOfMassTransform * (horizontal_normal * top_radius + Vec3(0, top, 0)));
+		outVertices.push_back(inCenterOfMassTransform * (horizontal_normal * bottom_radius + Vec3(0, bottom, 0)));
 	}
 	else if (inDirection.GetY() < 0.0f)
 	{
 		// Top of the cylinder
-		for (Vec3 v : cTaperedCapsuleFace)
-			outVertices.push_back(inCenterOfMassTransform * (top_radius * v + half_height_3d));
+		if (top_radius > cMinRadius)
+		{
+			Vec3 top_3d(0, top, 0);
+			for (Vec3 v : cTaperedCapsuleFace)
+				outVertices.push_back(inCenterOfMassTransform * (top_radius * v + top_3d));
+		}
 	}
 	else
 	{
 		// Bottom of the cylinder
-		for (int i = (int)std::size(cTaperedCapsuleFace) - 1; i >= 0; --i)
-			outVertices.push_back(inCenterOfMassTransform * (bottom_radius * cTaperedCapsuleFace[i] - half_height_3d));
+		if (bottom_radius > cMinRadius)
+		{
+			Vec3 bottom_3d(0, bottom, 0);
+			for (int i = int(std::size(cTaperedCapsuleFace)) - 1; i >= 0; --i)
+				outVertices.push_back(inCenterOfMassTransform * (bottom_radius * cTaperedCapsuleFace[i] + bottom_3d));
+		}
 	}
 }
 
@@ -239,7 +289,7 @@ MassProperties TaperedCylinderShape::GetMassProperties() const
 	p.mMass = GetVolume() * GetDensity();
 
 	// TODO this is the inertia of a cylinder, not a tapered cylinder
-	float height = 2.0f * mHalfHeight;
+	float height = mTop - mBottom;
 	float inertia_y = 0.5f * (mBottomRadius + mTopRadius) * p.mMass * 0.5f;
 	float inertia_x = inertia_y * 0.5f + p.mMass * height * height / 12.0f;
 	float inertia_z = inertia_x;
@@ -257,7 +307,7 @@ Vec3 TaperedCylinderShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3
 AABox TaperedCylinderShape::GetLocalBounds() const
 {
 	float max_radius = max(mTopRadius, mBottomRadius);
-	return AABox(Vec3(-max_radius, -mHalfHeight, -max_radius), Vec3(max_radius, mHalfHeight, max_radius));
+	return AABox(Vec3(-max_radius, mBottom, -max_radius), Vec3(max_radius, mTop, max_radius));
 }
 
 void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
@@ -297,7 +347,8 @@ void TaperedCylinderShape::SaveBinaryState(StreamOut &inStream) const
 {
 	ConvexShape::SaveBinaryState(inStream);
 
-	inStream.Write(mHalfHeight);
+	inStream.Write(mTop);
+	inStream.Write(mBottom);
 	inStream.Write(mTopRadius);
 	inStream.Write(mBottomRadius);
 	inStream.Write(mConvexRadius);
@@ -307,7 +358,8 @@ void TaperedCylinderShape::RestoreBinaryState(StreamIn &inStream)
 {
 	ConvexShape::RestoreBinaryState(inStream);
 
-	inStream.Read(mHalfHeight);
+	inStream.Read(mTop);
+	inStream.Read(mBottom);
 	inStream.Read(mTopRadius);
 	inStream.Read(mBottomRadius);
 	inStream.Read(mConvexRadius);
@@ -315,8 +367,8 @@ void TaperedCylinderShape::RestoreBinaryState(StreamIn &inStream)
 
 float TaperedCylinderShape::GetVolume() const
 {
-	// Volume of a tapered cylinder is: integrate(%pi*(r1+x*(r2-r1)/(2*h))^2,x,0,2*h) where r1 is the top radius, r2 is the bottom radius and h is the half height
-	return (2.0f * JPH_PI / 3.0f) * mHalfHeight * (Square(mTopRadius) + mTopRadius * mBottomRadius + Square(mBottomRadius));
+	// Volume of a tapered cylinder is: integrate(%pi*(b+x*(t-b)/h)^2,x,0,h) where t is the top radius, b is the bottom radius and h is the height
+	return (JPH_PI / 3.0f) * (mTop - mBottom) * (Square(mTopRadius) + mTopRadius * mBottomRadius + Square(mBottomRadius));
 }
 
 bool TaperedCylinderShape::IsValidScale(Vec3Arg inScale) const
