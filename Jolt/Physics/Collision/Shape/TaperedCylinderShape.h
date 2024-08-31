@@ -6,9 +6,6 @@
 
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 #include <Jolt/Physics/PhysicsSettings.h>
-#ifdef JPH_DEBUG_RENDERER
-	#include <Jolt/Renderer/DebugRenderer.h>
-#endif // JPH_DEBUG_RENDERER
 
 JPH_NAMESPACE_BEGIN
 
@@ -114,10 +111,6 @@ private:
 	float					mTopRadius = 0.0f;
 	float					mBottomRadius = 0.0f;
 	float					mConvexRadius = 0.0f;
-
-#ifdef JPH_DEBUG_RENDERER
-	mutable DebugRenderer::GeometryRef mGeometry;
-#endif // JPH_DEBUG_RENDERER
 };
 
 JPH_NAMESPACE_END
