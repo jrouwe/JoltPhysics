@@ -122,9 +122,9 @@ TaperedCylinderShape::TaperedCylinderShape(const TaperedCylinderShapeSettings &i
 	// Area at x is: a(x):=%pi*r(x)^2;
 	// Volume of a cylinder x = [0, c]: v(c):=integrate(a(x),x,0,c);
 	// Solving for c: c(b,dr):=factor(rhs(ratsimp(solve(v(h)/2=v(c),c))[3]));
-	// Result: c(b,dr):=(((dr^3+3*(b*dr^2+b^2*dr)+2*b^3)^(1/3)-2^(1/3)*b)*h)/(2^(1/3)*dr)
+	// Result: c(b,dr):=((((dr^3+3*(b*dr^2+b^2*dr)+2*b^3)/2)^(1/3)-b)*h)/dr
 	float dr = mTopRadius - mBottomRadius;
-	if (abs(dr < 1.0e-4f))
+	if (abs(dr) < 1.0e-4f)
 	{
 		// If difference is small, just center the cylinder to avoid dividing by zero
 		mTop = inSettings.mHalfHeight;
@@ -132,15 +132,13 @@ TaperedCylinderShape::TaperedCylinderShape(const TaperedCylinderShapeSettings &i
 	}
 	else
 	{
-		constexpr float cOneThird = 1.0f / 3.0f;
-		const float cTwoToTheThird = std::pow(2.0f, cOneThird);
 		float h = 2.0f * inSettings.mHalfHeight;
 		float b = mBottomRadius;
 		float b2 = Square(b);
 		float b3 = b * b2;
 		float dr2 = Square(dr);
 		float dr3 = dr * dr2;
-		float c = ((std::pow(dr3 + 3.0f * (b * dr2 + b2 * dr) + 2.0f * b3, cOneThird) - cTwoToTheThird * b) * h) / (cTwoToTheThird * dr);
+		float c = ((std::pow(0.5f * dr3 + 1.5f * (b * dr2 + b2 * dr) + b3, 1.0f / 3.0f) - b) * h) / dr;
 		mTop = h - c;
 		mBottom = -c;
 	}

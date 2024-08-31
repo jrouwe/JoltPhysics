@@ -43,7 +43,7 @@ public:
 							TaperedCylinderShape(const TaperedCylinderShapeSettings &inSettings, ShapeResult &outResult);
 
 	// See Shape::GetCenterOfMass
-	virtual Vec3			GetCenterOfMass() const override										{ return Vec3::sZero(); }
+	virtual Vec3			GetCenterOfMass() const override										{ return Vec3(0, -0.5f * (mTop + mBottom), 0); }
 
 	// See Shape::GetLocalBounds
 	virtual AABox			GetLocalBounds() const override;
