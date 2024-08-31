@@ -356,7 +356,7 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 			{
 				// We're outside the cylinder
 				// Calculate the closest point on the line segment from bottom to top support point:
-				// closest_point = bottom + fraction * (top - bottom)
+				// closest_point = bottom + fraction * (top - bottom) / |top - bottom|^2
 				Vec3 side_support_bottom = normal_xz * bottom_radius + bottom_3d;
 				Vec3 bottom_to_top = side_support_top - side_support_bottom;
 				float fraction = (local_pos - side_support_bottom).Dot(bottom_to_top);
