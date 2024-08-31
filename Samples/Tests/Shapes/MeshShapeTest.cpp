@@ -47,8 +47,7 @@ void MeshShapeTest::Initialize()
 		materials.push_back(new PhysicsMaterialSimple("Material " + ConvertToString(i), Color::sGetDistinctColor(i)));
 
 	// Floor
-	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new MeshShapeSettings(triangles, std::move(materials)), RVec3::sZero(), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Static, Layers::NON_MOVING));
-	mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new MeshShapeSettings(triangles, std::move(materials)), RVec3::sZero(), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// 1 body with zero friction to test active edge detection
 	Ref<BoxShape> box_shape = new BoxShape(Vec3(2.0f, 2.0f, 2.0f), cDefaultConvexRadius, new PhysicsMaterialSimple("Box Material", Color::sYellow));

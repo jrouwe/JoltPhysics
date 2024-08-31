@@ -47,11 +47,9 @@ void ScaledOffsetCenterOfMassShapeTest::Initialize()
 
 	// Shape that is scaled before the offset center of mass offset is applied
 	ShapeRefC pre_scaled = OffsetCenterOfMassShapeSettings(Vec3(0, 0, 5.0f), new ScaledShape(new SphereShape(1.0f), JPH::Vec3::sReplicate(2.0f))).Create().Get();
-	Body &body_pre_scaled = *mBodyInterface->CreateBody(BodyCreationSettings(pre_scaled, RVec3(0, 5, -15), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body_pre_scaled.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(pre_scaled, RVec3(0, 5, -15), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
 	// Shape that is scaled after the offset center of mass offset is applied
 	ShapeRefC post_scaled = new ScaledShape(OffsetCenterOfMassShapeSettings(Vec3(0, 0, 5.0f), new SphereShape(1.0f)).Create().Get(), JPH::Vec3::sReplicate(2.0f));
-	Body &body_post_scaled = *mBodyInterface->CreateBody(BodyCreationSettings(post_scaled, RVec3(5, 5, -15), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body_post_scaled.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(post_scaled, RVec3(5, 5, -15), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }

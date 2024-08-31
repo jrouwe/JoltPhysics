@@ -46,8 +46,7 @@ void KinematicRigTest::Initialize()
 		for (int j = i / 2; j < 10 - (i + 1) / 2; ++j)
 		{
 			RVec3 position(-2.0f + j * 0.4f + (i & 1? 0.2f : 0.0f), 0.2f + i * 0.4f, -2.0f);
-			Body &wall = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-			mBodyInterface->AddBody(wall.GetID(), EActivation::DontActivate);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::DontActivate);
 		}
 
 	// Load ragdoll

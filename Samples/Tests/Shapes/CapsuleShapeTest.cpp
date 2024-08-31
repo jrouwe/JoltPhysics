@@ -22,12 +22,10 @@ void CapsuleShapeTest::Initialize()
 	RefConst<Shape> big_capsule = new CapsuleShape(2.5f, 2);
 
 	// Capsule on outer sphere
-	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(big_capsule, RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_capsule, RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
 	// Capsule on cylinder
-	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(big_capsule, RVec3(10, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body2.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_capsule, RVec3(10, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
 	RefConst<Shape> long_capsule = new CapsuleShape(5, 1);
 
@@ -48,8 +46,7 @@ void CapsuleShapeTest::Initialize()
 				position = RVec3(0, 2.0f + 3.0f * i, -20.0f - 4.0f + 8.0f * j);
 				rotation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
 			}
-			Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(long_capsule, position, rotation, EMotionType::Dynamic, Layers::MOVING));
-			mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(long_capsule, position, rotation, EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 		}
 	}
 }
