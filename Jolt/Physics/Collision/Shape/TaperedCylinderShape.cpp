@@ -339,35 +339,83 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 		if (v->mInvMass > 0.0f)
 		{
 			Vec3 local_pos = inverse_transform * v->mPosition;
-			bool is_top = local_pos.GetY() > 0.0f;
 
 			// Calculate penetration into side surface
 			Vec3 normal_xz = sCalculateSideNormalXZ(local_pos);
 			Vec3 side_normal = sCalculateSideNormal(normal_xz, top, bottom, top_radius, bottom_radius);
-			Vec3 support_point = is_top? normal_xz * top_radius + top_3d : normal_xz * bottom_radius + bottom_3d;
-			float side_penetration = (support_point - local_pos).Dot(side_normal);
+			Vec3 side_support_top = normal_xz * top_radius + top_3d;
+			float side_penetration = (side_support_top - local_pos).Dot(side_normal);
 
 			// Calculate penetration into top or bottom plane
-			float top_penetration = is_top? top - local_pos.GetY() : local_pos.GetY() - bottom;
+			float top_penetration = top - local_pos.GetY();
+			float bottom_penetration = local_pos.GetY() - bottom;
+			float min_top_bottom_penetration = min(top_penetration, bottom_penetration);
 
 			Vec3 point, normal;
-			if (side_penetration < 0.0f && top_penetration < 0.0f)
+			if (side_penetration < 0.0f || min_top_bottom_penetration < 0.0f)
 			{
-				// We're outside the cylinder height and radius
-				point = support_point;
-				normal = (local_pos - point).NormalizedOr(Vec3::sAxisY());
+				// We're outside the cylinder
+				// Calculate the closest point on the line segment from bottom to top support point:
+				// closest_point = bottom + fraction * (top - bottom)
+				Vec3 side_support_bottom = normal_xz * bottom_radius + bottom_3d;
+				Vec3 bottom_to_top = side_support_top - side_support_bottom;
+				float fraction = (local_pos - side_support_bottom).Dot(bottom_to_top);
+				if (top_penetration < 0.0f // If above the top plane
+					|| fraction > bottom_to_top.LengthSq()) // Or above the top support point
+				{
+					if (normal_xz.Dot(local_pos) <= top_radius)
+					{
+						// We're inside the top circle, top is closest
+						point = top_3d;
+						normal = Vec3(0, 1, 0);
+					}
+					else
+					{
+						// Top support point is closest
+						point = side_support_top;
+						normal = (local_pos - point).NormalizedOr(Vec3::sAxisY());
+					}
+				}
+				else if (bottom_penetration < 0.0f // If below the bottom plane
+					|| fraction < 0.0f) // Or below the bottom support point
+				{
+					if (normal_xz.Dot(local_pos) <= bottom_radius)
+					{
+						// We're inside the bottom circle, bottom is closest
+						point = bottom_3d;
+						normal = Vec3(0, -1, 0);
+					}
+					else
+					{
+						// Bottom support point is closest
+						point = side_support_bottom;
+						normal = (local_pos - point).NormalizedOr(Vec3::sAxisY());
+					}
+				}
+				else
+				{
+					// Side surface is closest
+					point = side_support_top;
+					normal = side_normal;
+				}
 			}
-			else if (side_penetration < top_penetration)
+			else if (side_penetration < min_top_bottom_penetration)
 			{
 				// Side surface is closest
-				point = support_point;
+				point = side_support_top;
 				normal = side_normal;
+			}
+			else if (top_penetration < bottom_penetration)
+			{
+				// Top plane is closest
+				point = top_3d;
+				normal = Vec3(0, 1, 0);
 			}
 			else
 			{
-				// Top or bottom plane is closest
-				point = is_top? top_3d : bottom_3d;
-				normal = is_top? Vec3(0, 1, 0) : Vec3(0, -1, 0);
+				// Bottom plane is closest
+				point = bottom_3d;
+				normal = Vec3(0, -1, 0);
 			}
 
 			// Calculate penetration
