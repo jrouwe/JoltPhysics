@@ -66,6 +66,12 @@ public:
 	// See: Shape::CollideSoftBodyVertices
 	virtual void			CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const override;
 
+	// See Shape::GetTrianglesStart
+	virtual void			GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const override;
+
+	// See Shape::GetTrianglesNext
+	virtual int				GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials = nullptr) const override;
+
 #ifdef JPH_DEBUG_RENDERER
 	// See Shape::Draw
 	virtual void			Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const override;
@@ -96,6 +102,9 @@ protected:
 private:
 	// Class for GetSupportFunction
 	class					TaperedCylinder;
+
+	// Class for GetTrianglesTart
+	class					TCSGetTrianglesContext;
 
 	// Scale the cylinder
 	JPH_INLINE void			GetScaled(Vec3Arg inScale, float &outTop, float &outBottom, float &outTopRadius, float &outBottomRadius, float &outConvexRadius) const;

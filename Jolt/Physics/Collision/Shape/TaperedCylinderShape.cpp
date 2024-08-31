@@ -315,6 +315,126 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 	// TODO implement
 }
 
+class TaperedCylinderShape::TCSGetTrianglesContext
+{
+public:
+				TCSGetTrianglesContext(Mat44Arg inTransform) : mTransform(inTransform) { }
+
+	Mat44		mTransform;
+	uint		mProcessed = 0; // Which elements we processed, bit 0 = top, bit 1 = bottom, bit 2 = side
+};
+
+void TaperedCylinderShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const
+{
+	static_assert(sizeof(TCSGetTrianglesContext) <= sizeof(GetTrianglesContext), "GetTrianglesContext too small");
+	JPH_ASSERT(IsAligned(&ioContext, alignof(TCSGetTrianglesContext)));
+
+	// Make sure the scale is not inside out
+	Vec3 scale = ScaleHelpers::IsInsideOut(inScale)? Vec3(-1, 1, 1) * inScale : inScale;
+
+	// Mark top and bottom processed if their radius is too small
+	TCSGetTrianglesContext *context = new (&ioContext) TCSGetTrianglesContext(Mat44::sRotationTranslation(inRotation, inPositionCOM) * Mat44::sScale(scale));
+	constexpr float cMinRadius = 1.0e-3f;
+	if (mTopRadius < cMinRadius)
+		context->mProcessed |= 0b001;
+	if (mBottomRadius < cMinRadius)
+		context->mProcessed |= 0b010;
+}
+
+int TaperedCylinderShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials) const
+{
+	constexpr int cNumVertices = int(std::size(cTaperedCapsuleFace));
+
+	static_assert(cGetTrianglesMinTrianglesRequested >= 2 * cNumVertices);
+	JPH_ASSERT(inMaxTrianglesRequested >= cGetTrianglesMinTrianglesRequested);
+
+	TCSGetTrianglesContext &context = (TCSGetTrianglesContext &)ioContext;
+
+	int total_num_triangles = 0;
+
+	// Top cap
+	Vec3 top_3d(0, mTop, 0);
+	if ((context.mProcessed & 0b001) == 0)
+	{
+		Vec3 v0 = context.mTransform * (top_3d + mTopRadius * cTaperedCapsuleFace[0]);
+		Vec3 v1 = context.mTransform * (top_3d + mTopRadius * cTaperedCapsuleFace[1]);
+
+		for (const Vec3 *v = cTaperedCapsuleFace + 2, *v_end = cTaperedCapsuleFace + cNumVertices; v < v_end; ++v)
+		{
+			Vec3 v2 = context.mTransform * (top_3d + mTopRadius * *v);
+
+			v0.StoreFloat3(outTriangleVertices++);
+			v1.StoreFloat3(outTriangleVertices++);
+			v2.StoreFloat3(outTriangleVertices++);
+
+			v1 = v2;
+		}
+
+		total_num_triangles = cNumVertices - 2;
+		context.mProcessed |= 0b001;
+	}
+
+	// Bottom cap
+	Vec3 bottom_3d(0, mBottom, 0);
+	if ((context.mProcessed & 0b010) == 0
+		&& total_num_triangles + cNumVertices - 2 < inMaxTrianglesRequested)
+	{
+		Vec3 v0 = context.mTransform * (bottom_3d + mBottomRadius * cTaperedCapsuleFace[0]);
+		Vec3 v1 = context.mTransform * (bottom_3d + mBottomRadius * cTaperedCapsuleFace[1]);
+
+		for (const Vec3 *v = cTaperedCapsuleFace + 2, *v_end = cTaperedCapsuleFace + cNumVertices; v < v_end; ++v)
+		{
+			Vec3 v2 = context.mTransform * (bottom_3d + mBottomRadius * *v);
+
+			v0.StoreFloat3(outTriangleVertices++);
+			v2.StoreFloat3(outTriangleVertices++);
+			v1.StoreFloat3(outTriangleVertices++);
+
+			v1 = v2;
+		}
+
+		total_num_triangles += cNumVertices - 2;
+		context.mProcessed |= 0b010;
+	}
+
+	// Side
+	if ((context.mProcessed & 0b100) == 0
+		&& total_num_triangles + 2 * cNumVertices < inMaxTrianglesRequested)
+	{
+		Vec3 v0t = context.mTransform * (top_3d + mTopRadius * cTaperedCapsuleFace[cNumVertices - 1]);
+		Vec3 v0b = context.mTransform * (bottom_3d + mBottomRadius * cTaperedCapsuleFace[cNumVertices - 1]);
+
+		for (const Vec3 *v = cTaperedCapsuleFace, *v_end = cTaperedCapsuleFace + cNumVertices; v < v_end; ++v)
+		{
+			Vec3 v1t = context.mTransform * (top_3d + mTopRadius * *v);
+			v0t.StoreFloat3(outTriangleVertices++);
+			v0b.StoreFloat3(outTriangleVertices++);
+			v1t.StoreFloat3(outTriangleVertices++);
+
+			Vec3 v1b = context.mTransform * (bottom_3d + mBottomRadius * *v);
+			v1t.StoreFloat3(outTriangleVertices++);
+			v0b.StoreFloat3(outTriangleVertices++);
+			v1b.StoreFloat3(outTriangleVertices++);
+
+			v0t = v1t;
+			v0b = v1b;
+		}
+
+		total_num_triangles += 2 * cNumVertices;
+		context.mProcessed |= 0b100;
+	}
+
+	// Store materials
+	if (outMaterials != nullptr)
+	{
+		const PhysicsMaterial *material = GetMaterial();
+		for (const PhysicsMaterial **m = outMaterials, **m_end = outMaterials + total_num_triangles; m < m_end; ++m)
+			*m = material;
+	}
+
+	return total_num_triangles;
+}
+
 #ifdef JPH_DEBUG_RENDERER
 void TaperedCylinderShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
