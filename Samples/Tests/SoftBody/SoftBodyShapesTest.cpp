@@ -12,6 +12,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
@@ -71,6 +72,7 @@ void SoftBodyShapesTest::Initialize()
 		new RotatedTranslatedShape(Vec3::sZero(), rotate_x, new CapsuleShape(1, 0.5f)),
 		new RotatedTranslatedShape(Vec3::sZero(), rotate_x, TaperedCapsuleShapeSettings(1.0f, 1.0f, 0.5f).Create().Get()),
 		new RotatedTranslatedShape(Vec3::sZero(), rotate_x, new CylinderShape(1, 0.5f)),
+		new RotatedTranslatedShape(Vec3::sZero(), rotate_x, TaperedCylinderShapeSettings(1, 0.5f, 1.0f).Create().Get()),
 		tetrahedron.Create().Get(),
 		compound_shape.Create().Get(),
 	};
