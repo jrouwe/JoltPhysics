@@ -611,18 +611,14 @@ float TaperedCylinderShape::GetVolume() const
 
 bool TaperedCylinderShape::IsValidScale(Vec3Arg inScale) const
 {
-	// X and Z need same scale
-	Vec3 abs_scale = inScale.Abs();
-	return ConvexShape::IsValidScale(inScale) && abs_scale.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>().IsClose(abs_scale, ScaleHelpers::cScaleToleranceSq);
+	return ConvexShape::IsValidScale(inScale) && ScaleHelpers::IsUniformScaleXZ(inScale.Abs());
 }
 
 Vec3 TaperedCylinderShape::MakeScaleValid(Vec3Arg inScale) const
 {
 	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
 
-	// Average X and Z
-	Vec3 abs_scale = scale.Abs();
-	return 0.5f * scale.GetSign() * (abs_scale + abs_scale.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>());
+	return scale.GetSign() * ScaleHelpers::MakeUniformScaleXZ(scale.Abs());
 }
 
 void TaperedCylinderShape::sRegister()
