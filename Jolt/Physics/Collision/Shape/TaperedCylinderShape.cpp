@@ -366,35 +366,50 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 				bool inside_top_radius = distance_to_axis <= top_radius;
 				bool inside_bottom_radius = distance_to_axis <= bottom_radius;
 
-				if (fraction >= bottom_to_top.LengthSq() // Above the line segment
+				// Regions of tapered cylinder (side view):
+				// 
+				//     _  B |       |
+				//      --_ |   A   |
+				//          t-------+
+				//    C    /         \
+				//        /  tapered  \
+				// _     /  cylinder   \
+				//  --_ /               \
+				//     b-----------------+
+				//  D  |        E        |
+				//     |                 |
+				//
+				// t = side_support_top, b = side_support_bottom
+				// Lines between B and C and C and D are at a 90 degree angle to the line between t and b
+				if (fraction >= bottom_to_top.LengthSq() // Region B: Above the line segment
 					&& !inside_top_radius) // Outside the top radius
 				{
 					// Top support point is closest
 					point = side_support_top;
 					normal = (local_pos - point).NormalizedOr(Vec3::sAxisY());
 				}
-				else if (fraction < 0.0f // Below the line segment
+				else if (fraction < 0.0f // Region D: Below the line segment
 					&& !inside_bottom_radius) // Outside the bottom radius
 				{
 					// Bottom support point is closest
 					point = side_support_bottom;
 					normal = (local_pos - point).NormalizedOr(Vec3::sAxisY());
 				}
-				else if (top_penetration < 0.0f // Above the top plane
+				else if (top_penetration < 0.0f // Region A: Above the top plane
 					&& inside_top_radius) // Inside the top radius
 				{
 					// Top plane is closest
 					point = top_3d;
 					normal = Vec3(0, 1, 0);
 				}
-				else if (bottom_penetration < 0.0f // Below the bottom plane
+				else if (bottom_penetration < 0.0f // Region E: Below the bottom plane
 					&& inside_bottom_radius) // Inside the bottom radius
 				{
 					// Bottom plane is closest
 					point = bottom_3d;
 					normal = Vec3(0, -1, 0);
 				}
-				else
+				else // Region C
 				{
 					// Side surface is closest
 					point = side_support_top;
