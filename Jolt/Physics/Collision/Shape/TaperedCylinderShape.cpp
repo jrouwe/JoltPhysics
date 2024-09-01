@@ -262,7 +262,7 @@ void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec
 
 	// Check if the normal is closer to the side than to the top or bottom
 	if (abs(normal.Dot(inDirection)) > abs(inDirection.GetY()))
-	{		
+	{
 		// Return the side of the cylinder
 		outVertices.push_back(inCenterOfMassTransform * (normal_xz * top_radius + Vec3(0, top, 0)));
 		outVertices.push_back(inCenterOfMassTransform * (normal_xz * bottom_radius + Vec3(0, bottom, 0)));
@@ -367,7 +367,7 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 				bool inside_bottom_radius = distance_to_axis <= bottom_radius;
 
 				// Regions of tapered cylinder (side view):
-				// 
+				//
 				//     _  B |       |
 				//      --_ |   A   |
 				//          t-------+
