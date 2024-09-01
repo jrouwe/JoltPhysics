@@ -13,8 +13,9 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
-#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
@@ -127,6 +128,11 @@ static HeightFieldShapeSettings *sCreateHeightField()
 
 Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 {
+	int color = 0;
+	auto next_color = [&color]() { return Color::sGetDistinctColor(color++); };
+	RVec3 pos(0, cMaxHeight, 0);
+	auto next_pos = [&pos]() { pos += RVec3(0, 1.0f, 0); return pos; };
+
 	// Create scene
 	Ref<PhysicsScene> scene = new PhysicsScene();
 
@@ -137,22 +143,24 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 	scene->AddBody(BodyCreationSettings(sCreateHeightField(), RVec3(50, 0, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 
 	// Some simple primitives
-	scene->AddBody(BodyCreationSettings(new TriangleShapeSettings(Vec3(-2, 0, 0), Vec3(0, 1, 0), Vec3(2, 0, 0), 0.0f, new PhysicsMaterialSimple("Triangle Material", Color::sGetDistinctColor(0))), RVec3(0, cMaxHeight, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Static, Layers::NON_MOVING));
-	scene->AddBody(BodyCreationSettings(new SphereShapeSettings(0.2f, new PhysicsMaterialSimple("Sphere Material", Color::sGetDistinctColor(1))), RVec3(0, cMaxHeight + 1.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	scene->AddBody(BodyCreationSettings(new BoxShapeSettings(Vec3(0.2f, 0.2f, 0.4f), 0.01f, new PhysicsMaterialSimple("Box Material", Color::sGetDistinctColor(2))), RVec3(0, cMaxHeight + 2.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	scene->AddBody(BodyCreationSettings(new CapsuleShapeSettings(1.5f, 0.2f, new PhysicsMaterialSimple("Capsule Material", Color::sGetDistinctColor(3))), RVec3(0, cMaxHeight + 3.0f, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
-	scene->AddBody(BodyCreationSettings(new TaperedCapsuleShapeSettings(0.5f, 0.1f, 0.2f, new PhysicsMaterialSimple("Tapered Capsule Material", Color::sGetDistinctColor(4))), RVec3(0, cMaxHeight + 4.0f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
-	scene->AddBody(BodyCreationSettings(new CylinderShapeSettings(0.5f, 0.2f, cDefaultConvexRadius, new PhysicsMaterialSimple("Cylinder Material", Color::sGetDistinctColor(5))), RVec3(0, cMaxHeight + 5.0f, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(new TriangleShapeSettings(Vec3(-2, 0, 0), Vec3(0, 1, 0), Vec3(2, 0, 0), 0.0f, new PhysicsMaterialSimple("Triangle Material", next_color())), next_pos(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Static, Layers::NON_MOVING));
+	scene->AddBody(BodyCreationSettings(new SphereShapeSettings(0.2f, new PhysicsMaterialSimple("Sphere Material", next_color())), next_pos(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(new BoxShapeSettings(Vec3(0.2f, 0.2f, 0.4f), 0.01f, new PhysicsMaterialSimple("Box Material", next_color())), next_pos(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(new CapsuleShapeSettings(1.5f, 0.2f, new PhysicsMaterialSimple("Capsule Material", next_color())), next_pos(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(new TaperedCapsuleShapeSettings(0.5f, 0.1f, 0.2f, new PhysicsMaterialSimple("Tapered Capsule Material", next_color())), next_pos(), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(new CylinderShapeSettings(0.5f, 0.2f, cDefaultConvexRadius, new PhysicsMaterialSimple("Cylinder Material", next_color())), next_pos(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(new TaperedCylinderShapeSettings(0.5f, 0.2f, 0.4f, cDefaultConvexRadius, new PhysicsMaterialSimple("Tapered Cylinder Material", next_color())), next_pos(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(new TaperedCylinderShapeSettings(0.5f, 0.4f, 0.0f, 0.0f, new PhysicsMaterialSimple("Cone Material", next_color())), next_pos(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 
 	// Compound with sub compound and rotation
 	StaticCompoundShapeSettings *sub_compound = new StaticCompoundShapeSettings();
-	sub_compound->AddShape(Vec3(0, 0.5f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new BoxShapeSettings(Vec3(0.5f, 0.1f, 0.2f), cDefaultConvexRadius, new PhysicsMaterialSimple("Compound Box Material", Color::sGetDistinctColor(6))));
-	sub_compound->AddShape(Vec3(0.5f, 0, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new CylinderShapeSettings(0.5f, 0.2f, cDefaultConvexRadius, new PhysicsMaterialSimple("Compound Cylinder Material", Color::sGetDistinctColor(7))));
-	sub_compound->AddShape(Vec3(0, 0, 0.5f), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), new TaperedCapsuleShapeSettings(0.5f, 0.1f, 0.2f, new PhysicsMaterialSimple("Compound Tapered Capsule Material", Color::sGetDistinctColor(8))));
+	sub_compound->AddShape(Vec3(0, 0.5f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new BoxShapeSettings(Vec3(0.5f, 0.1f, 0.2f), cDefaultConvexRadius, new PhysicsMaterialSimple("Compound Box Material", next_color())));
+	sub_compound->AddShape(Vec3(0.5f, 0, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new CylinderShapeSettings(0.5f, 0.2f, cDefaultConvexRadius, new PhysicsMaterialSimple("Compound Cylinder Material", next_color())));
+	sub_compound->AddShape(Vec3(0, 0, 0.5f), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), new TaperedCapsuleShapeSettings(0.5f, 0.1f, 0.2f, new PhysicsMaterialSimple("Compound Tapered Capsule Material", next_color())));
 	StaticCompoundShapeSettings *compound_shape = new StaticCompoundShapeSettings();
 	compound_shape->AddShape(Vec3(0, 0, 0), Quat::sRotation(Vec3::sAxisX(), -0.25f * JPH_PI) * Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), sub_compound);
 	compound_shape->AddShape(Vec3(0, -0.1f, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI) * Quat::sRotation(Vec3::sAxisZ(), -0.75f * JPH_PI), sub_compound);
-	scene->AddBody(BodyCreationSettings(compound_shape, RVec3(0, cMaxHeight + 6.0f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(compound_shape, next_pos(), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 
 	// Convex hull shape
 	Array<Vec3> tetrahedron;
@@ -160,18 +168,18 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 	tetrahedron.push_back(Vec3(0, 0, 0.5f));
 	tetrahedron.push_back(Vec3(0.5f, 0, -0.5f));
 	tetrahedron.push_back(Vec3(0, -0.5f, 0));
-	Ref<ConvexHullShapeSettings> convex_hull = new ConvexHullShapeSettings(tetrahedron, cDefaultConvexRadius, new PhysicsMaterialSimple("Convex Hull Material", Color::sGetDistinctColor(9)));
-	scene->AddBody(BodyCreationSettings(convex_hull, RVec3(0, cMaxHeight + 7.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	Ref<ConvexHullShapeSettings> convex_hull = new ConvexHullShapeSettings(tetrahedron, cDefaultConvexRadius, new PhysicsMaterialSimple("Convex Hull Material", next_color()));
+	scene->AddBody(BodyCreationSettings(convex_hull, next_pos(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 
 	// Rotated convex hull
-	scene->AddBody(BodyCreationSettings(new RotatedTranslatedShapeSettings(Vec3::sReplicate(0.5f), Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), convex_hull), RVec3(0, cMaxHeight + 8.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(new RotatedTranslatedShapeSettings(Vec3::sReplicate(0.5f), Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), convex_hull), next_pos(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 
 	// Mutable compound
 	MutableCompoundShapeSettings *mutable_compound = new MutableCompoundShapeSettings();
-	mutable_compound->AddShape(Vec3(0, 0.5f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new BoxShapeSettings(Vec3(0.5f, 0.1f, 0.2f), cDefaultConvexRadius, new PhysicsMaterialSimple("MutableCompound Box Material", Color::sGetDistinctColor(10))));
-	mutable_compound->AddShape(Vec3(0.5f, 0, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new CapsuleShapeSettings(0.5f, 0.1f, new PhysicsMaterialSimple("MutableCompound Capsule Material", Color::sGetDistinctColor(11))));
-	mutable_compound->AddShape(Vec3(0, 0, 0.5f), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), new TaperedCapsuleShapeSettings(0.5f, 0.2f, 0.1f, new PhysicsMaterialSimple("MutableCompound Tapered Capsule Material", Color::sGetDistinctColor(12))));
-	scene->AddBody(BodyCreationSettings(mutable_compound, RVec3(0, cMaxHeight + 9.0f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	mutable_compound->AddShape(Vec3(0, 0.5f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new BoxShapeSettings(Vec3(0.5f, 0.1f, 0.2f), cDefaultConvexRadius, new PhysicsMaterialSimple("MutableCompound Box Material", next_color())));
+	mutable_compound->AddShape(Vec3(0.5f, 0, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new CapsuleShapeSettings(0.5f, 0.1f, new PhysicsMaterialSimple("MutableCompound Capsule Material", next_color())));
+	mutable_compound->AddShape(Vec3(0, 0, 0.5f), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), new TaperedCapsuleShapeSettings(0.5f, 0.2f, 0.1f, new PhysicsMaterialSimple("MutableCompound Tapered Capsule Material", next_color())));
+	scene->AddBody(BodyCreationSettings(mutable_compound, next_pos(), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 
 	// Connect the first two dynamic bodies with a distance constraint
 	DistanceConstraintSettings *dist_constraint = new DistanceConstraintSettings();
@@ -180,18 +188,18 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 
 	// Add soft body cube
 	Ref<SoftBodySharedSettings> sb_cube_settings = SoftBodyCreator::CreateCube(5, 0.2f);
-	sb_cube_settings->mMaterials = { new PhysicsMaterialSimple("Soft Body Cube Material", Color::sGetDistinctColor(13)) };
-	SoftBodyCreationSettings sb_cube(sb_cube_settings, RVec3(0, cMaxHeight + 10.0f, 0), Quat::sIdentity(), Layers::MOVING);
+	sb_cube_settings->mMaterials = { new PhysicsMaterialSimple("Soft Body Cube Material", next_color()) };
+	SoftBodyCreationSettings sb_cube(sb_cube_settings, next_pos(), Quat::sIdentity(), Layers::MOVING);
 	scene->AddSoftBody(sb_cube);
 
 	// Add the same shape again to test sharing
-	sb_cube.mPosition = RVec3(0, cMaxHeight + 11.0f, 0);
+	sb_cube.mPosition = next_pos();
 	scene->AddSoftBody(sb_cube);
 
 	// Add soft body sphere
 	Ref<SoftBodySharedSettings> sb_sphere_settings = SoftBodyCreator::CreateSphere(0.5f);
-	sb_sphere_settings->mMaterials = { new PhysicsMaterialSimple("Soft Body Sphere Material", Color::sGetDistinctColor(14)) };
-	SoftBodyCreationSettings sb_sphere(sb_sphere_settings, RVec3(0, cMaxHeight + 12.0f, 0), Quat::sIdentity(), Layers::MOVING);
+	sb_sphere_settings->mMaterials = { new PhysicsMaterialSimple("Soft Body Sphere Material", next_color()) };
+	SoftBodyCreationSettings sb_sphere(sb_sphere_settings, next_pos(), Quat::sIdentity(), Layers::MOVING);
 	sb_sphere.mPressure = 2000.0f;
 	scene->AddSoftBody(sb_sphere);
 
