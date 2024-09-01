@@ -294,10 +294,48 @@ MassProperties TaperedCylinderShape::GetMassProperties() const
 	MassProperties p;
 	p.mMass = GetVolume() * GetDensity();
 
-	// TODO this is the inertia of a cylinder, not a tapered cylinder
-	float height = mTop - mBottom;
-	float inertia_y = 0.5f * (mBottomRadius + mTopRadius) * p.mMass * 0.5f;
-	float inertia_x = inertia_y * 0.5f + p.mMass * height * height / 12.0f;
+	// Calculate inertia of a tapered cylinder (using wxMaxima)
+	// Radius: r(x):=br+x*drdh;
+	// Where drdh=(top_radius-bottom_radius)/(top-bottom)
+	// Delta mass (note: needs to be multiplied by density but we're leaving that until later as it is a constant)
+	// dm(x):=%pi*r(x)^2;
+	// Delta inertia x (using inertia of a solid disc, see https://en.wikipedia.org/wiki/List_of_moments_of_inertia):
+	// dix(x):=dm(x)*r(x)^2/4;
+	// Delta inertia y:
+	// diy(x):=dm(x)*r(x)^2/2;
+	// The constant density:
+	// density(b,t):=m/integrate(dm(x),x,b,t);
+	// Inertia tensor element xx, note that we use the parallel axis theorem to move the inertia: Ixx' = Ixx + m translation^2
+	// Ixx(br,drdh,b,t):=integrate(dix(x)+dm(x)*x^2,x,b,t)*density(b,t);
+	// Inertia tensor element yy:
+	// Iyy(br,drdh,b,t):=integrate(diy(x),x,b,t)*density(b,t);
+	// For a cylinder this formula matches what is listed on the wiki:
+	// factor(Ixx(r,0,-h/2,h/2));
+	// factor(Iyy(r,0,-h/2,h/2));
+	// For a cone with tip at origin too:
+	// factor(Ixx(0,r/h,0,h));
+	// factor(Iyy(0,r/h,0,h));
+	// Now for the tapered cylinder:
+	// rat(Ixx(br,drdh,b,t),br,dr);
+	// rat(Iyy(br,drdh,b,t),br,dr);
+	float br = mBottomRadius;
+	float br2 = Square(br);
+	float br3 = br * br2;
+	float br4 = Square(br2);
+	float drdh = (mTopRadius - br) / (mTop - mBottom);
+	float drdh2 = Square(drdh);
+	float drdh3 = drdh * drdh2;
+	float drdh4 = drdh2 * drdh2;
+	float t = mTop;
+	float t2 = Square(t);
+	float t3 = t * t2;
+	float t4 = Square(t2);
+	float b = mBottom;
+	float b2 = Square(b);
+	float b3 = b * b2;
+	float b4 = Square(b2);
+	float inertia_x = p.mMass*((3*t4+3*b*t3+3*b2*t2+3*b3*t+3*b4)*drdh4+(15*t3+15*b*t2+15*b2*t+15*b3)*br*drdh3+((30*t2+30*b*t+30*b2)*br2+12*t4+12*b*t3+12*b2*t2+12*b3*t+12*b4)*drdh2+((30*t+30*b)*br3+(30*t3+30*b*t2+30*b2*t+30*b3)*br)*drdh+15*br4+(20*t2+20*b*t+20*b2)*br2)/((20*t2+20*b*t+20*b2)*drdh2+(60*t+60*b)*br*drdh+60*br2);
+	float inertia_y = p.mMass*((3*t4+3*b*t3+3*b2*t2+3*b3*t+3*b4)*drdh4+(15*t3+15*b*t2+15*b2*t+15*b3)*br*drdh3+(30*t2+30*b*t+30*b2)*br2*drdh2+(30*t+30*b)*br3*drdh+15*br4)/((10*t2+10*b*t+10*b2)*drdh2+(30*t+30*b)*br*drdh+30*br2);
 	float inertia_z = inertia_x;
 	p.mInertia = Mat44::sScale(Vec3(inertia_x, inertia_y, inertia_z));
 	return p;
