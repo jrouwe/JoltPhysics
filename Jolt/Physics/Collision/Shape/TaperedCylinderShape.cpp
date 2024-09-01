@@ -334,8 +334,13 @@ MassProperties TaperedCylinderShape::GetMassProperties() const
 	float b2 = Square(b);
 	float b3 = b * b2;
 	float b4 = Square(b2);
-	float inertia_x = p.mMass*((3*t4+3*b*t3+3*b2*t2+3*b3*t+3*b4)*drdh4+(15*t3+15*b*t2+15*b2*t+15*b3)*br*drdh3+((30*t2+30*b*t+30*b2)*br2+12*t4+12*b*t3+12*b2*t2+12*b3*t+12*b4)*drdh2+((30*t+30*b)*br3+(30*t3+30*b*t2+30*b2*t+30*b3)*br)*drdh+15*br4+(20*t2+20*b*t+20*b2)*br2)/((20*t2+20*b*t+20*b2)*drdh2+(60*t+60*b)*br*drdh+60*br2);
-	float inertia_y = p.mMass*((3*t4+3*b*t3+3*b2*t2+3*b3*t+3*b4)*drdh4+(15*t3+15*b*t2+15*b2*t+15*b3)*br*drdh3+(30*t2+30*b*t+30*b2)*br2*drdh2+(30*t+30*b)*br3*drdh+15*br4)/((10*t2+10*b*t+10*b2)*drdh2+(30*t+30*b)*br*drdh+30*br2);
+	float f0 = t+b;
+	float f1 = t2+b*t+b2;
+	float f2 = t3+b*t2+b2*t+b3;
+	float f3 = t4+b*t3+b2*t2+b3*t+b4;
+	float denom = 10.0f*f1*drdh2+30.0f*(f0*br*drdh+br2);
+	float inertia_y = p.mMass*(3.0f*f3*drdh4+15.0f*f2*br*drdh3+30.0f*(f1*br2*drdh2+f0*br3*drdh)+15.0f*br4)/denom;
+	float inertia_x = 0.5f*(inertia_y+p.mMass*(12.0f*f3*drdh2+30.0f*f2*br*drdh+20.0f*f1*br2)/denom);
 	float inertia_z = inertia_x;
 	p.mInertia = Mat44::sScale(Vec3(inertia_x, inertia_y, inertia_z));
 	return p;
