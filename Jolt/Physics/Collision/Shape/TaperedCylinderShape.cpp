@@ -414,7 +414,7 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 
 				/*
 					Regions of tapered cylinder (side view):
-				
+
 						_  B |       |
 						 --_ |   A   |
 							 t-------+
@@ -425,7 +425,7 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 						b-----------------+
 					 D  |        E        |
 						|                 |
-				
+
 					t = side_support_top, b = side_support_bottom
 					Lines between B and C and C and D are at a 90 degree angle to the line between t and b
 				*/
