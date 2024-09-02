@@ -292,55 +292,62 @@ void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec
 MassProperties TaperedCylinderShape::GetMassProperties() const
 {
 	MassProperties p;
-	p.mMass = GetVolume() * GetDensity();
+
+	// Calculate mass
+	float density = GetDensity();
+	p.mMass = GetVolume() * density;
 
 	// Calculate inertia of a tapered cylinder (using wxMaxima)
-	// Radius: r(x):=br+x*drdh;
-	// Where drdh=(top_radius-bottom_radius)/(top-bottom)
-	// Delta mass (note: needs to be multiplied by density but we're leaving that until later as it is a constant)
-	// dm(x):=%pi*r(x)^2;
-	// Delta inertia x (using inertia of a solid disc, see https://en.wikipedia.org/wiki/List_of_moments_of_inertia):
-	// dix(x):=dm(x)*r(x)^2/4;
-	// Delta inertia y:
-	// diy(x):=dm(x)*r(x)^2/2;
-	// The constant density:
-	// density(b,t):=m/integrate(dm(x),x,b,t);
-	// Inertia tensor element xx, note that we use the parallel axis theorem to move the inertia: Ixx' = Ixx + m translation^2
-	// Ixx(br,drdh,b,t):=integrate(dix(x)+dm(x)*x^2,x,b,t)*density(b,t);
+	// Radius:
+	// r(x):=br+(x-b)*(tr-br)/(t-b);
+	// Where t=top, b=bottom, tr=top radius, br=bottom radius
+	// Area of the cross section of the cylinder at x:
+	// area(x):=%pi*r(x)^2;
+	// Inertia x slice at x (using inertia of a solid disc, see https://en.wikipedia.org/wiki/List_of_moments_of_inertia, note needs to be multiplied by density):
+	// dix(x):=area(x)*r(x)^2/4;
+	// Inertia y slice at y (note needs to be multiplied by density)
+	// diy(x):=area(x)*r(x)^2/2;
+	// Volume:
+	// volume(b,t):=integrate(area(x),x,b,t);
+	// The constant density (note that we have this through GetDensity() so we'll use that instead):
+	// density(b,t):=m/volume(b,t);
+	// Inertia tensor element xx, note that we use the parallel axis theorem to move the inertia: Ixx' = Ixx + m translation^2, also note we multiply by density here:
+	// Ixx(br,tr,b,t):=integrate(dix(x)+area(x)*x^2,x,b,t)*density(b,t);
 	// Inertia tensor element yy:
-	// Iyy(br,drdh,b,t):=integrate(diy(x),x,b,t)*density(b,t);
+	// Iyy(br,tr,b,t):=integrate(diy(x),x,b,t)*density(b,t);
+	// Note that we can simplfy Ixx by using:
+	// Ixx_delta(br,tr,b,t):=Ixx(br,tr,b,t)-Iyy(br,tr,b,t)/2;
 	// For a cylinder this formula matches what is listed on the wiki:
-	// factor(Ixx(r,0,-h/2,h/2));
-	// factor(Iyy(r,0,-h/2,h/2));
+	// factor(Ixx(r,r,-h/2,h/2));
+	// factor(Iyy(r,r,-h/2,h/2));
 	// For a cone with tip at origin too:
-	// factor(Ixx(0,r/h,0,h));
-	// factor(Iyy(0,r/h,0,h));
+	// factor(Ixx(0,r,0,h));
+	// factor(Iyy(0,r,0,h));
 	// Now for the tapered cylinder:
-	// rat(Ixx(br,drdh,b,t),br,dr);
-	// rat(Iyy(br,drdh,b,t),br,dr);
+	// rat(Ixx(br,tr,b,t),br,bt);
+	// rat(Iyy(br,tr,b,t),br,bt);
+	// rat(Ixx_delta(br,tr,b,t),br,bt);
+	float t = mTop;
+	float t2 = Square(t);
+	float t3 = t * t2;
+
+	float b = mBottom;
+	float b2 = Square(b);
+	float b3 = b * b2;
+
 	float br = mBottomRadius;
 	float br2 = Square(br);
 	float br3 = br * br2;
 	float br4 = Square(br2);
-	float drdh = (mTopRadius - br) / (mTop - mBottom);
-	float drdh2 = Square(drdh);
-	float drdh3 = drdh * drdh2;
-	float drdh4 = drdh2 * drdh2;
-	float t = mTop;
-	float t2 = Square(t);
-	float t3 = t * t2;
-	float t4 = Square(t2);
-	float b = mBottom;
-	float b2 = Square(b);
-	float b3 = b * b2;
-	float b4 = Square(b2);
-	float f0 = t+b;
-	float f1 = t2+b*t+b2;
-	float f2 = t3+b*t2+b2*t+b3;
-	float f3 = t4+b*t3+b2*t2+b3*t+b4;
-	float denom = 10.0f*f1*drdh2+30.0f*(f0*br*drdh+br2);
-	float inertia_y = p.mMass*(3.0f*f3*drdh4+15.0f*f2*br*drdh3+30.0f*(f1*br2*drdh2+f0*br3*drdh)+15.0f*br4)/denom;
-	float inertia_x = 0.5f*(inertia_y+p.mMass*(12.0f*f3*drdh2+30.0f*f2*br*drdh+20.0f*f1*br2)/denom);
+
+	float tr = mTopRadius;
+	float tr2 = Square(tr);
+	float tr3 = tr * tr2;
+	float tr4 = Square(tr2);
+
+	float inertia_y = (JPH_PI / 10.0f) * density * (t - b) * (br4 + tr * br3 + tr2 * br2 + tr3 * br + tr4);
+	float inertia_x_delta = (JPH_PI / 30.0f) * density * ((t3 + 2 * b * t2 + 3 * b2 * t - 6 * b3) * br2 + (3 * t3 + b * t2 - b2 * t - 3 * b3) * tr * br + (6 * t3 - 3 * b * t2 - 2 * b2 * t - b3) * tr2);
+	float inertia_x = inertia_x_delta + inertia_y / 2;
 	float inertia_z = inertia_x;
 	p.mInertia = Mat44::sScale(Vec3(inertia_x, inertia_y, inertia_z));
 	return p;
