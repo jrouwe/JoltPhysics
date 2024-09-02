@@ -409,21 +409,23 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 				bool inside_top_radius = distance_to_axis <= top_radius;
 				bool inside_bottom_radius = distance_to_axis <= bottom_radius;
 
-				// Regions of tapered cylinder (side view):
-				//
-				//     _  B |       |
-				//      --_ |   A   |
-				//          t-------+
-				//    C    /         \
-				//        /  tapered  \
-				// _     /  cylinder   \
-				//  --_ /               \
-				//     b-----------------+
-				//  D  |        E        |
-				//     |                 |
-				//
-				// t = side_support_top, b = side_support_bottom
-				// Lines between B and C and C and D are at a 90 degree angle to the line between t and b
+				/*
+					Regions of tapered cylinder (side view):
+				
+						_  B |       |
+						 --_ |   A   |
+							 t-------+
+					   C    /         \
+						   /  tapered  \
+					_     /  cylinder   \
+					 --_ /               \
+						b-----------------+
+					 D  |        E        |
+						|                 |
+				
+					t = side_support_top, b = side_support_bottom
+					Lines between B and C and C and D are at a 90 degree angle to the line between t and b
+				*/
 				if (fraction >= bottom_to_top.LengthSq() // Region B: Above the line segment
 					&& !inside_top_radius) // Outside the top radius
 				{
@@ -495,7 +497,7 @@ void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransf
 class TaperedCylinderShape::TCSGetTrianglesContext
 {
 public:
-				TCSGetTrianglesContext(Mat44Arg inTransform) : mTransform(inTransform) { }
+	explicit	TCSGetTrianglesContext(Mat44Arg inTransform) : mTransform(inTransform) { }
 
 	Mat44		mTransform;
 	uint		mProcessed = 0; // Which elements we processed, bit 0 = top, bit 1 = bottom, bit 2 = side
