@@ -12,6 +12,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
@@ -468,6 +469,25 @@ TEST_SUITE("RayShapeTests")
 		TestRayHelper(shape, Vec3(-2, 0, 0), Vec3(2, 0, 0));
 		TestRayHelper(shape, Vec3(0, -4, 0), Vec3(0, 4, 0));
 		TestRayHelper(shape, Vec3(0, 0, -2), Vec3(0, 0, 2));
+	}
+
+	TEST_CASE("TestTaperedCylinderShapeRay")
+	{
+		// Create tapered cylinder shape
+		Ref<Shape> shape = TaperedCylinderShapeSettings(4, 1, 3).Create().Get();
+
+		// Ray through origin
+		TestRayHelper(shape, Vec3(-2, 0, 0), Vec3(2, 0, 0));
+		TestRayHelper(shape, Vec3(0, -4, 0), Vec3(0, 4, 0));
+		TestRayHelper(shape, Vec3(0, 0, -2), Vec3(0, 0, 2));
+
+		// Ray halfway to the top
+		TestRayHelper(shape, Vec3(-1.5f, 2, 0), Vec3(1.5f, 2, 0));
+		TestRayHelper(shape, Vec3(0, 2, -1.5f), Vec3(0, 2, 1.5f));
+
+		// Ray halfway to the bottom
+		TestRayHelper(shape, Vec3(-2.5f, -2, 0), Vec3(2.5f, -2, 0));
+		TestRayHelper(shape, Vec3(0, -2, -2.5f), Vec3(0, -2, 2.5f));
 	}
 
 	TEST_CASE("TestScaledShapeRay")

@@ -16,6 +16,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
@@ -39,6 +40,7 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, BoxShapeSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, CapsuleShapeSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, TaperedCapsuleShapeSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, CylinderShapeSettings)
+JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, TaperedCylinderShapeSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, ScaledShapeSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, MeshShapeSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, ConvexHullShapeSettings)
@@ -124,6 +126,7 @@ void RegisterTypesInternal(uint64 inVersionID)
 	CapsuleShape::sRegister();
 	TaperedCapsuleShape::sRegister();
 	CylinderShape::sRegister();
+	TaperedCylinderShape::sRegister();
 	MeshShape::sRegister();
 	ConvexHullShape::sRegister();
 	HeightFieldShape::sRegister();
@@ -148,6 +151,7 @@ void RegisterTypesInternal(uint64 inVersionID)
 		JPH_RTTI(CapsuleShapeSettings),
 		JPH_RTTI(TaperedCapsuleShapeSettings),
 		JPH_RTTI(CylinderShapeSettings),
+		JPH_RTTI(TaperedCylinderShapeSettings),
 		JPH_RTTI(ScaledShapeSettings),
 		JPH_RTTI(MeshShapeSettings),
 		JPH_RTTI(ConvexHullShapeSettings),

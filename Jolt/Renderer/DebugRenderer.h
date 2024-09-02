@@ -164,6 +164,17 @@ public:
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void					DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
+	/// Draw a tapered cylinder
+	/// @param inMatrix Matrix that transforms the cylinder to world space.
+	/// @param inTop Top of cylinder (along Y axis)
+	/// @param inBottom Bottom of cylinder (along Y axis)
+	/// @param inTopRadius Radius at the top
+	/// @param inBottomRadius Radius at the bottom
+	/// @param inColor Color to use for drawing the pie.
+	/// @param inCastShadow determines if this geometry should cast a shadow or not.
+	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
+	void					DrawTaperedCylinder(RMat44Arg inMatrix, float inTop, float inBottom, float inTopRadius, float inBottomRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+
 	/// Singleton instance
 	static DebugRenderer *	sInstance;
 
@@ -287,6 +298,9 @@ private:
 	void					Create8thSphereRecursive(Array<uint32> &ioIndices, Array<Vertex> &ioVertices, Vec3Arg inDir1, uint32 &ioIdx1, Vec3Arg inDir2, uint32 &ioIdx2, Vec3Arg inDir3, uint32 &ioIdx3, const Float2 &inUV, SupportFunction inGetSupport, int inLevel);
 	void					Create8thSphere(Array<uint32> &ioIndices, Array<Vertex> &ioVertices, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, const Float2 &inUV, SupportFunction inGetSupport, int inLevel);
 
+	/// Helper functions to create a vertex and index buffer for a cylinder
+	Batch					CreateCylinder(float inTop, float inBottom, float inTopRadius, float inBottomRadius, int inLevel);
+
 	/// Helper function for DrawSwingConeLimits and DrawSwingPyramidLimits
 	Geometry *				CreateSwingLimitGeometry(int inNumSegments, const Vec3 *inVertices);
 
@@ -342,6 +356,28 @@ private:
 	using PieBatces = UnorderedMap<float, GeometryRef>;
 	PieBatces				mPieLimits;
 	PieBatces				mPrevPieLimits;
+
+	struct TaperedCylinder
+	{
+		bool				operator == (const TaperedCylinder &inRHS) const
+		{
+			return mTop == inRHS.mTop
+				&& mBottom == inRHS.mBottom
+				&& mTopRadius == inRHS.mTopRadius
+				&& mBottomRadius == inRHS.mBottomRadius;
+		}
+
+		float				mTop;
+		float				mBottom;
+		float				mTopRadius;
+		float				mBottomRadius;
+	};
+
+	JPH_MAKE_HASH_STRUCT(TaperedCylinder, TaperedCylinderHasher, t.mTop, t.mBottom, t.mTopRadius, t.mBottomRadius)
+
+	using TaperedCylinderBatces = UnorderedMap<TaperedCylinder, GeometryRef, TaperedCylinderHasher>;
+	TaperedCylinderBatces	mTaperedCylinders;
+	TaperedCylinderBatces	mPrevTaperedCylinders;
 };
 
 JPH_NAMESPACE_END

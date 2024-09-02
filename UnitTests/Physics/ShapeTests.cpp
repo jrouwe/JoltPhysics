@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
@@ -168,6 +169,19 @@ TEST_SUITE("ShapeTests")
 		CHECK(cylinder->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
 		CHECK(cylinder->MakeScaleValid(Vec3(-1.0e-10f, 1, 1.0e-10f)) == Vec3(-ScaleHelpers::cMinScale, 1, ScaleHelpers::cMinScale));
 		CHECK(cylinder->MakeScaleValid(Vec3(2, 5, -4)) == Vec3(3, 5, -3));
+
+		Ref<Shape> tapered_cylinder = TaperedCylinderShapeSettings(0.5f, 2.0f, 3.0f).Create().Get();
+		CHECK(!tapered_cylinder->IsValidScale(Vec3::sZero()));
+		CHECK(!tapered_cylinder->IsValidScale(Vec3(0, 1, 0)));
+		CHECK(!tapered_cylinder->IsValidScale(Vec3(1, 0, 1)));
+		CHECK(tapered_cylinder->IsValidScale(Vec3(2, 2, 2)));
+		CHECK(tapered_cylinder->IsValidScale(Vec3(-1, 1, -1)));
+		CHECK(!tapered_cylinder->IsValidScale(Vec3(2, 1, 1)));
+		CHECK(tapered_cylinder->IsValidScale(Vec3(1, 2, 1)));
+		CHECK(!tapered_cylinder->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(tapered_cylinder->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
+		CHECK(tapered_cylinder->MakeScaleValid(Vec3(-1.0e-10f, 1, 1.0e-10f)) == Vec3(-ScaleHelpers::cMinScale, 1, ScaleHelpers::cMinScale));
+		CHECK(tapered_cylinder->MakeScaleValid(Vec3(2, 5, -4)) == Vec3(3, 5, -3));
 
 		Ref<Shape> triangle = new TriangleShape(Vec3(1, 2, 3), Vec3(4, 5, 6), Vec3(7, 8, 9));
 		CHECK(!triangle->IsValidScale(Vec3::sZero()));

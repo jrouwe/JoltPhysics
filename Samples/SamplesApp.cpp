@@ -32,6 +32,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/PlaneShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
@@ -202,6 +203,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SphereShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TaperedCapsuleShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CapsuleShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CylinderShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TaperedCylinderShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, StaticCompoundShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MutableCompoundShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TriangleShapeTest)
@@ -221,6 +223,7 @@ static TestNameAndRTTI sShapeTests[] =
 	{ "Capsule Shape",						JPH_RTTI(CapsuleShapeTest) },
 	{ "Tapered Capsule Shape",				JPH_RTTI(TaperedCapsuleShapeTest) },
 	{ "Cylinder Shape",						JPH_RTTI(CylinderShapeTest) },
+	{ "Tapered Cylinder Shape",				JPH_RTTI(TaperedCylinderShapeTest) },
 	{ "Convex Hull Shape",					JPH_RTTI(ConvexHullShapeTest) },
 	{ "Mesh Shape",							JPH_RTTI(MeshShapeTest) },
 	{ "Mesh Shape Per Triangle User Data",	JPH_RTTI(MeshShapeUserDataTest) },
@@ -239,6 +242,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledBoxShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledCapsuleShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledTaperedCapsuleShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledCylinderShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledTaperedCylinderShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledConvexHullShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledMeshShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledHeightFieldShapeTest)
@@ -256,6 +260,7 @@ static TestNameAndRTTI sScaledShapeTests[] =
 	{ "Capsule Shape",						JPH_RTTI(ScaledCapsuleShapeTest) },
 	{ "Tapered Capsule Shape",				JPH_RTTI(ScaledTaperedCapsuleShapeTest) },
 	{ "Cylinder Shape",						JPH_RTTI(ScaledCylinderShapeTest) },
+	{ "Tapered Cylinder Shape",				JPH_RTTI(ScaledTaperedCylinderShapeTest) },
 	{ "Convex Hull Shape",					JPH_RTTI(ScaledConvexHullShapeTest) },
 	{ "Mesh Shape",							JPH_RTTI(ScaledMeshShapeTest) },
 	{ "Height Field Shape",					JPH_RTTI(ScaledHeightFieldShapeTest) },
