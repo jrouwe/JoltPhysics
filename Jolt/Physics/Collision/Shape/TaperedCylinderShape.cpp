@@ -116,32 +116,28 @@ TaperedCylinderShape::TaperedCylinderShape(const TaperedCylinderShapeSettings &i
 	}
 
 	// Calculate the center of mass (using wxMaxima).
-	// We define the cylinder with bottom at x=0 and radius b
-	// The top is at x=h width b + dr
-	// Radius as a function of x is: r(x):=b+x*dr/h;
-	// Area at x is: a(x):=%pi*r(x)^2;
-	// Volume of a cylinder x = [0, c]: v(c):=integrate(a(x),x,0,c);
-	// Solving for c: c(b,dr):=factor(rhs(ratsimp(solve(v(h)/2=v(c),c))[3]));
-	// Result: c(b,dr):=((((dr^3+3*(b*dr^2+b^2*dr)+2*b^3)/2)^(1/3)-b)*h)/dr
-	float dr = mTopRadius - mBottomRadius;
-	if (abs(dr) < 1.0e-4f)
-	{
-		// If difference is small, just center the cylinder to avoid dividing by zero
-		mTop = inSettings.mHalfHeight;
-		mBottom = -inSettings.mHalfHeight;
-	}
-	else
-	{
-		float h = 2.0f * inSettings.mHalfHeight;
-		float b = mBottomRadius;
-		float b2 = Square(b);
-		float b3 = b * b2;
-		float dr2 = Square(dr);
-		float dr3 = dr * dr2;
-		float c = ((std::pow(0.5f * dr3 + 1.5f * (b * dr2 + b2 * dr) + b3, 1.0f / 3.0f) - b) * h) / dr;
-		mTop = h - c;
-		mBottom = -c;
-	}
+	// Radius of cross section for tapered cylinder from 0 to h:
+	// r(x):=br+x*(tr-br)/h;
+	// Area:
+	// area(x):=%pi*r(x)^2;
+	// Total volume of cylinder:
+	// volume(h):=integrate(area(x),x,0,h);
+	// Center of mass:
+	// com(br,tr,h):=integrate(x*area(x),x,0,h)/volume(h);
+	// Results:
+	// ratsimp(com(br,tr,h),br,bt);
+	// Non-tapered cylinder should have com = 0.5:
+	// ratsimp(com(r,r,h));
+	// Cone with tip at origin and height h should have com = 3/4 h
+	// ratsimp(com(0,r,h));
+	float h = 2.0f * inSettings.mHalfHeight;
+	float tr = mTopRadius;
+	float tr2 = Square(tr);
+	float br = mBottomRadius;
+	float br2 = Square(br);
+	float com = h * (3 * tr2 + 2 * br * tr + br2) / (4.0f * (tr2 + br * tr + br2));
+	mTop = h - com;
+	mBottom = -com;
 
 	outResult.Set(this);
 }
