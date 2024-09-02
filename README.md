@@ -37,6 +37,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 	* Capsule
 	* Tapered-capsule
 	* Cylinder
+	* Tapered-cylinder
 	* Convex hull
 	* Plane
 	* Compound

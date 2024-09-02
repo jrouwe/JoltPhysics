@@ -7,6 +7,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 ### New functionality
 
 * Added PlaneShape. An infinite plane. Negative half space is considered solid.
+* Added TaperedCylinderShape. A cylinder with different top and bottom radii.
 * Use MeshShapeSettings::mPerTriangleUserData at about 25% memory increase to get per triangle user data through MeshShape::GetTriangleUserData
 * Added Shape::GetLeafShape function to be able to get a leaf shape given a sub shape ID
 * Added HeightFieldShape::GetSubShapeCoordinates to get the triangle coordinates of a particular sub shape ID

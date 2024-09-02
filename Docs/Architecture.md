@@ -88,6 +88,7 @@ Each body has a shape attached that determines the collision volume. The followi
 * [CapsuleShape](@ref CapsuleShape) - A capsule centered around zero.
 * [TaperedCapsuleShape](@ref TaperedCapsuleShape) - A capsule with different radii at the bottom and top.
 * [CylinderShape](@ref CylinderShape) - A cylinder shape. Note that cylinders are the least stable of all shapes, so use another shape if possible.
+* [TaperedCylinderShape](@ref TaperedCylinderShape) - A cylinder with different radii at the bottom and top. Note that cylinders are the least stable of all shapes, so use another shape if possible.
 * [ConvexHullShape](@ref ConvexHullShape) - A convex hull defined by a set of points.
 * [TriangleShape](@ref TriangleShape) - A single triangle. Use a MeshShape if you have multiple triangles.
 * [PlaneShape](@ref PlaneShape) - An infinite plane. Negative half space is considered solid.
