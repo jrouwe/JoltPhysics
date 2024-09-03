@@ -32,17 +32,16 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(CylinderShapeSettings)
 }
 
 // Approximation of top face with 8 vertices
-static const float cSin45 = 0.70710678118654752440084436210485f;
-static const Vec3 cTopFace[] =
+static const Vec3 cCylinderTopFace[] =
 {
-	Vec3(0.0f,		1.0f,	1.0f),
-	Vec3(cSin45,	1.0f,	cSin45),
-	Vec3(1.0f,		1.0f,	0.0f),
-	Vec3(cSin45,	1.0f,	-cSin45),
-	Vec3(-0.0f,		1.0f,	-1.0f),
-	Vec3(-cSin45,	1.0f,	-cSin45),
-	Vec3(-1.0f,		1.0f,	0.0f),
-	Vec3(-cSin45,	1.0f,	cSin45)
+	Vec3(0.0f,			1.0f,	1.0f),
+	Vec3(0.707106769f,	1.0f,	0.707106769f),
+	Vec3(1.0f,			1.0f,	0.0f),
+	Vec3(0.707106769f,	1.0f,	-0.707106769f),
+	Vec3(-0.0f,			1.0f,	-1.0f),
+	Vec3(-0.707106769f,	1.0f,	-0.707106769f),
+	Vec3(-1.0f,			1.0f,	0.0f),
+	Vec3(-0.707106769f,	1.0f,	0.707106769f)
 };
 
 static const StaticArray<Vec3, 96> sUnitCylinderTriangles = []() {
@@ -50,13 +49,13 @@ static const StaticArray<Vec3, 96> sUnitCylinderTriangles = []() {
 
 	const Vec3 bottom_offset(0.0f, -2.0f, 0.0f);
 
-	int num_verts = sizeof(cTopFace) / sizeof(Vec3);
+	int num_verts = sizeof(cCylinderTopFace) / sizeof(Vec3);
 	for (int i = 0; i < num_verts; ++i)
 	{
-		Vec3 t1 = cTopFace[i];
-		Vec3 t2 = cTopFace[(i + 1) % num_verts];
-		Vec3 b1 = cTopFace[i] + bottom_offset;
-		Vec3 b2 = cTopFace[(i + 1) % num_verts] + bottom_offset;
+		Vec3 t1 = cCylinderTopFace[i];
+		Vec3 t2 = cCylinderTopFace[(i + 1) % num_verts];
+		Vec3 b1 = cCylinderTopFace[i] + bottom_offset;
+		Vec3 b2 = cCylinderTopFace[(i + 1) % num_verts] + bottom_offset;
 
 		// Top
 		verts.emplace_back(0.0f, 1.0f, 0.0f);
@@ -218,7 +217,7 @@ void CylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg in
 		// Hitting top or bottom
 		Vec3 multiplier = y < 0.0f? Vec3(scaled_radius, scaled_half_height, scaled_radius) : Vec3(-scaled_radius, -scaled_half_height, scaled_radius);
 		Mat44 transform = inCenterOfMassTransform.PreScaled(multiplier);
-		for (const Vec3 &v : cTopFace)
+		for (const Vec3 &v : cCylinderTopFace)
 			outVertices.push_back(transform * v);
 	}
 }

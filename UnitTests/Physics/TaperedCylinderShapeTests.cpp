@@ -5,6 +5,8 @@
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
 #include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/CollidePointResult.h>
 
 TEST_SUITE("TaperedCylinderShapeTests")
 {
@@ -47,5 +49,50 @@ TEST_SUITE("TaperedCylinderShapeTests")
 		CHECK_APPROX_EQUAL(expected_inertia_xx, m1.mInertia(0, 0), 1.0e-3f);
 		CHECK_APPROX_EQUAL(expected_inertia_yy, m1.mInertia(1, 1), 1.0e-3f);
 		CHECK_APPROX_EQUAL(expected_inertia_xx, m1.mInertia(2, 2), 1.0e-3f);
+	}
+
+	TEST_CASE("TestCollidePoint")
+	{
+		const float cTopRadius = 3.0f;
+		const float cBottomRadius = 5.0f;
+		const float cHalfHeight = 3.5f;
+
+		RefConst<Shape> shape = TaperedCylinderShapeSettings(cHalfHeight, cTopRadius, cBottomRadius).Create().Get();
+
+		auto test_inside = [shape](Vec3Arg inPoint)
+		{
+			AllHitCollisionCollector<CollidePointCollector> collector;
+			shape->CollidePoint(inPoint - shape->GetCenterOfMass(), SubShapeIDCreator(), collector);
+			CHECK(collector.mHits.size() == 1);
+		};
+
+		auto test_outside = [shape](Vec3Arg inPoint)
+		{
+			AllHitCollisionCollector<CollidePointCollector> collector;
+			shape->CollidePoint(inPoint - shape->GetCenterOfMass(), SubShapeIDCreator(), collector);
+			CHECK(collector.mHits.size() == 0);
+		};
+
+		constexpr float cEpsilon = 1.0e-3f;
+
+		test_inside(Vec3::sZero());
+
+		// Top plane
+		test_inside(Vec3(0, cHalfHeight - cEpsilon, 0));
+		test_outside(Vec3(0, cHalfHeight + cEpsilon, 0));
+
+		// Bottom plane
+		test_inside(Vec3(0, -cHalfHeight + cEpsilon, 0));
+		test_outside(Vec3(0, -cHalfHeight - cEpsilon, 0));
+
+		// COM plane
+		test_inside(Vec3(0.5f * (cTopRadius + cBottomRadius) - cEpsilon, 0, 0));
+		test_outside(Vec3(0.5f * (cTopRadius + cBottomRadius) + cEpsilon, 0, 0));
+
+		// At quarter h above COM plane
+		float h = 0.5f * cHalfHeight;
+		float r = cBottomRadius + (cTopRadius - cBottomRadius) * (h + cHalfHeight) / (2.0f * cHalfHeight);
+		test_inside(Vec3(0, h, r - cEpsilon));
+		test_outside(Vec3(0, h, r + cEpsilon));
 	}
 }

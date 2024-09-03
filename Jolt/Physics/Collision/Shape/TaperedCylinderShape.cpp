@@ -7,6 +7,8 @@
 #include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
+#include <Jolt/Physics/Collision/CollidePointResult.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
 #include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
@@ -17,17 +19,17 @@
 
 JPH_NAMESPACE_BEGIN
 
-// Approximation of a face of the tapered capsule
-static const Vec3 cTaperedCapsuleFace[] =
+// Approximation of a face of the tapered cylinder
+static const Vec3 cTaperedCylinderFace[] =
 {
 	Vec3(0.0f,			0.0f,	1.0f),
-	Vec3(0.7071067f,	0.0f,	0.7071067f),
+	Vec3(0.707106769f,	0.0f,	0.707106769f),
 	Vec3(1.0f,			0.0f,	0.0f),
-	Vec3(0.7071067f,	0.0f,	-0.7071067f),
+	Vec3(0.707106769f,	0.0f,	-0.707106769f),
 	Vec3(-0.0f,			0.0f,	-1.0f),
-	Vec3(-0.7071067f,	0.0f,	-0.7071067f),
+	Vec3(-0.707106769f,	0.0f,	-0.707106769f),
 	Vec3(-1.0f,			0.0f,	0.0f),
-	Vec3(-0.7071067f,	0.0f,	0.7071067f)
+	Vec3(-0.707106769f,	0.0f,	0.707106769f)
 };
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TaperedCylinderShapeSettings)
@@ -269,7 +271,7 @@ void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec
 		if (top_radius > cMinRadius)
 		{
 			Vec3 top_3d(0, top, 0);
-			for (Vec3 v : cTaperedCapsuleFace)
+			for (Vec3 v : cTaperedCylinderFace)
 				outVertices.push_back(inCenterOfMassTransform * (top_radius * v + top_3d));
 		}
 	}
@@ -279,7 +281,7 @@ void TaperedCylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec
 		if (bottom_radius > cMinRadius)
 		{
 			Vec3 bottom_3d(0, bottom, 0);
-			for (const Vec3 *v = cTaperedCapsuleFace + std::size(cTaperedCapsuleFace) - 1; v >= cTaperedCapsuleFace; --v)
+			for (const Vec3 *v = cTaperedCylinderFace + std::size(cTaperedCylinderFace) - 1; v >= cTaperedCylinderFace; --v)
 				outVertices.push_back(inCenterOfMassTransform * (bottom_radius * *v + bottom_3d));
 		}
 	}
@@ -367,6 +369,18 @@ AABox TaperedCylinderShape::GetLocalBounds() const
 {
 	float max_radius = max(mTopRadius, mBottomRadius);
 	return AABox(Vec3(-max_radius, mBottom, -max_radius), Vec3(max_radius, mTop, max_radius));
+}
+
+void TaperedCylinderShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
+{
+	// Test shape filter
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
+		return;
+
+	// Check if the point is in the tapered cylinder
+	if (inPoint.GetY() >= mBottom && inPoint.GetY() <= mTop // Within height
+		&& Square(inPoint.GetX()) + Square(inPoint.GetZ()) <= Square(mBottomRadius + (inPoint.GetY() - mBottom) * (mTopRadius - mBottomRadius) / (mTop - mBottom))) // Within the radius
+		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
 }
 
 void TaperedCylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
@@ -525,7 +539,7 @@ void TaperedCylinderShape::GetTrianglesStart(GetTrianglesContext &ioContext, con
 
 int TaperedCylinderShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials) const
 {
-	constexpr int cNumVertices = int(std::size(cTaperedCapsuleFace));
+	constexpr int cNumVertices = int(std::size(cTaperedCylinderFace));
 
 	static_assert(cGetTrianglesMinTrianglesRequested >= 2 * cNumVertices);
 	JPH_ASSERT(inMaxTrianglesRequested >= cGetTrianglesMinTrianglesRequested);
@@ -538,10 +552,10 @@ int TaperedCylinderShape::GetTrianglesNext(GetTrianglesContext &ioContext, int i
 	Vec3 top_3d(0, mTop, 0);
 	if ((context.mProcessed & 0b001) == 0)
 	{
-		Vec3 v0 = context.mTransform * (top_3d + mTopRadius * cTaperedCapsuleFace[0]);
-		Vec3 v1 = context.mTransform * (top_3d + mTopRadius * cTaperedCapsuleFace[1]);
+		Vec3 v0 = context.mTransform * (top_3d + mTopRadius * cTaperedCylinderFace[0]);
+		Vec3 v1 = context.mTransform * (top_3d + mTopRadius * cTaperedCylinderFace[1]);
 
-		for (const Vec3 *v = cTaperedCapsuleFace + 2, *v_end = cTaperedCapsuleFace + cNumVertices; v < v_end; ++v)
+		for (const Vec3 *v = cTaperedCylinderFace + 2, *v_end = cTaperedCylinderFace + cNumVertices; v < v_end; ++v)
 		{
 			Vec3 v2 = context.mTransform * (top_3d + mTopRadius * *v);
 
@@ -561,10 +575,10 @@ int TaperedCylinderShape::GetTrianglesNext(GetTrianglesContext &ioContext, int i
 	if ((context.mProcessed & 0b010) == 0
 		&& total_num_triangles + cNumVertices - 2 < inMaxTrianglesRequested)
 	{
-		Vec3 v0 = context.mTransform * (bottom_3d + mBottomRadius * cTaperedCapsuleFace[0]);
-		Vec3 v1 = context.mTransform * (bottom_3d + mBottomRadius * cTaperedCapsuleFace[1]);
+		Vec3 v0 = context.mTransform * (bottom_3d + mBottomRadius * cTaperedCylinderFace[0]);
+		Vec3 v1 = context.mTransform * (bottom_3d + mBottomRadius * cTaperedCylinderFace[1]);
 
-		for (const Vec3 *v = cTaperedCapsuleFace + 2, *v_end = cTaperedCapsuleFace + cNumVertices; v < v_end; ++v)
+		for (const Vec3 *v = cTaperedCylinderFace + 2, *v_end = cTaperedCylinderFace + cNumVertices; v < v_end; ++v)
 		{
 			Vec3 v2 = context.mTransform * (bottom_3d + mBottomRadius * *v);
 
@@ -583,10 +597,10 @@ int TaperedCylinderShape::GetTrianglesNext(GetTrianglesContext &ioContext, int i
 	if ((context.mProcessed & 0b100) == 0
 		&& total_num_triangles + 2 * cNumVertices < inMaxTrianglesRequested)
 	{
-		Vec3 v0t = context.mTransform * (top_3d + mTopRadius * cTaperedCapsuleFace[cNumVertices - 1]);
-		Vec3 v0b = context.mTransform * (bottom_3d + mBottomRadius * cTaperedCapsuleFace[cNumVertices - 1]);
+		Vec3 v0t = context.mTransform * (top_3d + mTopRadius * cTaperedCylinderFace[cNumVertices - 1]);
+		Vec3 v0b = context.mTransform * (bottom_3d + mBottomRadius * cTaperedCylinderFace[cNumVertices - 1]);
 
-		for (const Vec3 *v = cTaperedCapsuleFace, *v_end = cTaperedCapsuleFace + cNumVertices; v < v_end; ++v)
+		for (const Vec3 *v = cTaperedCylinderFace, *v_end = cTaperedCylinderFace + cNumVertices; v < v_end; ++v)
 		{
 			Vec3 v1t = context.mTransform * (top_3d + mTopRadius * *v);
 			v0t.StoreFloat3(outTriangleVertices++);
