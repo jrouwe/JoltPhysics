@@ -14,24 +14,23 @@ public:
 	/// Empty constructor
 					Frustum() = default;
 
-	/// Construct frustum from position, forward, up, field of view x and y and near and far plane.
+	/// Construct frustum from position, forward, up, field of view x and y and near plane.
 	/// Note that inUp does not need to be perpendicular to inForward but cannot be collinear.
-	inline			Frustum(Vec3Arg inPosition, Vec3Arg inForward, Vec3Arg inUp, float inFOVX, float inFOVY, float inNear, float inFar)
+	inline			Frustum(Vec3Arg inPosition, Vec3Arg inForward, Vec3Arg inUp, float inFOVX, float inFOVY, float inNear)
 	{
 		Vec3 right = inForward.Cross(inUp).Normalized();
 		Vec3 up = right.Cross(inForward).Normalized(); // Calculate the real up vector (inUp does not need to be perpendicular to inForward)
 
-		// Near and far plane
+		// Near plane
 		mPlanes[0] = Plane::sFromPointAndNormal(inPosition + inNear * inForward, inForward);
-		mPlanes[1] = Plane::sFromPointAndNormal(inPosition + inFar * inForward, -inForward);
 
 		// Top and bottom planes
-		mPlanes[2] = Plane::sFromPointAndNormal(inPosition, Mat44::sRotation(right, 0.5f * inFOVY) * -up);
-		mPlanes[3] = Plane::sFromPointAndNormal(inPosition, Mat44::sRotation(right, -0.5f * inFOVY) * up);
+		mPlanes[1] = Plane::sFromPointAndNormal(inPosition, Mat44::sRotation(right, 0.5f * inFOVY) * -up);
+		mPlanes[2] = Plane::sFromPointAndNormal(inPosition, Mat44::sRotation(right, -0.5f * inFOVY) * up);
 
 		// Left and right planes
-		mPlanes[4] = Plane::sFromPointAndNormal(inPosition, Mat44::sRotation(up, 0.5f * inFOVX) * right);
-		mPlanes[5] = Plane::sFromPointAndNormal(inPosition, Mat44::sRotation(up, -0.5f * inFOVX) * -right);
+		mPlanes[3] = Plane::sFromPointAndNormal(inPosition, Mat44::sRotation(up, 0.5f * inFOVX) * right);
+		mPlanes[4] = Plane::sFromPointAndNormal(inPosition, Mat44::sRotation(up, -0.5f * inFOVX) * -right);
 	}
 
 	/// Test if frustum overlaps with axis aligned box. Note that this is a conservative estimate and can return true if the
@@ -54,5 +53,5 @@ public:
 	}
 
 private:
-	Plane			mPlanes[6];																	///< Planes forming the frustum
+	Plane			mPlanes[5];																	///< Planes forming the frustum
 };

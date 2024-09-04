@@ -121,7 +121,7 @@ void Renderer::CreateDepthBuffer()
 	// Allocate depth stencil buffer
 	D3D12_CLEAR_VALUE clear_value = {};
 	clear_value.Format = DXGI_FORMAT_D32_FLOAT;
-	clear_value.DepthStencil.Depth = 1.0f;
+	clear_value.DepthStencil.Depth = 0.0f;
 	clear_value.DepthStencil.Stencil = 0;
 
 	D3D12_HEAP_PROPERTIES heap_properties = {};
@@ -352,10 +352,10 @@ void Renderer::Initialize()
 	samplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	samplers[1].ShaderRegister = 1;
 
-	// Sampler 2: Point filtering, using SampleCmp mode to compare if sampled value <= reference value (for shadows)
+	// Sampler 2: Point filtering, using SampleCmp mode to compare if sampled value >= reference value (for shadows)
 	samplers[2] = samplers[0];
 	samplers[2].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
-	samplers[2].ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	samplers[2].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
 	samplers[2].ShaderRegister = 2;
 
 	D3D12_ROOT_SIGNATURE_DESC root_signature_desc = {};
@@ -440,6 +440,14 @@ void Renderer::OnWindowResize()
 	CreateDepthBuffer();
 }
 
+static Mat44 sPerspectiveInfiniteReverseZ(float inFovY, float inAspect, float inNear)
+{
+	float height = 1.0f / Tan(0.5f * inFovY);
+	float width = height / inAspect;
+
+	return Mat44(Vec4(width, 0.0f, 0.0f, 0.0f), Vec4(0.0f, height, 0.0f, 0.0f), Vec4(0.0f, 0.0f, 0, -1.0f), Vec4(0.0f, 0.0f, inNear, 0.0f));
+}
+
 void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 {
 	JPH_PROFILE_FUNCTION();
@@ -480,7 +488,7 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	// Clear the back buffer.
 	const float blue[] = { 0.098f, 0.098f, 0.439f, 1.000f };
 	mCommandList->ClearRenderTargetView(mRenderTargetViews[mFrameIndex], blue, 0, nullptr);
-	mCommandList->ClearDepthStencilView(mDepthStencilView, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	mCommandList->ClearDepthStencilView(mDepthStencilView, D3D12_CLEAR_FLAG_DEPTH, 0.0f, 0, 0, nullptr);
 
 	// Light properties
 	Vec3 light_pos = inWorldScale * Vec3(250, 250, 250);
@@ -489,26 +497,24 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	Vec3 light_fwd = (light_tgt - light_pos).Normalized();
 	float light_fov = DegreesToRadians(20.0f);
 	float light_near = 1.0f;
-	float light_far = 1000.0f;
 
 	// Camera properties
 	float camera_fovy = inCamera.mFOVY;
 	float camera_aspect = static_cast<float>(GetWindowWidth()) / GetWindowHeight();
 	float camera_fovx = 2.0f * ATan(camera_aspect * Tan(0.5f * camera_fovy));
 	float camera_near = 0.01f * inWorldScale;
-	float camera_far = inCamera.mFarPlane * inWorldScale;
 
 	// Set constants for vertex shader in projection mode
 	VertexShaderConstantBuffer *vs = mVertexShaderConstantBufferProjection[mFrameIndex]->Map<VertexShaderConstantBuffer>();
 
 	// Camera projection and view
-	vs->mProjection = Mat44::sPerspective(camera_fovy, camera_aspect, camera_near, camera_far);
+	vs->mProjection = sPerspectiveInfiniteReverseZ(camera_fovy, camera_aspect, camera_near);
 	Vec3 cam_pos = Vec3(inCamera.mPos - mBaseOffset);
 	Vec3 tgt = cam_pos + inCamera.mForward;
 	vs->mView = Mat44::sLookAt(cam_pos, tgt, inCamera.mUp);
 
 	// Light projection and view
-	vs->mLightProjection = Mat44::sPerspective(light_fov, 1.0f, light_near, light_far);
+	vs->mLightProjection = sPerspectiveInfiniteReverseZ(light_fov, 1.0f, light_near);
 	vs->mLightView = Mat44::sLookAt(light_pos, light_tgt, light_up);
 
 	mVertexShaderConstantBufferProjection[mFrameIndex]->Unmap();
@@ -539,10 +545,10 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	mPixelShaderConstantBuffer[mFrameIndex]->Bind(1);
 
 	// Calculate camera frustum
-	mCameraFrustum = Frustum(cam_pos, inCamera.mForward, inCamera.mUp, camera_fovx, camera_fovy, camera_near, camera_far);
+	mCameraFrustum = Frustum(cam_pos, inCamera.mForward, inCamera.mUp, camera_fovx, camera_fovy, camera_near);
 
 	// Calculate light frustum
-	mLightFrustum = Frustum(light_pos, light_fwd, light_up, light_fov, light_fov, light_near, light_far);
+	mLightFrustum = Frustum(light_pos, light_fwd, light_up, light_fov, light_fov, light_near);
 }
 
 void Renderer::EndFrame()

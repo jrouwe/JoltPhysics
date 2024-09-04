@@ -138,7 +138,7 @@ Texture::Texture(Renderer *inRenderer, int inWidth, int inHeight) :
 	// Allocate depth stencil buffer
 	D3D12_CLEAR_VALUE clear_value = {};
 	clear_value.Format = DXGI_FORMAT_D32_FLOAT;
-	clear_value.DepthStencil.Depth = 1.0f;
+	clear_value.DepthStencil.Depth = 0;
 	clear_value.DepthStencil.Stencil = 0;
 
 	D3D12_HEAP_PROPERTIES heap_properties = {};
@@ -201,7 +201,7 @@ void Texture::Bind(int inSlot) const
 
 void Texture::ClearRenderTarget()
 {
-	mRenderer->GetCommandList()->ClearDepthStencilView(mDSV, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	mRenderer->GetCommandList()->ClearDepthStencilView(mDSV, D3D12_CLEAR_FLAG_DEPTH, 0, 0, 0, nullptr);
 }
 
 void Texture::SetAsRenderTarget(bool inSet) const

@@ -2519,7 +2519,6 @@ void SamplesApp::GetInitialCamera(CameraState &ioState) const
 	// Default if the test doesn't override it
 	ioState.mPos = GetWorldScale() * RVec3(30, 10, 30);
 	ioState.mForward = -Vec3(ioState.mPos).Normalized();
-	ioState.mFarPlane = 1000.0f;
 
 	mTest->GetInitialCamera(ioState);
 }
