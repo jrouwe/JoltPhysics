@@ -39,6 +39,18 @@ public:
 							TaperedCylinderShape() : ConvexShape(EShapeSubType::TaperedCylinder) { }
 							TaperedCylinderShape(const TaperedCylinderShapeSettings &inSettings, ShapeResult &outResult);
 
+	/// Get top radius of the tapered cylinder
+	inline float			GetTopRadius() const													{ return mTopRadius; }
+
+	/// Get bottom radius of the tapered cylinder
+	inline float			GetBottomRadius() const													{ return mBottomRadius; }
+
+	/// Get convex radius of the tapered cylinder
+	inline float			GetConvexRadius() const													{ return mConvexRadius; }
+
+	/// Get half height of the tapered cylinder
+	inline float			GetHalfHeight() const													{ return 0.5f * (mTop - mBottom); }
+
 	// See Shape::GetCenterOfMass
 	virtual Vec3			GetCenterOfMass() const override										{ return Vec3(0, -0.5f * (mTop + mBottom), 0); }
 

@@ -25,6 +25,12 @@ TEST_SUITE("TaperedCylinderShapeTests")
 		RefConst<TaperedCylinderShape> cylinder1 = StaticCast<TaperedCylinderShape>(settings1.Create().Get());
 		RefConst<TaperedCylinderShape> cylinder2 = StaticCast<TaperedCylinderShape>(settings2.Create().Get());
 
+		// Check accessors
+		CHECK(cylinder1->GetTopRadius() == cRadius);
+		CHECK(cylinder1->GetBottomRadius() == 0.0f);
+		CHECK(cylinder1->GetConvexRadius() == 0.0f);
+		CHECK_APPROX_EQUAL(cylinder1->GetHalfHeight(), 0.5f * cHeight);
+
 		MassProperties m1 = cylinder1->GetMassProperties();
 		MassProperties m2 = cylinder2->GetMassProperties();
 
