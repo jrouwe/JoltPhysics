@@ -46,6 +46,15 @@ public:
 							TaperedCapsuleShape() : ConvexShape(EShapeSubType::TaperedCapsule) { }
 							TaperedCapsuleShape(const TaperedCapsuleShapeSettings &inSettings, ShapeResult &outResult);
 
+	/// Get top radius of the tapered capsule
+	inline float			GetTopRadius() const													{ return mTopRadius; }
+
+	/// Get bottom radius of the tapered capsule
+	inline float			GetBottomRadius() const													{ return mBottomRadius; }
+
+	/// Get half height between the top and bottom sphere center
+	inline float			GetHalfHeight() const													{ return 0.5f * (mTopCenter - mBottomCenter); }
+
 	// See Shape::GetCenterOfMass
 	virtual Vec3			GetCenterOfMass() const override										{ return mCenterOfMass; }
 

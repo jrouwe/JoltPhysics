@@ -44,6 +44,11 @@ public:
 	/// Note that the convex radius is currently only used for shape vs shape collision, for all other purposes the triangle is infinitely thin.
 							TriangleShape(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, float inConvexRadius = 0.0f, const PhysicsMaterial *inMaterial = nullptr) : ConvexShape(EShapeSubType::Triangle, inMaterial), mV1(inV1), mV2(inV2), mV3(inV3), mConvexRadius(inConvexRadius) { JPH_ASSERT(inConvexRadius >= 0.0f); }
 
+	/// Get the vertices of the triangle
+	inline Vec3				GetVertex1() const																	{ return mV1; }
+	inline Vec3				GetVertex2() const																	{ return mV2; }
+	inline Vec3				GetVertex3() const																	{ return mV3; }
+
 	/// Convex radius
 	float					GetConvexRadius() const																{ return mConvexRadius; }
 
