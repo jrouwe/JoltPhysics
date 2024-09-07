@@ -19,7 +19,25 @@ Moving bodies have a [MotionProperties](@ref MotionProperties) object that conta
 
 ## Creating Bodies {#creating-bodies}
 
-Bodies are inserted into the [PhysicsSystem](@ref PhysicsSystem) and interacted with through the [BodyInterface](@ref BodyInterface). 
+Bodies are inserted into the [PhysicsSystem](@ref PhysicsSystem) and interacted with through the [BodyInterface](@ref BodyInterface).
+
+The general life cycle of a body is:
+
+- BodyInterface::CreateBody - Construct a Body object and initialize it. You cannot use `new` to create a Body.
+- BodyInterface::AddBody - Add the body to the PhysicsSystem and make it participate in the simulation.
+- BodyInterface::RemoveBody - Remove it from the PhysicsSystem.
+- BodyInterface::DestroyBody - Deinitialize and destruct the Body. You cannot use `delete` to delete a Body. This function will not automatically remove the Body from the PhysicsSystem.
+
+If you need to add many bodies at the same time then use the batching functions:
+
+- BodyInterface::AddBodiesPrepare - Prepares bodies to be added to the PhysicsSystem. Doesn't affect simulation and can be done from a background thread.
+- BodyInterface::AddBodiesFinalize - Finalize insertion. This atomically adds all bodies to the PhysicsSystem.
+- BodyInterface::AddBodiesAbort - If you've called AddBodiesPrepare but changed your mind and no longer want to add the bodies to the PhysicsSystem. Useful when streaming in level sections and the player decides to go the other way.
+- BodyInterface::RemoveBodies - Batch remove a lot of bodies from the PhysicsSystem.
+
+Always use the batch adding functions when possible! Adding many bodies, one at a time, results in a really inefficient broadphase and in the worst case can lead to missed collisions (an assert will trigger if this is the case). If you cannot avoid adding many bodies one at a time, use PhysicsSystem::OptimizeBroadPhase to rebuild the tree.
+
+You can call AddBody, RemoveBody, AddBody, RemoveBody to temporarily remove and later reinsert a body into the simulation.
 
 ## Multithreaded Access 
 
@@ -70,7 +88,10 @@ Each body has a shape attached that determines the collision volume. The followi
 * [CapsuleShape](@ref CapsuleShape) - A capsule centered around zero.
 * [TaperedCapsuleShape](@ref TaperedCapsuleShape) - A capsule with different radii at the bottom and top.
 * [CylinderShape](@ref CylinderShape) - A cylinder shape. Note that cylinders are the least stable of all shapes, so use another shape if possible.
+* [TaperedCylinderShape](@ref TaperedCylinderShape) - A cylinder with different radii at the bottom and top. Note that cylinders are the least stable of all shapes, so use another shape if possible.
 * [ConvexHullShape](@ref ConvexHullShape) - A convex hull defined by a set of points.
+* [TriangleShape](@ref TriangleShape) - A single triangle. Use a MeshShape if you have multiple triangles.
+* [PlaneShape](@ref PlaneShape) - An infinite plane. Negative half space is considered solid.
 * [StaticCompoundShape](@ref StaticCompoundShape) - A shape containing other shapes. This shape is constructed once and cannot be changed afterwards. Child shapes are organized in a tree to speed up collision detection.
 * [MutableCompoundShape](@ref MutableCompoundShape) - A shape containing other shapes. This shape can be constructed/changed at runtime and trades construction time for runtime performance. Child shapes are organized in a list to make modification easy.
 * [MeshShape](@ref MeshShape) - A shape consisting of triangles. They are mostly used for static geometry.
@@ -210,6 +231,26 @@ will return a box of size 2x2x2 centered around the origin, so in order to get i
 	JPH_ASSERT(shape_bounds == JPH::AABox(JPH::Vec3(9, -1, -1), JPH::Vec3(11, 1, 1))); // Now we have the box relative to how we created it
 
 Note that when you work with interface of [BroadPhaseQuery](@ref BroadPhaseQuery), [NarrowPhaseQuery](@ref NarrowPhaseQuery) or [TransformedShape](@ref TransformedShape) this transformation is done for you.
+
+### Scaling Shapes {#scaling-shapes}
+
+Shapes can be scaled using the [ScaledShape](@ref ScaledShape) class. You can scale a shape like:
+
+	JPH::RefConst<Shape> my_scaled_shape = new JPH::ScaledShape(my_non_scaled_shape, JPH::Vec3(x_scale, y_scale, z_scale));
+
+Not all scales are valid for every shape. Use Shape::IsValidScale to check if a scale is valid for a particular shape (the documentation for this function also lists the rules for all shape types).
+
+A safer way of scaling shapes is provided by the Shape::ScaleShape function:
+
+	JPH::Shape::ShapeResult my_scaled_shape = my_non_scaled_shape->ScaleShape(JPH::Vec3(x_scale, y_scale, z_scale));
+
+This function will check if a scale is valid for a particular shape and if a scale is not valid, it will produce the closest scale that is valid. 
+For example, if you scale a CompoundShape that has rotated sub shapes, a non-uniform scale would cause shearing. In that case the Shape::ScaleShape function will create a new compound shape and scale the sub shapes (losing the shear) rather than creating a ScaledShape around the entire CompoundShape.
+
+Updating scaling after a body is created is also possible, but should be done with care. Imagine a sphere in a pipe, scaling the sphere so that it becomes bigger than the pipe creates an impossible situation as there is no way to resolve the collision anymore. 
+Please take a look at the [DynamicScaledShape](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/ScaledShapes/DynamicScaledShape.cpp) demo. The reason that no ScaledShape::SetScale function exists is to ensure thread safety when collision queries are being executed while shapes are modified.
+
+Note that there are many functions that take a scale in Jolt (e.g. CollisionDispatch::sCollideShapeVsShape), usually the shape is scaled relative to its center of mass. The Shape::ScaleShape function scales the shape relative to the origin of the shape.
 
 ### Creating Custom Shapes {#creating-custom-shapes}
 
@@ -490,6 +531,8 @@ The [Character](@ref Character) and [CharacterVirtual](@ref CharacterVirtual) cl
 
 The Character class is the simplest controller and is essentially a rigid body that has been configured to only allow translation (and no rotation so it stays upright). It is simulated together with the other rigid bodies so it properly reacts to them. Because it is simulated, it is usually not the best solution for a player as the player usually requires a lot of behavior that is non-physical. This character controller is cheap so it is recommended for e.g. simple AI characters. After every PhysicsSystem::Update call you must call Character::PostSimulation to update the ground contacts.
 
+Characters are usually driven in a kinematic way (i.e. by calling Character::SetLinearVelocity or CharacterVirtual::SetLinearVelocity before their update).
+
 The CharacterVirtual class is much more advanced. It is implemented using collision detection functionality only (through NarrowPhaseQuery) and is simulated when CharacterVirtual::Update is called. Since the character is not 'added' to the world, it is not visible to rigid bodies and it only interacts with them during the CharacterVirtual::Update function by applying impulses. This does mean there can be some update order artifacts, like the character slightly hovering above an elevator going down, because the characters moves at a different time than the other rigid bodies. Separating it has the benefit that the update can happen at the appropriate moment in the game code. Multiple CharacterVirtuals can update concurrently, so it is not an issue if the game code is parallelized.
 
 CharacterVirtual has the following extra functionality:
@@ -500,9 +543,13 @@ CharacterVirtual has the following extra functionality:
 * Sticking to the ground when walking down a slope through the CharacterVirtual::ExtendedUpdate call
 * Support for specifying a local coordinate system that allows e.g. [walking around in a flying space ship](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Character/CharacterSpaceShipTest.cpp) that is equipped with 'inertial dampers' (a sci-fi concept often used in games).
 
-If you want CharacterVirtual to have presence in the world, it is recommended to pair it with a slightly smaller [Kinematic](@ref EMotionType) body (or Character). After each update, move this body using BodyInterface::MoveKinematic to the new location. This ensures that standard collision tests like ray casts are able to find the character in the world and that fast moving objects with motion quality [LinearCast](@ref EMotionQuality) will not pass through the character in 1 update. As an alternative to a Kinematic body, you can also use a regular Dynamic body with a [gravity factor](@ref BodyCreationSettings::mGravityFactor) of 0. Ensure that the character only collides with dynamic objects in this case. The advantage of this approach is that the paired body doesn't have infinite mass so is less strong.
+CharacterVirtual should provide everything that Character provides. Since it is not a rigid body, it requires some extra consideration:
+* Collision callbacks are passed through the CharacterContactListener instead of the ContactListener class
+* CharacterVirtual vs sensor contacts are also passed through this listener, you will not receive them through the regular ContactListener
+* CharacterVirtual vs CharacterVirtual collisions can be handled through the CharacterVsCharacterCollision interface
+* Collision checks (e.g. CastRay) do not collide with CharacterVirtual. Use e.g. `NarrowPhaseQuery::CastRay(..., collector)` followed by `CharacterVirtual::GetTransformedShape().CastRay(..., collector)` to include the collision results.
 
-Characters are usually driven in a kinematic way (i.e. by calling Character::SetLinearVelocity or CharacterVirtual::SetLinearVelocity before their update).
+You can create a hybrid between these two by setting CharacterVirtualSettings::mInnerBodyShape. This will create an inner rigid body that follows the movement of the CharacterVirtual. This inner rigid body will be detected by sensors and regular collision tests.
 
 To get started take a look at the [Character](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Character/CharacterTest.cpp) and [CharacterVirtual](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Character/CharacterVirtualTest.cpp) examples.
 
@@ -552,7 +599,7 @@ The physics simulation is deterministic provided that:
 
 If you want cross platform determinism then please turn on the CROSS_PLATFORM_DETERMINISTIC option in CMake. This will make the library approximately 8% slower but the simulation will be deterministic regardless of:
 
-* Compiler used to compile the library (tested MSVC2022 vs clang)
+* Compiler used to compile the library (tested MSVC2022, clang, gcc and emscripten)
 * Configuration (Debug, Release or Distribution)
 * OS (tested Windows, macOS, Linux)
 * Architecture (x86 or ARM).
@@ -566,9 +613,12 @@ It is quite difficult to verify cross platform determinism, so this feature is l
 
 * Windows MSVC x86 64-bit with AVX2
 * Windows MSVC x86 32-bit with SSE2
-* macOS clang x86 64-bit with AVX
+* macOS clang ARM 64-bit with NEON
 * Linux clang x86 64-bit with AVX2
 * Linux clang ARM 64-bit with NEON
+* Linux gcc x86 64-bit with AVX2
+* Linux gcc ARM 64-bit with NEON
+* WASM emscripten running in nodejs
 
 The most important things to look out for in your own application:
 

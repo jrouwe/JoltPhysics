@@ -38,10 +38,11 @@ private:
 	static inline bool			sFourWheelDrive = false;
 	static inline bool			sAntiRollbar = true;
 	static inline bool			sLimitedSlipDifferentials = true;
+	static inline bool			sOverrideGravity = false;					///< If true, gravity is overridden to always oppose the ground normal
 	static inline float			sMaxEngineTorque = 500.0f;
 	static inline float			sClutchStrength = 10.0f;
 	static inline float			sFrontCasterAngle = 0.0f;
-	static inline float 		sFrontKingPinAngle = 0.0f;
+	static inline float			sFrontKingPinAngle = 0.0f;
 	static inline float			sFrontCamber = 0.0f;
 	static inline float			sFrontToe = 0.0f;
 	static inline float			sFrontSuspensionForwardAngle = 0.0f;
@@ -52,8 +53,8 @@ private:
 	static inline float			sFrontSuspensionDamping = 0.5f;
 	static inline float			sRearSuspensionForwardAngle = 0.0f;
 	static inline float			sRearSuspensionSidewaysAngle = 0.0f;
-	static inline float 		sRearCasterAngle = 0.0f;
-	static inline float 		sRearKingPinAngle = 0.0f;
+	static inline float			sRearCasterAngle = 0.0f;
+	static inline float			sRearKingPinAngle = 0.0f;
 	static inline float			sRearCamber = 0.0f;
 	static inline float			sRearToe = 0.0f;
 	static inline float			sRearSuspensionMinLength = 0.3f;

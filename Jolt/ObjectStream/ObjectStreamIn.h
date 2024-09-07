@@ -13,6 +13,8 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
+#ifdef JPH_OBJECT_STREAM
+
 JPH_NAMESPACE_BEGIN
 
 /// ObjectStreamIn contains all logic for reading an object from disk. It is the base
@@ -86,7 +88,7 @@ public:
 
 protected:
 	/// Constructor
-	explicit 					ObjectStreamIn(istream &inStream);
+	explicit					ObjectStreamIn(istream &inStream);
 
 	/// Determine the type and version of an object stream
 	static bool					GetInfo(istream &inStream, EStreamType &outType, int &outVersion, int &outRevision);
@@ -110,7 +112,7 @@ private:
 	struct ClassDescription
 	{
 								ClassDescription() = default;
-		explicit 				ClassDescription(const RTTI *inRTTI)					: mRTTI(inRTTI) { }
+		explicit				ClassDescription(const RTTI *inRTTI)					: mRTTI(inRTTI) { }
 
 		const RTTI *			mRTTI = nullptr;
 		Array<AttributeDescription>	mAttributes;
@@ -142,3 +144,5 @@ private:
 };
 
 JPH_NAMESPACE_END
+
+#endif // JPH_OBJECT_STREAM

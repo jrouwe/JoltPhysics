@@ -1570,7 +1570,7 @@ TEST_SUITE("PhysicsTests")
 		public:
 			bool						ShouldSaveBody(const BodyID &inBodyID) const
 			{
-				return find(mIgnoreBodies.cbegin(), mIgnoreBodies.cend(), inBodyID) == mIgnoreBodies.cend();
+				return std::find(mIgnoreBodies.cbegin(), mIgnoreBodies.cend(), inBodyID) == mIgnoreBodies.cend();
 			}
 
 			virtual bool				ShouldSaveBody(const Body &inBody) const override
@@ -1593,7 +1593,7 @@ TEST_SUITE("PhysicsTests")
 			Vec3 gravity = c.GetSystem()->GetGravity();
 			Vec3 upside_down_gravity = -gravity;
 
-  			// Create the ground.
+			// Create the ground.
 			Body &ground = c.CreateFloor();
 
 			// Create two sets of bodies that each overlap
@@ -1786,7 +1786,7 @@ TEST_SUITE("PhysicsTests")
 		shape_settings->AddShape(Vec3(-5, 0, 0), Quat::sIdentity(), box_shape);
 		shape_settings->AddShape(Vec3(0, 0, 5), Quat::sIdentity(), box_shape);
 		shape_settings->AddShape(Vec3(0, 0, -5), Quat::sIdentity(), box_shape);
-		RefConst<StaticCompoundShape> compound_shape = static_cast<const StaticCompoundShape *>(shape_settings->Create().Get().GetPtr());
+		RefConst<StaticCompoundShape> compound_shape = StaticCast<StaticCompoundShape>(shape_settings->Create().Get());
 		SubShapeID sub_shape_ids[] = {
 			compound_shape->GetSubShapeIDFromIndex(0, SubShapeIDCreator()).GetID(),
 			compound_shape->GetSubShapeIDFromIndex(1, SubShapeIDCreator()).GetID(),

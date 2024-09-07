@@ -62,8 +62,31 @@ inline const char *GetConfigurationString()
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 		"(FP Exceptions) "
 #endif
+#ifdef JPH_DEBUG_RENDERER
+		"(Debug Renderer) "
+#endif
+#ifdef JPH_PROFILE_ENABLED
+		"(Profile) "
+#endif
+#if defined(JPH_OBJECT_LAYER_BITS) && JPH_OBJECT_LAYER_BITS == 32
+		"(32-bit ObjectLayer) "
+#else
+		"(16-bit ObjectLayer) "
+#endif
+#ifdef JPH_ENABLE_ASSERTS
+		"(Assertions) "
+#endif
+#ifdef JPH_OBJECT_STREAM
+		"(ObjectStream) "
+#endif
 #ifdef JPH_DEBUG
 		"(Debug) "
+#endif
+#if defined(__cpp_rtti) && __cpp_rtti
+		"(C++ RTTI) "
+#endif
+#if defined(__cpp_exceptions) && __cpp_exceptions
+		"(C++ Exceptions) "
 #endif
 		;
 }

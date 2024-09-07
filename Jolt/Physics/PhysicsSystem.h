@@ -48,7 +48,8 @@ public:
 	void						SetBodyActivationListener(BodyActivationListener *inListener) { mBodyManager.SetBodyActivationListener(inListener); }
 	BodyActivationListener *	GetBodyActivationListener() const							{ return mBodyManager.GetBodyActivationListener(); }
 
-	/// Listener that is notified whenever a contact point between two bodies is added/updated/removed
+	/// Listener that is notified whenever a contact point between two bodies is added/updated/removed.
+	/// You can't change contact listener during PhysicsSystem::Update but it can be changed at any other time.
 	void						SetContactListener(ContactListener *inListener)				{ mContactManager.SetContactListener(inListener); }
 	ContactListener *			GetContactListener() const									{ return mContactManager.GetContactListener(); }
 
@@ -72,16 +73,16 @@ public:
 
 	/// Access to the body interface. This interface allows to to create / remove bodies and to change their properties.
 	const BodyInterface &		GetBodyInterface() const									{ return mBodyInterfaceLocking; }
-	BodyInterface &				GetBodyInterface() 											{ return mBodyInterfaceLocking; }
+	BodyInterface &				GetBodyInterface()											{ return mBodyInterfaceLocking; }
 	const BodyInterface &		GetBodyInterfaceNoLock() const								{ return mBodyInterfaceNoLock; } ///< Version that does not lock the bodies, use with great care!
-	BodyInterface & 			GetBodyInterfaceNoLock()									{ return mBodyInterfaceNoLock; } ///< Version that does not lock the bodies, use with great care!
+	BodyInterface &				GetBodyInterfaceNoLock()									{ return mBodyInterfaceNoLock; } ///< Version that does not lock the bodies, use with great care!
 
 	/// Access to the broadphase interface that allows coarse collision queries
 	const BroadPhaseQuery &		GetBroadPhaseQuery() const									{ return *mBroadPhase; }
 
 	/// Interface that allows fine collision queries against first the broad phase and then the narrow phase.
 	const NarrowPhaseQuery &	GetNarrowPhaseQuery() const									{ return mNarrowPhaseQueryLocking; }
-	const NarrowPhaseQuery & 	GetNarrowPhaseQueryNoLock() const							{ return mNarrowPhaseQueryNoLock; } ///< Version that does not lock the bodies, use with great care!
+	const NarrowPhaseQuery &	GetNarrowPhaseQueryNoLock() const							{ return mNarrowPhaseQueryNoLock; } ///< Version that does not lock the bodies, use with great care!
 
 	/// Add constraint to the world
 	void						AddConstraint(Constraint *inConstraint)						{ mConstraintManager.Add(&inConstraint, 1); }
@@ -99,6 +100,11 @@ public:
 	Constraints					GetConstraints() const										{ return mConstraintManager.GetConstraints(); }
 
 	/// Optimize the broadphase, needed only if you've added many bodies prior to calling Update() for the first time.
+	/// Don't call this every frame as PhysicsSystem::Update spreads out the same work over multiple frames.
+	/// If you add many bodies through BodyInterface::AddBodiesPrepare/AddBodiesFinalize and if the bodies in a batch are
+	/// in a roughly unoccupied space (e.g. a new level section) then a call to OptimizeBroadPhase is also not needed
+	/// as batch adding creates an efficient bounding volume hierarchy.
+	/// Don't call this function while bodies are being modified from another thread or use the locking BodyInterface to modify bodies.
 	void						OptimizeBroadPhase();
 
 	/// Adds a new step listener
@@ -144,7 +150,7 @@ public:
 
 	/// Set gravity value
 	void						SetGravity(Vec3Arg inGravity)								{ mGravity = inGravity; }
-	Vec3		 				GetGravity() const											{ return mGravity; }
+	Vec3						GetGravity() const											{ return mGravity; }
 
 	/// Returns a locking interface that won't actually lock the body. Use with great care!
 	inline const BodyLockInterfaceNoLock &	GetBodyLockInterfaceNoLock() const				{ return mBodyLockInterfaceNoLock; }
@@ -288,7 +294,7 @@ private:
 	/// The soft body contact listener
 	SoftBodyContactListener *	mSoftBodyContactListener = nullptr;
 
-    /// Simulation settings
+	/// Simulation settings
 	PhysicsSettings				mPhysicsSettings;
 
 	/// The contact manager resolves all contacts during a simulation step

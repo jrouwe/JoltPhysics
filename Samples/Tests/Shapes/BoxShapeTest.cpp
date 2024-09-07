@@ -20,12 +20,9 @@ void BoxShapeTest::Initialize()
 	CreateFloor();
 
 	// Different sized boxes
-	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(20, 1, 1)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(20, 1, 1)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
-	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(2, 3, 4)), RVec3(0, 10, 10), Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body2.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(2, 3, 4)), RVec3(0, 10, 10), Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
-	Body &body3 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 0.75f, 1.0f)), RVec3(0, 10, 20), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI) * Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body3.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 0.75f, 1.0f)), RVec3(0, 10, 20), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI) * Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }

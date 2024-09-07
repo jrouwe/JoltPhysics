@@ -301,7 +301,7 @@ void Application::UpdateCamera(float inDeltaTime)
 	JPH_PROFILE_FUNCTION();
 
 	// Determine speed
-	float speed = GetWorldScale() * mWorldCamera.mFarPlane / 50.0f * inDeltaTime;
+	float speed = 20.0f * GetWorldScale() * inDeltaTime;
 	bool shift = mKeyboard->IsKeyPressed(DIK_LSHIFT) || mKeyboard->IsKeyPressed(DIK_RSHIFT);
 	bool control = mKeyboard->IsKeyPressed(DIK_LCONTROL) || mKeyboard->IsKeyPressed(DIK_RCONTROL);
 	bool alt = mKeyboard->IsKeyPressed(DIK_LALT) || mKeyboard->IsKeyPressed(DIK_RALT);

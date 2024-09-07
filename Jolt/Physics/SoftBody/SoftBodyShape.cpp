@@ -92,8 +92,8 @@ void SoftBodyShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCa
 		Vec3 x3 = vertices[f.mVertex[2]].mPosition;
 
 		// Back facing check
-		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::IgnoreBackFaces && (x2 - x1).Cross(x3 - x1).Dot(inRay.mDirection) > 0.0f)
-			return;
+		if (inRayCastSettings.mBackFaceModeTriangles == EBackFaceMode::IgnoreBackFaces && (x2 - x1).Cross(x3 - x1).Dot(inRay.mDirection) > 0.0f)
+			continue;
 
 		// Test ray against triangle
 		float fraction = RayTriangle(inRay.mOrigin, inRay.mDirection, x1, x2, x3);

@@ -14,6 +14,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h
 	${JOLT_PHYSICS_ROOT}/AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h
 	${JOLT_PHYSICS_ROOT}/Core/ARMNeon.h
+	${JOLT_PHYSICS_ROOT}/Core/Array.h
 	${JOLT_PHYSICS_ROOT}/Core/Atomics.h
 	${JOLT_PHYSICS_ROOT}/Core/ByteBuffer.h
 	${JOLT_PHYSICS_ROOT}/Core/Color.cpp
@@ -55,6 +56,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/Result.h
 	${JOLT_PHYSICS_ROOT}/Core/RTTI.cpp
 	${JOLT_PHYSICS_ROOT}/Core/RTTI.h
+	${JOLT_PHYSICS_ROOT}/Core/ScopeExit.h
 	${JOLT_PHYSICS_ROOT}/Core/Semaphore.cpp
 	${JOLT_PHYSICS_ROOT}/Core/Semaphore.h
 	${JOLT_PHYSICS_ROOT}/Core/StaticArray.h
@@ -138,29 +140,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Math/Vec8.h
 	${JOLT_PHYSICS_ROOT}/Math/Vec8.inl
 	${JOLT_PHYSICS_ROOT}/Math/Vector.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/GetPrimitiveTypeOfType.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStream.cpp
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStream.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryIn.cpp
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryIn.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryOut.cpp
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryOut.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamIn.cpp
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamIn.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamOut.cpp
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamOut.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextIn.cpp
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextIn.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextOut.cpp
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextOut.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTypes.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttribute.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttributeEnum.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttributeTyped.h
 	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableObject.cpp
 	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableObject.h
-	${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.cpp
-	${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/AllowedDOFs.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.h
@@ -277,6 +258,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/MutableCompoundShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/OffsetCenterOfMassShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/OffsetCenterOfMassShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/PlaneShape.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/PlaneShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/PolyhedronSubmergedVolumeCalculator.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/RotatedTranslatedShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/RotatedTranslatedShape.h
@@ -294,6 +277,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCapsuleShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCapsuleShape.gliffy
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCapsuleShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCylinderShape.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TaperedCylinderShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TriangleShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TriangleShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ShapeCast.h
@@ -449,6 +434,33 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterMorton.h
 )
 
+if (ENABLE_OBJECT_STREAM)
+	set(JOLT_PHYSICS_SRC_FILES
+		${JOLT_PHYSICS_SRC_FILES}
+		${JOLT_PHYSICS_ROOT}/ObjectStream/GetPrimitiveTypeOfType.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStream.cpp
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStream.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryIn.cpp
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryIn.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryOut.cpp
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryOut.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamIn.cpp
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamIn.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamOut.cpp
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamOut.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextIn.cpp
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextIn.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextOut.cpp
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextOut.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTypes.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttribute.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttributeEnum.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttributeTyped.h
+		${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.cpp
+		${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.h
+	)
+endif()
+
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	# Add natvis file
 	set(JOLT_PHYSICS_SRC_FILES ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_ROOT}/Jolt.natvis)
@@ -487,8 +499,24 @@ if (BUILD_SHARED_LIBS)
 	target_compile_definitions(Jolt PRIVATE JPH_BUILD_SHARED_LIBRARY)
 endif()
 
-target_include_directories(Jolt PUBLIC ${PHYSICS_REPO_ROOT})
-target_precompile_headers(Jolt PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
+# Use repository as include directory when building, install directory when installing
+target_include_directories(Jolt PUBLIC
+	$<BUILD_INTERFACE:${PHYSICS_REPO_ROOT}>
+	$<INSTALL_INTERFACE:include/>)
+
+# Code coverage doesn't work when using precompiled headers
+if (CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND MSVC)
+	# The Ninja Multi-Config generator errors out when selectively disabling precompiled headers for certain configurations.
+	# See: https://github.com/jrouwe/JoltPhysics/issues/1211
+	target_precompile_headers(Jolt PRIVATE "${JOLT_PHYSICS_ROOT}/Jolt.h")
+else()
+	target_precompile_headers(Jolt PRIVATE "$<$<NOT:$<CONFIG:ReleaseCoverage>>:${JOLT_PHYSICS_ROOT}/Jolt.h>")
+endif()
+
+if (NOT CPP_EXCEPTIONS_ENABLED)
+	# Disable use of exceptions in MSVC's STL
+	target_compile_definitions(Jolt PUBLIC $<$<BOOL:${MSVC}>:_HAS_EXCEPTIONS=0>)
+endif()
 
 # Set the debug/non-debug build flags
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:_DEBUG>")
@@ -507,6 +535,11 @@ if (DISABLE_CUSTOM_ALLOCATOR)
 	target_compile_definitions(Jolt PUBLIC JPH_DISABLE_CUSTOM_ALLOCATOR)
 endif()
 
+# Setting enable asserts flag
+if (USE_ASSERTS)
+	target_compile_definitions(Jolt PUBLIC JPH_ENABLE_ASSERTS)
+endif()
+
 # Setting double precision flag
 if (DOUBLE_PRECISION)
 	target_compile_definitions(Jolt PUBLIC JPH_DOUBLE_PRECISION)
@@ -520,6 +553,10 @@ endif()
 # Setting to determine number of bits in ObjectLayer
 if (OBJECT_LAYER_BITS)
 	target_compile_definitions(Jolt PUBLIC JPH_OBJECT_LAYER_BITS=${OBJECT_LAYER_BITS})
+endif()
+
+if (USE_STD_VECTOR)
+	target_compile_definitions(Jolt PUBLIC JPH_USE_STD_VECTOR)
 endif()
 
 # Setting to periodically trace broadphase stats to help determine if the broadphase layer configuration is optimal
@@ -544,6 +581,11 @@ if (PROFILER_IN_DISTRIBUTION)
 	target_compile_definitions(Jolt PUBLIC "JPH_PROFILE_ENABLED")
 elseif (PROFILER_IN_DEBUG_AND_RELEASE)
 	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug,Release,ReleaseASAN,ReleaseUBSAN>:JPH_PROFILE_ENABLED>")
+endif()
+
+# Compile the ObjectStream class and RTTI attribute information
+if (ENABLE_OBJECT_STREAM)
+	target_compile_definitions(Jolt PUBLIC JPH_OBJECT_STREAM)
 endif()
 
 # Emit the instruction set definitions to ensure that child projects use the same settings even if they override the used instruction sets (a mismatch causes link errors)
@@ -594,8 +636,19 @@ else()
 		# XCode builds for multiple architectures, we can't set global flags
 	elseif (CROSS_COMPILE_ARM OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
 		# ARM64 uses no special commandline flags
-	elseif ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
-		# x64
+	elseif (EMSCRIPTEN)
+		if (USE_WASM_SIMD)
+			# Jolt currently doesn't implement the WASM specific SIMD intrinsics so uses the SSE 4.2 intrinsics
+			# See: https://emscripten.org/docs/porting/simd.html#webassembly-simd-intrinsics
+			# Note that this does not require the browser to actually support SSE 4.2 it merely means that it can translate those instructions to WASM SIMD instructions
+			target_compile_options(Jolt PUBLIC -msimd128 -msse4.2)
+		endif()
+	elseif ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i386")
+		# x86 and x86_64
+		# On 32-bit builds we need to default to using SSE instructions, the x87 FPU instructions have higher intermediate precision
+		# which will cause problems in the collision detection code (the effect is similar to leaving FMA on, search for
+		# JPH_PRECISE_MATH_ON for the locations where this is a problem).
+
 		if (USE_AVX512)
 			target_compile_options(Jolt PUBLIC -mavx512f -mavx512vl -mavx512dq -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c)
 		elseif (USE_AVX2)
@@ -622,13 +675,21 @@ else()
 			target_compile_options(Jolt PUBLIC -mfma)
 		endif()
 
-		# On 32-bit builds we need to default to using SSE instructions, the x87 FPU instructions have higher intermediate precision
-		# which will cause problems in the collision detection code (the effect is similar to leaving FMA on, search for
-		# JPH_PRECISE_MATH_ON for the locations where this is a problem).
 		if (NOT MSVC)
 			target_compile_options(Jolt PUBLIC -mfpmath=sse)
 		endif()
 
 		EMIT_X86_INSTRUCTION_SET_DEFINITIONS()
 	endif()
+endif()
+
+# On Unix flavors we need the pthread library
+if (NOT ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows") AND NOT EMSCRIPTEN)
+	target_compile_options(Jolt PUBLIC -pthread)
+endif()
+
+if (EMSCRIPTEN)
+	# We need more than the default 64KB stack and 16MB memory
+	# Also disable warning: running limited binaryen optimizations because DWARF info requested (or indirectly required)
+	target_link_options(Jolt PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=134217728 -Wno-limited-postlink-optimizations)
 endif()

@@ -4,8 +4,8 @@
 
 #include <Jolt/Jolt.h>
 
-#include <Jolt/Physics/Constraints/SwingTwistConstraint.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Physics/Constraints/SwingTwistConstraint.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/Body/BodyLockMulti.h>
 #include <Jolt/Physics/Collision/GroupFilterTable.h>
@@ -341,7 +341,7 @@ RagdollSettings::RagdollResult RagdollSettings::sRestoreFromBinaryState(StreamIn
 				result.SetError(constraint_result.GetError());
 				return result;
 			}
-			p.mToParent = DynamicCast<TwoBodyConstraintSettings>(constraint_result.Get().GetPtr());
+			p.mToParent = DynamicCast<TwoBodyConstraintSettings>(constraint_result.Get());
 		}
 	}
 
@@ -361,7 +361,7 @@ RagdollSettings::RagdollResult RagdollSettings::sRestoreFromBinaryState(StreamIn
 			result.SetError(constraint_result.GetError());
 			return result;
 		}
-		c.mConstraint = DynamicCast<TwoBodyConstraintSettings>(constraint_result.Get().GetPtr());
+		c.mConstraint = DynamicCast<TwoBodyConstraintSettings>(constraint_result.Get());
 	}
 
 	// Create mapping tables

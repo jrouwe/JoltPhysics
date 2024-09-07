@@ -49,6 +49,7 @@ bool Factory::Register(const RTTI *inRTTI)
 		if (!Register(inRTTI->GetBaseClass(i)))
 			return false;
 
+#ifdef JPH_OBJECT_STREAM
 	// Register attribute classes
 	for (int i = 0; i < inRTTI->GetAttributeCount(); ++i)
 	{
@@ -56,6 +57,7 @@ bool Factory::Register(const RTTI *inRTTI)
 		if (rtti != nullptr && !Register(rtti))
 			return false;
 	}
+#endif // JPH_OBJECT_STREAM
 
 	return true;
 }

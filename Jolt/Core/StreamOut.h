@@ -22,28 +22,39 @@ public:
 	virtual bool		IsFailed() const = 0;
 
 	/// Write a primitive (e.g. float, int, etc.) to the binary stream
-	template <class T>
+	template <class T, std::enable_if_t<std::is_trivially_copyable_v<T>, bool> = true>
 	void				Write(const T &inT)
 	{
 		WriteBytes(&inT, sizeof(inT));
 	}
 
 	/// Write a vector of primitives to the binary stream
-	template <class T, class A>
-	void				Write(const std::vector<T, A> &inT)
+	template <class T, class A, std::enable_if_t<std::is_trivially_copyable_v<T>, bool> = true>
+	void				Write(const Array<T, A> &inT)
 	{
-		typename Array<T>::size_type len = inT.size();
+		uint32 len = uint32(inT.size());
 		Write(len);
 		if (!IsFailed())
-			for (typename Array<T>::size_type i = 0; i < len; ++i)
-				Write(inT[i]);
+		{
+			if constexpr (std::is_same_v<T, Vec3> || std::is_same_v<T, DVec3> || std::is_same_v<T, DMat44>)
+			{
+				// These types have unused components that we don't want to write
+				for (typename Array<T, A>::size_type i = 0; i < len; ++i)
+					Write(inT[i]);
+			}
+			else
+			{
+				// Write all elements at once
+				WriteBytes(inT.data(), len * sizeof(T));
+			}
+		}
 	}
 
 	/// Write a string to the binary stream (writes the number of characters and then the characters)
 	template <class Type, class Traits, class Allocator>
 	void				Write(const std::basic_string<Type, Traits, Allocator> &inString)
 	{
-		typename std::basic_string<Type, Traits, Allocator>::size_type len = inString.size();
+		uint32 len = uint32(inString.size());
 		Write(len);
 		if (!IsFailed())
 			WriteBytes(inString.data(), len * sizeof(Type));
@@ -51,12 +62,12 @@ public:
 
 	/// Write a vector of primitives to the binary stream using a custom write function
 	template <class T, class A, typename F>
-	void				Write(const std::vector<T, A> &inT, const F &inWriteElement)
+	void				Write(const Array<T, A> &inT, const F &inWriteElement)
 	{
-		typename Array<T>::size_type len = inT.size();
+		uint32 len = uint32(inT.size());
 		Write(len);
 		if (!IsFailed())
-			for (typename Array<T>::size_type i = 0; i < len; ++i)
+			for (typename Array<T, A>::size_type i = 0; i < len; ++i)
 				inWriteElement(inT[i], *this);
 	}
 

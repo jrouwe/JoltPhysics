@@ -44,12 +44,19 @@ JPH_IMPLEMENT_SERIALIZABLE_OUTSIDE_CLASS(Triangle)
 {
 	JPH_ADD_ATTRIBUTE(Triangle, mV)
 	JPH_ADD_ATTRIBUTE(Triangle, mMaterialIndex)
+	JPH_ADD_ATTRIBUTE(Triangle, mUserData)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_OUTSIDE_CLASS(IndexedTriangle)
 {
 	JPH_ADD_ATTRIBUTE(IndexedTriangle, mIdx)
 	JPH_ADD_ATTRIBUTE(IndexedTriangle, mMaterialIndex)
+	JPH_ADD_ATTRIBUTE(IndexedTriangle, mUserData)
+}
+
+JPH_IMPLEMENT_SERIALIZABLE_OUTSIDE_CLASS(Plane)
+{
+	JPH_ADD_ATTRIBUTE(Plane, mNormalAndConstant)
 }
 
 JPH_NAMESPACE_END

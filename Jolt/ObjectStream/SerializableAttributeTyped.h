@@ -8,6 +8,8 @@
 #include <Jolt/ObjectStream/GetPrimitiveTypeOfType.h>
 #include <Jolt/ObjectStream/ObjectStream.h>
 
+#ifdef JPH_OBJECT_STREAM
+
 JPH_NAMESPACE_BEGIN
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -49,3 +51,10 @@ inline void AddSerializableAttributeTyped(RTTI &inRTTI, uint inOffset, const cha
 	JPH_ADD_ATTRIBUTE_WITH_ALIAS(class_name, member_name, #member_name)
 
 JPH_NAMESPACE_END
+
+#else
+
+#define JPH_ADD_ATTRIBUTE_WITH_ALIAS(...)
+#define JPH_ADD_ATTRIBUTE(...)
+
+#endif // JPH_OBJECT_STREAM

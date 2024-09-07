@@ -9,6 +9,20 @@
 
 TEST_SUITE("QuatTests")
 {
+	TEST_CASE("TestQuatSetXYZW")
+	{
+		Quat q(0, 0, 0, 0);
+		CHECK(q == Quat(0, 0, 0, 0));
+		q.SetX(1);
+		q.SetY(2);
+		q.SetZ(3);
+		q.SetW(4);
+		CHECK(q == Quat(1, 2, 3, 4));
+
+		q.Set(4, 3, 2, 1);
+		CHECK(q == Quat(4, 3, 2, 1));
+	}
+
 	TEST_CASE("TestQuatEqual")
 	{
 		CHECK(Quat(1, 2, 3, 4) == Quat(1, 2, 3, 4));

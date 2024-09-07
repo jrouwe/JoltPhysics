@@ -14,6 +14,8 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
+#ifdef JPH_OBJECT_STREAM
+
 JPH_NAMESPACE_BEGIN
 
 template <class T> using Queue = std::queue<T, std::deque<T, STLAllocator<T>>>;
@@ -71,7 +73,7 @@ protected:
 	static ObjectStreamOut *	Open(EStreamType inType, ostream &inStream);
 
 	/// Constructor
-	explicit 					ObjectStreamOut(ostream &inStream);
+	explicit					ObjectStreamOut(ostream &inStream);
 
 	ostream &					mStream;
 
@@ -98,3 +100,5 @@ private:
 };
 
 JPH_NAMESPACE_END
+
+#endif // JPH_OBJECT_STREAM

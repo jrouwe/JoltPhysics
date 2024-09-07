@@ -54,6 +54,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaxTrianglesPerLeaf)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mActiveEdgeCosThresholdAngle)
+	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mPerTriangleUserData)
 }
 
 // Codecs this mesh shape is using
@@ -199,7 +200,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	// Convert to buffer
 	AABBTreeToBuffer<TriangleCodec, NodeCodec> buffer;
 	const char *error = nullptr;
-	if (!buffer.Convert(inSettings.mTriangleVertices, root, error))
+	if (!buffer.Convert(inSettings.mTriangleVertices, root, inSettings.mPerTriangleUserData, error))
 	{
 		outResult.SetError(error);
 		delete root;
@@ -392,7 +393,7 @@ Vec3 MeshShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocal
 	const TriangleCodec::DecodingContext triangle_ctx(sGetTriangleHeader(mTree));
 	triangle_ctx.GetTriangle(block_start, triangle_idx, v1, v2, v3);
 
-	//  Calculate normal
+	// Calculate normal
 	return (v3 - v2).Cross(v1 - v2).Normalized();
 }
 
@@ -588,7 +589,7 @@ void MeshShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransfor
 	{
 		struct Visitor
 		{
-			JPH_INLINE 			Visitor(DebugRenderer *inRenderer, RMat44Arg inTransform) :
+			JPH_INLINE			Visitor(DebugRenderer *inRenderer, RMat44Arg inTransform) :
 				mRenderer(inRenderer),
 				mTransform(inTransform)
 			{
@@ -772,7 +773,7 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 	};
 
 	Visitor visitor(ioCollector);
-	visitor.mBackFaceMode = inRayCastSettings.mBackFaceMode;
+	visitor.mBackFaceMode = inRayCastSettings.mBackFaceModeTriangles;
 	visitor.mRayOrigin = inRay.mOrigin;
 	visitor.mRayDirection = inRay.mDirection;
 	visitor.mRayInvDirection.Set(inRay.mDirection);
@@ -938,7 +939,7 @@ void MeshShape::sCastSphereVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 
 struct MeshShape::MSGetTrianglesContext
 {
-	JPH_INLINE 		MSGetTrianglesContext(const MeshShape *inShape, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) :
+	JPH_INLINE		MSGetTrianglesContext(const MeshShape *inShape, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) :
 		mDecodeCtx(sGetNodeHeader(inShape->mTree)),
 		mShape(inShape),
 		mLocalBox(Mat44::sInverseRotationTranslation(inRotation, inPositionCOM), inBox),
@@ -1219,6 +1220,18 @@ Shape::Stats MeshShape::GetStats() const
 	WalkTree(visitor);
 
 	return Stats(sizeof(*this) + mMaterials.size() * sizeof(Ref<PhysicsMaterial>) + mTree.size() * sizeof(uint8), visitor.mNumTriangles);
+}
+
+uint32 MeshShape::GetTriangleUserData(const SubShapeID &inSubShapeID) const
+{
+	// Decode ID
+	const void *block_start;
+	uint32 triangle_idx;
+	DecodeSubShapeID(inSubShapeID, block_start, triangle_idx);
+
+	// Decode triangle
+	const TriangleCodec::DecodingContext triangle_ctx(sGetTriangleHeader(mTree));
+	return triangle_ctx.GetUserData(block_start, triangle_idx);
 }
 
 void MeshShape::sRegister()

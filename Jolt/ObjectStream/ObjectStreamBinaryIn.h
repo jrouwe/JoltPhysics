@@ -6,6 +6,8 @@
 
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 
+#ifdef JPH_OBJECT_STREAM
+
 JPH_NAMESPACE_BEGIN
 
 /// Implementation of ObjectStream binary input stream.
@@ -15,7 +17,7 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor
-	explicit 					ObjectStreamBinaryIn(istream &inStream);
+	explicit					ObjectStreamBinaryIn(istream &inStream);
 
 	///@name Input type specific operations
 	virtual bool				ReadDataType(EOSDataType &outType) override;
@@ -49,3 +51,5 @@ private:
 };
 
 JPH_NAMESPACE_END
+
+#endif // JPH_OBJECT_STREAM

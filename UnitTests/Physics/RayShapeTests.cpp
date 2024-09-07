@@ -12,6 +12,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
@@ -100,7 +101,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::IgnoreBackFaces);
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -136,7 +137,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -183,7 +184,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::IgnoreBackFaces);
 			settings.mTreatConvexAsSolid = false;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -220,7 +221,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 			settings.mTreatConvexAsSolid = false;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -293,7 +294,7 @@ TEST_SUITE("RayShapeTests")
 			if (inExpectedFraction1 != FLT_MAX)
 			{
 				CHECK(system.GetNarrowPhaseQuery().CastRay(RRayCast(ray), hit));
-				CHECK_APPROX_EQUAL(hit.mFraction, inExpectedFraction1, 2.0e-5f);
+				CHECK_APPROX_EQUAL(hit.mFraction, inExpectedFraction1, 2.5e-5f);
 			}
 			else
 			{
@@ -318,7 +319,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::IgnoreBackFaces);
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -327,7 +328,7 @@ TEST_SUITE("RayShapeTests")
 			if (inExpectedFraction1 != FLT_MAX)
 			{
 				CHECK(collector.mHits.size() == 1);
-				CHECK_APPROX_EQUAL(collector.mHits[0].mFraction, inExpectedFraction1, 2.0e-5f);
+				CHECK_APPROX_EQUAL(collector.mHits[0].mFraction, inExpectedFraction1, 2.5e-5f);
 			}
 			else
 			{
@@ -352,7 +353,7 @@ TEST_SUITE("RayShapeTests")
 
 			// Ray cast settings
 			RayCastSettings settings;
-			settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+			settings.SetBackFaceMode(EBackFaceMode::CollideWithBackFaces);
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
@@ -362,7 +363,7 @@ TEST_SUITE("RayShapeTests")
 			if (inExpectedFraction1 != FLT_MAX)
 			{
 				CHECK(collector.mHits.size() >= 1);
-				CHECK_APPROX_EQUAL(collector.mHits[0].mFraction, inExpectedFraction1, 2.0e-5f);
+				CHECK_APPROX_EQUAL(collector.mHits[0].mFraction, inExpectedFraction1, 2.5e-5f);
 			}
 			else
 			{
@@ -373,7 +374,7 @@ TEST_SUITE("RayShapeTests")
 			if (inExpectedFraction2 != FLT_MAX)
 			{
 				CHECK(collector.mHits.size() >= 2);
-				CHECK_APPROX_EQUAL(collector.mHits[1].mFraction, inExpectedFraction2, 2.0e-5f);
+				CHECK_APPROX_EQUAL(collector.mHits[1].mFraction, inExpectedFraction2, 2.5e-5f);
 			}
 			else
 			{
@@ -468,6 +469,25 @@ TEST_SUITE("RayShapeTests")
 		TestRayHelper(shape, Vec3(-2, 0, 0), Vec3(2, 0, 0));
 		TestRayHelper(shape, Vec3(0, -4, 0), Vec3(0, 4, 0));
 		TestRayHelper(shape, Vec3(0, 0, -2), Vec3(0, 0, 2));
+	}
+
+	TEST_CASE("TestTaperedCylinderShapeRay")
+	{
+		// Create tapered cylinder shape
+		Ref<Shape> shape = TaperedCylinderShapeSettings(4, 1, 3).Create().Get();
+
+		// Ray through origin
+		TestRayHelper(shape, Vec3(-2, 0, 0), Vec3(2, 0, 0));
+		TestRayHelper(shape, Vec3(0, -4, 0), Vec3(0, 4, 0));
+		TestRayHelper(shape, Vec3(0, 0, -2), Vec3(0, 0, 2));
+
+		// Ray halfway to the top
+		TestRayHelper(shape, Vec3(-1.5f, 2, 0), Vec3(1.5f, 2, 0));
+		TestRayHelper(shape, Vec3(0, 2, -1.5f), Vec3(0, 2, 1.5f));
+
+		// Ray halfway to the bottom
+		TestRayHelper(shape, Vec3(-2.5f, -2, 0), Vec3(2.5f, -2, 0));
+		TestRayHelper(shape, Vec3(0, -2, -2.5f), Vec3(0, -2, 2.5f));
 	}
 
 	TEST_CASE("TestScaledShapeRay")

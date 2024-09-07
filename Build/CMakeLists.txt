@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 project(JoltPhysics CXX)
+
+# When turning this option on, the library will be compiled using assertions. By default asserts are enabled in Debug build.
+option(USE_ASSERTS "Enable asserts" OFF)
 
 # When turning this option on, the library will be compiled using doubles for positions. This allows for much bigger worlds.
 option(DOUBLE_PRECISION "Use double precision math" OFF)
@@ -30,6 +33,14 @@ option(INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimizations" ON)
 # Note that this currently only works using MSVC. Clang turns Float2 into a SIMD vector sometimes causing floating point exceptions (the option is ignored).
 option(FLOATING_POINT_EXCEPTIONS_ENABLED "Enable floating point exceptions" ON)
 
+# When turning this on, the library will be compiled with C++ exceptions enabled.
+# This adds some overhead and Jolt doesn't use exceptions so by default it is off.
+option(CPP_EXCEPTIONS_ENABLED "Enable C++ exceptions" OFF)
+
+# When turning this on, the library will be compiled with C++ RTTI enabled.
+# This adds some overhead and Jolt doesn't use RTTI so by default it is off.
+option(CPP_RTTI_ENABLED "Enable C++ RTTI" OFF)
+
 # Number of bits to use in ObjectLayer. Can be 16 or 32.
 option(OBJECT_LAYER_BITS "Number of bits in ObjectLayer" 16)
 
@@ -43,6 +54,10 @@ option(USE_LZCNT "Enable LZCNT" ON)
 option(USE_TZCNT "Enable TZCNT" ON)
 option(USE_F16C "Enable F16C" ON)
 option(USE_FMADD "Enable FMADD" ON)
+
+# Enable SIMD for the WASM build. Note that this is currently off by default since not all browsers support this.
+# See: https://caniuse.com/?search=WebAssembly%20SIMD (Safari got support in March 2023 and was the last major browser to get support).
+option(USE_WASM_SIMD "Enable SIMD for WASM" OFF)
 
 # Enable all warnings
 option(ENABLE_ALL_WARNINGS "Enable all warnings and warnings as errors" ON)
@@ -69,6 +84,15 @@ option(PROFILER_IN_DISTRIBUTION "Enable the profiler in all builds" OFF)
 
 # Setting this option will force the library to use malloc/free instead of allowing the user to override the memory allocator
 option(DISABLE_CUSTOM_ALLOCATOR "Disable support for a custom memory allocator" OFF)
+
+# Setting this option will force the library to use the STL vector instead of the custom Array class
+option(USE_STD_VECTOR "Use std::vector instead of own Array class" OFF)
+
+# Setting this option will compile the ObjectStream class and RTTI attribute information
+option(ENABLE_OBJECT_STREAM "Compile the ObjectStream class and RTTI attribute information" ON)
+
+# Enable installation
+option(ENABLE_INSTALL "Generate installation target"  ON)
 
 include(CMakeDependentOption)
 
@@ -110,21 +134,31 @@ if (MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zi")
 	endif()
 
-	# Remove any existing compiler flag that enables RTTI
-	string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+	if (NOT CPP_RTTI_ENABLED)
+		# Set compiler flag for disabling RTTI
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+	else()
+		# Set compiler flag for enabling RTTI
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR")
+	endif()
 
-	# Set compiler flag for disabling RTTI
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+	if (NOT CPP_EXCEPTIONS_ENABLED)
+		# Remove any existing compiler flag that enables exceptions
+		string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-	if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")
-		# On ARM the exception handling flag is missing which causes warnings
+		# Disable warning about STL and compiler-generated types using noexcept when exceptions are disabled
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4577")
+	else()
+		# Enable exceptions
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 	endif()
 
 	# Set compiler flags for various configurations
-	set(CMAKE_CXX_FLAGS_DEBUG "/GS /Od /Ob0 /RTC1")
-	set(CMAKE_CXX_FLAGS_RELEASE "/GS- /Gy /O2 /Oi /Ot")
-	set(CMAKE_CXX_FLAGS_DISTRIBUTION "/GS- /Gy /O2 /Oi /Ot")
+	if (OVERRIDE_CXX_FLAGS)
+		set(CMAKE_CXX_FLAGS_DEBUG "/GS /Od /Ob0 /RTC1")
+		set(CMAKE_CXX_FLAGS_RELEASE "/GS- /Gy /O2 /Oi /Ot")
+	endif()
+	set(CMAKE_CXX_FLAGS_DISTRIBUTION "${CMAKE_CXX_FLAGS_RELEASE}")
 	set(CMAKE_CXX_FLAGS_RELEASEASAN "-fsanitize=address /Od")
 	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "-fsanitize=undefined,implicit-conversion,float-divide-by-zero,local-bounds -fno-sanitize-recover=all")
 	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-fprofile-instr-generate -fcoverage-mapping")
@@ -158,6 +192,22 @@ else()
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 	endif()
 
+	if (NOT CPP_RTTI_ENABLED)
+		# Set compiler flag for disabling RTTI
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+	else()
+		# Set compiler flag for enabling RTTI
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frtti")
+	endif()
+
+	if (NOT CPP_EXCEPTIONS_ENABLED)
+		# Set compiler flag for disabling exception-handling
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+	else()
+		# Set compiler flag for enabling exception-handling
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
+	endif()
+
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		# Also disable -Wstringop-overflow or it will generate false positives that can't be disabled from code when link-time optimizations are enabled
 		# Also turn off automatic fused multiply add contractions, there doesn't seem to be a way to do this selectively through the macro JPH_PRECISE_MATH_OFF
@@ -170,16 +220,16 @@ else()
 		if (CMAKE_CXX_COMPILER_VERSION LESS 14 OR CROSS_PLATFORM_DETERMINISTIC)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-contract=off")
 		endif()
+
+		# Cross compiler flags
+		if (CROSS_COMPILE_ARM)
+			set(CMAKE_CXX_FLAGS "--target=aarch64-linux-gnu ${CMAKE_CXX_FLAGS}")
+		endif()
 	endif()
 
 	# See https://github.com/jrouwe/JoltPhysics/issues/922. When compiling with DOUBLE_PRECISION=YES and CMAKE_OSX_DEPLOYMENT_TARGET=10.12 clang triggers a warning that we silence here.
 	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin" AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-allocation")
-	endif()
-
-	# Cross compiler flags
-	if (CROSS_COMPILE_ARM)
-		set(CMAKE_CXX_FLAGS "--target=aarch64-linux-gnu ${CMAKE_CXX_FLAGS}")
 	endif()
 
 	# Set compiler flags for various configurations
@@ -191,11 +241,6 @@ else()
 	set(CMAKE_CXX_FLAGS_RELEASEASAN "-fsanitize=address")
 	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "-fsanitize=undefined,implicit-conversion,float-divide-by-zero,local-bounds -fno-sanitize-recover=all")
 	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-O0 -DJPH_NO_FORCE_INLINE -fprofile-instr-generate -fcoverage-mapping")
-
-	# Set linker flags
-	if (NOT ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows"))
-		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
-	endif()
 endif()
 
 # Set linker flags
@@ -232,14 +277,27 @@ if (XCODE)
 endif()
 
 # Install Jolt library and includes
-install(TARGETS Jolt DESTINATION lib)
-foreach(SRC_FILE ${JOLT_PHYSICS_SRC_FILES})
-	string(REPLACE ${PHYSICS_REPO_ROOT} "" RELATIVE_SRC_FILE ${SRC_FILE})
-	get_filename_component(DESTINATION_PATH ${RELATIVE_SRC_FILE} DIRECTORY)
-	if (NOT RELATIVE_SRC_FILE MATCHES "\.cpp")
-		install(FILES ${SRC_FILE} DESTINATION include/${DESTINATION_PATH})
-	endif()
-endforeach()
+if (ENABLE_INSTALL)
+	install(TARGETS Jolt
+		EXPORT JoltExport
+		DESTINATION lib)
+	foreach(SRC_FILE ${JOLT_PHYSICS_SRC_FILES})
+		string(REPLACE ${PHYSICS_REPO_ROOT} "" RELATIVE_SRC_FILE ${SRC_FILE})
+		get_filename_component(DESTINATION_PATH ${RELATIVE_SRC_FILE} DIRECTORY)
+		if (NOT RELATIVE_SRC_FILE MATCHES "\.cpp")
+			install(FILES ${SRC_FILE} DESTINATION include/${DESTINATION_PATH})
+		endif()
+	endforeach()
+
+	# Export Jolt library
+	export(TARGETS Jolt
+		NAMESPACE Jolt::
+		FILE JoltConfig.cmake)
+	install(EXPORT JoltExport
+		DESTINATION lib/cmake/Jolt/
+		NAMESPACE Jolt::
+		FILE JoltConfig.cmake)
+endif()
 
 # Check if we're the root CMakeLists.txt, if not we are included by another CMake file and we should disable everything except for the main library
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -256,15 +314,26 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		add_executable(UnitTests ${UNIT_TESTS_SRC_FILES})
 		target_include_directories(UnitTests PUBLIC ${UNIT_TESTS_ROOT})
 		target_link_libraries(UnitTests LINK_PUBLIC Jolt)
-		target_precompile_headers(UnitTests PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
+
+		# Code coverage doesn't work when using precompiled headers
+		if (CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND MSVC)
+			# The Ninja Multi-Config generator errors out when selectively disabling precompiled headers for certain configurations.
+			# See: https://github.com/jrouwe/JoltPhysics/issues/1211
+			target_precompile_headers(UnitTests PRIVATE "${JOLT_PHYSICS_ROOT}/Jolt.h")
+		else()
+			target_precompile_headers(UnitTests PRIVATE "$<$<NOT:$<CONFIG:ReleaseCoverage>>:${JOLT_PHYSICS_ROOT}/Jolt.h>")
+		endif()
+
 		if (MSVC)
 			target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
 		endif()
+
 		if (IOS)
 			# Set the bundle information
 			set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/UnitTestsInfo.plist")
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
 		endif()
+
 		if (XCODE)
 			# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
@@ -296,6 +365,12 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			target_link_libraries(PerformanceTest LINK_PUBLIC Jolt)
 			if (MSVC)
 				target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
+			endif()
+			if (EMSCRIPTEN)
+				# Embed the assets for the RagdollScene
+				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/Human.tof@/Assets/Human.tof")
+				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose1.tof@/Assets/Human/dead_pose1.tof")
+				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/terrain2.bof@/Assets/terrain2.bof")
 			endif()
 			set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 

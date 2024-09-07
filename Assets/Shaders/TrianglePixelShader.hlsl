@@ -13,9 +13,9 @@ cbuffer PixelShaderConstantBuffer : register(b1)
 
 struct PS_INPUT
 {
-    float4 Position  : SV_POSITION; // interpolated vertex position
-    float3 Normal	 : TEXCOORD0;
-	float3 WorldPos  : TEXCOORD1;
+	float4 Position	 : SV_POSITION; // interpolated vertex position
+	float3 Normal	 : TEXCOORD0;
+	float3 WorldPos	 : TEXCOORD1;
 	float2 Tex		 : TEXCOORD2;
 	float4 PositionL : TEXCOORD3; // interpolated vertex position in light space
 	float4 Color	 : COLOR0;
@@ -23,7 +23,7 @@ struct PS_INPUT
 
 struct PS_OUTPUT
 {
-    float4 RGBColor : SV_TARGET;
+	float4 RGBColor : SV_TARGET;
 };
 
 PS_OUTPUT main(PS_INPUT input)
@@ -115,7 +115,7 @@ PS_OUTPUT main(PS_INPUT input)
 	darken_factor = lerp(darken_factor, 0.75, clamp(5.0 * texel_distance - 1.5, 0.0, 1.0));
 
 	// Calculate color
-    PS_OUTPUT output;
+	PS_OUTPUT output;
 	output.RGBColor = float4(saturate((AmbientFactor + diffuse * shadow_factor) * darken_factor * DiffuseColor + SpecularColor * specular * shadow_factor), 1);
-    return output;
+	return output;
 }

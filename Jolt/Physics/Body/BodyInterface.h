@@ -83,10 +83,12 @@ public:
 	/// @param outBodies If not null on input, this will contain a list of body pointers corresponding to inBodyIDs that can be destroyed afterwards (caller assumes ownership over these).
 	void						UnassignBodyIDs(const BodyID *inBodyIDs, int inNumber, Body **outBodies);
 
-	/// Destroy a body
+	/// Destroy a body.
+	/// Make sure that you remove the body from the physics system using BodyInterface::RemoveBody before calling this function.
 	void						DestroyBody(const BodyID &inBodyID);
 
 	/// Destroy multiple bodies
+	/// Make sure that you remove the bodies from the physics system using BodyInterface::RemoveBody before calling this function.
 	void						DestroyBodies(const BodyID *inBodyIDs, int inNumber);
 
 	/// Add body to the physics system.
@@ -109,15 +111,28 @@ public:
 	/// @return Created body ID or an invalid ID when out of bodies
 	BodyID						CreateAndAddSoftBody(const SoftBodyCreationSettings &inSettings, EActivation inActivationMode);
 
-	/// Broadphase add state handle, used to keep track of a batch while adding to the broadphase.
+	/// Add state handle, used to keep track of a batch of bodies while adding them to the PhysicsSystem.
 	using AddState = void *;
 
-	///@name Batch adding interface, see Broadphase for further documentation.
-	/// Note that ioBodies array must be kept constant while the add is in progress.
+	///@name Batch adding interface
 	///@{
+
+	/// Prepare adding inNumber bodies at ioBodies to the PhysicsSystem, returns a handle that should be used in AddBodiesFinalize/Abort.
+	/// This can be done on a background thread without influencing the PhysicsSystem.
+	/// ioBodies may be shuffled around by this function and should be kept that way until AddBodiesFinalize/Abort is called.
 	AddState					AddBodiesPrepare(BodyID *ioBodies, int inNumber);
+
+	/// Finalize adding bodies to the PhysicsSystem, supply the return value of AddBodiesPrepare in inAddState.
+	/// Please ensure that the ioBodies array passed to AddBodiesPrepare is unmodified and passed again to this function.
 	void						AddBodiesFinalize(BodyID *ioBodies, int inNumber, AddState inAddState, EActivation inActivationMode);
+
+	/// Abort adding bodies to the PhysicsSystem, supply the return value of AddBodiesPrepare in inAddState.
+	/// This can be done on a background thread without influencing the PhysicsSystem.
+	/// Please ensure that the ioBodies array passed to AddBodiesPrepare is unmodified and passed again to this function.
 	void						AddBodiesAbort(BodyID *ioBodies, int inNumber, AddState inAddState);
+
+	/// Remove inNumber bodies in ioBodies from the PhysicsSystem.
+	/// ioBodies may be shuffled around by this function.
 	void						RemoveBodies(BodyID *ioBodies, int inNumber);
 	///@}
 
@@ -129,6 +144,7 @@ public:
 	void						DeactivateBody(const BodyID &inBodyID);
 	void						DeactivateBodies(const BodyID *inBodyIDs, int inNumber);
 	bool						IsActive(const BodyID &inBodyID) const;
+	void						ResetSleepTimer(const BodyID &inBodyID);
 	///@}
 
 	/// Create a two body constraint
@@ -199,10 +215,10 @@ public:
 
 	///@name Add forces to the body
 	///@{
-	void						AddForce(const BodyID &inBodyID, Vec3Arg inForce); ///< See Body::AddForce
-	void						AddForce(const BodyID &inBodyID, Vec3Arg inForce, RVec3Arg inPoint); ///< Applied at inPoint
-	void						AddTorque(const BodyID &inBodyID, Vec3Arg inTorque); ///< See Body::AddTorque
-	void						AddForceAndTorque(const BodyID &inBodyID, Vec3Arg inForce, Vec3Arg inTorque); ///< A combination of Body::AddForce and Body::AddTorque
+	void						AddForce(const BodyID &inBodyID, Vec3Arg inForce, EActivation inActivationMode = EActivation::Activate); ///< See Body::AddForce
+	void						AddForce(const BodyID &inBodyID, Vec3Arg inForce, RVec3Arg inPoint, EActivation inActivationMode = EActivation::Activate); ///< Applied at inPoint
+	void						AddTorque(const BodyID &inBodyID, Vec3Arg inTorque, EActivation inActivationMode = EActivation::Activate); ///< See Body::AddTorque
+	void						AddForceAndTorque(const BodyID &inBodyID, Vec3Arg inForce, Vec3Arg inTorque, EActivation inActivationMode = EActivation::Activate); ///< A combination of Body::AddForce and Body::AddTorque
 	///@}
 
 	///@name Add an impulse to the body
@@ -271,6 +287,9 @@ public:
 	void						InvalidateContactCache(const BodyID &inBodyID);
 
 private:
+	/// Helper function to activate a single body
+	JPH_INLINE void				ActivateBodyInternal(Body &ioBody) const;
+
 	BodyLockInterface *			mBodyLockInterface = nullptr;
 	BodyManager *				mBodyManager = nullptr;
 	BroadPhase *				mBroadPhase = nullptr;

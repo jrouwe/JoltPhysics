@@ -16,4 +16,4 @@ echo Generating Makefile for build type \"$BUILD_TYPE\" in folder \"$BUILD_DIR\"
 
 cmake -S . -B $BUILD_DIR -DCMAKE_TOOLCHAIN_FILE=mingw-w64-x86_64.cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE "${@}"
 
-echo Compile by running \"cmake --build $BUILD_DIR -j 8\"
+echo Compile by running \"cmake --build $BUILD_DIR -j $(nproc)\"

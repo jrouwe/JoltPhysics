@@ -142,7 +142,7 @@ public:
 		JobHandle			mStartNextStep;											///< Job that kicks the next step (empty for the last step)
 	};
 
-	using Steps = std::vector<Step, STLTempAllocator<Step>>;
+	using Steps = Array<Step, STLTempAllocator<Step>>;
 
 	/// Maximum amount of concurrent jobs on this machine
 	int						GetMaxConcurrency() const								{ const int max_concurrency = PhysicsUpdateContext::cMaxConcurrency; return min(max_concurrency, mJobSystem->GetMaxConcurrency()); } ///< Need to put max concurrency in temp var as min requires a reference

@@ -4,10 +4,10 @@
 
 #include <Jolt/Jolt.h>
 
+#include <Jolt/Physics/Character/Character.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
-#include <Jolt/Physics/Character/Character.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
@@ -35,6 +35,7 @@ Character::Character(const CharacterSettings *inSettings, RVec3Arg inPosition, Q
 	// Construct rigid body
 	BodyCreationSettings settings(mShape, inPosition, inRotation, EMotionType::Dynamic, mLayer);
 	settings.mAllowedDOFs = EAllowedDOFs::TranslationX | EAllowedDOFs::TranslationY | EAllowedDOFs::TranslationZ;
+	settings.mEnhancedInternalEdgeRemoval = inSettings->mEnhancedInternalEdgeRemoval;
 	settings.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
 	settings.mMassPropertiesOverride.mMass = inSettings->mMass;
 	settings.mFriction = inSettings->mFriction;
@@ -312,6 +313,11 @@ bool Character::SetShape(const Shape *inShape, float inMaxPenetrationDepth, bool
 	mShape = inShape;
 	sGetBodyInterface(mSystem, inLockBodies).SetShape(mBodyID, mShape, false, EActivation::Activate);
 	return true;
+}
+
+TransformedShape Character::GetTransformedShape(bool inLockBodies) const
+{
+	return sGetBodyInterface(mSystem, inLockBodies).GetTransformedShape(mBodyID);
 }
 
 JPH_NAMESPACE_END

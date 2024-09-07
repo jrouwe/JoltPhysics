@@ -4,20 +4,32 @@
 
 #include <Jolt/Jolt.h>
 
-#include <Jolt/Core/UnorderedSet.h>
 #include <Jolt/Math/Vec3.h>
 
 JPH_NAMESPACE_BEGIN
 
-static void sCreateVertices(std::unordered_set<Vec3> &ioVertices, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel)
+static void sAddVertex(StaticArray<Vec3, 1026> &ioVertices, Vec3Arg inVertex)
+{
+	bool found = false;
+	for (const Vec3 &v : ioVertices)
+		if (v == inVertex)
+		{
+			found = true;
+			break;
+		}
+	if (!found)
+		ioVertices.push_back(inVertex);
+}
+
+static void sCreateVertices(StaticArray<Vec3, 1026> &ioVertices, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel)
 {
 	Vec3 center1 = (inDir1 + inDir2).Normalized();
 	Vec3 center2 = (inDir2 + inDir3).Normalized();
 	Vec3 center3 = (inDir3 + inDir1).Normalized();
 
-	ioVertices.insert(center1);
-	ioVertices.insert(center2);
-	ioVertices.insert(center3);
+	sAddVertex(ioVertices, center1);
+	sAddVertex(ioVertices, center2);
+	sAddVertex(ioVertices, center3);
 
 	if (inLevel > 0)
 	{
@@ -29,19 +41,19 @@ static void sCreateVertices(std::unordered_set<Vec3> &ioVertices, Vec3Arg inDir1
 	}
 }
 
-const std::vector<Vec3> Vec3::sUnitSphere = []() {
+const StaticArray<Vec3, 1026> Vec3::sUnitSphere = []() {
 
 	const int level = 3;
 
-	std::unordered_set<Vec3> verts;
+	StaticArray<Vec3, 1026> verts;
 
 	// Add unit axis
-	verts.insert(Vec3::sAxisX());
-	verts.insert(-Vec3::sAxisX());
-	verts.insert(Vec3::sAxisY());
-	verts.insert(-Vec3::sAxisY());
-	verts.insert(Vec3::sAxisZ());
-	verts.insert(-Vec3::sAxisZ());
+	verts.push_back(Vec3::sAxisX());
+	verts.push_back(-Vec3::sAxisX());
+	verts.push_back(Vec3::sAxisY());
+	verts.push_back(-Vec3::sAxisY());
+	verts.push_back(Vec3::sAxisZ());
+	verts.push_back(-Vec3::sAxisZ());
 
 	// Subdivide
 	sCreateVertices(verts, Vec3::sAxisX(), Vec3::sAxisY(), Vec3::sAxisZ(), level);
@@ -53,7 +65,7 @@ const std::vector<Vec3> Vec3::sUnitSphere = []() {
 	sCreateVertices(verts, Vec3::sAxisX(), -Vec3::sAxisY(), -Vec3::sAxisZ(), level);
 	sCreateVertices(verts, -Vec3::sAxisX(), -Vec3::sAxisY(), -Vec3::sAxisZ(), level);
 
-	return std::vector<Vec3>(verts.begin(), verts.end());
+	return verts;
 }();
 
 JPH_NAMESPACE_END

@@ -41,6 +41,9 @@ public:
 	/// Maximum angle of slope that character can still walk on (radians).
 	float								mMaxSlopeAngle = DegreesToRadians(50.0f);
 
+	/// Set to indicate that extra effort should be made to try to remove ghost contacts (collisions with internal edges of a mesh). This is more expensive but makes bodies move smoother over a mesh with convex edges.
+	bool								mEnhancedInternalEdgeRemoval = false;
+
 	/// Initial shape that represents the character's volume.
 	/// Usually this is a capsule, make sure the shape is made so that the bottom of the shape is at (0, 0, 0).
 	RefConst<Shape>						mShape;
@@ -97,10 +100,10 @@ public:
 	bool								IsSupported() const										{ return mGroundState == EGroundState::OnGround || mGroundState == EGroundState::OnSteepGround; }
 
 	/// Get the contact point with the ground
-	RVec3 								GetGroundPosition() const								{ return mGroundPosition; }
+	RVec3								GetGroundPosition() const								{ return mGroundPosition; }
 
 	/// Get the contact normal with the ground
-	Vec3	 							GetGroundNormal() const									{ return mGroundNormal; }
+	Vec3								GetGroundNormal() const									{ return mGroundNormal; }
 
 	/// Velocity in world space of ground
 	Vec3								GetGroundVelocity() const								{ return mGroundVelocity; }

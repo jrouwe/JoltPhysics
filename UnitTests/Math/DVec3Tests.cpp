@@ -172,6 +172,16 @@ TEST_SUITE("DVec3Tests")
 	{
 		CHECK(-DVec3(1, 2, 3) == DVec3(-1, -2, -3));
 
+		DVec3 neg_zero = -DVec3::sZero();
+		CHECK(neg_zero == DVec3::sZero());
+
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		// When cross platform deterministic, we want to make sure that -0 is represented as 0
+		CHECK(BitCast<uint64>(neg_zero.GetX()) == 0);
+		CHECK(BitCast<uint64>(neg_zero.GetY()) == 0);
+		CHECK(BitCast<uint64>(neg_zero.GetZ()) == 0);
+	#endif // JPH_CROSS_PLATFORM_DETERMINISTIC
+
 		CHECK(DVec3(1, 2, 3) + Vec3(4, 5, 6) == DVec3(5, 7, 9));
 		CHECK(DVec3(1, 2, 3) - Vec3(6, 5, 4) == DVec3(-5, -3, -1));
 

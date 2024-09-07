@@ -10,13 +10,13 @@ JPH_NAMESPACE_BEGIN
 static constexpr float JPH_PI = 3.14159265358979323846f;
 
 /// Convert a value from degrees to radians
-constexpr float DegreesToRadians(float inV)
+JPH_INLINE constexpr float DegreesToRadians(float inV)
 {
 	return inV * (JPH_PI / 180.0f);
 }
 
 /// Convert a value from radians to degrees
-constexpr float RadiansToDegrees(float inV)
+JPH_INLINE constexpr float RadiansToDegrees(float inV)
 {
 	return inV * (180.0f / JPH_PI);
 }
@@ -42,28 +42,28 @@ inline float CenterAngleAroundZero(float inV)
 
 /// Clamp a value between two values
 template <typename T>
-constexpr T Clamp(T inV, T inMin, T inMax)
+JPH_INLINE constexpr T Clamp(T inV, T inMin, T inMax)
 {
 	return min(max(inV, inMin), inMax);
 }
 
 /// Square a value
 template <typename T>
-constexpr T Square(T inV)
+JPH_INLINE constexpr T Square(T inV)
 {
 	return inV * inV;
 }
 
 /// Returns \f$inV^3\f$.
 template <typename T>
-constexpr T Cubed(T inV)
+JPH_INLINE constexpr T Cubed(T inV)
 {
 	return inV * inV * inV;
 }
 
 /// Get the sign of a value
 template <typename T>
-constexpr T Sign(T inV)
+JPH_INLINE constexpr T Sign(T inV)
 {
 	return inV < 0? T(-1) : T(1);
 }
@@ -116,7 +116,9 @@ inline uint CountTrailingZeros(uint32 inValue)
 		_BitScanForward(&result, inValue);
 		return result;
 	#else
-		return __builtin_clz(__builtin_bitreverse32(inValue));
+		if (inValue == 0)
+			return 32;
+		return __builtin_ctz(inValue);
 	#endif
 #elif defined(JPH_CPU_E2K)
 		return inValue ? __builtin_ctz(inValue) : 32;

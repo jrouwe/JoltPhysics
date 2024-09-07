@@ -209,10 +209,12 @@ TEST_SUITE("ObjectStreamTest")
 		TestSerializable *test = CreateTestObject();
 
 		stringstream stream;
-		REQUIRE(ObjectStreamOut::sWriteObject(stream, ObjectStreamOut::EStreamType::Text, *test));
+		CHECK(ObjectStreamOut::sWriteObject(stream, ObjectStreamOut::EStreamType::Text, *test));
 
 		TestSerializable *test_out = nullptr;
-		REQUIRE(ObjectStreamIn::sReadObject(stream, test_out));
+		CHECK(ObjectStreamIn::sReadObject(stream, test_out));
+		if (test_out == nullptr)
+			return;
 
 		// Check that DynamicCast returns the right offsets
 		CHECK(DynamicCast<TestSerializable>(test_out) == test_out);
@@ -232,10 +234,12 @@ TEST_SUITE("ObjectStreamTest")
 		TestSerializable *test = CreateTestObject();
 
 		stringstream stream;
-		REQUIRE(ObjectStreamOut::sWriteObject(stream, ObjectStreamOut::EStreamType::Binary, *test));
+		CHECK(ObjectStreamOut::sWriteObject(stream, ObjectStreamOut::EStreamType::Binary, *test));
 
 		TestSerializable *test_out = nullptr;
-		REQUIRE(ObjectStreamIn::sReadObject(stream, test_out));
+		CHECK(ObjectStreamIn::sReadObject(stream, test_out));
+		if (test_out == nullptr)
+			return;
 
 		CompareObjects(test, test_out);
 

@@ -7,6 +7,8 @@
 #include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/ObjectStream/ObjectStream.h>
 
+#ifdef JPH_OBJECT_STREAM
+
 JPH_NAMESPACE_BEGIN
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -56,3 +58,10 @@ inline void AddSerializableAttributeEnum(RTTI &inRTTI, uint inOffset, const char
 	JPH_ADD_ENUM_ATTRIBUTE_WITH_ALIAS(class_name, member_name, #member_name);
 
 JPH_NAMESPACE_END
+
+#else
+
+#define JPH_ADD_ENUM_ATTRIBUTE_WITH_ALIAS(...)
+#define JPH_ADD_ENUM_ATTRIBUTE(...)
+
+#endif // JPH_OBJECT_STREAM

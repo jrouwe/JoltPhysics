@@ -27,7 +27,7 @@ float LinearCurve::GetValue(float inX) const
 	if (mPoints.empty())
 		return 0.0f;
 
-	Points::const_iterator i2 = lower_bound(mPoints.begin(), mPoints.end(), inX, [](const Point &inPoint, float inValue) { return inPoint.mX < inValue; });
+	Points::const_iterator i2 = std::lower_bound(mPoints.begin(), mPoints.end(), inX, [](const Point &inPoint, float inValue) { return inPoint.mX < inValue; });
 
 	if (i2 == mPoints.begin())
 		return mPoints.front().mY;

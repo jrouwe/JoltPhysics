@@ -15,6 +15,8 @@
 #include "PerformanceTestScene.h"
 #include "Layers.h"
 
+#ifdef JPH_OBJECT_STREAM
+
 // A scene that loads a part of a Horizon Zero Dawn level and drops many ragdolls on the terrain (motors enabled)
 class RagdollScene : public PerformanceTestScene
 {
@@ -129,12 +131,15 @@ public:
 	}
 
 private:
-	int 					mNumPilesPerAxis;
-	int 					mPileSize;
-	float 					mVerticalSeparation;
+	int						mNumPilesPerAxis;
+	int						mPileSize;
+	float					mVerticalSeparation;
 	Ref<RagdollSettings>	mRagdollSettings;
 	Ref<SkeletalAnimation>	mAnimation;
 	SkeletonPose			mPose;
 	Ref<PhysicsScene>		mBackground;
 	Array<Ref<Ragdoll>>		mRagdolls;
 };
+
+#endif // JPH_OBJECT_STREAM
+

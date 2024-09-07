@@ -128,6 +128,22 @@ const PhysicsMaterial *CompoundShape::GetMaterial(const SubShapeID &inSubShapeID
 	return mSubShapes[index].mShape->GetMaterial(remainder);
 }
 
+const Shape *CompoundShape::GetLeafShape(const SubShapeID &inSubShapeID, SubShapeID &outRemainder) const
+{
+	// Decode sub shape index
+	SubShapeID remainder;
+	uint32 index = GetSubShapeIndexFromID(inSubShapeID, remainder);
+	if (index >= mSubShapes.size())
+	{
+		// No longer valid index
+		outRemainder = SubShapeID();
+		return nullptr;
+	}
+
+	// Pass call on
+	return mSubShapes[index].mShape->GetLeafShape(remainder, outRemainder);
+}
+
 uint64 CompoundShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 {
 	// Decode sub shape index
@@ -386,6 +402,20 @@ bool CompoundShape::IsValidScale(Vec3Arg inScale) const
 	}
 
 	return true;
+}
+
+Vec3 CompoundShape::MakeScaleValid(Vec3Arg inScale) const
+{
+	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
+	if (CompoundShape::IsValidScale(scale))
+		return scale;
+
+	Vec3 abs_uniform_scale = ScaleHelpers::MakeUniformScale(scale.Abs());
+	Vec3 uniform_scale = scale.GetSign() * abs_uniform_scale;
+	if (CompoundShape::IsValidScale(uniform_scale))
+		return uniform_scale;
+
+	return Sign(scale.GetX()) * abs_uniform_scale;
 }
 
 void CompoundShape::sRegister()

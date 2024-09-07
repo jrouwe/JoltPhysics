@@ -2369,6 +2369,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = _WIN32 \
                          JPH_PROFILE_ENABLED \
                          JPH_DEBUG_RENDERER \
+                         JPH_OBJECT_STREAM \
                          JPH_PLATFORM_DOXYGEN
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this

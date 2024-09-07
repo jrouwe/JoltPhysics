@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: MIT
 
 #include <Jolt/Jolt.h>
+
+#include <Jolt/Physics/Collision/BroadPhase/QuadTree.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseQuadTree.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/AABoxCast.h>
@@ -307,7 +309,9 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 						}
 						else
 						{
-							JPH_ASSERT(false); // Out of stack space, this must be a very deep tree. Are you batch adding bodies to the broadphase?
+							JPH_ASSERT(false, "Stack full!\n"
+								"This must be a very deep tree. Are you batch adding bodies through BodyInterface::AddBodiesPrepare/AddBodiesFinalize?\n"
+								"If you add lots of bodies through BodyInterface::AddBody you may need to call PhysicsSystem::OptimizeBroadPhase to rebuild the tree.");
 
 							// Falling back to adding the node as a whole
 							*cur_node_id = child_node_id;
@@ -1018,7 +1022,9 @@ JPH_INLINE void QuadTree::WalkTree(const ObjectLayerFilter &inObjectLayerFilter,
 				top += num_results;
 			}
 			else
-				JPH_ASSERT(false, "Stack full!");
+				JPH_ASSERT(false, "Stack full!\n"
+					"This must be a very deep tree. Are you batch adding bodies through BodyInterface::AddBodiesPrepare/AddBodiesFinalize?\n"
+					"If you add lots of bodies through BodyInterface::AddBody you may need to call PhysicsSystem::OptimizeBroadPhase to rebuild the tree.");
 		}
 
 		// Fetch next node until we find one that the visitor wants to see
@@ -1440,7 +1446,9 @@ void QuadTree::FindCollidingPairs(const BodyVector &inBodies, const BodyID *inAc
 						top += num_results;
 					}
 					else
-						JPH_ASSERT(false, "Stack full!");
+						JPH_ASSERT(false, "Stack full!\n"
+							"This must be a very deep tree. Are you batch adding bodies through BodyInterface::AddBodiesPrepare/AddBodiesFinalize?\n"
+							"If you add lots of bodies through BodyInterface::AddBody you may need to call PhysicsSystem::OptimizeBroadPhase to rebuild the tree.");
 				}
 			}
 			--top;

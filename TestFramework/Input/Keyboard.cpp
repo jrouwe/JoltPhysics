@@ -88,7 +88,7 @@ bool Keyboard::Initialize(Renderer *inRenderer)
 	dipdw.diph.dwObj = 0;
 	dipdw.diph.dwHow = DIPH_DEVICE;
 	dipdw.dwData = BUFFERSIZE;
-    if (FAILED(mKeyboard->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph)))
+	if (FAILED(mKeyboard->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph)))
 	{
 		Trace("Unable to set keyboard buffer size");
 		return false;
@@ -144,8 +144,8 @@ void Keyboard::Poll()
 	}
 
 	// Check double clicks
-    for (DWORD d = 0; d < mDODLength; d++)
-    {
+	for (DWORD d = 0; d < mDODLength; d++)
+	{
 		// Check if this means a button is pressed
 		if (mDOD[d].dwData & 0x80)
 		{

@@ -191,7 +191,8 @@ private:
 	EProbeShape				mProbeShape = EProbeShape::Sphere;							// Shape to use for the mouse probe.
 	bool					mScaleShape = false;										// If the shape is scaled or not. When true mShapeScale is taken into account.
 	Vec3					mShapeScale = Vec3::sReplicate(1.0f);						// Scale in local space for the probe shape.
-	EBackFaceMode			mBackFaceMode = EBackFaceMode::CollideWithBackFaces;		// How to handle back facing triangles when doing a collision probe check.
+	EBackFaceMode			mBackFaceModeTriangles = EBackFaceMode::CollideWithBackFaces; // How to handle back facing triangles when doing a collision probe check.
+	EBackFaceMode			mBackFaceModeConvex = EBackFaceMode::CollideWithBackFaces; // How to handle back facing convex shapes when doing a collision probe check.
 	EActiveEdgeMode			mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;	// How to handle active edges when doing a collision probe check.
 	ECollectFacesMode		mCollectFacesMode = ECollectFacesMode::NoFaces;				// If we should collect colliding faces
 	float					mMaxSeparationDistance = 0.0f;								// Max separation distance for collide shape test

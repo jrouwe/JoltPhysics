@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Jolt/Physics/Collision/Shape/DecoratedShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -42,10 +43,10 @@ public:
 									ScaledShape(const ScaledShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Constructor that decorates another shape with a scale
-									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(EShapeSubType::Scaled, inShape), mScale(inScale) { }
+									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(EShapeSubType::Scaled, inShape), mScale(inScale) { JPH_ASSERT(!ScaleHelpers::IsZeroScale(mScale)); }
 
 	/// Get the scale
-	Vec3		 					GetScale() const										{ return mScale; }
+	Vec3							GetScale() const										{ return mScale; }
 
 	// See Shape::GetCenterOfMass
 	virtual Vec3					GetCenterOfMass() const override						{ return mScale * mInnerShape->GetCenterOfMass(); }
@@ -119,6 +120,9 @@ public:
 
 	// See Shape::IsValidScale
 	virtual bool					IsValidScale(Vec3Arg inScale) const override;
+
+	// See Shape::MakeScaleValid
+	virtual Vec3					MakeScaleValid(Vec3Arg inScale) const override;
 
 	// Register shape functions with the registry
 	static void						sRegister();

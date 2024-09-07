@@ -32,7 +32,7 @@ TEST_SUITE("HeightFieldShapeTests")
 	static Ref<HeightFieldShape> sValidateGetPosition(const HeightFieldShapeSettings &inSettings, float inMaxError)
 	{
 		// Create shape
-		Ref<HeightFieldShape> shape = static_cast<HeightFieldShape *>(inSettings.Create().Get().GetPtr());
+		Ref<HeightFieldShape> shape = StaticCast<HeightFieldShape>(inSettings.Create().Get());
 
 		// Validate it
 		float max_diff = -1.0f;
@@ -223,7 +223,7 @@ TEST_SUITE("HeightFieldShapeTests")
 
 		// Create shape
 		ShapeRefC shape = settings.Create().Get();
-		const HeightFieldShape *height_field = static_cast<const HeightFieldShape *>(shape.GetPtr());
+		const HeightFieldShape *height_field = StaticCast<HeightFieldShape>(shape);
 
 		{
 			// Check that the GetHeights function returns the same values as the original height samples
@@ -276,7 +276,7 @@ TEST_SUITE("HeightFieldShapeTests")
 
 		// Create shape
 		Ref<Shape> shape = settings.Create().Get();
-		HeightFieldShape *height_field = static_cast<HeightFieldShape *>(shape.GetPtr());
+		HeightFieldShape *height_field = StaticCast<HeightFieldShape>(shape);
 
 		// Get the original (quantized) heights
 		Array<float> original_heights;
@@ -353,7 +353,7 @@ TEST_SUITE("HeightFieldShapeTests")
 
 		// Create shape
 		Ref<Shape> shape = settings.Create().Get();
-		HeightFieldShape *height_field = static_cast<HeightFieldShape *>(shape.GetPtr());
+		HeightFieldShape *height_field = StaticCast<HeightFieldShape>(shape);
 
 		// Check that the material is set
 		auto check_materials = [height_field, &current_state]() {

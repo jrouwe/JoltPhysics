@@ -73,11 +73,11 @@ Quat Quat::operator * (QuatArg inRHS) const
 
 Quat Quat::sRotation(Vec3Arg inAxis, float inAngle)
 {
-    // returns [inAxis * sin(0.5f * inAngle), cos(0.5f * inAngle)]
+	// returns [inAxis * sin(0.5f * inAngle), cos(0.5f * inAngle)]
 	JPH_ASSERT(inAxis.IsNormalized());
 	Vec4 s, c;
 	Vec4::sReplicate(0.5f * inAngle).SinCos(s, c);
-    return Quat(Vec4::sSelect(Vec4(inAxis) * s, c, UVec4(0, 0, 0, 0xffffffffU)));
+	return Quat(Vec4::sSelect(Vec4(inAxis) * s, c, UVec4(0, 0, 0, 0xffffffffU)));
 }
 
 void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
@@ -237,12 +237,12 @@ Quat Quat::LERP(QuatArg inDestination, float inFraction) const
 
 Quat Quat::SLERP(QuatArg inDestination, float inFraction) const
 {
-    // Difference at which to LERP instead of SLERP
+	// Difference at which to LERP instead of SLERP
 	const float delta = 0.0001f;
 
 	// Calc cosine
 	float sign_scale1 = 1.0f;
-    float cos_omega = Dot(inDestination);
+	float cos_omega = Dot(inDestination);
 
 	// Adjust signs (if necessary)
 	if (cos_omega < 0.0f)

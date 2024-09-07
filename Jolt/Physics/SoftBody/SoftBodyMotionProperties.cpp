@@ -10,6 +10,7 @@
 #include <Jolt/Physics/SoftBody/SoftBodyManifold.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/Body/BodyManager.h>
+#include <Jolt/Core/ScopeExit.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -912,6 +913,7 @@ void SoftBodyMotionProperties::SkinVertices([[maybe_unused]] RMat44Arg inCenterO
 	uint num_skin_matrices = uint(mSettings->mInvBindMatrices.size());
 	uint skin_matrices_size = num_skin_matrices * sizeof(Mat44);
 	Mat44 *skin_matrices = (Mat44 *)ioTempAllocator.Allocate(skin_matrices_size);
+	JPH_SCOPE_EXIT([&ioTempAllocator, skin_matrices, skin_matrices_size]{ ioTempAllocator.Free(skin_matrices, skin_matrices_size); });
 	const Mat44 *skin_matrices_end = skin_matrices + num_skin_matrices;
 	const InvBind *inv_bind_matrix = mSettings->mInvBindMatrices.data();
 	for (Mat44 *s = skin_matrices; s < skin_matrices_end; ++s, ++inv_bind_matrix)
@@ -967,8 +969,6 @@ void SoftBodyMotionProperties::SkinVertices([[maybe_unused]] RMat44Arg inCenterO
 		}
 		mSkinState[s.mVertex].mNormal = normal;
 	}
-
-	ioTempAllocator.Free(skin_matrices, skin_matrices_size);
 
 	if (inHardSkinAll)
 	{
@@ -1166,6 +1166,13 @@ void SoftBodyMotionProperties::SaveState(StateRecorder &inStream) const
 		inStream.Write(v.mVelocity);
 	}
 
+	for (const SkinState &s : mSkinState)
+	{
+		inStream.Write(s.mPreviousPosition);
+		inStream.Write(s.mPosition);
+		inStream.Write(s.mNormal);
+	}
+
 	inStream.Write(mLocalBounds.mMin);
 	inStream.Write(mLocalBounds.mMax);
 	inStream.Write(mLocalPredictedBounds.mMin);
@@ -1181,6 +1188,13 @@ void SoftBodyMotionProperties::RestoreState(StateRecorder &inStream)
 		inStream.Read(v.mPreviousPosition);
 		inStream.Read(v.mPosition);
 		inStream.Read(v.mVelocity);
+	}
+
+	for (SkinState &s : mSkinState)
+	{
+		inStream.Read(s.mPreviousPosition);
+		inStream.Read(s.mPosition);
+		inStream.Read(s.mNormal);
 	}
 
 	inStream.Read(mLocalBounds.mMin);

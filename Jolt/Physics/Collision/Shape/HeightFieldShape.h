@@ -78,6 +78,10 @@ public:
 	/// Artificial maximum value of mHeightSamples, used for compression and can be used to update the terrain after creating with higher height values. If there are any higher values in mHeightSamples, this value will be ignored.
 	float							mMaxHeightValue = -FLT_MAX;
 
+	/// When bigger than mMaterials.size() the internal material list will be preallocated to support this number of materials.
+	/// This avoids reallocations when calling HeightFieldShape::SetMaterials with new materials later.
+	uint32							mMaterialsCapacity = 0;
+
 	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only,
 	/// bigger block sizes reduce memory consumption but also reduce query performance. Sensible values are [2, 8], does not need to be
 	/// a power of 2. Note that at run-time we'll perform one more grid subdivision, so the effective block size is half of what is provided here.
@@ -104,6 +108,10 @@ public:
 };
 
 /// A height field shape. Cannot be used as a dynamic object.
+///
+/// Note: If you're using HeightFieldShape and are querying data while modifying the shape you'll have a race condition.
+/// In this case it is best to create a new HeightFieldShape using the Clone function. You replace the shape on a body using BodyInterface::SetShape.
+/// If a query is still working on the old shape, it will have taken a reference and keep the old shape alive until the query finishes.
 class JPH_EXPORT HeightFieldShape final : public Shape
 {
 public:
@@ -112,6 +120,10 @@ public:
 	/// Constructor
 									HeightFieldShape() : Shape(EShapeType::HeightField, EShapeSubType::HeightField) { }
 									HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult);
+	virtual							~HeightFieldShape() override;
+
+	/// Clone this shape. Can be used to avoid race conditions. See the documentation of this class for more information.
+	Ref<HeightFieldShape>			Clone() const;
 
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override				{ return true; }
@@ -181,6 +193,13 @@ public:
 	/// When there is no surface position (because of a hole or because the point is outside the heightfield) the function will return false.
 	bool							ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurfacePosition, SubShapeID &outSubShapeID) const;
 
+	/// Returns the coordinates of the triangle that a sub shape ID represents
+	/// @param inSubShapeID The sub shape ID to decode
+	/// @param outX X coordinate of the triangle (in the range [0, mSampleCount - 2])
+	/// @param outY Y coordinate of the triangle (in the range [0, mSampleCount - 2])
+	/// @param outTriangleIndex Triangle within the quad (0 = lower triangle or 1 = upper triangle)
+	void							GetSubShapeCoordinates(const SubShapeID &inSubShapeID, uint &outX, uint &outY, uint &outTriangleIndex) const;
+
 	/// Get the range of height values that this height field can encode. Can be used to determine the allowed range when setting the height values with SetHeights.
 	float							GetMinHeightValue() const					{ return mOffset.GetY(); }
 	float							GetMaxHeightValue() const					{ return mOffset.GetY() + mScale.GetY() * HeightFieldShapeConstants::cMaxHeightValue16; }
@@ -192,20 +211,21 @@ public:
 	/// @param inSizeX Number of samples in X direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param inSizeY Number of samples in Y direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param outHeights Returned height values, must be at least inSizeX * inSizeY floats. Values are returned in x-major order and can be cNoCollisionValue.
-	/// @param inHeightsStride Stride in floats between two consecutive rows of outHeights.
-	void							GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights, uint inHeightsStride) const;
+	/// @param inHeightsStride Stride in floats between two consecutive rows of outHeights (can be negative if the data is upside down).
+	void							GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights, intptr_t inHeightsStride) const;
 
 	/// Set the height values of a block of data.
 	/// Note that this requires decompressing and recompressing a border of size mBlockSize in the negative x/y direction so will cause some precision loss.
+	/// Beware this can create a race condition if you're running collision queries in parallel. See class documentation for more information.
 	/// @param inX Start X position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
 	/// @param inY Start Y position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
 	/// @param inSizeX Number of samples in X direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param inSizeY Number of samples in Y direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param inHeights The new height values to set, must be an array of inSizeX * inSizeY floats, can be cNoCollisionValue. Values outside of the range [GetMinHeightValue(), GetMaxHeightValue()] will be clamped.
-	/// @param inHeightsStride Stride in floats between two consecutive rows of outHeights.
+	/// @param inHeightsStride Stride in floats between two consecutive rows of inHeights (can be negative if the data is upside down).
 	/// @param inAllocator Allocator to use for temporary memory
 	/// @param inActiveEdgeCosThresholdAngle Cosine of the threshold angle (if the angle between the two triangles is bigger than this, the edge is active, note that a concave edge is always inactive).
-	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle = 0.996195f);
+	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, intptr_t inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle = 0.996195f);
 
 	/// Get the current list of materials, the indices returned by GetMaterials() will index into this list.
 	const PhysicsMaterialList &		GetMaterialList() const						{ return mMaterials; }
@@ -216,20 +236,21 @@ public:
 	/// @param inSizeX Number of samples in X direction
 	/// @param inSizeY Number of samples in Y direction
 	/// @param outMaterials Returned material indices, must be at least inSizeX * inSizeY uint8s. Values are returned in x-major order.
-	/// @param inMaterialsStride Stride in uint8s between two consecutive rows of outMaterials.
-	void							GetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, uint8 *outMaterials, uint inMaterialsStride) const;
+	/// @param inMaterialsStride Stride in uint8s between two consecutive rows of outMaterials (can be negative if the data is upside down).
+	void							GetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, uint8 *outMaterials, intptr_t inMaterialsStride) const;
 
 	/// Set the material indices of a block of data.
+	/// Beware this can create a race condition if you're running collision queries in parallel. See class documentation for more information.
 	/// @param inX Start X position, must in the range [0, mSampleCount - 1]
 	/// @param inY Start Y position, must in the range [0, mSampleCount - 1]
 	/// @param inSizeX Number of samples in X direction
 	/// @param inSizeY Number of samples in Y direction
 	/// @param inMaterials The new material indices, must be at least inSizeX * inSizeY uint8s. Values are returned in x-major order.
-	/// @param inMaterialsStride Stride in uint8s between two consecutive rows of inMaterials.
+	/// @param inMaterialsStride Stride in uint8s between two consecutive rows of inMaterials (can be negative if the data is upside down).
 	/// @param inMaterialList The material list to use for the new material indices or nullptr if the material list should not be updated
 	/// @param inAllocator Allocator to use for temporary memory
 	/// @return True if the material indices were set, false if the total number of materials exceeded 256
-	bool							SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, uint inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator);
+	bool							SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, intptr_t inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator);
 
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
@@ -261,8 +282,11 @@ private:
 	/// Calculate commonly used values and store them in the shape
 	void							CacheValues();
 
+	/// Allocate the mRangeBlocks, mHeightSamples and mActiveEdges buffers as a single data block
+	void							AllocateBuffers();
+
 	/// Calculate bit mask for all active edges in the heightfield for a specific region
-	void							CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, uint inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator);
+	void							CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, intptr_t inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator);
 
 	/// Calculate bit mask for all active edges in the heightfield
 	void							CalculateActiveEdges(const HeightFieldShapeSettings &inSettings);
@@ -330,13 +354,16 @@ private:
 	/// Height data
 	uint32							mSampleCount = 0;							///< See HeightFieldShapeSettings::mSampleCount
 	uint32							mBlockSize = 2;								///< See HeightFieldShapeSettings::mBlockSize
+	uint32							mHeightSamplesSize = 0;						///< Size of mHeightSamples in bytes
+	uint32							mRangeBlocksSize = 0;						///< Size of mRangeBlocks in elements
+	uint32							mActiveEdgesSize = 0;						///< Size of mActiveEdges in bytes
 	uint8							mBitsPerSample = 8;							///< See HeightFieldShapeSettings::mBitsPerSample
 	uint8							mSampleMask = 0xff;							///< All bits set for a sample: (1 << mBitsPerSample) - 1, used to indicate that there's no collision
 	uint16							mMinSample = HeightFieldShapeConstants::cNoCollisionValue16; ///< Min and max value in mHeightSamples quantized to 16 bit, for calculating bounding box
 	uint16							mMaxSample = HeightFieldShapeConstants::cNoCollisionValue16;
-	Array<RangeBlock>				mRangeBlocks;								///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
-	Array<uint8>					mHeightSamples;								///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
-	Array<uint8>					mActiveEdges;								///< (mSampleCount - 1)^2 * 3-bit active edge flags.
+	RangeBlock *					mRangeBlocks = nullptr;						///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
+	uint8 *							mHeightSamples = nullptr;					///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
+	uint8 *							mActiveEdges = nullptr;						///< (mSampleCount - 1)^2 * 3-bit active edge flags.
 
 	/// Materials
 	PhysicsMaterialList				mMaterials;									///< The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]

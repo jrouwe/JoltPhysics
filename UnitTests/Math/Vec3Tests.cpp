@@ -84,6 +84,7 @@ TEST_SUITE("Vec3Tests")
 	{
 		Vec3 v1(1, 5, 3);
 		Vec3 v2(4, 2, 6);
+		Vec3 v3(6, 4, 2);
 
 		CHECK(Vec3::sMin(v1, v2) == Vec3(1, 2, 3));
 		CHECK(Vec3::sMax(v1, v2) == Vec3(4, 5, 6));
@@ -97,6 +98,8 @@ TEST_SUITE("Vec3Tests")
 		CHECK(v1.GetHighestComponentIndex() == 1);
 		CHECK(v2.GetLowestComponentIndex() == 1);
 		CHECK(v2.GetHighestComponentIndex() == 2);
+		CHECK(v3.GetLowestComponentIndex() == 2);
+		CHECK(v3.GetHighestComponentIndex() == 0);
 	}
 
 	TEST_CASE("TestVec3Clamp")
@@ -154,6 +157,17 @@ TEST_SUITE("Vec3Tests")
 	TEST_CASE("TestVec3Operators")
 	{
 		CHECK(-Vec3(1, 2, 3) == Vec3(-1, -2, -3));
+
+		Vec3 neg_zero = -Vec3::sZero();
+		CHECK(neg_zero == Vec3::sZero());
+
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		// When cross platform deterministic, we want to make sure that -0 is represented as 0
+		UVec4 neg_zero_bin = neg_zero.ReinterpretAsInt();
+		CHECK(neg_zero_bin.GetX() == 0);
+		CHECK(neg_zero_bin.GetY() == 0);
+		CHECK(neg_zero_bin.GetZ() == 0);
+	#endif // JPH_CROSS_PLATFORM_DETERMINISTIC
 
 		CHECK(Vec3(1, 2, 3) + Vec3(4, 5, 6) == Vec3(5, 7, 9));
 		CHECK(Vec3(1, 2, 3) - Vec3(6, 5, 4) == Vec3(-5, -3, -1));

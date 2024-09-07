@@ -12,6 +12,8 @@ JPH_NAMESPACE_BEGIN
 // Helper macros
 //////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef JPH_OBJECT_STREAM
+
 // JPH_DECLARE_SERIALIZATION_FUNCTIONS
 #define JPH_DECLARE_SERIALIZATION_FUNCTIONS(linkage, prefix, class_name)											\
 	linkage prefix bool	OSReadData(IObjectStreamIn &ioStream, class_name &inInstance);								\
@@ -49,7 +51,7 @@ JPH_NAMESPACE_BEGIN
 	{																												\
 		if (inPointer)																								\
 			ioStream.WritePointerData(GetRTTI(inPointer), (void *)inPointer);										\
-		else 																										\
+		else																										\
 			ioStream.WritePointerData(nullptr, nullptr);															\
 	}																												\
 	void		OSWriteDataType(IObjectStreamOut &ioStream, class_name *)											\
@@ -62,6 +64,13 @@ JPH_NAMESPACE_BEGIN
 		ioStream.WriteDataType(EOSDataType::Pointer);																\
 		ioStream.WriteName(#class_name);																			\
 	}
+
+#else
+
+#define JPH_DECLARE_SERIALIZATION_FUNCTIONS(...)
+#define JPH_IMPLEMENT_SERIALIZATION_FUNCTIONS(...)
+
+#endif // JPH_OBJECT_STREAM
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Use these macros on non-virtual objects to make them serializable

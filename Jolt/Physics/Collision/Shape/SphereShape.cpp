@@ -256,7 +256,7 @@ void SphereShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCast
 		}
 
 		// Check back side hit
-		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces
+		if (inRayCastSettings.mBackFaceModeConvex == EBackFaceMode::CollideWithBackFaces
 			&& num_results > 1 // Ray should have 2 intersections
 			&& max_fraction < ioCollector.GetEarlyOutFraction()) // End of ray should be before early out fraction
 		{
@@ -303,15 +303,6 @@ void SphereShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3
 		}
 }
 
-void SphereShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
-{
-	Vec3 scale;
-	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
-	ts.SetShapeScale(ScaleHelpers::MakeUniformScale(scale.Abs()));
-	ioCollector.AddHit(ts);
-}
-
 void SphereShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const
 {
 	float scaled_radius = GetScaledRadius(inScale);
@@ -340,6 +331,13 @@ void SphereShape::RestoreBinaryState(StreamIn &inStream)
 bool SphereShape::IsValidScale(Vec3Arg inScale) const
 {
 	return ConvexShape::IsValidScale(inScale) && ScaleHelpers::IsUniformScale(inScale.Abs());
+}
+
+Vec3 SphereShape::MakeScaleValid(Vec3Arg inScale) const
+{
+	Vec3 scale = ScaleHelpers::MakeNonZeroScale(inScale);
+
+	return scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs());
 }
 
 void SphereShape::sRegister()

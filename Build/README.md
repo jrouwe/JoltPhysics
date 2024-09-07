@@ -22,6 +22,7 @@ There are a number of user configurable defines that turn on/off certain feature
 <details>
 	<summary>General Options (click to see more)</summary>
 	<ul>
+		<li>JPH_SHARED_LIBRARY - Use the Jolt library as a shared library. Use JPH_BUILD_SHARED_LIBRARY to build Jolt as a shared library.</li>
 		<li>JPH_PROFILE_ENABLED - Turns on the internal profiler.</li>
 		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).</li>
 		<li>JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.</li>
@@ -29,7 +30,13 @@ There are a number of user configurable defines that turn on/off certain feature
 		<li>JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.</li>
 		<li>JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).</li>
 		<li>JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.</li>
+		<li>JPH_DET_LOG - Turn on a lot of extra logging to help debug determinism issues when JPH_CROSS_PLATFORM_DETERMINISTIC is turned on.</li>
+		<li>JPH_ENABLE_ASSERTS - Compiles the library so that it rises an assert in case of failures. The library ignores these failures otherwise.</li>
 		<li>JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.</li>
+		<li>JPH_OBJECT_LAYER_BITS - Defines the size of ObjectLayer, must be 16 or 32 bits.</li>
+		<li>JPH_OBJECT_STREAM - Includes the code to serialize physics data in the ObjectStream format (mostly used by the examples).</li>
+		<li>JPH_NO_FORCE_INLINE - Don't use force inlining but fall back to a regular 'inline'.</li>
+		<li>JPH_USE_STD_VECTOR - Use std::vector instead of Jolt's own Array class.</li>
 	</ul>
 </details>
 
@@ -54,7 +61,7 @@ To override the default trace and assert mechanism install your own custom handl
 
 ## Custom Memory Allocator
 
-To implement your custom memory allocator override Allocate, Free, AlignedAllocate and AlignedFree (see Memory.h).
+To implement your custom memory allocator override Allocate, Free, Reallocate, AlignedAllocate and AlignedFree (see Memory.h).
 
 ## Building
 
@@ -65,7 +72,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 			<summary>MSVC CL (default compiler)</summary>
 			<ul>
 				<li>Download Visual Studio 2022 (Community or other edition)</li>
-				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
+				<li>Download CMake 3.20+ (https://cmake.org/download/)</li>
 				<li>Run cmake_vs2022_cl.bat</li>
 				<li>Open the resulting project file VS2022_CL\JoltPhysics.sln</li>
 				<li>Compile and run either 'Samples' or 'UnitTests'</li>
@@ -75,7 +82,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 			<summary>MSVC CL - 32 bit</summary>
 			<ul>
 				<li>Download Visual Studio 2022 (Community or other edition)</li>
-				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
+				<li>Download CMake 3.20+ (https://cmake.org/download/)</li>
 				<li>Run cmake_vs2022_cl_32bit.bat</li>
 				<li>Open the resulting project file VS2022_CL_32BIT\JoltPhysics.sln</li>
 				<li>Compile and run either 'Samples' or 'UnitTests'</li>
@@ -86,7 +93,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 			<ul>
 				<li>Download Visual Studio 2022 (Community or other edition)</li>
 				<li>Make sure to install "C++ Clang Compiler for Windows 11.0.0+" and "C++ Clang-cl for v142+ build tools (x64/x86)" using the Visual Studio Installer</li>
-				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
+				<li>Download CMake 3.20+ (https://cmake.org/download/)</li>
 				<li>Run cmake_vs2022_clang.bat</li>
 				<li>Open the resulting project file VS2022_Clang\JoltPhysics.sln</li>
 				<li>Compile and run either 'Samples' or 'UnitTests'</li>
@@ -97,7 +104,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 			<ul>
 				<li>Download Visual Studio 2022+ (Community or other edition)</li>
 				<li>Make sure to install "Universal Windows Platform development" using the Visual Studio Installer</li>
-				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
+				<li>Download CMake 3.20+ (https://cmake.org/download/)</li>
 				<li>Run cmake_vs2022_uwp.bat</li>
 				<li>Open the resulting project file VS2022_UWP\JoltPhysics.sln</li>
 				<li>Compile and run 'UnitTests'</li>
@@ -178,6 +185,18 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 		<li>Run: ./cmake_xcode.ios.sh</li>
 		<li>This will open XCode with a newly generated project</li>
 		<li>Build and run the project (note that this will only work in the simulator as the code signing information is not set up)</li>
+	</ul>
+</details>
+
+<details>
+	<summary>Emscripten (tested only on Linux)</summary>
+	<ul>
+		<li>Install Emscripten (https://emscripten.org/docs/getting_started/downloads.html)</li>
+		<li>Install nodejs (apt-get install nodejs)</li>
+		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
+		<li>Run: ./cmake_linux_emscripten.sh</li>
+		<li>Go to the WASM_Debug folder</li>
+		<li>Run: make -j$(nproc) && node UnitTests.js</li>
 	</ul>
 </details>
 

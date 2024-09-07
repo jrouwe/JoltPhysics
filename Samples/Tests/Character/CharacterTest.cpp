@@ -94,7 +94,8 @@ void CharacterTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool i
 		// Update velocity
 		Vec3 current_velocity = mCharacter->GetLinearVelocity();
 		Vec3 desired_velocity = sCharacterSpeed * movement_direction;
-		desired_velocity.SetY(current_velocity.GetY());
+		if (!desired_velocity.IsNearZero() || current_velocity.GetY() < 0.0f || !mCharacter->IsSupported())
+			desired_velocity.SetY(current_velocity.GetY());
 		Vec3 new_velocity = 0.75f * current_velocity + 0.25f * desired_velocity;
 
 		// Jump

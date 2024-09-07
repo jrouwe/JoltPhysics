@@ -33,10 +33,10 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(ConvexShapeSettings)
 	JPH_ADD_ATTRIBUTE(ConvexShapeSettings, mMaterial)
 }
 
-const std::vector<Vec3> ConvexShape::sUnitSphereTriangles = []() {
+const StaticArray<Vec3, 384> ConvexShape::sUnitSphereTriangles = []() {
 	const int level = 2;
 
-	std::vector<Vec3> verts;
+	StaticArray<Vec3, 384> verts;
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereTop(verts, level);
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereBottom(verts, level);
 	return verts;
@@ -198,7 +198,7 @@ void ConvexShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCast
 		}
 
 		// Check if we want back facing hits and the collector still accepts additional hits
-		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces && !ioCollector.ShouldEarlyOut())
+		if (inRayCastSettings.mBackFaceModeConvex == EBackFaceMode::CollideWithBackFaces && !ioCollector.ShouldEarlyOut())
 		{
 			// Invert the ray, going from the early out fraction back to the fraction where we found our forward hit
 			float start_fraction = min(1.0f, ioCollector.GetEarlyOutFraction());

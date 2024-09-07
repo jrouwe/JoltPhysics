@@ -45,6 +45,10 @@ This categories shows vehicles created through the VehicleConstraint. These vehi
 |:-|
 |*Demonstrates a motor cycle.*|
 
+|[![Vehicle Gravity Override](https://img.youtube.com/vi/AJPS31S6ZO8/hqdefault.jpg)](https://www.youtube.com/watch?v=AJPS31S6ZO8)|
+|:-|
+|*Applying a custom gravity override to a vehicle to create weird gameplay.*|
+
 ### Rig (Ragdolls)
 
 This category demonstrates how ragdolls can be made and controlled using keyframing or motors.
@@ -133,7 +137,7 @@ This category shows the various constraints that are supported. Constraints conn
 
 ### General
 
-This category contains general simulation tests. It demonstrates things like friction, restitution, damping, modifying gravity and continous collision detection. Some highlights:
+This category contains general simulation tests. It demonstrates things like friction, restitution, damping, modifying gravity and continuous collision detection. Some highlights:
 
 |[![Stable Box Stacking](https://img.youtube.com/vi/fTtjBLYBxco/hqdefault.jpg)](https://www.youtube.com/watch?v=fTtjBLYBxco)|
 |:-|

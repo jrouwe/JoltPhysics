@@ -4,6 +4,7 @@
 
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
+#include "LoggingCharacterContactListener.h"
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
@@ -32,6 +33,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Create character
 			mCharacter = new CharacterVirtual(&mCharacterSettings, mInitialPosition, Quat::sIdentity(), 0, mContext.GetSystem());
 			mCharacter->SetListener(this);
+			mCharacter->SetCharacterVsCharacterCollision(&mCharacterVsCharacter);
 		}
 
 		// Step the character and the world
@@ -68,7 +70,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Update character velocity
 			mCharacter->SetLinearVelocity(new_velocity);
 
-			RVec3 start_pos = mCharacter->GetPosition();
+			RVec3 start_pos = GetPosition();
 
 			// Update the character position
 			TempAllocatorMalloc allocator;
@@ -82,7 +84,7 @@ TEST_SUITE("CharacterVirtualTests")
 				allocator);
 
 			// Calculate effective velocity in this step
-			mEffectiveVelocity = Vec3(mCharacter->GetPosition() - start_pos) / delta_time;
+			mEffectiveVelocity = Vec3(GetPosition() - start_pos) / delta_time;
 		}
 
 		// Simulate a longer period of time
@@ -91,6 +93,30 @@ TEST_SUITE("CharacterVirtualTests")
 			int num_steps = (int)round(inTime / mContext.GetDeltaTime());
 			for (int step = 0; step < num_steps; ++step)
 				Step();
+		}
+
+		// Get the number of active contacts
+		size_t					GetNumContacts() const
+		{
+			return mCharacter->GetActiveContacts().size();
+		}
+
+		// Check if the character is in contact with another body
+		bool					HasCollidedWith(const BodyID &inBody) const
+		{
+			return mCharacter->HasCollidedWith(inBody);
+		}
+
+		// Check if the character is in contact with another character
+		bool					HasCollidedWith(const CharacterVirtual *inCharacter) const
+		{
+			return mCharacter->HasCollidedWith(inCharacter);
+		}
+
+		// Get position of character
+		RVec3					GetPosition() const
+		{
+			return mCharacter->GetPosition();
 		}
 
 		// Configuration
@@ -107,11 +133,37 @@ TEST_SUITE("CharacterVirtualTests")
 		// The character
 		Ref<CharacterVirtual>	mCharacter;
 
+		// Character vs character
+		CharacterVsCharacterCollisionSimple mCharacterVsCharacter;
+
 		// Calculated effective velocity after a step
 		Vec3					mEffectiveVelocity = Vec3::sZero();
 
+		// Log of contact events
+		LoggingCharacterContactListener mContactLog;
+
 	private:
 		// CharacterContactListener callback
+		virtual bool			OnContactValidate(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) override
+		{
+			return mContactLog.OnContactValidate(inCharacter, inBodyID2, inSubShapeID2);
+		}
+
+		virtual bool			OnCharacterContactValidate(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2) override
+		{
+			return mContactLog.OnCharacterContactValidate(inCharacter, inOtherCharacter, inSubShapeID2);
+		}
+
+		virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+		{
+			mContactLog.OnContactAdded(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+		}
+
+		virtual void			OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+		{
+			mContactLog.OnCharacterContactAdded(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+		}
+
 		virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) override
 		{
 			// Don't allow sliding if the character doesn't want to move
@@ -140,21 +192,21 @@ TEST_SUITE("CharacterVirtualTests")
 		// After some time we should be on the floor
 		character.Simulate(1.0f);
 		CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3::sZero());
+		CHECK_APPROX_EQUAL(character.GetPosition(), RVec3::sZero());
 		CHECK_APPROX_EQUAL(character.mEffectiveVelocity, Vec3::sZero());
 
 		// Jump
 		character.mJumpSpeed = 1.0f;
 		character.Step();
 		Vec3 velocity(0, 1.0f + c.GetDeltaTime() * c.GetSystem()->GetGravity().GetY(), 0);
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(velocity * c.GetDeltaTime()));
+		CHECK_APPROX_EQUAL(character.GetPosition(), RVec3(velocity * c.GetDeltaTime()));
 		CHECK_APPROX_EQUAL(character.mEffectiveVelocity, velocity);
 		CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::InAir);
 
 		// After some time we should be on the floor again
 		character.Simulate(1.0f);
 		CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3::sZero());
+		CHECK_APPROX_EQUAL(character.GetPosition(), RVec3::sZero());
 		CHECK_APPROX_EQUAL(character.mEffectiveVelocity, Vec3::sZero());
 	}
 
@@ -198,12 +250,12 @@ TEST_SUITE("CharacterVirtualTests")
 			// After 1 step we should be on the slope
 			character.Step();
 			CHECK(character.mCharacter->GetGroundState() == expected_ground_state);
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), position_after_1_step, 2.0e-6f);
+			CHECK_APPROX_EQUAL(character.GetPosition(), position_after_1_step, 2.0e-6f);
 
 			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
 			character.mCharacter->SetLinearVelocity(Vec3::sZero());
 
-			RVec3 start_pos = character.mCharacter->GetPosition();
+			RVec3 start_pos = character.GetPosition();
 
 			// Start moving in X direction
 			character.mHorizontalSpeed = Vec3(2.0f, 0, 0);
@@ -211,7 +263,7 @@ TEST_SUITE("CharacterVirtualTests")
 			CHECK(character.mCharacter->GetGroundState() == expected_ground_state);
 
 			// Calculate resulting translation
-			Vec3 translation = Vec3(character.mCharacter->GetPosition() - start_pos);
+			Vec3 translation = Vec3(character.GetPosition() - start_pos);
 
 			// Calculate expected translation
 			Vec3 expected_translation;
@@ -255,7 +307,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Create sloped floor
 			PhysicsTestContext c;
 			Quat slope_rotation = Quat::sRotation(Vec3::sAxisZ(), cSlopeAngle);
-			c.CreateBox(RVec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
+			Body &floor = c.CreateBox(RVec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
 
 			// Create character so that it is touching the slope
 			Character character(c);
@@ -267,19 +319,48 @@ TEST_SUITE("CharacterVirtualTests")
 			// After 1 step we should be on the slope
 			character.Step();
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+			CHECK(character.mContactLog.GetEntryCount() == 2);
+			CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::ValidateBody, character.mCharacter, floor.GetID()));
+			CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::AddBody, character.mCharacter, floor.GetID()));
+			character.mContactLog.Clear();
 
 			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
 			character.mCharacter->SetLinearVelocity(Vec3::sZero());
 
-			RVec3 start_pos = character.mCharacter->GetPosition();
+			RVec3 start_pos = character.GetPosition();
 
-			// Start moving down the slope at a speed high enough so that gravity will not keep us on the floor
-			character.mHorizontalSpeed = Vec3(-10.0f, 0, 0);
-			character.Simulate(cMovementTime);
-			CHECK(character.mCharacter->GetGroundState() == (stick_to_floor? CharacterBase::EGroundState::OnGround : CharacterBase::EGroundState::InAir));
+			float time_step = c.GetDeltaTime();
+			int num_steps = (int)round(cMovementTime / time_step);
+
+			for (int i = 0; i < num_steps; ++i)
+			{
+				// Start moving down the slope at a speed high enough so that gravity will not keep us on the floor
+				character.mHorizontalSpeed = Vec3(-10.0f, 0, 0);
+				character.Step();
+
+				if (stick_to_floor)
+				{
+					// Should stick to floor
+					CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+
+					// Should have received callbacks
+					CHECK(character.mContactLog.GetEntryCount() == 2);
+					CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::ValidateBody, character.mCharacter, floor.GetID()));
+					CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::AddBody, character.mCharacter, floor.GetID()));
+					character.mContactLog.Clear();
+				}
+				else
+				{
+					// Should be off ground
+					CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::InAir);
+
+					// No callbacks
+					CHECK(character.mContactLog.GetEntryCount() == 0);
+				}
+			}
 
 			// Calculate resulting translation
-			Vec3 translation = Vec3(character.mCharacter->GetPosition() - start_pos);
+			Vec3 translation = Vec3(character.GetPosition() - start_pos);
 
 			// Calculate expected translation
 			Vec3 expected_translation;
@@ -291,13 +372,10 @@ TEST_SUITE("CharacterVirtualTests")
 			}
 			else
 			{
-				Vec3 gravity = c.GetSystem()->GetGravity();
-				float time_step = c.GetDeltaTime();
-
 				// If too steep, we're just falling. Integrate using an Euler integrator.
 				Vec3 velocity = character.mHorizontalSpeed;
 				expected_translation = Vec3::sZero();
-				int num_steps = (int)round(cMovementTime / time_step);
+				Vec3 gravity = c.GetSystem()->GetGravity();
 				for (int i = 0; i < num_steps; ++i)
 				{
 					velocity += gravity * time_step;
@@ -366,7 +444,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// We should have gotten stuck at the start of the stairs (can't move up)
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
 			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(0, 0, -radius_and_padding), 1.1e-2f);
+			CHECK_APPROX_EQUAL(character.GetPosition(), RVec3(0, 0, -radius_and_padding), 1.1e-2f);
 
 			// Enable stair walking
 			character.mUpdateSettings.mWalkStairsStepUp = Vec3(0, 0.4f, 0);
@@ -376,7 +454,7 @@ TEST_SUITE("CharacterVirtualTests")
 			int max_steps = int(1.5f * round(movement_time / time_step)); // In practice there is a bit of slowdown while stair stepping, so add a bit of slack
 
 			// Step until we reach the top of the stairs
-			RVec3 last_position = character.mCharacter->GetPosition();
+			RVec3 last_position = character.GetPosition();
 			bool reached_goal = false;
 			for (int i = 0; i < max_steps; ++i)
 			{
@@ -386,7 +464,7 @@ TEST_SUITE("CharacterVirtualTests")
 				CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
 
 				// Check position progression
-				RVec3 position = character.mCharacter->GetPosition();
+				RVec3 position = character.GetPosition();
 				CHECK_APPROX_EQUAL(position.GetX(), 0); // No movement in X
 				CHECK(position.GetZ() > last_position.GetZ()); // Always moving forward
 				CHECK(position.GetZ() < cNumSteps * cStepHeight); // No movement beyond stairs
@@ -436,7 +514,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Note that the character moves according to the ground velocity and the ground velocity is updated at the end of the step
 			// so the character is always 1 time step behind the platform. This is why we use t and not t + 1 to calculate the expected position.
 			RVec3 expected_position = RMat44::sRotation(Quat::sRotation(Vec3::sAxisY(), float(t) * c.GetDeltaTime() * cAngularVelocity)) * character.mInitialPosition;
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-4f);
+			CHECK_APPROX_EQUAL(character.GetPosition(), expected_position, 1.0e-4f);
 		}
 	}
 
@@ -470,7 +548,7 @@ TEST_SUITE("CharacterVirtualTests")
 			character.Step();
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
 			RVec3 expected_position = box.GetPosition() + character.mInitialPosition;
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-2f);
+			CHECK_APPROX_EQUAL(character.GetPosition(), expected_position, 1.0e-2f);
 		}
 
 		// Stop box
@@ -486,7 +564,7 @@ TEST_SUITE("CharacterVirtualTests")
 			character.Step();
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
 			RVec3 expected_position = box.GetPosition() + character.mInitialPosition;
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-2f);
+			CHECK_APPROX_EQUAL(character.GetPosition(), expected_position, 1.0e-2f);
 		}
 	}
 
@@ -558,11 +636,11 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() <= character.mCharacter->GetMaxNumHits());
+			CHECK(character.GetNumContacts() <= character.mCharacter->GetMaxNumHits());
 			CHECK(character.mCharacter->GetGroundBodyID() == cylinder_id);
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), pos_end, 1.0e-4f);
+		CHECK_APPROX_EQUAL(character.GetPosition(), pos_end, 1.0e-4f);
 
 		// Move towards negative cap and test if we hit the end
 		character.mHorizontalSpeed = Vec3(-cCylinderLength, 0, 0);
@@ -570,11 +648,11 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() <= character.mCharacter->GetMaxNumHits());
+			CHECK(character.GetNumContacts() <= character.mCharacter->GetMaxNumHits());
 			CHECK(character.mCharacter->GetGroundBodyID() == cylinder_id);
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), neg_end, 1.0e-4f);
+		CHECK_APPROX_EQUAL(character.GetPosition(), neg_end, 1.0e-4f);
 
 		// Turn off contact point reduction
 		character.mCharacter->SetHitReductionCosMaxAngle(-1.0f);
@@ -585,9 +663,9 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() == character.mCharacter->GetMaxNumHits());
+			CHECK(character.GetNumContacts() == character.mCharacter->GetMaxNumHits());
 		}
-		RVec3 cur_pos = character.mCharacter->GetPosition();
+		RVec3 cur_pos = character.GetPosition();
 		CHECK((pos_end - cur_pos).Length() > 0.01_r);
 
 		// Move towards negative cap and test that we got stuck
@@ -596,9 +674,9 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() == character.mCharacter->GetMaxNumHits());
+			CHECK(character.GetNumContacts() == character.mCharacter->GetMaxNumHits());
 		}
-		CHECK(cur_pos.IsClose(character.mCharacter->GetPosition(), 1.0e-6f));
+		CHECK(cur_pos.IsClose(character.GetPosition(), 1.0e-6f));
 
 		// Now teleport the character next to the half cylinder
 		character.mCharacter->SetPosition(RVec3(0, 0, 1));
@@ -609,11 +687,11 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(!character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() == 1); // We should only hit the floor
+			CHECK(character.GetNumContacts() == 1); // We should only hit the floor
 			CHECK(character.mCharacter->GetGroundBodyID() == floor.GetID());
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(cCylinderLength, 0, 1), 1.0e-4f);
+		CHECK_APPROX_EQUAL(character.GetPosition(), RVec3(cCylinderLength, 0, 1), 1.0e-4f);
 	}
 
 	TEST_CASE("TestStairWalkAlongWall")
@@ -641,7 +719,7 @@ TEST_SUITE("CharacterVirtualTests")
 
 			// We should have moved along the wall at the desired speed
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(5.0f, 0, 0), 1.0e-2f);
+			CHECK_APPROX_EQUAL(character.GetPosition(), RVec3(5.0f, 0, 0), 1.0e-2f);
 		}
 	}
 
@@ -660,7 +738,7 @@ TEST_SUITE("CharacterVirtualTests")
 			Character character(c);
 			character.mCharacterSettings.mPenetrationRecoverySpeed = penetration_recovery;
 			character.Create();
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3::sZero());
+			CHECK_APPROX_EQUAL(character.GetPosition(), RVec3::sZero());
 
 			// Total radius of character
 			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
@@ -673,8 +751,102 @@ TEST_SUITE("CharacterVirtualTests")
 
 				// Step character and check that it matches expected recovery
 				character.Step();
-				CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(x, 0, 0));
+				CHECK_APPROX_EQUAL(character.GetPosition(), RVec3(x, 0, 0));
 			}
 		}
+	}
+
+	TEST_CASE("TestCharacterVsCharacter")
+	{
+		PhysicsTestContext c;
+		BodyID floor_id = c.CreateFloor().GetID();
+
+		// Create characters with different radii and padding
+		Character character1(c);
+		character1.mInitialPosition = RVec3::sZero();
+		character1.mRadiusStanding = 0.2f;
+		character1.mCharacterSettings.mCharacterPadding = 0.04f;
+		character1.Create();
+
+		Character character2(c);
+		character2.mInitialPosition = RVec3(1, 0, 0);
+		character2.mRadiusStanding = 0.3f;
+		character2.mCharacterSettings.mCharacterPadding = 0.03f;
+		character2.Create();
+
+		// Make both collide
+		character1.mCharacterVsCharacter.Add(character2.mCharacter);
+		character2.mCharacterVsCharacter.Add(character1.mCharacter);
+
+		// Add a box behind character 2, we should never hit this
+		Vec3 box_extent(0.1f, 1.0f, 1.0f);
+		c.CreateBox(RVec3(1.5f, 0, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, box_extent, EActivation::DontActivate);
+
+		// Move character 1 towards character 2 so that in 1 step it will hit both character 2 and the box
+		character1.mHorizontalSpeed = Vec3(600.0f, 0, 0);
+		character1.Step();
+
+		// Character 1 should have stopped at character 2
+		float character1_radius = character1.mRadiusStanding + character1.mCharacterSettings.mCharacterPadding;
+		float character2_radius = character2.mRadiusStanding + character2.mCharacterSettings.mCharacterPadding;
+		float separation = character1_radius + character2_radius;
+		RVec3 expected_colliding_with_character = character2.mInitialPosition - Vec3(separation, 0, 0);
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_character, 1.0e-3f);
+		CHECK(character1.GetNumContacts() == 2);
+		CHECK(character1.HasCollidedWith(floor_id));
+		CHECK(character1.HasCollidedWith(character2.mCharacter));
+
+		// Move character 1 back to its initial position
+		character1.mCharacter->SetPosition(character1.mInitialPosition);
+		character1.mCharacter->SetLinearVelocity(Vec3::sZero());
+
+		// Now move slowly so that we will detect the collision during the normal collide shape step
+		character1.mHorizontalSpeed = Vec3(1.0f, 0, 0);
+		character1.Step();
+		CHECK(character1.GetNumContacts() == 1);
+		CHECK(character1.HasCollidedWith(floor_id));
+		character1.Simulate(1.0f);
+
+		// Character 1 should have stopped at character 2
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_character, 1.0e-3f);
+		CHECK(character1.GetNumContacts() == 2);
+		CHECK(character1.HasCollidedWith(floor_id));
+		CHECK(character1.HasCollidedWith(character2.mCharacter));
+
+		// Move character 1 back to its initial position
+		character1.mCharacter->SetPosition(character1.mInitialPosition);
+		character1.mCharacter->SetLinearVelocity(Vec3::sZero());
+
+		// Add a box in between the characters
+		RVec3 box_position(0.5f, 0, 0);
+		BodyID box_id = c.CreateBox(box_position, Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, box_extent, EActivation::DontActivate).GetID();
+
+		// Move character 1 so that it will step through both the box and the character in 1 time step
+		character1.mHorizontalSpeed = Vec3(600.0f, 0, 0);
+		character1.Step();
+
+		// Expect that it ends up at the box
+		RVec3 expected_colliding_with_box = box_position - Vec3(character1_radius + box_extent.GetX(), 0, 0);
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_box, 1.0e-3f);
+		CHECK(character1.GetNumContacts() == 2);
+		CHECK(character1.HasCollidedWith(floor_id));
+		CHECK(character1.HasCollidedWith(box_id));
+
+		// Move character 1 back to its initial position
+		character1.mCharacter->SetPosition(character1.mInitialPosition);
+		character1.mCharacter->SetLinearVelocity(Vec3::sZero());
+
+		// Now move slowly so that we will detect the collision during the normal collide shape step
+		character1.mHorizontalSpeed = Vec3(1.0f, 0, 0);
+		character1.Step();
+		CHECK(character1.GetNumContacts() == 1);
+		CHECK(character1.HasCollidedWith(floor_id));
+		character1.Simulate(1.0f);
+
+		// Expect that it ends up at the box
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_box, 1.0e-3f);
+		CHECK(character1.GetNumContacts() == 2);
+		CHECK(character1.HasCollidedWith(floor_id));
+		CHECK(character1.HasCollidedWith(box_id));
 	}
 }

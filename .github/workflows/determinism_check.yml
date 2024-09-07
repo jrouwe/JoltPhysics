@@ -1,39 +1,69 @@
 name: Determinism Check
 
 env:
-    CONVEX_VS_MESH_HASH: '0x10139effe747511'
-    RAGDOLL_HASH: '0x777396947c3fff6a'
+  CONVEX_VS_MESH_HASH: '0x10139effe747511'
+  RAGDOLL_HASH: '0x777396947c3fff6a'
+  EMSCRIPTEN_VERSION: 3.1.64
+  UBUNTU_CLANG_VERSION: clang++-15
+  UBUNTU_GCC_VERSION: g++-12
+  UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-12
 
 on:
   push:
-    branches: [ master, 4.x ]
+    branches: [ master ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
   pull_request:
-    branches: [ master, 4.x ]
+    branches: [ master ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
 
 jobs:
-  linux:
+  linux_clang:
     runs-on: ubuntu-latest
-    name: Linux Determinism Check
+    name: Linux Clang Determinism Check
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=clang++ Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ctest --output-on-failure --verbose
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+
+  linux_gcc:
+    runs-on: ubuntu-latest
+    name: Linux GCC Determinism Check
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ctest --output-on-failure --verbose
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
 
   msvc_cl:
     runs-on: windows-latest
@@ -45,15 +75,19 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_vs2022_cl.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=Distribution
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      run: ./UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
 
   msvc_cl_32:
     runs-on: windows-latest
@@ -66,15 +100,18 @@ jobs:
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_vs2022_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+      run: ./cmake_vs2022_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: msbuild Build\VS2022_CL_32BIT\JoltPhysics.sln /property:Configuration=Distribution
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      run: ./UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
 
   macos:
     runs-on: macos-latest
@@ -84,36 +121,98 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh Distribution clang++ -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ctest --output-on-failure --verbose
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
 
-  arm:
+  arm_clang:
     runs-on: ubuntu-latest
-    name: ARM Determinism Check
+    name: ARM Clang Determinism Check
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install gcc-11-aarch64-linux-gnu gcc-11-multilib g++-11-multilib libstdc++-11-dev-arm64-cross qemu-user -y
+      run: sudo apt-get install gcc-12-aarch64-linux-gnu gcc-12-multilib g++-12-multilib libstdc++-12-dev-arm64-cross qemu-user -y
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=clang++ Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
-    - name: Test
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
+    - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./UnitTests
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+
+  arm_gcc:
+    runs-on: ubuntu-latest
+    name: ARM GCC Determinism Check
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    - name: Update index
+      run: sudo apt-get update
+    - name: Install Cross Compiler
+      run: sudo apt-get install g++-12-aarch64-linux-gnu gcc-12-multilib g++-12-multilib libstdc++-12-dev-arm64-cross qemu-user -y
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_AARCH64_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./UnitTests
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+
+  emscripten:
+    runs-on: ubuntu-latest
+    name: Emscripten
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    - name: Setup emsdk
+      uses: mymindstorm/setup-emsdk@v14
+      with:
+        version: ${{env.EMSCRIPTEN_VERSION}}
+    - name: Verify emsdk
+      run: emcc -v
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_emscripten.sh Distribution -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)      
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node UnitTests.js
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}

@@ -5,7 +5,6 @@
 #pragma once
 
 #include <Tests/Character/CharacterBaseTest.h>
-#include <Jolt/Physics/Character/CharacterVirtual.h>
 
 // Simple test that test the CharacterVirtual class. Allows the user to move around with the arrow keys and jump with the J button.
 class CharacterVirtualTest : public CharacterBaseTest, public CharacterContactListener
@@ -26,8 +25,11 @@ public:
 	/// Callback to adjust the velocity of a body as seen by the character. Can be adjusted to e.g. implement a conveyor belt or an inertial dampener system of a sci-fi space ship.
 	virtual void			OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity) override;
 
-	// Called whenever the character collides with a body. Returns true if the contact can push the character.
+	// Called whenever the character collides with a body.
 	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override;
+
+	// Called whenever the character collides with a virtual character.
+	virtual void			OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override;
 
 	// Called whenever the character movement is solved and a constraint is hit. Allows the listener to override the resulting character velocity (e.g. by preventing sliding along certain surfaces).
 	virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) override;
@@ -60,6 +62,10 @@ private:
 	static inline float		sPredictiveContactDistance = 0.1f;
 	static inline bool		sEnableWalkStairs = true;
 	static inline bool		sEnableStickToFloor = true;
+	static inline bool		sEnhancedInternalEdgeRemoval = false;
+	static inline bool		sCreateInnerBody = false;
+	static inline bool		sPlayerCanPushOtherCharacters = true;
+	static inline bool		sOtherCharactersCanPushPlayer = true;
 
 	// The 'player' character
 	Ref<CharacterVirtual>	mCharacter;

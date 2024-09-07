@@ -142,8 +142,7 @@ void ConvexHullBuilder2D::AssignPointToEdge(int inPositionIdx, const Array<Edge 
 		else
 		{
 			// Not the furthest point, add it as the before last point
-			best_edge->mConflictList.push_back(best_edge->mConflictList.back());
-			best_edge->mConflictList[best_edge->mConflictList.size() - 2] = inPositionIdx;
+			best_edge->mConflictList.insert(best_edge->mConflictList.begin() + best_edge->mConflictList.size() - 1, inPositionIdx);
 		}
 	}
 }

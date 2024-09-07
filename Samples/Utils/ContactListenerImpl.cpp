@@ -109,7 +109,8 @@ void ContactListenerImpl::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
 void ContactListenerImpl::SaveState(StateRecorder &inStream) const
 {
 	// Write length
-	inStream.Write(mState.size());
+	uint32 length = uint32(mState.size());
+	inStream.Write(length);
 
 	// Get and sort keys
 	Array<SubShapeIDPair> keys;
@@ -126,7 +127,7 @@ void ContactListenerImpl::SaveState(StateRecorder &inStream) const
 		// Write value
 		const StatePair &sp = mState.find(k)->second;
 		inStream.Write(sp.first);
-		inStream.Write(sp.second.size());
+		inStream.Write(uint32(sp.second.size()));
 		inStream.WriteBytes(sp.second.data(), sp.second.size() * sizeof(Vec3));
 	}
 }
@@ -136,9 +137,9 @@ void ContactListenerImpl::RestoreState(StateRecorder &inStream)
 	Trace("Restore Contact State");
 
 	// Read length
-	StateMap::size_type length;
+	uint32 length;
 	if (inStream.IsValidating())
-		length = mState.size();
+		length = uint32(mState.size());
 	inStream.Read(length);
 
 	Array<SubShapeIDPair> keys;
@@ -175,9 +176,9 @@ void ContactListenerImpl::RestoreState(StateRecorder &inStream)
 		inStream.Read(sp.first);
 
 		// Read num contact points
-		ContactPoints::size_type num_contacts;
+		uint32 num_contacts;
 		if (inStream.IsValidating())
-			num_contacts = old_state[key].second.size();
+			num_contacts = uint32(old_state[key].second.size());
 		inStream.Read(num_contacts);
 
 		// Read contact points

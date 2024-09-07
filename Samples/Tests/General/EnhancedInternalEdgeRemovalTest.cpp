@@ -21,7 +21,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(EnhancedInternalEdgeRemovalTest)
 void EnhancedInternalEdgeRemovalTest::CreateSlidingObjects(RVec3Arg inStart)
 {
 	// Slide the shapes over the grid of boxes
-	RVec3 pos = inStart - RVec3(0, 0, 8.5_r);
+	RVec3 pos = inStart - RVec3(0, 0, 12.0_r);
 	for (int enhanced_removal = 0; enhanced_removal < 2; ++enhanced_removal)
 	{
 		// A box
@@ -36,6 +36,20 @@ void EnhancedInternalEdgeRemovalTest::CreateSlidingObjects(RVec3Arg inStart)
 		sphere_bcs.mLinearVelocity = Vec3(20, 0, 0);
 		sphere_bcs.mEnhancedInternalEdgeRemoval = enhanced_removal == 1;
 		mBodyInterface->CreateAndAddBody(sphere_bcs, EActivation::Activate);
+		pos += RVec3(0, 0, 5.0_r);
+
+		// Compound
+		RefConst<Shape> box = new BoxShape(Vec3::sReplicate(0.1f));
+		StaticCompoundShapeSettings compound;
+		compound.SetEmbedded();
+		for (int x = 0; x < 2; ++x)
+			for (int y = 0; y < 2; ++y)
+				for (int z = 0; z < 2; ++z)
+					compound.AddShape(Vec3(x == 0? -1.9f : 1.9f, y == 0? -1.9f : 1.9f, z == 0? -1.9f : 1.9f), Quat::sIdentity(), box);
+		BodyCreationSettings compound_bcs(&compound, pos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		compound_bcs.mLinearVelocity = Vec3(20, 0, 0);
+		compound_bcs.mEnhancedInternalEdgeRemoval = enhanced_removal == 1;
+		mBodyInterface->CreateAndAddBody(compound_bcs, EActivation::Activate);
 		pos += RVec3(0, 0, 7.0_r);
 	}
 }
@@ -111,4 +125,71 @@ void EnhancedInternalEdgeRemovalTest::Initialize()
 			z += 4.0f;
 		}
 	}
+
+	// This tests that fast moving spheres rolling over a triangle will not be affected by internal edges
+	{
+		// Create a flat plane
+		MeshShapeSettings plane_mesh({
+			{
+				Float3(-10, 0, -10),
+				Float3(-10, 0, 10),
+				Float3(10, 0, 10)
+			},
+			{
+				Float3(-10, 0, -10),
+				Float3(10, 0, 10),
+				Float3(10, 0, -10)
+			},
+		});
+		plane_mesh.SetEmbedded();
+		BodyCreationSettings level_plane(&plane_mesh, RVec3(-10, 0, 50), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		level_plane.mFriction = 1;
+		mBodyInterface->CreateAndAddBody(level_plane, EActivation::DontActivate);
+
+		// Roll a ball over it
+		BodyCreationSettings level_ball(new SphereShape(0.5f), RVec3(-10, 1, 41), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		level_ball.mEnhancedInternalEdgeRemoval = true;
+		level_ball.mFriction = 1;
+		level_ball.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+		level_ball.mMassPropertiesOverride.mMass = 1;
+		mLevelBall = mBodyInterface->CreateAndAddBody(level_ball, EActivation::Activate);
+
+		// Create a sloped plane
+		BodyCreationSettings slope_plane(&plane_mesh, RVec3(10, 0, 50), Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(45)), EMotionType::Static, Layers::NON_MOVING);
+		slope_plane.mFriction = 1;
+		mBodyInterface->CreateAndAddBody(slope_plane, EActivation::DontActivate);
+
+		// Roll a ball over it
+		BodyCreationSettings slope_ball(new SphereShape(0.5f), RVec3(10, 8, 44), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		slope_ball.mEnhancedInternalEdgeRemoval = true;
+		slope_ball.mFriction = 1;
+		slope_ball.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+		slope_ball.mMassPropertiesOverride.mMass = 1;
+		mBodyInterface->CreateAndAddBody(slope_ball, EActivation::Activate);
+	}
+
+	// This tests a previous bug where a compound shape will fall through a box because features are voided by accident.
+	// This is because both boxes of the compound shape collide with the top face of the static box. The big box will have a normal
+	// that is aligned with the face so will be processed immediately. This will void the top face of the static box. The small box,
+	// which collides with an edge of the top face will not be processed. This will cause the small box to penetrate the face.
+	{
+		// A box
+		BodyCreationSettings box_bcs(new BoxShape(Vec3::sReplicate(2.5f)), RVec3(0, 0, 70), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		mBodyInterface->CreateAndAddBody(box_bcs, EActivation::DontActivate);
+
+		// Compound
+		StaticCompoundShapeSettings compound;
+		compound.SetEmbedded();
+		compound.AddShape(Vec3(-2.5f, 0, 0), Quat::sIdentity(), new BoxShape(Vec3(2.5f, 0.1f, 0.1f)));
+		compound.AddShape(Vec3(0.1f, 0, 0), Quat::sIdentity(), new BoxShape(Vec3(0.1f, 1, 1)));
+		BodyCreationSettings compound_bcs(&compound, RVec3(2, 5, 70), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		compound_bcs.mEnhancedInternalEdgeRemoval = true;
+		mBodyInterface->CreateAndAddBody(compound_bcs, EActivation::Activate);
+	}
+}
+
+void EnhancedInternalEdgeRemovalTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	// Increase rotation speed of the ball on the flat plane
+	mBodyInterface->AddTorque(mLevelBall, Vec3(JPH_PI * 4, 0, 0));
 }

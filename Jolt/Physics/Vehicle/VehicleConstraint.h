@@ -108,6 +108,12 @@ public:
 	const StepCallback &		GetPostStepCallback() const					{ return mPostStepCallback; }
 	void						SetPostStepCallback(const StepCallback &inPostStepCallback) { mPostStepCallback = inPostStepCallback; }
 
+	/// Override gravity for this vehicle. Note that overriding gravity will set the gravity factor of the vehicle body to 0 and apply gravity in the PhysicsStepListener instead.
+	void						OverrideGravity(Vec3Arg inGravity)			{ mGravityOverride = inGravity; mIsGravityOverridden = true; }
+	bool						IsGravityOverridden() const					{ return mIsGravityOverridden; }
+	Vec3						GetGravityOverride() const					{ return mGravityOverride; }
+	void						ResetGravityOverride()						{ mIsGravityOverridden = false; mBody->GetMotionProperties()->SetGravityFactor(1.0f); } ///< Note that resetting the gravity override will restore the gravity factor of the vehicle body to 1.
+
 	/// Get the local space forward vector of the vehicle
 	Vec3						GetLocalForward() const						{ return mForward; }
 
@@ -197,6 +203,10 @@ private:
 
 	// Calculate the constraint properties for mPitchRollPart
 	void						CalculatePitchRollConstraintProperties(RMat44Arg inBodyTransform);
+
+	// Gravity override
+	bool						mIsGravityOverridden = false;				///< If the gravity is currently overridden
+	Vec3						mGravityOverride = Vec3::sZero();			///< Gravity override value, replaces PhysicsSystem::GetGravity() when mIsGravityOverridden is true
 
 	// Simulation information
 	Body *						mBody;										///< Body of the vehicle

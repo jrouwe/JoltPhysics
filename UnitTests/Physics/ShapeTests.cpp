@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
@@ -21,6 +22,7 @@
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Core/StreamWrapper.h>
 
 TEST_SUITE("ShapeTests")
@@ -120,6 +122,8 @@ TEST_SUITE("ShapeTests")
 	// Test IsValidScale function
 	TEST_CASE("TestIsValidScale")
 	{
+		constexpr float cMinScaleToleranceSq = Square(1.0e-6f * ScaleHelpers::cMinScale);
+
 		// Test simple shapes
 		Ref<Shape> sphere = new SphereShape(2.0f);
 		CHECK(!sphere->IsValidScale(Vec3::sZero()));
@@ -128,14 +132,20 @@ TEST_SUITE("ShapeTests")
 		CHECK(!sphere->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!sphere->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!sphere->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(sphere->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq)); // Averaging can cause a slight error
+		CHECK(sphere->MakeScaleValid(Vec3(-2, 3, 4)) == Vec3(-3, 3, 3));
 
 		Ref<Shape> capsule = new CapsuleShape(2.0f, 0.5f);
 		CHECK(!capsule->IsValidScale(Vec3::sZero()));
+		CHECK(!capsule->IsValidScale(Vec3(0, 1, 0)));
+		CHECK(!capsule->IsValidScale(Vec3(1, 0, 1)));
 		CHECK(capsule->IsValidScale(Vec3(2, 2, 2)));
 		CHECK(capsule->IsValidScale(Vec3(-1, 1, -1)));
 		CHECK(!capsule->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!capsule->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!capsule->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(capsule->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
+		CHECK(capsule->MakeScaleValid(Vec3(-2, 3, 4)) == Vec3(-3, 3, 3));
 
 		Ref<Shape> tapered_capsule = TaperedCapsuleShapeSettings(2.0f, 0.5f, 0.7f).Create().Get();
 		CHECK(!tapered_capsule->IsValidScale(Vec3::sZero()));
@@ -144,30 +154,60 @@ TEST_SUITE("ShapeTests")
 		CHECK(!tapered_capsule->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!tapered_capsule->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!tapered_capsule->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(tapered_capsule->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
+		CHECK(tapered_capsule->MakeScaleValid(Vec3(2, -3, 4)) == Vec3(3, -3, 3));
 
 		Ref<Shape> cylinder = new CylinderShape(0.5f, 2.0f);
 		CHECK(!cylinder->IsValidScale(Vec3::sZero()));
+		CHECK(!cylinder->IsValidScale(Vec3(0, 1, 0)));
+		CHECK(!cylinder->IsValidScale(Vec3(1, 0, 1)));
 		CHECK(cylinder->IsValidScale(Vec3(2, 2, 2)));
 		CHECK(cylinder->IsValidScale(Vec3(-1, 1, -1)));
 		CHECK(!cylinder->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(cylinder->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!cylinder->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(cylinder->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
+		CHECK(cylinder->MakeScaleValid(Vec3(-1.0e-10f, 1, 1.0e-10f)) == Vec3(-ScaleHelpers::cMinScale, 1, ScaleHelpers::cMinScale));
+		CHECK(cylinder->MakeScaleValid(Vec3(2, 5, -4)) == Vec3(3, 5, -3));
+
+		Ref<Shape> tapered_cylinder = TaperedCylinderShapeSettings(0.5f, 2.0f, 3.0f).Create().Get();
+		CHECK(!tapered_cylinder->IsValidScale(Vec3::sZero()));
+		CHECK(!tapered_cylinder->IsValidScale(Vec3(0, 1, 0)));
+		CHECK(!tapered_cylinder->IsValidScale(Vec3(1, 0, 1)));
+		CHECK(tapered_cylinder->IsValidScale(Vec3(2, 2, 2)));
+		CHECK(tapered_cylinder->IsValidScale(Vec3(-1, 1, -1)));
+		CHECK(!tapered_cylinder->IsValidScale(Vec3(2, 1, 1)));
+		CHECK(tapered_cylinder->IsValidScale(Vec3(1, 2, 1)));
+		CHECK(!tapered_cylinder->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(tapered_cylinder->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
+		CHECK(tapered_cylinder->MakeScaleValid(Vec3(-1.0e-10f, 1, 1.0e-10f)) == Vec3(-ScaleHelpers::cMinScale, 1, ScaleHelpers::cMinScale));
+		CHECK(tapered_cylinder->MakeScaleValid(Vec3(2, 5, -4)) == Vec3(3, 5, -3));
 
 		Ref<Shape> triangle = new TriangleShape(Vec3(1, 2, 3), Vec3(4, 5, 6), Vec3(7, 8, 9));
 		CHECK(!triangle->IsValidScale(Vec3::sZero()));
+		CHECK(!triangle->IsValidScale(Vec3::sAxisX()));
+		CHECK(!triangle->IsValidScale(Vec3::sAxisY()));
+		CHECK(!triangle->IsValidScale(Vec3::sAxisZ()));
 		CHECK(triangle->IsValidScale(Vec3(2, 2, 2)));
 		CHECK(triangle->IsValidScale(Vec3(-1, 1, -1)));
 		CHECK(triangle->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(triangle->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(triangle->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(triangle->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
+		CHECK(triangle->MakeScaleValid(Vec3(2, 5, -4)) == Vec3(2, 5, -4));
 
 		Ref<Shape> triangle2 = new TriangleShape(Vec3(1, 2, 3), Vec3(4, 5, 6), Vec3(7, 8, 9), 0.01f); // With convex radius
 		CHECK(!triangle2->IsValidScale(Vec3::sZero()));
+		CHECK(!triangle2->IsValidScale(Vec3::sAxisX()));
+		CHECK(!triangle2->IsValidScale(Vec3::sAxisY()));
+		CHECK(!triangle2->IsValidScale(Vec3::sAxisZ()));
 		CHECK(triangle2->IsValidScale(Vec3(2, 2, 2)));
 		CHECK(triangle2->IsValidScale(Vec3(-1, 1, -1)));
 		CHECK(!triangle2->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!triangle2->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!triangle2->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(triangle2->MakeScaleValid(Vec3::sZero()).IsClose(Vec3::sReplicate(ScaleHelpers::cMinScale), cMinScaleToleranceSq));
+		CHECK(triangle2->MakeScaleValid(Vec3(2, 6, -4)) == Vec3(4, 4, -4));
 
 		Ref<Shape> scaled = new ScaledShape(sphere, Vec3(1, 2, 1));
 		CHECK(!scaled->IsValidScale(Vec3::sZero()));
@@ -177,6 +217,8 @@ TEST_SUITE("ShapeTests")
 		CHECK(!scaled->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!scaled->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!scaled->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(scaled->MakeScaleValid(Vec3(3, 3, 3)) == Vec3(4, 2, 4));
+		CHECK(scaled->MakeScaleValid(Vec3(4, 2, 4)) == Vec3(4, 2, 4));
 
 		Ref<Shape> scaled2 = new ScaledShape(scaled, Vec3(1, 0.5f, 1));
 		CHECK(!scaled2->IsValidScale(Vec3::sZero()));
@@ -185,6 +227,8 @@ TEST_SUITE("ShapeTests")
 		CHECK(!scaled2->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!scaled2->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(!scaled2->IsValidScale(Vec3(1, 1, 2)));
+		CHECK(scaled2->MakeScaleValid(Vec3(3, 3, 3)) == Vec3(3, 3, 3));
+		CHECK(scaled2->MakeScaleValid(Vec3(5, 2, 5)) == Vec3(4, 4, 4));
 
 		// Test a compound with shapes that can only be scaled uniformly
 		StaticCompoundShapeSettings compound_settings;
@@ -282,6 +326,22 @@ TEST_SUITE("ShapeTests")
 		CHECK(!mutable_compound4->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(mutable_compound4->IsValidScale(Vec3(1, 1, 2))); // We're rotation around Z, so non-uniform in the Z direction is ok
 
+		// Test a cylinder rotated by 90 degrees around Z rotating Y to X, meaning that Y and Z should be scaled uniformly
+		MutableCompoundShapeSettings mutable_compound_settings5;
+		mutable_compound_settings5.AddShape(Vec3(1, 2, 3), Quat::sRotation(Vec3::sAxisZ(), -0.5f * JPH_PI), new CylinderShape(1.0f, 0.5f));
+		Ref<Shape> mutable_compound5 = mutable_compound_settings5.Create().Get();
+		CHECK(mutable_compound5->IsValidScale(Vec3::sReplicate(2)));
+		CHECK(mutable_compound5->IsValidScale(Vec3(1, 2, 2)));
+		CHECK(mutable_compound5->IsValidScale(Vec3(1, 2, -2)));
+		CHECK(!mutable_compound5->IsValidScale(Vec3(2, 1, 2)));
+		CHECK(!mutable_compound5->IsValidScale(Vec3(2, 2, 1)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3::sReplicate(2)).IsClose(Vec3::sReplicate(2)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3::sReplicate(-2)).IsClose(Vec3::sReplicate(-2)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3(1, 2, 2)).IsClose(Vec3(1, 2, 2)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3(1, 2, -2)).IsClose(Vec3(1, 2, -2)));
+		CHECK(mutable_compound5->MakeScaleValid(Vec3(2, 1, 2)).IsClose(Vec3::sReplicate(5.0f / 3.0f))); // Not the best solution, but we don't have logic to average over YZ only
+		CHECK(mutable_compound5->MakeScaleValid(Vec3(2, 2, 1)).IsClose(Vec3::sReplicate(5.0f / 3.0f))); // Not the best solution, but we don't have logic to average over YZ only
+
 		// Test a rotated translated shape that can only be scaled uniformly
 		RotatedTranslatedShapeSettings rt_settings(Vec3(1, 2, 3), Quat::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI), sphere);
 		Ref<Shape> rt_shape = rt_settings.Create().Get();
@@ -321,6 +381,21 @@ TEST_SUITE("ShapeTests")
 		CHECK(!rt_shape4->IsValidScale(Vec3(2, 1, 1)));
 		CHECK(!rt_shape4->IsValidScale(Vec3(1, 2, 1)));
 		CHECK(rt_shape4->IsValidScale(Vec3(1, 1, 2))); // We're rotation around Z, so non-uniform in the Z direction is ok
+
+		// Test a cylinder rotated by 90 degrees around Z rotating Y to X, meaning that Y and Z should be scaled uniformly
+		RotatedTranslatedShapeSettings rt_settings5(Vec3(1, 2, 3), Quat::sRotation(Vec3::sAxisZ(), -0.5f * JPH_PI), new CylinderShape(1.0f, 0.5f));
+		Ref<Shape> rt_shape5 = rt_settings5.Create().Get();
+		CHECK(rt_shape5->IsValidScale(Vec3::sReplicate(2)));
+		CHECK(rt_shape5->IsValidScale(Vec3(1, 2, 2)));
+		CHECK(rt_shape5->IsValidScale(Vec3(1, 2, -2)));
+		CHECK(!rt_shape5->IsValidScale(Vec3(2, 1, 2)));
+		CHECK(!rt_shape5->IsValidScale(Vec3(2, 2, 1)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3::sReplicate(2)).IsClose(Vec3::sReplicate(2)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3::sReplicate(-2)).IsClose(Vec3::sReplicate(-2)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3(1, 2, 2)).IsClose(Vec3(1, 2, 2)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3(1, 2, -2)).IsClose(Vec3(1, 2, -2)));
+		CHECK(rt_shape5->MakeScaleValid(Vec3(2, 1, 2)).IsClose(Vec3(2, 1.5f, 1.5f))); // YZ will be averaged here
+		CHECK(rt_shape5->MakeScaleValid(Vec3(2, 2, 1)).IsClose(Vec3(2, 1.5f, 1.5f))); // YZ will be averaged here
 	}
 
 	// Test embedded shape
@@ -362,16 +437,16 @@ TEST_SUITE("ShapeTests")
 	{
 		// Create a sphere and check radius
 		SphereShapeSettings sphere_settings(1.0f);
-		RefConst<SphereShape> sphere1 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		RefConst<SphereShape> sphere1 = StaticCast<SphereShape>(sphere_settings.Create().Get());
 		CHECK(sphere1->GetRadius() == 1.0f);
 
 		// Modify radius and check that creating the shape again returns the cached result
 		sphere_settings.mRadius = 2.0f;
-		RefConst<SphereShape> sphere2 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		RefConst<SphereShape> sphere2 = StaticCast<SphereShape>(sphere_settings.Create().Get());
 		CHECK(sphere2 == sphere1);
 
 		sphere_settings.ClearCachedResult();
-		RefConst<SphereShape> sphere3 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		RefConst<SphereShape> sphere3 = StaticCast<SphereShape>(sphere_settings.Create().Get());
 		CHECK(sphere3->GetRadius() == 2.0f);
 	}
 
@@ -599,20 +674,20 @@ TEST_SUITE("ShapeTests")
 		CHECK(sphere->GetType() == EShapeType::Convex);
 		CHECK(sphere->GetSubType() == EShapeSubType::Sphere);
 		CHECK(sphere->GetUserData() == 0x5678123443218765);
-		CHECK(static_cast<SphereShape *>(sphere.GetPtr())->GetRadius() == cRadius);
+		CHECK(StaticCast<SphereShape>(sphere)->GetRadius() == cRadius);
 	}
 
 	// Test setting user data on shapes
 	TEST_CASE("TestIsValidSubShapeID")
 	{
 		MutableCompoundShapeSettings shape1_settings;
-		RefConst<CompoundShape> shape1 = static_cast<const CompoundShape *>(shape1_settings.Create().Get().GetPtr());
+		RefConst<CompoundShape> shape1 = StaticCast<CompoundShape>(shape1_settings.Create().Get());
 
 		MutableCompoundShapeSettings shape2_settings;
 		shape2_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), new SphereShape(1.0f));
 		shape2_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), new SphereShape(1.0f));
 		shape2_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), new SphereShape(1.0f));
-		RefConst<CompoundShape> shape2 = static_cast<const CompoundShape *>(shape2_settings.Create().Get().GetPtr());
+		RefConst<CompoundShape> shape2 = StaticCast<CompoundShape>(shape2_settings.Create().Get());
 
 		// Get sub shape IDs of shape 2 and test if they're valid
 		SubShapeID sub_shape1 = shape2->GetSubShapeIDFromIndex(0, SubShapeIDCreator()).GetID();
@@ -731,7 +806,7 @@ TEST_SUITE("ShapeTests")
 			StreamInWrapper iwrapper(stream);
 			Shape::ShapeResult result = Shape::sRestoreFromBinaryState(iwrapper);
 			CHECK(result.IsValid());
-			RefConst<MeshShape> mesh_shape = static_cast<const MeshShape *>(result.Get().GetPtr());
+			RefConst<MeshShape> mesh_shape = StaticCast<MeshShape>(result.Get());
 
 			// Test if it contains the same amount of triangles
 			Shape::Stats stats = mesh_shape->GetStats();
@@ -747,5 +822,125 @@ TEST_SUITE("ShapeTests")
 			CHECK(hit.mFraction == 0.5f);
 			CHECK(mesh_shape->GetSurfaceNormal(hit.mSubShapeID2, ray.GetPointOnRay(hit.mFraction)) == Vec3::sAxisY());
 		}
+	}
+
+	TEST_CASE("TestMeshShapePerTriangleUserData")
+	{
+		UnitTestRandom random;
+
+		// Create regular grid of triangles
+		TriangleList triangles[2];
+		for (int x = 0; x < 20; ++x)
+			for (int z = 0; z < 20; ++z)
+			{
+				float x1 = 10.0f * x;
+				float z1 = 10.0f * z;
+				float x2 = x1 + 10.0f;
+				float z2 = z1 + 10.0f;
+
+				Float3 v1 = Float3(x1, 0, z1);
+				Float3 v2 = Float3(x2, 0, z1);
+				Float3 v3 = Float3(x1, 0, z2);
+				Float3 v4 = Float3(x2, 0, z2);
+
+				uint32 user_data = (x << 16) + z;
+				triangles[random() & 1].push_back(Triangle(v1, v3, v4, 0, user_data));
+				triangles[random() & 1].push_back(Triangle(v1, v4, v2, 0, user_data | 0x80000000));
+			}
+
+		// Create a compound with 2 meshes
+		StaticCompoundShapeSettings compound_settings;
+		compound_settings.SetEmbedded();
+		for (TriangleList &t : triangles)
+		{
+			// Shuffle the triangles
+			std::shuffle(t.begin(), t.end(), random);
+
+			// Create mesh
+			MeshShapeSettings mesh_settings(t);
+			mesh_settings.mPerTriangleUserData = true;
+			compound_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), mesh_settings.Create().Get());
+		}
+		RefConst<Shape> compound = compound_settings.Create().Get();
+
+		// Collide the compound with a box to get all triangles back
+		RefConst<Shape> box = new BoxShape(Vec3::sReplicate(100.0f));
+		AllHitCollisionCollector<CollideShapeCollector> collector;
+		CollideShapeSettings settings;
+		settings.mCollectFacesMode = ECollectFacesMode::CollectFaces;
+		CollisionDispatch::sCollideShapeVsShape(box, compound, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(100.0f, 0, 100.0f)), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+		CHECK(collector.mHits.size() == triangles[0].size() + triangles[1].size());
+		for (const CollideShapeResult &r : collector.mHits)
+		{
+			// Get average vertex
+			Vec3 avg = Vec3::sZero();
+			for (const Vec3 &v : r.mShape2Face)
+				avg += v;
+
+			// Calculate the expected user data
+			avg = avg / 30.0f;
+			uint x = uint(avg.GetX());
+			uint z = uint(avg.GetZ());
+			uint32 expected_user_data = (x << 16) + z;
+			if (avg.GetX() - float(x) > 0.5f)
+				expected_user_data |= 0x80000000;
+
+			// Get the leaf shape (mesh shape in this case)
+			SubShapeID remainder;
+			const Shape *shape = compound->GetLeafShape(r.mSubShapeID2, remainder);
+			JPH_ASSERT(shape->GetType() == EShapeType::Mesh);
+
+			// Get user data from the triangle that was hit
+			uint32 user_data = static_cast<const MeshShape *>(shape)->GetTriangleUserData(remainder);
+
+			CHECK(user_data == expected_user_data);
+		}
+	}
+
+	TEST_CASE("TestMutableCompoundShapeAdjustCenterOfMass")
+	{
+		// Start with a box at (-1 0 0)
+		MutableCompoundShapeSettings settings;
+		Ref<Shape> box_shape1 = new BoxShape(Vec3::sReplicate(1.0f));
+		box_shape1->SetUserData(1);
+		settings.AddShape(Vec3(-1.0f, 0.0f, 0.0f), Quat::sIdentity(), box_shape1);
+		Ref<MutableCompoundShape> shape = StaticCast<MutableCompoundShape>(settings.Create().Get());
+		CHECK(shape->GetCenterOfMass() == Vec3(-1.0f, 0.0f, 0.0f));
+		CHECK(shape->GetLocalBounds() == AABox(Vec3::sReplicate(-1.0f), Vec3::sReplicate(1.0f)));
+
+		// Check that we can hit the box
+		AllHitCollisionCollector<CollidePointCollector> collector;
+		shape->CollidePoint(Vec3(-0.5f, 0.0f, 0.0f) - shape->GetCenterOfMass(), SubShapeIDCreator(), collector);
+		CHECK((collector.mHits.size() == 1 && shape->GetSubShapeUserData(collector.mHits[0].mSubShapeID2) == 1));
+		collector.Reset();
+		CHECK(collector.mHits.empty());
+
+		// Now add another box at (1 0 0)
+		Ref<Shape> box_shape2 = new BoxShape(Vec3::sReplicate(1.0f));
+		box_shape2->SetUserData(2);
+		shape->AddShape(Vec3(1.0f, 0.0f, 0.0f), Quat::sIdentity(), box_shape2);
+		CHECK(shape->GetCenterOfMass() == Vec3(-1.0f, 0.0f, 0.0f));
+		CHECK(shape->GetLocalBounds() == AABox(Vec3(-1.0f, -1.0f, -1.0f), Vec3(3.0f, 1.0f, 1.0f)));
+
+		// Check that we can hit both boxes
+		shape->CollidePoint(Vec3(-0.5f, 0.0f, 0.0f) - shape->GetCenterOfMass(), SubShapeIDCreator(), collector);
+		CHECK((collector.mHits.size() == 1 && shape->GetSubShapeUserData(collector.mHits[0].mSubShapeID2) == 1));
+		collector.Reset();
+		shape->CollidePoint(Vec3(0.5f, 0.0f, 0.0f) - shape->GetCenterOfMass(), SubShapeIDCreator(), collector);
+		CHECK((collector.mHits.size() == 1 && shape->GetSubShapeUserData(collector.mHits[0].mSubShapeID2) == 2));
+		collector.Reset();
+
+		// Adjust the center of mass
+		shape->AdjustCenterOfMass();
+		CHECK(shape->GetCenterOfMass() == Vec3::sZero());
+		CHECK(shape->GetLocalBounds() == AABox(Vec3(-2.0f, -1.0f, -1.0f), Vec3(2.0f, 1.0f, 1.0f)));
+
+		// Check that we can hit both boxes
+		shape->CollidePoint(Vec3(-0.5f, 0.0f, 0.0f) - shape->GetCenterOfMass(), SubShapeIDCreator(), collector);
+		CHECK((collector.mHits.size() == 1 && shape->GetSubShapeUserData(collector.mHits[0].mSubShapeID2) == 1));
+		collector.Reset();
+		shape->CollidePoint(Vec3(0.5f, 0.0f, 0.0f) - shape->GetCenterOfMass(), SubShapeIDCreator(), collector);
+		CHECK((collector.mHits.size() == 1 && shape->GetSubShapeUserData(collector.mHits[0].mSubShapeID2) == 2));
+		collector.Reset();
 	}
 }

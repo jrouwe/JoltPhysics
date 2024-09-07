@@ -31,6 +31,5 @@ void RotatedTranslatedShapeTest::Initialize()
 	Ref<RotatedTranslatedShapeSettings> rot_trans = new RotatedTranslatedShapeSettings(Vec3(0, 2.5f, 0), Quat::sRotation(Vec3::sAxisX(), JPH_PI), convex_hull);
 
 	// Place at 0 so that the point touches the floor
-	Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(rot_trans, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(rot_trans, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }
