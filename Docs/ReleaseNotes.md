@@ -19,6 +19,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed an issue where the bounding volume of a HeightFieldShape was not properly adjusted when calling SetHeights leading to missed collisions.
 * Workaround for CMake error 'CMake Error: No output files for WriteBuild!' when using the 'Ninja Multi-Config' generator.
 * When a height field was created where SampleCount / BlockSize is not a power of 2 and a soft body touched the right or bottom border of the height field, the application would crash.
+* Fixed a link error 'ld: error: undefined symbol: pthread_create' on FreeBSD
 
 ## v5.1.0
 
