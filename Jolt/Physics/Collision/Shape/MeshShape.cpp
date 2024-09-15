@@ -343,7 +343,15 @@ void MeshShape::sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTri
 
 MassProperties MeshShape::GetMassProperties() const
 {
-	// Object should always be static, return default mass properties
+	// We cannot calculate the volume for an arbitrary mesh, so we return invalid mass properties.
+	// If you want your mesh to be dynamic, then you should provide the mass properties yourself when
+	// creating a Body:
+	//
+	// BodyCreationSettings::mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
+	// BodyCreationSettings::mMassPropertiesOverride.SetMassAndInertiaOfSolidBox(Vec3::sReplicate(1.0f), 1000.0f);
+	//
+	// Note that for a mesh shape to simulate properly, it is best if the mesh is manifold
+	// (i.e. closed, all edges shared by only two triangles, consistent winding order).
 	return MassProperties();
 }
 

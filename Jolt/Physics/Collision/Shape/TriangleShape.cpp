@@ -183,7 +183,16 @@ void TriangleShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg in
 
 MassProperties TriangleShape::GetMassProperties() const
 {
-	// Object should always be static, return default mass properties
+	// We cannot calculate the volume for a triangle, so we return invalid mass properties.
+	// If you want your triangle to be dynamic, then you should provide the mass properties yourself when
+	// creating a Body:
+	//
+	// BodyCreationSettings::mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
+	// BodyCreationSettings::mMassPropertiesOverride.SetMassAndInertiaOfSolidBox(Vec3::sReplicate(1.0f), 1000.0f);
+	//
+	// Note that this makes the triangle shape behave the same as a mesh shape with a single triangle.
+	// In practice there is very little use for a dynamic triangle shape as back side collisions will be ignored
+	// so if the triangle falls the wrong way it will sink through the floor.
 	return MassProperties();
 }
 
