@@ -37,6 +37,7 @@ There are a number of user configurable defines that turn on/off certain feature
 		<li>JPH_OBJECT_STREAM - Includes the code to serialize physics data in the ObjectStream format (mostly used by the examples).</li>
 		<li>JPH_NO_FORCE_INLINE - Don't use force inlining but fall back to a regular 'inline'.</li>
 		<li>JPH_USE_STD_VECTOR - Use std::vector instead of Jolt's own Array class.</li>
+		<li>CPP_RTTI_ENABLED - Enable C++ RTTI for the library. Disabled by default.</li>
 	</ul>
 </details>
 

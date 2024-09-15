@@ -90,10 +90,10 @@ public:
 	/// Remove constraint from the world
 	void						RemoveConstraint(Constraint *inConstraint)					{ mConstraintManager.Remove(&inConstraint, 1); }
 
-	/// Batch add constraints. Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
+	/// Batch add constraints.
 	void						AddConstraints(Constraint **inConstraints, int inNumber)	{ mConstraintManager.Add(inConstraints, inNumber); }
 
-	/// Batch remove constraints. Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
+	/// Batch remove constraints.
 	void						RemoveConstraints(Constraint **inConstraints, int inNumber)	{ mConstraintManager.Remove(inConstraints, inNumber); }
 
 	/// Get a list of all constraints
