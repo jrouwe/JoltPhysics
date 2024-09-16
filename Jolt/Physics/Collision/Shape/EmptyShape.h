@@ -10,7 +10,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Class that constructs an EmptyShape
-class EmptyShapeSettings final : public ShapeSettings
+class JPH_EXPORT EmptyShapeSettings final : public ShapeSettings
 {
 public:
 	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, EmptyShapeSettings)
@@ -24,7 +24,7 @@ public:
 };
 
 /// An empty shape that has no volume and collides with nothing.
-class EmptyShape final : public Shape
+class JPH_EXPORT EmptyShape final : public Shape
 {
 public:
 	// Constructor
