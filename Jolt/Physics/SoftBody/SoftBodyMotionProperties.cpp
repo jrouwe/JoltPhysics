@@ -198,7 +198,7 @@ void SoftBodyMotionProperties::DetermineCollisionPlanes(const SoftBodyUpdateCont
 
 	// Generate collision planes
 	for (const CollidingShape &cs : mCollidingShapes)
-		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices.data() + inVertexStart, inNumVertices, inContext.mDeltaTime, inContext.mDisplacementDueToGravity, int(&cs - mCollidingShapes.data()));
+		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices.data() + inVertexStart, inNumVertices, int(&cs - mCollidingShapes.data()));
 }
 
 void SoftBodyMotionProperties::ApplyPressure(const SoftBodyUpdateContext &inContext)
