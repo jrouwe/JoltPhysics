@@ -22,6 +22,7 @@
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/Shape/EmptyShape.h>
 #include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
@@ -151,6 +152,7 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 	scene->AddBody(BodyCreationSettings(new CylinderShapeSettings(0.5f, 0.2f, cDefaultConvexRadius, new PhysicsMaterialSimple("Cylinder Material", next_color())), next_pos(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 	scene->AddBody(BodyCreationSettings(new TaperedCylinderShapeSettings(0.5f, 0.2f, 0.4f, cDefaultConvexRadius, new PhysicsMaterialSimple("Tapered Cylinder Material", next_color())), next_pos(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 	scene->AddBody(BodyCreationSettings(new TaperedCylinderShapeSettings(0.5f, 0.4f, 0.0f, 0.0f, new PhysicsMaterialSimple("Cone Material", next_color())), next_pos(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	scene->AddBody(BodyCreationSettings(new EmptyShapeSettings(), next_pos(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 
 	// Compound with sub compound and rotation
 	StaticCompoundShapeSettings *sub_compound = new StaticCompoundShapeSettings();
