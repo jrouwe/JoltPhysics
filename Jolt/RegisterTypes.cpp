@@ -25,28 +25,12 @@
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/Shape/EmptyShape.h>
 #include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
 #include <Jolt/Physics/SoftBody/SoftBodyShape.h>
 
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, Skeleton)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, SkeletalAnimation)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, CompoundShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, StaticCompoundShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, MutableCompoundShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, TriangleShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, PlaneShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, SphereShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, BoxShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, CapsuleShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, TaperedCapsuleShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, CylinderShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, TaperedCylinderShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, ScaledShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, MeshShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, ConvexHullShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, HeightFieldShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, RotatedTranslatedShapeSettings)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, OffsetCenterOfMassShapeSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, RagdollSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, PointConstraintSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, SixDOFConstraintSettings)
@@ -136,6 +120,7 @@ void RegisterTypesInternal(uint64 inVersionID)
 	RotatedTranslatedShape::sRegister();
 	OffsetCenterOfMassShape::sRegister();
 	ScaledShape::sRegister();
+	EmptyShape::sRegister();
 
 	// Create list of all types
 	const RTTI *types[] = {
@@ -158,6 +143,7 @@ void RegisterTypesInternal(uint64 inVersionID)
 		JPH_RTTI(HeightFieldShapeSettings),
 		JPH_RTTI(RotatedTranslatedShapeSettings),
 		JPH_RTTI(OffsetCenterOfMassShapeSettings),
+		JPH_RTTI(EmptyShapeSettings),
 		JPH_RTTI(RagdollSettings),
 		JPH_RTTI(PointConstraintSettings),
 		JPH_RTTI(SixDOFConstraintSettings),

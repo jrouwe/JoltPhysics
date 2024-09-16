@@ -96,6 +96,7 @@ Each body has a shape attached that determines the collision volume. The followi
 * [MutableCompoundShape](@ref MutableCompoundShape) - A shape containing other shapes. This shape can be constructed/changed at runtime and trades construction time for runtime performance. Child shapes are organized in a list to make modification easy.
 * [MeshShape](@ref MeshShape) - A shape consisting of triangles. They are mostly used for static geometry.
 * [HeightFieldShape](@ref HeightFieldShape) - A shape consisting of NxN points that define the height at each point, very suitable for representing hilly terrain. Any body that uses this shape needs to be static.
+* [EmptyShape](@ref EmptyShape) - A shape that collides with nothing and that can be used as a placeholder or for dummy bodies.
 
 Next to this there are a number of decorator shapes that change the behavior of their children:
 

@@ -249,6 +249,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/CylinderShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/DecoratedShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/DecoratedShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/EmptyShape.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/EmptyShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/GetTrianglesContext.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/HeightFieldShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/HeightFieldShape.h

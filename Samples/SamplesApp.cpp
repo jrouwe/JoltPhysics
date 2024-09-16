@@ -39,6 +39,7 @@
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Collision/Shape/EmptyShape.h>
 #include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Jolt/Physics/Constraints/PulleyConstraint.h>
@@ -215,6 +216,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HeightFieldShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DeformedHeightFieldShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RotatedTranslatedShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, OffsetCenterOfMassShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, EmptyShapeTest)
 
 static TestNameAndRTTI sShapeTests[] =
 {
@@ -234,7 +236,8 @@ static TestNameAndRTTI sShapeTests[] =
 	{ "Triangle Shape",						JPH_RTTI(TriangleShapeTest) },
 	{ "Plane Shape",						JPH_RTTI(PlaneShapeTest) },
 	{ "Rotated Translated Shape",			JPH_RTTI(RotatedTranslatedShapeTest) },
-	{ "Offset Center Of Mass Shape",		JPH_RTTI(OffsetCenterOfMassShapeTest) }
+	{ "Offset Center Of Mass Shape",		JPH_RTTI(OffsetCenterOfMassShapeTest) },
+	{ "Empty Shape",						JPH_RTTI(EmptyShapeTest) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledSphereShapeTest)
