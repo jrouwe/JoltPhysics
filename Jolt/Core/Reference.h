@@ -103,14 +103,18 @@ public:
 	/// Constructor
 	inline					Ref()											: mPtr(nullptr) { }
 	inline					Ref(T *inRHS)									: mPtr(inRHS) { AddRef(); }
-	inline					Ref(const Ref<T> &inRHS)						: mPtr(inRHS.mPtr) { AddRef(); }
-	inline					Ref(Ref<T> &&inRHS) noexcept					: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+							Ref(const Ref<T2> &inRHS)						: mPtr(inRHS.mPtr) { AddRef(); }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+							Ref(Ref<T2> &&inRHS) noexcept					: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
 	inline					~Ref()											{ Release(); }
 
 	/// Assignment operators
 	inline Ref<T> &			operator = (T *inRHS)							{ if (mPtr != inRHS) { Release(); mPtr = inRHS; AddRef(); } return *this; }
-	inline Ref<T> &			operator = (const Ref<T> &inRHS)				{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; AddRef(); } return *this; }
-	inline Ref<T> &			operator = (Ref<T> &&inRHS) noexcept			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+	Ref<T> &				operator = (const Ref<T2> &inRHS)				{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; AddRef(); } return *this; }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+	Ref<T> &				operator = (Ref<T2> &&inRHS) noexcept			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
 
 	/// Casting operators
 	inline					operator T *() const							{ return mPtr; }
@@ -132,6 +136,7 @@ public:
 	void **					InternalGetPointer()							{ return reinterpret_cast<void **>(&mPtr); }
 
 private:
+	template <class T2> friend class Ref;
 	template <class T2> friend class RefConst;
 
 	/// Use "variable = nullptr;" to release an object, do not call these functions
@@ -153,18 +158,26 @@ public:
 	/// Constructor
 	inline					RefConst()										: mPtr(nullptr) { }
 	inline					RefConst(const T * inRHS)						: mPtr(inRHS) { AddRef(); }
-	inline					RefConst(const RefConst<T> &inRHS)				: mPtr(inRHS.mPtr) { AddRef(); }
-	inline					RefConst(RefConst<T> &&inRHS) noexcept			: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
-	inline					RefConst(const Ref<T> &inRHS)					: mPtr(inRHS.mPtr) { AddRef(); }
-	inline					RefConst(Ref<T> &&inRHS) noexcept				: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+							RefConst(const RefConst<T2> &inRHS)				: mPtr(inRHS.mPtr) { AddRef(); }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+							RefConst(RefConst<T2> &&inRHS) noexcept			: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+							RefConst(const Ref<T2> &inRHS)					: mPtr(inRHS.mPtr) { AddRef(); }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+							RefConst(Ref<T2> &&inRHS) noexcept				: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
 	inline					~RefConst()										{ Release(); }
 
 	/// Assignment operators
 	inline RefConst<T> &	operator = (const T * inRHS)					{ if (mPtr != inRHS) { Release(); mPtr = inRHS; AddRef(); } return *this; }
-	inline RefConst<T> &	operator = (const RefConst<T> &inRHS)			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; AddRef(); } return *this; }
-	inline RefConst<T> &	operator = (RefConst<T> &&inRHS) noexcept		{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
-	inline RefConst<T> &	operator = (const Ref<T> &inRHS)				{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; AddRef(); } return *this; }
-	inline RefConst<T> &	operator = (Ref<T> &&inRHS) noexcept			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+	RefConst<T> &			operator = (const RefConst<T2> &inRHS)			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; AddRef(); } return *this; }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+	RefConst<T> &			operator = (RefConst<T2> &&inRHS) noexcept		{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+	RefConst<T> &			operator = (const Ref<T2> &inRHS)				{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; AddRef(); } return *this; }
+	template<typename T2, typename = std::enable_if_t<std::is_base_of_v<T, T2>>>
+	RefConst<T> &			operator = (Ref<T2> &&inRHS) noexcept			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
 
 	/// Casting operators
 	inline					operator const T * () const						{ return mPtr; }
@@ -188,6 +201,8 @@ public:
 	void **					InternalGetPointer()							{ return const_cast<void **>(reinterpret_cast<const void **>(&mPtr)); }
 
 private:
+	template <class T2> friend class RefConst;
+
 	/// Use "variable = nullptr;" to release an object, do not call these functions
 	inline void				AddRef()										{ if (mPtr != nullptr) mPtr->AddRef(); }
 	inline void				Release()										{ if (mPtr != nullptr) mPtr->Release(); }
