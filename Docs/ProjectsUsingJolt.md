@@ -12,6 +12,7 @@
 * [Substrata](https://substrata.info/) - A metaverse platform.
 * [Supernova Engine](https://www.supernovaengine.org/) - Game engine for 2D and 3D projects with entity component system (ECS) and data-oriented design.
 * [VPhysics Jolt](https://github.com/Joshua-Ashton/VPhysics-Jolt), a replacement for Ipion Virtual Physics in the Source Engine. Can be used in e.g. [Garry's Mod](https://store.steampowered.com/app/4000/Garrys_Mod/).
+* [Wicked Engine](https://wickedengine.net/) - 3D engine with modern graphics. See [X post](https://x.com/turanszkij/status/1805979390557528217) and [github](https://github.com/turanszkij/WickedEngine/blob/master/WickedEngine/wiPhysics_Jolt.cpp).
 * [X4 Foundations](https://store.steampowered.com/app/392160/X4_Foundations/) - A space simulation game. See [this](https://forum.egosoft.com/viewtopic.php?t=451046) announcement.
 
 If your project is using Jolt, open a discussion or send a PR to add it to the list.
