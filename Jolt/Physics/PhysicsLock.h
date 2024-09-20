@@ -29,7 +29,7 @@ using PhysicsLockContext = const BodyManager *;
 
 /// Helpers to safely lock the different mutexes that are part of the physics system while preventing deadlock
 /// Class that keeps track per thread which lock are taken and if the order of locking is correct
-class PhysicsLock
+class JPH_EXPORT PhysicsLock
 {
 public:
 #ifdef JPH_ENABLE_ASSERTS
