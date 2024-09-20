@@ -86,11 +86,11 @@ private:
 		PhysicsLockContext		mContext = nullptr;
 	};
 
-	static thread_local LockData sLocks[4];
-
 	// Helper function to find the locked mutexes for a particular context
 	static uint32 &				sGetLockedMutexes(PhysicsLockContext inContext)
 	{
+		static thread_local LockData sLocks[4];
+
 		// If we find a matching context we can use it
 		for (LockData &l : sLocks)
 			if (l.mContext == inContext)

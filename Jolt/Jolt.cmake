@@ -350,7 +350,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/IslandBuilder.h
 	${JOLT_PHYSICS_ROOT}/Physics/LargeIslandSplitter.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/LargeIslandSplitter.h
-	${JOLT_PHYSICS_ROOT}/Physics/PhysicsLock.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/PhysicsLock.h
 	${JOLT_PHYSICS_ROOT}/Physics/PhysicsScene.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/PhysicsScene.h
