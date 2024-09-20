@@ -13,6 +13,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/AABBTree/AABBTreeToBuffer.h
 	${JOLT_PHYSICS_ROOT}/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h
 	${JOLT_PHYSICS_ROOT}/AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h
+	${JOLT_PHYSICS_ROOT}/ConfigurationString.h
 	${JOLT_PHYSICS_ROOT}/Core/ARMNeon.h
 	${JOLT_PHYSICS_ROOT}/Core/Array.h
 	${JOLT_PHYSICS_ROOT}/Core/Atomics.h
@@ -60,15 +61,15 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/Semaphore.cpp
 	${JOLT_PHYSICS_ROOT}/Core/Semaphore.h
 	${JOLT_PHYSICS_ROOT}/Core/StaticArray.h
+	${JOLT_PHYSICS_ROOT}/Core/STLAlignedAllocator.h
+	${JOLT_PHYSICS_ROOT}/Core/STLAllocator.h
+	${JOLT_PHYSICS_ROOT}/Core/STLTempAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamIn.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamOut.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamUtils.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamWrapper.h
 	${JOLT_PHYSICS_ROOT}/Core/StringTools.cpp
 	${JOLT_PHYSICS_ROOT}/Core/StringTools.h
-	${JOLT_PHYSICS_ROOT}/Core/STLAlignedAllocator.h
-	${JOLT_PHYSICS_ROOT}/Core/STLAllocator.h
-	${JOLT_PHYSICS_ROOT}/Core/STLTempAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/TempAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/TickCounter.cpp
 	${JOLT_PHYSICS_ROOT}/Core/TickCounter.h
@@ -195,9 +196,9 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/QuadTree.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CastConvexVsTriangles.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CastConvexVsTriangles.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/CastResult.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CastSphereVsTriangles.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CastSphereVsTriangles.h
-	${JOLT_PHYSICS_ROOT}/Physics/Collision/CastResult.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollectFacesMode.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideConvexVsTriangles.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideConvexVsTriangles.h
@@ -365,12 +366,13 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyCreationSettings.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyCreationSettings.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyManifold.h
-	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodySharedSettings.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodySharedSettings.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyUpdateContext.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyVertex.h
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorder.h
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorderImpl.cpp
