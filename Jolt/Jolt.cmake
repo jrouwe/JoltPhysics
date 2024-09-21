@@ -96,12 +96,10 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Geometry/OrientedBox.h
 	${JOLT_PHYSICS_ROOT}/Geometry/Plane.h
 	${JOLT_PHYSICS_ROOT}/Geometry/RayAABox.h
-	${JOLT_PHYSICS_ROOT}/Geometry/RayAABox8.h
 	${JOLT_PHYSICS_ROOT}/Geometry/RayCapsule.h
 	${JOLT_PHYSICS_ROOT}/Geometry/RayCylinder.h
 	${JOLT_PHYSICS_ROOT}/Geometry/RaySphere.h
 	${JOLT_PHYSICS_ROOT}/Geometry/RayTriangle.h
-	${JOLT_PHYSICS_ROOT}/Geometry/RayTriangle8.h
 	${JOLT_PHYSICS_ROOT}/Geometry/Sphere.h
 	${JOLT_PHYSICS_ROOT}/Geometry/Triangle.h
 	${JOLT_PHYSICS_ROOT}/Jolt.cmake
@@ -131,15 +129,11 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Math/Trigonometry.h
 	${JOLT_PHYSICS_ROOT}/Math/UVec4.h
 	${JOLT_PHYSICS_ROOT}/Math/UVec4.inl
-	${JOLT_PHYSICS_ROOT}/Math/UVec8.h
-	${JOLT_PHYSICS_ROOT}/Math/UVec8.inl
 	${JOLT_PHYSICS_ROOT}/Math/Vec3.cpp
 	${JOLT_PHYSICS_ROOT}/Math/Vec3.h
 	${JOLT_PHYSICS_ROOT}/Math/Vec3.inl
 	${JOLT_PHYSICS_ROOT}/Math/Vec4.h
 	${JOLT_PHYSICS_ROOT}/Math/Vec4.inl
-	${JOLT_PHYSICS_ROOT}/Math/Vec8.h
-	${JOLT_PHYSICS_ROOT}/Math/Vec8.inl
 	${JOLT_PHYSICS_ROOT}/Math/Vector.h
 	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableObject.cpp
 	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableObject.h
