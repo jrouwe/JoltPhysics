@@ -96,6 +96,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 * Platform Blue (a popular game console) x64
 * macOS x64/ARM64
 * iOS x64/ARM64
+* MSYS2 MinGW64
 * WebAssembly, see [this](https://github.com/jrouwe/JoltPhysics.js) separate project.
 
 ## Required CPU features
