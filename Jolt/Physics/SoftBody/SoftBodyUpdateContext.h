@@ -34,7 +34,6 @@ public:
 	enum class EState
 	{
 		DetermineCollisionPlanes,													///< Determine collision planes for vertices in parallel
-		DetermineSensorCollisions,													///< Determine collisions with sensors in parallel
 		ApplyConstraints,															///< Apply constraints in parallel
 		Done																		///< Update is finished
 	};
@@ -42,7 +41,6 @@ public:
 	// State of the update
 	atomic<EState>						mState { EState::DetermineCollisionPlanes };///< Current state of the update
 	atomic<uint>						mNextCollisionVertex { 0 };					///< Next vertex to process for DetermineCollisionPlanes
-	atomic<uint>						mNextSensorIndex { 0 };						///< Next sensor to process for DetermineCollisionPlanes
 	atomic<uint>						mNumCollisionVerticesProcessed { 0 };		///< Number of vertices processed by DetermineCollisionPlanes, used to determine if we can start simulating
 	atomic<uint>						mNextIteration { 0 };						///< Next simulation iteration to process
 	atomic<uint>						mNextConstraintGroup { 0 };					///< Next constraint group to process

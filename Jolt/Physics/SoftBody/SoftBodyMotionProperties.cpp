@@ -8,6 +8,7 @@
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyContactListener.h>
 #include <Jolt/Physics/SoftBody/SoftBodyManifold.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVertexIterator.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/Body/BodyManager.h>
 #include <Jolt/Core/ScopeExit.h>
@@ -198,7 +199,7 @@ void SoftBodyMotionProperties::DetermineCollisionPlanes(const SoftBodyUpdateCont
 
 	// Generate collision planes
 	for (const CollidingShape &cs : mCollidingShapes)
-		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices.data() + inVertexStart, inNumVertices, int(&cs - mCollidingShapes.data()));
+		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), CollideSoftBodyVertexIterator(mVertices.data() + inVertexStart), inNumVertices, int(&cs - mCollidingShapes.data()));
 }
 
 void SoftBodyMotionProperties::ApplyPressure(const SoftBodyUpdateContext &inContext)
