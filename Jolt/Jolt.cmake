@@ -141,7 +141,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.inl
-	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyAccess.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyAccess.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyActivationListener.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyCreationSettings.cpp
