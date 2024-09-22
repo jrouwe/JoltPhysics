@@ -44,8 +44,7 @@ public:
 	inline bool				operator <  (const StridedPtr &inRHS) const				{ return mPtr <  inRHS.mPtr; }
 	inline bool				operator >  (const StridedPtr &inRHS) const				{ return mPtr >  inRHS.mPtr; }
 
-	/// Access as normal pointer
-	inline					operator T * () const									{ return reinterpret_cast<T *>(mPtr); }
+	/// Access value
 	inline T &				operator * () const										{ return *reinterpret_cast<T *>(mPtr); }
 	inline T *				operator -> () const									{ return reinterpret_cast<T *>(mPtr); }
 	inline T &				operator [] (int inOffset) const						{ uint8 *ptr = mPtr + inOffset * mStride; return *reinterpret_cast<T *>(ptr); }

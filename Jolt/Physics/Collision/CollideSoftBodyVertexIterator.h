@@ -29,7 +29,7 @@ public:
 	}
 
 	/// Construct using a soft body vertex
-									CollideSoftBodyVertexIterator(SoftBodyVertex *inVertices) :
+	explicit						CollideSoftBodyVertexIterator(SoftBodyVertex *inVertices) :
 		mPosition(&inVertices->mPosition, sizeof(SoftBodyVertex)),
 		mInvMass(&inVertices->mInvMass, sizeof(SoftBodyVertex)),
 		mCollisionPlane(&inVertices->mCollisionPlane, sizeof(SoftBodyVertex)),

@@ -207,7 +207,7 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector, broadphase_layer_filter, object_layer_filter);
 }
 
-void SoftBodyMotionProperties::DetermineCollisionPlanes(const SoftBodyUpdateContext &inContext, uint inVertexStart, uint inNumVertices)
+void SoftBodyMotionProperties::DetermineCollisionPlanes(uint inVertexStart, uint inNumVertices)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -216,7 +216,7 @@ void SoftBodyMotionProperties::DetermineCollisionPlanes(const SoftBodyUpdateCont
 		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), CollideSoftBodyVertexIterator(mVertices.data() + inVertexStart), inNumVertices, int(&cs - mCollidingShapes.data()));
 }
 
-void SoftBodyMotionProperties::DetermineSensorCollisions(const SoftBodyUpdateContext &inContext, CollidingSensor &ioSensor)
+void SoftBodyMotionProperties::DetermineSensorCollisions(CollidingSensor &ioSensor)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -842,7 +842,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCol
 		{
 			// Process collision planes
 			uint num_vertices_to_process = min(SoftBodyUpdateContext::cVertexCollisionBatch, num_vertices - next_vertex);
-			DetermineCollisionPlanes(ioContext, next_vertex, num_vertices_to_process);
+			DetermineCollisionPlanes(next_vertex, num_vertices_to_process);
 			uint vertices_processed = ioContext.mNumCollisionVerticesProcessed.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_release) + num_vertices_to_process;
 			if (vertices_processed >= num_vertices)
 			{
@@ -870,7 +870,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineSen
 		if (sensor_index < num_sensors)
 		{
 			// Process this sensor
-			DetermineSensorCollisions(ioContext, mCollidingSensors[sensor_index]);
+			DetermineSensorCollisions(mCollidingSensors[sensor_index]);
 
 			// Determine next state
 			uint sensors_processed = ioContext.mNumSensorsProcessed.fetch_add(1, memory_order_release) + 1;

@@ -205,10 +205,10 @@ private:
 	};
 
 	/// Do a narrow phase check and determine the closest feature that we can collide with
-	void								DetermineCollisionPlanes(const SoftBodyUpdateContext &inContext, uint inVertexStart, uint inNumVertices);
+	void								DetermineCollisionPlanes(uint inVertexStart, uint inNumVertices);
 
 	/// Do a narrow phase check between a single sensor and the soft body
-	void								DetermineSensorCollisions(const SoftBodyUpdateContext &inContext, CollidingSensor &ioSensor);
+	void								DetermineSensorCollisions(CollidingSensor &ioSensor);
 
 	/// Apply pressure force and update the vertex velocities
 	void								ApplyPressure(const SoftBodyUpdateContext &inContext);
