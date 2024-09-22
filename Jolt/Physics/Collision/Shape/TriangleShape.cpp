@@ -269,16 +269,16 @@ void TriangleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 	// Can't be inside a triangle
 }
 
-void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const CollideSoftBodyVertexIterator &inVertices, uint inNumVertices, int inCollidingShapeIndex) const
 {
 	CollideSoftBodyVerticesVsTriangles collider(inCenterOfMassTransform, inScale);
 
-	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
-		if (v->mInvMass > 0.0f)
+	for (CollideSoftBodyVertexIterator v = inVertices, sbv_end = inVertices + inNumVertices; v != sbv_end; ++v)
+		if (v.GetInvMass() > 0.0f)
 		{
-			collider.StartVertex(*v);
+			collider.StartVertex(v);
 			collider.ProcessTriangle(mV1, mV2, mV3);
-			collider.FinishVertex(*v, inCollidingShapeIndex);
+			collider.FinishVertex(v, inCollidingShapeIndex);
 		}
 }
 

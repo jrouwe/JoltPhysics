@@ -2201,7 +2201,7 @@ void HeightFieldShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &in
 	// A height field doesn't have volume, so we can't test insideness
 }
 
-void HeightFieldShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void HeightFieldShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const CollideSoftBodyVertexIterator &inVertices, uint inNumVertices, int inCollidingShapeIndex) const
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -2241,12 +2241,12 @@ void HeightFieldShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform,
 
 	Visitor visitor(inCenterOfMassTransform, inScale);
 
-	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
-		if (v->mInvMass > 0.0f)
+	for (CollideSoftBodyVertexIterator v = inVertices, sbv_end = inVertices + inNumVertices; v != sbv_end; ++v)
+		if (v.GetInvMass() > 0.0f)
 		{
-			visitor.StartVertex(*v);
+			visitor.StartVertex(v);
 			WalkHeightField(visitor);
-			visitor.FinishVertex(*v, inCollidingShapeIndex);
+			visitor.FinishVertex(v, inCollidingShapeIndex);
 		}
 }
 

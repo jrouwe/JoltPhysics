@@ -41,6 +41,7 @@
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/EmptyShape.h>
 #include <Jolt/Physics/Collision/NarrowPhaseStats.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVertexIterator.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Jolt/Physics/Constraints/PulleyConstraint.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
@@ -355,6 +356,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyCustomUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyLRAConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyBendConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodySkinnedConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodySensorTest)
 
 static TestNameAndRTTI sSoftBodyTests[] =
 {
@@ -373,7 +375,8 @@ static TestNameAndRTTI sSoftBodyTests[] =
 	{ "Soft Body Custom Update",		JPH_RTTI(SoftBodyCustomUpdateTest) },
 	{ "Soft Body LRA Constraint",		JPH_RTTI(SoftBodyLRAConstraintTest) },
 	{ "Soft Body Bend Constraint",		JPH_RTTI(SoftBodyBendConstraintTest) },
-	{ "Soft Body Skinned Constraint",	JPH_RTTI(SoftBodySkinnedConstraintTest) }
+	{ "Soft Body Skinned Constraint",	JPH_RTTI(SoftBodySkinnedConstraintTest) },
+	{ "Soft Body vs Sensor",			JPH_RTTI(SoftBodySensorTest) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
@@ -1466,31 +1469,32 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 	case EProbeMode::CollideSoftBody:
 		{
-			// Create a soft body vertex
 			const float fraction = 0.2f;
 			const float max_distance = 10.0f;
-			SoftBodyVertex vertex;
-			vertex.mInvMass = 1.0f;
-			vertex.mPosition = fraction * direction;
-			vertex.mVelocity = 10.0f * direction;
-			vertex.mCollidingShapeIndex = -1;
-			vertex.mLargestPenetration = -FLT_MAX;
+
+			// Create a soft body vertex iterator
+			const float inv_mass = 1.0f;
+			const Vec3 position = fraction * direction;
+			Plane largest_penetration_collision_plane;
+			float largest_penetration = -FLT_MAX;
+			int largest_penetration_colliding_shape_idx = -1;
+			CollideSoftBodyVertexIterator vertex_iterator(&position, &inv_mass, &largest_penetration_collision_plane, &largest_penetration, &largest_penetration_colliding_shape_idx);
 
 			// Get shapes in a large radius around the start position
-			AABox box(Vec3(start + vertex.mPosition), max_distance);
+			AABox box(Vec3(start + position), max_distance);
 			AllHitCollisionCollector<TransformedShapeCollector> collector;
 			mPhysicsSystem->GetNarrowPhaseQuery().CollectTransformedShapes(box, collector);
 
 			// Closest point found using CollideShape, position relative to 'start'
-			Vec3 closest_point = vertex.mPosition;
+			Vec3 closest_point = position;
 			float closest_point_penetration = 0;
 
 			// Test against each shape
 			for (const TransformedShape &ts : collector.mHits)
 			{
 				int colliding_shape_index = int(&ts - collector.mHits.data());
-				ts.mShape->CollideSoftBodyVertices((RMat44::sTranslation(-start) * ts.GetCenterOfMassTransform()).ToMat44(), ts.GetShapeScale(), &vertex, 1, 1.0f / 60.0f, Vec3::sZero(), colliding_shape_index);
-				if (vertex.mCollidingShapeIndex == colliding_shape_index)
+				ts.mShape->CollideSoftBodyVertices((RMat44::sTranslation(-start) * ts.GetCenterOfMassTransform()).ToMat44(), ts.GetShapeScale(), vertex_iterator, 1, colliding_shape_index);
+				if (largest_penetration_colliding_shape_idx == colliding_shape_index)
 				{
 					// To draw a plane, we need a point but CollideSoftBodyVertices doesn't provide one, so we use CollideShape with a tiny sphere to get the closest point and then project that onto the plane to draw the plane
 					SphereShape point_sphere(1.0e-6f);
@@ -1498,7 +1502,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 					CollideShapeSettings settings;
 					settings.mMaxSeparationDistance = sqrt(3.0f) * max_distance; // Box is extended in all directions by max_distance
 					ClosestHitCollisionCollector<CollideShapeCollector> collide_shape_collector;
-					ts.CollideShape(&point_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(start + vertex.mPosition), settings, start, collide_shape_collector);
+					ts.CollideShape(&point_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(start + position), settings, start, collide_shape_collector);
 					if (collide_shape_collector.HadHit())
 					{
 						closest_point = collide_shape_collector.mHit.mContactPointOn2;
@@ -1508,19 +1512,19 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			}
 
 			// Draw test point
-			mDebugRenderer->DrawMarker(start + vertex.mPosition, Color::sYellow, 0.1f);
+			mDebugRenderer->DrawMarker(start + position, Color::sYellow, 0.1f);
 			mDebugRenderer->DrawMarker(start + closest_point, Color::sRed, 0.1f);
 
 			// Draw collision plane
-			if (vertex.mCollidingShapeIndex != -1)
+			if (largest_penetration_colliding_shape_idx != -1)
 			{
-				RVec3 plane_point = start + vertex.mPosition - vertex.mCollisionPlane.GetNormal() * vertex.mCollisionPlane.SignedDistance(vertex.mPosition);
-				mDebugRenderer->DrawPlane(plane_point, vertex.mCollisionPlane.GetNormal(), Color::sGreen, 2.0f);
+				RVec3 plane_point = start + position - largest_penetration_collision_plane.GetNormal() * largest_penetration_collision_plane.SignedDistance(position);
+				mDebugRenderer->DrawPlane(plane_point, largest_penetration_collision_plane.GetNormal(), Color::sGreen, 2.0f);
 
-				if (abs(closest_point_penetration - vertex.mLargestPenetration) > 0.001f)
-					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f (exp %f)", (double)vertex.mLargestPenetration, (double)closest_point_penetration));
+				if (abs(closest_point_penetration - largest_penetration) > 0.001f)
+					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f (exp %f)", (double)largest_penetration, (double)closest_point_penetration));
 				else
-					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f", (double)vertex.mLargestPenetration));
+					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f", (double)largest_penetration));
 			}
 		}
 		break;

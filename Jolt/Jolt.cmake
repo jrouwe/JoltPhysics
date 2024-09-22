@@ -68,6 +68,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/StreamOut.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamUtils.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamWrapper.h
+	${JOLT_PHYSICS_ROOT}/Core/StridedPtr.h
 	${JOLT_PHYSICS_ROOT}/Core/StringTools.cpp
 	${JOLT_PHYSICS_ROOT}/Core/StringTools.h
 	${JOLT_PHYSICS_ROOT}/Core/TempAllocator.h
@@ -197,6 +198,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideConvexVsTriangles.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollidePointResult.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideSoftBodyVertexIterator.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideSoftBodyVerticesVsTriangles.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideSphereVsTriangles.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideSphereVsTriangles.h

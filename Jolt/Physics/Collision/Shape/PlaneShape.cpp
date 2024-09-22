@@ -14,7 +14,7 @@
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
-#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVertexIterator.h>
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
@@ -246,24 +246,20 @@ void PlaneShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubSha
 		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
 }
 
-void PlaneShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void PlaneShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const CollideSoftBodyVertexIterator &inVertices, uint inNumVertices, int inCollidingShapeIndex) const
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Convert plane to world space
 	Plane plane = mPlane.Scaled(inScale).GetTransformed(inCenterOfMassTransform);
 
-	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
-		if (v->mInvMass > 0.0f)
+	for (CollideSoftBodyVertexIterator v = inVertices, sbv_end = inVertices + inNumVertices; v != sbv_end; ++v)
+		if (v.GetInvMass() > 0.0f)
 		{
 			// Calculate penetration
-			float penetration = -plane.SignedDistance(v->mPosition);
-			if (penetration > v->mLargestPenetration)
-			{
-				v->mLargestPenetration = penetration;
-				v->mCollisionPlane = plane;
-				v->mCollidingShapeIndex = inCollidingShapeIndex;
-			}
+			float penetration = -plane.SignedDistance(v.GetPosition());
+			if (v.UpdatePenetration(penetration))
+				v.SetCollision(plane, inCollidingShapeIndex);
 		}
 }
 

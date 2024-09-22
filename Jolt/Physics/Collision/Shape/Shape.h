@@ -33,7 +33,7 @@ class SubShapeID;
 class PhysicsMaterial;
 class TransformedShape;
 class Plane;
-class SoftBodyVertex;
+class CollideSoftBodyVertexIterator;
 class Shape;
 class StreamOut;
 class StreamIn;
@@ -323,12 +323,10 @@ public:
 	/// Collides all vertices of a soft body with this shape and updates SoftBodyVertex::mCollisionPlane, SoftBodyVertex::mCollidingShapeIndex and SoftBodyVertex::mLargestPenetration if a collision with more penetration was found.
 	/// @param inCenterOfMassTransform Center of mass transform for this shape relative to the vertices.
 	/// @param inScale Scale in local space of the shape (scales relative to its center of mass)
-	/// @param ioVertices The vertices of the soft body
-	/// @param inNumVertices The number of vertices in ioVertices
-	/// @param inDeltaTime Delta time of this time step (can be used to extrapolate the position using the velocity of the particle)
-	/// @param inDisplacementDueToGravity Displacement due to gravity during this time step
-	/// @param inCollidingShapeIndex Value to store in SoftBodyVertex::mCollidingShapeIndex when a collision was found
-	virtual void					CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const = 0;
+	/// @param inVertices The vertices of the soft body
+	/// @param inNumVertices The number of vertices in inVertices
+	/// @param inCollidingShapeIndex Value to store in CollideSoftBodyVertexIterator::mCollidingShapeIndex when a collision was found
+	virtual void					CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const CollideSoftBodyVertexIterator &inVertices, uint inNumVertices, int inCollidingShapeIndex) const = 0;
 
 	/// Collect the leaf transformed shapes of all leaf shapes of this shape.
 	/// inBox is the world space axis aligned box which leaf shapes should collide with.

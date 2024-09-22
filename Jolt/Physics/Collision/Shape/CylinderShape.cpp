@@ -11,7 +11,7 @@
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
-#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVertexIterator.h>
 #include <Jolt/Geometry/RayCylinder.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
@@ -300,7 +300,7 @@ void CylinderShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
 }
 
-void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const CollideSoftBodyVertexIterator &inVertices, uint inNumVertices, int inCollidingShapeIndex) const
 {
 	JPH_ASSERT(IsValidScale(inScale));
 
@@ -311,10 +311,10 @@ void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ve
 	float half_height = abs_scale.GetY() * mHalfHeight;
 	float radius = abs_scale.GetX() * mRadius;
 
-	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
-		if (v->mInvMass > 0.0f)
+	for (CollideSoftBodyVertexIterator v = inVertices, sbv_end = inVertices + inNumVertices; v != sbv_end; ++v)
+		if (v.GetInvMass() > 0.0f)
 		{
-			Vec3 local_pos = inverse_transform * v->mPosition;
+			Vec3 local_pos = inverse_transform * v.GetPosition();
 
 			// Calculate penetration into side surface
 			Vec3 side_normal = local_pos;
@@ -348,14 +348,8 @@ void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ve
 			// Calculate penetration
 			Plane plane = Plane::sFromPointAndNormal(point, normal);
 			float penetration = -plane.SignedDistance(local_pos);
-			if (penetration > v->mLargestPenetration)
-			{
-				v->mLargestPenetration = penetration;
-
-				// Store collision
-				v->mCollisionPlane = plane.GetTransformed(inCenterOfMassTransform);
-				v->mCollidingShapeIndex = inCollidingShapeIndex;
-			}
+			if (v.UpdatePenetration(penetration))
+				v.SetCollision(plane.GetTransformed(inCenterOfMassTransform), inCollidingShapeIndex);
 		}
 }
 

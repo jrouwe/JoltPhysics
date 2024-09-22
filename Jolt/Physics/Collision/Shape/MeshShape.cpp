@@ -793,7 +793,7 @@ void MeshShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShap
 	sCollidePointUsingRayCast(*this, inPoint, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const CollideSoftBodyVertexIterator &inVertices, uint inNumVertices, int inCollidingShapeIndex) const
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -830,12 +830,12 @@ void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Ar
 
 	Visitor visitor(inCenterOfMassTransform, inScale);
 
-	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
-		if (v->mInvMass > 0.0f)
+	for (CollideSoftBodyVertexIterator v = inVertices, sbv_end = inVertices + inNumVertices; v != sbv_end; ++v)
+		if (v.GetInvMass() > 0.0f)
 		{
-			visitor.StartVertex(*v);
+			visitor.StartVertex(v);
 			WalkTreePerTriangle(SubShapeIDCreator(), visitor);
-			visitor.FinishVertex(*v, inCollidingShapeIndex);
+			visitor.FinishVertex(v, inCollidingShapeIndex);
 		}
 }
 
