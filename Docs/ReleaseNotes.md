@@ -13,6 +13,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added Shape::GetLeafShape function to be able to get a leaf shape given a sub shape ID
 * Added HeightFieldShape::GetSubShapeCoordinates to get the triangle coordinates of a particular sub shape ID
 * Split back face mode between convex/triangles for ray casts. This allows you to e.g. have meshes that do give back face hits while convex shapes don't.
+* SoftBodyManifold now returns sensor contacts separately. Before this change, there was a limit of a single colliding body per soft body vertex. If the closest body happened to be a sensor this effectively disabled the collision with the world and caused artifacts. We can now also detect multiple sensor contacts per soft body and they are returned through a new interface SoftBodyManifold::GetSensorContactBodyID.
 
 ### Bug fixes
 
