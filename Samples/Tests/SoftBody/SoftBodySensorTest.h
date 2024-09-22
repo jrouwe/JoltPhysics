@@ -18,7 +18,4 @@ public:
 
 	// See: SoftBodyContactListener
 	virtual void		OnSoftBodyContactAdded(const Body &inSoftBody, const SoftBodyManifold &inManifold) override;
-
-private:
-	BodyID				mSensorID;
 };

@@ -18,7 +18,7 @@ public:
 	/// Constructors
 							StridedPtr() = default;
 							StridedPtr(const StridedPtr &inRHS) = default;
-							StridedPtr(T *inPtr, int inStride = sizeof(T))			: mPtr((uint8 *)inPtr), mStride(inStride) { }
+							StridedPtr(T *inPtr, int inStride = sizeof(T))			: mPtr(const_cast<uint8 *>(reinterpret_cast<const uint8 *>(inPtr))), mStride(inStride) { }
 
 	/// Assignment
 	inline StridedPtr &		operator = (const StridedPtr &inRHS) = default;

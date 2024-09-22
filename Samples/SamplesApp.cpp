@@ -376,7 +376,7 @@ static TestNameAndRTTI sSoftBodyTests[] =
 	{ "Soft Body LRA Constraint",		JPH_RTTI(SoftBodyLRAConstraintTest) },
 	{ "Soft Body Bend Constraint",		JPH_RTTI(SoftBodyBendConstraintTest) },
 	{ "Soft Body Skinned Constraint",	JPH_RTTI(SoftBodySkinnedConstraintTest) },
-	{ "Soft Body Sensor",				JPH_RTTI(SoftBodySensorTest) }
+	{ "Soft Body vs Sensor",			JPH_RTTI(SoftBodySensorTest) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
