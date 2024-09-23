@@ -29,6 +29,7 @@ class JPH_EXPORT EmptyShape final : public Shape
 public:
 	// Constructor
 							EmptyShape() : Shape(EShapeType::Empty, EShapeSubType::Empty) { }
+	explicit				EmptyShape(Vec3Arg inCenterOfMass) : Shape(EShapeType::Empty, EShapeSubType::Empty), mCenterOfMass(inCenterOfMass) { }
 							EmptyShape(const EmptyShapeSettings &inSettings, ShapeResult &outResult) : Shape(EShapeType::Empty, EShapeSubType::Empty, inSettings, outResult), mCenterOfMass(inSettings.mCenterOfMass) { outResult.Set(this); }
 
 	// See: Shape
