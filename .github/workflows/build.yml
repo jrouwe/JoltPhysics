@@ -39,6 +39,33 @@ jobs:
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
+  linux_clang_tsan:
+    runs-on: ubuntu-latest
+    name: Linux Clang TSAN
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh ReleaseTSAN ${{env.UBUNTU_CLANG_VERSION}} \
+        -DTARGET_VIEWER=OFF \
+        -DTARGET_SAMPLES=OFF \
+        -DTARGET_HELLO_WORLD=OFF \
+        -DTARGET_UNIT_TESTS=ON \
+        -DTARGET_PERFORMANCE_TEST=ON
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_ReleaseTSAN -j $(nproc)
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/Linux_ReleaseTSAN
+      run: ctest --output-on-failure --verbose
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/Linux_ReleaseTSAN
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/Linux_ReleaseTSAN
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll
+
   linux-clang-so:
     runs-on: ubuntu-latest
     name: Linux Clang Shared Library

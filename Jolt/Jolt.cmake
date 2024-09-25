@@ -487,6 +487,7 @@ if (BUILD_SHARED_LIBS)
 	# Set linker flags for other build types to be the same as release
 	set(CMAKE_SHARED_LINKER_FLAGS_RELEASEASAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 	set(CMAKE_SHARED_LINKER_FLAGS_RELEASEUBSAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASETSAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 	set(CMAKE_SHARED_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 	set(CMAKE_SHARED_LINKER_FLAGS_DISTRIBUTION "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 
@@ -518,7 +519,7 @@ endif()
 
 # Set the debug/non-debug build flags
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:_DEBUG>")
-target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release,Distribution,ReleaseASAN,ReleaseUBSAN,ReleaseCoverage>:NDEBUG>")
+target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release,Distribution,ReleaseASAN,ReleaseUBSAN,ReleaseTSAN,ReleaseCoverage>:NDEBUG>")
 
 # ASAN should use the default allocators
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseASAN>:JPH_DISABLE_TEMP_ALLOCATOR;JPH_DISABLE_CUSTOM_ALLOCATOR>")
@@ -571,14 +572,14 @@ endif()
 if (DEBUG_RENDERER_IN_DISTRIBUTION)
 	target_compile_definitions(Jolt PUBLIC "JPH_DEBUG_RENDERER")
 elseif (DEBUG_RENDERER_IN_DEBUG_AND_RELEASE)
-	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug,Release,ReleaseASAN,ReleaseUBSAN>:JPH_DEBUG_RENDERER>")
+	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug,Release,ReleaseASAN,ReleaseUBSAN,ReleaseTSAN>:JPH_DEBUG_RENDERER>")
 endif()
 
 # Enable the profiler
 if (PROFILER_IN_DISTRIBUTION)
 	target_compile_definitions(Jolt PUBLIC "JPH_PROFILE_ENABLED")
 elseif (PROFILER_IN_DEBUG_AND_RELEASE)
-	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug,Release,ReleaseASAN,ReleaseUBSAN>:JPH_PROFILE_ENABLED>")
+	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug,Release,ReleaseASAN,ReleaseUBSAN,ReleaseTSAN>:JPH_PROFILE_ENABLED>")
 endif()
 
 # Compile the ObjectStream class and RTTI attribute information

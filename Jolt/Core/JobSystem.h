@@ -195,7 +195,7 @@ protected:
 		}
 		inline void			Release()
 		{
-		#if !defined(JPH_TSAN_ENABLED)
+		#ifndef JPH_TSAN_ENABLED
 			// Releasing a reference must use release semantics...
 			if (mReferenceCount.fetch_sub(1, memory_order_release) == 1)
 			{
@@ -206,9 +206,7 @@ protected:
 		#else
 			// But under TSAN, we cannot use atomic_thread_fence, so we use an acq_rel operation unconditionally instead
 			if (mReferenceCount.fetch_sub(1, memory_order_acq_rel) == 1)
-			{
 				mJobSystem->FreeJob(this);
-			}
 		#endif
 		}
 

@@ -578,12 +578,13 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	#error Undefined
 #endif
 
-#if defined(__has_feature)
+// Check if Thread Sanitizer is enabled
+#ifdef __has_feature
 	#if __has_feature(thread_sanitizer)
 		#define JPH_TSAN_ENABLED
 	#endif
 #else
-	#if defined(__SANITIZE_THREAD__)
+	#ifdef __SANITIZE_THREAD__
 		#define JPH_TSAN_ENABLED
 	#endif
 #endif
