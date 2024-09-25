@@ -4,8 +4,9 @@
 
 #pragma once
 
+#include <Jolt/Core/Atomics.h>
+
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <atomic>
 #include <mutex>
 #include <condition_variable>
 JPH_SUPPRESS_WARNINGS_STD_END
@@ -33,7 +34,14 @@ public:
 	void				Acquire(uint inNumber = 1);
 
 	/// Get the current value of the semaphore
-	inline int			GetValue() const								{ return mCount; }
+	inline int			GetValue() const
+	{
+#if defined(JPH_TSAN_ENABLED) && !defined(JPH_PLATFORM_WINDOWS)
+		// TSAN complains that we're reading mCount without locking. We don't care if we read a stale value. Inserting a lock to keep TSAN happy.
+		std::unique_lock<mutex> lock(mLock);
+#endif
+		return mCount;
+	}
 
 private:
 #ifdef JPH_PLATFORM_WINDOWS
@@ -42,7 +50,7 @@ private:
 	void *				mSemaphore;										///< The semaphore is an expensive construct so we only acquire/release it if we know that we need to wait/have waiting threads
 #else
 	// Other platforms: Emulate a semaphore using a mutex, condition variable and count
-	mutex				mLock;
+	mutable mutex		mLock;
 	condition_variable	mWaitVariable;
 	int					mCount = 0;
 #endif
