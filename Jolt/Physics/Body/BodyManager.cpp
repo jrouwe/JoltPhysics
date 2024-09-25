@@ -105,6 +105,9 @@ void BodyManager::Init(uint inMaxBodies, uint inNumBodyMutexes, const BroadPhase
 
 	// Num body mutexes must be a power of two and not bigger than our MutexMask
 	uint num_body_mutexes = Clamp<uint>(GetNextPowerOf2(inNumBodyMutexes == 0? 2 * thread::hardware_concurrency() : inNumBodyMutexes), 1, sizeof(MutexMask) * 8);
+#ifdef JPH_TSAN_ENABLED
+	num_body_mutexes = min(num_body_mutexes, 32U); // TSAN errors out when locking too many mutexes on the same thread, see: https://github.com/google/sanitizers/issues/950
+#endif
 
 	// Allocate the body mutexes
 	mBodyMutexes.Init(num_body_mutexes);
