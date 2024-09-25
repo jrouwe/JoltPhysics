@@ -48,12 +48,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ReleaseTSAN ${{env.UBUNTU_CLANG_VERSION}} \
-        -DTARGET_VIEWER=OFF \
-        -DTARGET_SAMPLES=OFF \
-        -DTARGET_HELLO_WORLD=OFF \
-        -DTARGET_UNIT_TESTS=ON \
-        -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh ReleaseTSAN ${{env.UBUNTU_CLANG_VERSION}} -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_ReleaseTSAN -j $(nproc)
     - name: Unit Tests
