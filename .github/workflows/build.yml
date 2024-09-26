@@ -54,6 +54,12 @@ jobs:
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_ReleaseTSAN
       run: ctest --output-on-failure --verbose
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/Linux_ReleaseTSAN
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/Linux_ReleaseTSAN
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll
 
   linux-clang-so:
     runs-on: ubuntu-latest
