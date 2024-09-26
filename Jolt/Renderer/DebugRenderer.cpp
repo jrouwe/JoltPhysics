@@ -733,7 +733,7 @@ void DebugRenderer::DrawBox(RMat44Arg inMatrix, const AABox &inBox, ColorArg inC
 {
 	JPH_PROFILE_FUNCTION();
 
-	Mat44 m = Mat44::sScale(inBox.GetExtent());
+	Mat44 m = Mat44::sScale(Vec3::sMax(inBox.GetExtent(), Vec3::sReplicate(1.0e-6f)));
 	m.SetTranslation(inBox.GetCenter());
 	DrawGeometry(inMatrix * m, inColor, mBox, ECullMode::CullBackFace, inCastShadow, inDrawMode);
 }
