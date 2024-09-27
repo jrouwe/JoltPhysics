@@ -17,10 +17,11 @@ namespace Layers
 	static constexpr ObjectLayer UNUSED5 = 4;
 	static constexpr ObjectLayer NON_MOVING = 5;
 	static constexpr ObjectLayer MOVING = 6;
-	static constexpr ObjectLayer HQ_DEBRIS = 7; // High quality debris collides with MOVING and NON_MOVING but not with any debris
-	static constexpr ObjectLayer LQ_DEBRIS = 8; // Low quality debris only collides with NON_MOVING
-	static constexpr ObjectLayer SENSOR = 9; // Sensors only collide with MOVING objects
-	static constexpr ObjectLayer NUM_LAYERS = 10;
+	static constexpr ObjectLayer MOVING2 = 7; // Another moving layer that acts as MOVING but doesn't collide with MOVING
+	static constexpr ObjectLayer HQ_DEBRIS = 8; // High quality debris collides with MOVING and NON_MOVING but not with any debris
+	static constexpr ObjectLayer LQ_DEBRIS = 9; // Low quality debris only collides with NON_MOVING
+	static constexpr ObjectLayer SENSOR = 10; // Sensors only collide with MOVING objects
+	static constexpr ObjectLayer NUM_LAYERS = 11;
 };
 
 /// Class that determines if two object layers can collide
@@ -38,15 +39,17 @@ public:
 		case Layers::UNUSED5:
 			return false;
 		case Layers::NON_MOVING:
-			return inObject2 == Layers::MOVING || inObject2 == Layers::HQ_DEBRIS || inObject2 == Layers::LQ_DEBRIS;
+			return inObject2 == Layers::MOVING || inObject2 == Layers::MOVING2 || inObject2 == Layers::HQ_DEBRIS || inObject2 == Layers::LQ_DEBRIS;
 		case Layers::MOVING:
 			return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING || inObject2 == Layers::HQ_DEBRIS || inObject2 == Layers::SENSOR;
+		case Layers::MOVING2:
+			return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING2 || inObject2 == Layers::HQ_DEBRIS || inObject2 == Layers::SENSOR;
 		case Layers::HQ_DEBRIS:
-			return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING;
+			return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING || inObject2 == Layers::MOVING2;
 		case Layers::LQ_DEBRIS:
 			return inObject2 == Layers::NON_MOVING;
 		case Layers::SENSOR:
-			return inObject2 == Layers::MOVING;
+			return inObject2 == Layers::MOVING || inObject2 == Layers::MOVING2;
 		default:
 			JPH_ASSERT(false);
 			return false;
@@ -59,10 +62,11 @@ namespace BroadPhaseLayers
 {
 	static constexpr BroadPhaseLayer NON_MOVING(0);
 	static constexpr BroadPhaseLayer MOVING(1);
-	static constexpr BroadPhaseLayer LQ_DEBRIS(2);
-	static constexpr BroadPhaseLayer UNUSED(3);
-	static constexpr BroadPhaseLayer SENSOR(4);
-	static constexpr uint NUM_LAYERS(5);
+	static constexpr BroadPhaseLayer MOVING2(2);
+	static constexpr BroadPhaseLayer LQ_DEBRIS(3);
+	static constexpr BroadPhaseLayer UNUSED(4);
+	static constexpr BroadPhaseLayer SENSOR(5);
+	static constexpr uint NUM_LAYERS(6);
 };
 
 /// BroadPhaseLayerInterface implementation
@@ -79,6 +83,7 @@ public:
 		mObjectToBroadPhase[Layers::UNUSED5] = BroadPhaseLayers::UNUSED;
 		mObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
 		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
+		mObjectToBroadPhase[Layers::MOVING2] = BroadPhaseLayers::MOVING2;
 		mObjectToBroadPhase[Layers::HQ_DEBRIS] = BroadPhaseLayers::MOVING; // HQ_DEBRIS is also in the MOVING layer as an example on how to map multiple layers onto the same broadphase layer
 		mObjectToBroadPhase[Layers::LQ_DEBRIS] = BroadPhaseLayers::LQ_DEBRIS;
 		mObjectToBroadPhase[Layers::SENSOR] = BroadPhaseLayers::SENSOR;
@@ -102,6 +107,7 @@ public:
 		{
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
+		case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING2:		return "MOVING2";
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::LQ_DEBRIS:	return "LQ_DEBRIS";
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::UNUSED:		return "UNUSED";
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::SENSOR:		return "SENSOR";
@@ -127,6 +133,8 @@ public:
 		case Layers::MOVING:
 		case Layers::HQ_DEBRIS:
 			return inLayer2 == BroadPhaseLayers::NON_MOVING || inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::SENSOR;
+		case Layers::MOVING2:
+			return inLayer2 == BroadPhaseLayers::NON_MOVING || inLayer2 == BroadPhaseLayers::MOVING2 || inLayer2 == BroadPhaseLayers::SENSOR;
 		case Layers::LQ_DEBRIS:
 			return inLayer2 == BroadPhaseLayers::NON_MOVING;
 		case Layers::SENSOR:

@@ -2668,12 +2668,15 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 			return false;
 
 		// Update bounding boxes for all bodies in the broadphase
-		Array<BodyID> bodies;
-		for (const Body *b : mBodyManager.GetBodies())
-			if (BodyManager::sIsValidBodyPointer(b) && b->IsInBroadPhase())
-				bodies.push_back(b->GetID());
-		if (!bodies.empty())
-			mBroadPhase->NotifyBodiesAABBChanged(&bodies[0], (int)bodies.size());
+		if (inStream.IsLastPart())
+		{
+			Array<BodyID> bodies;
+			for (const Body *b : mBodyManager.GetBodies())
+				if (BodyManager::sIsValidBodyPointer(b) && b->IsInBroadPhase())
+					bodies.push_back(b->GetID());
+			if (!bodies.empty())
+				mBroadPhase->NotifyBodiesAABBChanged(&bodies[0], (int)bodies.size());
+		}
 	}
 
 	if (uint8(state) & uint8(EStateRecorderState::Contacts))

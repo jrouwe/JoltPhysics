@@ -24,6 +24,51 @@ enum class EStateRecorderState : uint8
 	All					= Global | Bodies | Contacts | Constraints					///< Save all state
 };
 
+/// Bitwise OR operator for EStateRecorderState
+constexpr EStateRecorderState operator | (EStateRecorderState inLHS, EStateRecorderState inRHS)
+{
+	return EStateRecorderState(uint8(inLHS) | uint8(inRHS));
+}
+
+/// Bitwise AND operator for EStateRecorderState
+constexpr EStateRecorderState operator & (EStateRecorderState inLHS, EStateRecorderState inRHS)
+{
+	return EStateRecorderState(uint8(inLHS) & uint8(inRHS));
+}
+
+/// Bitwise XOR operator for EStateRecorderState
+constexpr EStateRecorderState operator ^ (EStateRecorderState inLHS, EStateRecorderState inRHS)
+{
+	return EStateRecorderState(uint8(inLHS) ^ uint8(inRHS));
+}
+
+/// Bitwise NOT operator for EStateRecorderState
+constexpr EStateRecorderState operator ~ (EStateRecorderState inAllowedDOFs)
+{
+	return EStateRecorderState(~uint8(inAllowedDOFs));
+}
+
+/// Bitwise OR assignment operator for EStateRecorderState
+constexpr EStateRecorderState & operator |= (EStateRecorderState &ioLHS, EStateRecorderState inRHS)
+{
+	ioLHS = ioLHS | inRHS;
+	return ioLHS;
+}
+
+/// Bitwise AND assignment operator for EStateRecorderState
+constexpr EStateRecorderState & operator &= (EStateRecorderState &ioLHS, EStateRecorderState inRHS)
+{
+	ioLHS = ioLHS & inRHS;
+	return ioLHS;
+}
+
+/// Bitwise XOR assignment operator for EStateRecorderState
+constexpr EStateRecorderState & operator ^= (EStateRecorderState &ioLHS, EStateRecorderState inRHS)
+{
+	ioLHS = ioLHS ^ inRHS;
+	return ioLHS;
+}
+
 /// User callbacks that allow determining which parts of the simulation should be saved by a StateRecorder
 class JPH_EXPORT StateRecorderFilter
 {
@@ -59,8 +104,16 @@ public:
 	void				SetValidating(bool inValidating)							{ mIsValidating = inValidating; }
 	bool				IsValidating() const										{ return mIsValidating; }
 
+	/// This allows splitting the state in multiple parts. While restoring, only the last part should have this flag set to true.
+	/// Note that you should ensure that the different parts contain information for disjoint sets of bodies, constraints and contacts.
+	/// E.g. if you restore the same contact twice, you get undefined behavior. In order to create disjoint sets you can use the StateRecorderFilter.
+	/// Note that validation is not compatible with restoring a simulation state in multiple parts.
+	void				SetIsLastPart(bool inIsLastPart)							{ mIsLastPart = inIsLastPart; }
+	bool				IsLastPart() const											{ return mIsLastPart; }
+
 private:
 	bool				mIsValidating = false;
+	bool				mIsLastPart = true;
 };
 
 JPH_NAMESPACE_END

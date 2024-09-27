@@ -600,7 +600,9 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 	}
 
 #ifdef JPH_ENABLE_ASSERTS
-	mIsFinalized = true;
+	// We don't finalize until the last part is restored
+	if (inStream.IsLastPart())
+		mIsFinalized = true;
 #endif
 
 	return success;
@@ -1710,8 +1712,14 @@ void ContactConstraintManager::SaveState(StateRecorder &inStream, const StateRec
 bool ContactConstraintManager::RestoreState(StateRecorder &inStream)
 {
 	bool success = mCache[mCacheWriteIdx].RestoreState(mCache[mCacheWriteIdx ^ 1], inStream);
-	mCacheWriteIdx ^= 1;
-	mCache[mCacheWriteIdx].Clear();
+
+	// If this is the last part, the cache is finalized
+	if (inStream.IsLastPart())
+	{
+		mCacheWriteIdx ^= 1;
+		mCache[mCacheWriteIdx].Clear();
+	}
+
 	return success;
 }
 
