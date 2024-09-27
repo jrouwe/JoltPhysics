@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v5.1.0 and latest
 
+* 20240927 - PhysicsStepListener::OnStep now takes a single PhysicsStepListenerContext parameter. The old parameters 'delta time' and 'physics system' are part of this context. The VehicleConstraint step callbacks use the same context. (8153cd854ce0547b2def425118e1e2f68a9e365c)
 * 20240922 - SoftBodyManifold now has a separate interface to return collisions with sensors (GetNumSensorContacts/GetSensorContactBodyID), this means they can no longer be retrieved through GetContactBodyID. (4058e6a72edc6e11630b3ec6b67d97e2b9324473)
 * 20240922 - The interface of Shape::CollideSoftBodyVertices changed. It no longer takes a list of SoftBodyVertex but instead uses CollideSoftBodyVertexIterator. Also the delta time and displacement due to gravity parameters have been removed. If you have custom shapes, you need to update the signature. (4058e6a72edc6e11630b3ec6b67d97e2b9324473)
 * 20240825 - RayCastSettings::mBackFaceMode was split into mBackFaceModeTriangles and mBackFaceModeConvex. Replace `mBackFaceMode = ...` with `SetBackFaceMode(...)` (b3cd9f4846c52a84064b7e5e9a9a9fcbfdf286de)
