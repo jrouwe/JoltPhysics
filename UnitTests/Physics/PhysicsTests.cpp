@@ -1805,7 +1805,7 @@ TEST_SUITE("PhysicsTests")
 		};
 
 		PhysicsTestContext c;
-		BodyID floor = c.CreateFloor().GetID();
+		c.CreateFloor();
 
 		// Create 1st set of moving bodies
 		constexpr int cNumMoving1 = 10;
