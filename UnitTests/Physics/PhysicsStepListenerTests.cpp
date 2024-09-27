@@ -13,14 +13,16 @@ TEST_SUITE("StepListenerTest")
 	class TestStepListener : public PhysicsStepListener
 	{
 	public:
-		virtual void			OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override
+		virtual void			OnStep(const PhysicsStepListenerContext &inContext) override
 		{
-			CHECK(inDeltaTime == mExpectedDeltaTime);
-
-			++mCount;
+			CHECK(inContext.mDeltaTime == mExpectedDeltaTime);
+			CHECK(inContext.mIsFirstStep == ((mCount % mExpectedSteps) == 0));
+			int new_count = mCount.fetch_add(1) + 1;
+			CHECK(inContext.mIsLastStep == ((new_count % mExpectedSteps) == 0));
 		}
 
 		atomic<int>				mCount = 0;
+		int						mExpectedSteps;
 		float					mExpectedDeltaTime = 0.0f;
 	};
 
@@ -32,7 +34,10 @@ TEST_SUITE("StepListenerTest")
 		// Initialize and add listeners
 		TestStepListener listeners[10];
 		for (TestStepListener &l : listeners)
+		{
 			l.mExpectedDeltaTime = 1.0f / 60.0f / inCollisionSteps;
+			l.mExpectedSteps = inCollisionSteps;
+		}
 		for (TestStepListener &l : listeners)
 			c.GetSystem()->AddStepListener(&l);
 
@@ -61,6 +66,13 @@ TEST_SUITE("StepListenerTest")
 		// Unregister all listeners
 		for (TestStepListener &l : listeners)
 			c.GetSystem()->RemoveStepListener(&l);
+
+		// Step the simulation
+		c.SimulateSingleStep();
+
+		// Check that no further callbacks were triggered
+		for (TestStepListener &l : listeners)
+			CHECK(l.mCount == 2 * inCollisionSteps);
 	}
 
 	// Test the step listeners with a single collision step
@@ -73,5 +85,11 @@ TEST_SUITE("StepListenerTest")
 	TEST_CASE("TestStepListener2")
 	{
 		DoTest(2);
+	}
+
+	// Test the step listeners with four collision steps
+	TEST_CASE("TestStepListener4")
+	{
+		DoTest(4);
 	}
 }
