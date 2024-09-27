@@ -38,7 +38,7 @@ public:
 	virtual void			RestoreInputState(StateRecorder &inStream) override;
 
 	// See: PhysicsStepListener
-	virtual void			OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
+	virtual void			OnStep(const PhysicsStepListenerContext &inContext) override;
 
 	// See: CharacterContactListener
 	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override;
