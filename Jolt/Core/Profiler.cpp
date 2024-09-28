@@ -60,6 +60,7 @@ uint64 Profiler::GetProcessorTicksPerSecond() const
 	return (ticks - mReferenceTick) * 1000000000ULL / std::chrono::duration_cast<std::chrono::nanoseconds>(time - mReferenceTime).count();
 }
 
+JPH_TSAN_NO_SANITIZE // This function assumes that none of the threads are active while we're dumping the profile, otherwise there will be a race condition on mCurrentSample and the profile data
 void Profiler::NextFrame()
 {
 	std::lock_guard lock(mLock);
