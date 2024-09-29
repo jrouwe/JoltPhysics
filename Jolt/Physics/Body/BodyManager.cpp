@@ -501,7 +501,7 @@ void BodyManager::AddBodyToActiveBodies(Body &ioBody)
 	mp->mIndexInActiveBodies = num_active_bodies;
 	JPH_ASSERT(num_active_bodies < GetMaxBodies());
 	active_bodies[num_active_bodies] = ioBody.GetID();
-	num_active_bodies++; // Increment atomic after setting the body ID so that PhysicsSystem::JobFindCollisions (which doesn't lock the mActiveBodiesMutex) will only read valid IDs
+	num_active_bodies.fetch_add(1, memory_order_release); // Increment atomic after setting the body ID so that PhysicsSystem::JobFindCollisions (which doesn't lock the mActiveBodiesMutex) will only read valid IDs
 
 	// Count CCD bodies
 	if (mp->GetMotionQuality() == EMotionQuality::LinearCast)
@@ -533,7 +533,7 @@ void BodyManager::RemoveBodyFromActiveBodies(Body &ioBody)
 	mp->mIndexInActiveBodies = Body::cInactiveIndex;
 
 	// Remove unused element from active bodies list
-	--num_active_bodies;
+	num_active_bodies.fetch_sub(1, memory_order_release);
 
 	// Count CCD bodies
 	if (mp->GetMotionQuality() == EMotionQuality::LinearCast)
@@ -643,7 +643,7 @@ void BodyManager::GetActiveBodies(EBodyType inType, BodyIDVector &outBodyIDs) co
 	UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
 
 	const BodyID *active_bodies = mActiveBodies[(int)inType];
-	outBodyIDs.assign(active_bodies, active_bodies + mNumActiveBodies[(int)inType]);
+	outBodyIDs.assign(active_bodies, active_bodies + mNumActiveBodies[(int)inType].load(memory_order_relaxed));
 }
 
 void BodyManager::GetBodyIDs(BodyIDVector &outBodies) const
@@ -1142,7 +1142,7 @@ void BodyManager::ValidateActiveBodyBounds()
 	UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
 
 	for (uint type = 0; type < cBodyTypeCount; ++type)
-		for (BodyID *id = mActiveBodies[type], *id_end = mActiveBodies[type] + mNumActiveBodies[type]; id < id_end; ++id)
+		for (BodyID *id = mActiveBodies[type], *id_end = mActiveBodies[type] + mNumActiveBodies[type].load(memory_order_relaxed); id < id_end; ++id)
 		{
 			const Body *body = mBodies[id->GetIndex()];
 			AABox cached = body->GetWorldSpaceBounds();
