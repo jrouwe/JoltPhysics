@@ -830,6 +830,9 @@ static void sFinalizeContactAllocator(PhysicsUpdateContext::Step &ioStep, const 
 	ioStep.mContext->mErrors.fetch_or((uint32)inAllocator.mErrors, memory_order_relaxed);
 }
 
+// Disable TSAN for this function. It detects a false positive race condition on mBodyPairs.
+// We have written mBodyPairs before doing mWriteIdx++ and we check mWriteIdx before reading mBodyPairs, so this should be safe.
+JPH_TSAN_NO_SANITIZE
 void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex)
 {
 #ifdef JPH_ENABLE_ASSERTS
