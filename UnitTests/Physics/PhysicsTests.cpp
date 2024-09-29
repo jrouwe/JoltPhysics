@@ -1833,7 +1833,7 @@ TEST_SUITE("PhysicsTests")
 		c.GetSystem()->SaveState(state1, EStateRecorderState::All, &filter1);
 		CHECK(filter1.mNumBodies == cNumMoving1);
 		CHECK(filter1.mNumContacts > cNumMoving1 / 2); // Many bodies should be in contact now, if not we're not testing contact restoring
-		CHECK(state1.GetData().size() < initial_state.GetData().size()); // Should be smaller than the full state
+		CHECK(state1.GetDataSize() < initial_state.GetDataSize()); // Should be smaller than the full state
 
 		// Save everything relating to 2nd set of bodies
 		MyFilter filter2(moving2);
@@ -1841,7 +1841,7 @@ TEST_SUITE("PhysicsTests")
 		c.GetSystem()->SaveState(state2, EStateRecorderState::Bodies | EStateRecorderState::Contacts, &filter2);
 		CHECK(filter2.mNumBodies == cNumMoving2);
 		CHECK(filter2.mNumContacts > cNumMoving2 / 2);
-		CHECK(state2.GetData().size() < initial_state.GetData().size());
+		CHECK(state2.GetDataSize() < initial_state.GetDataSize());
 
 		// Simulate for 2 seconds
 		c.Simulate(2.0f);

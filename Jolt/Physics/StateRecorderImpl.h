@@ -40,6 +40,9 @@ public:
 	/// Convert the binary data to a string
 	string				GetData() const												{ return mStream.str(); }
 
+	/// Get size of the binary data in bytes
+	size_t				GetDataSize() const											{ return size_t(const_cast<std::stringstream *>(&mStream)->tellp()); }
+
 private:
 	std::stringstream	mStream;
 };
