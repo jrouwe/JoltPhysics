@@ -205,7 +205,7 @@ public:
 	void					SetIslandIndexInternal(uint32 inIndex)							{ mIslandIndex = inIndex; }
 
 	/// Access to the index in the active bodies array
-	uint32					GetIndexInActiveBodiesInternal() const							{ return mIndexInActiveBodies; }
+	inline uint32			GetIndexInActiveBodiesInternal() const							{ return mIndexInActiveBodies.load(memory_order_relaxed); }
 
 #ifdef JPH_DOUBLE_PRECISION
 	inline DVec3			GetSleepTestOffset() const										{ return DVec3::sLoadDouble3Unsafe(mSleepTestOffset); }
@@ -249,7 +249,7 @@ private:
 	float					mMaxLinearVelocity;												///< Maximum linear velocity that this body can reach (m/s)
 	float					mMaxAngularVelocity;											///< Maximum angular velocity that this body can reach (rad/s)
 	float					mGravityFactor;													///< Factor to multiply gravity with
-	uint32					mIndexInActiveBodies = cInactiveIndex;							///< If the body is active, this is the index in the active body list or cInactiveIndex if it is not active (note that there are 2 lists, one for rigid and one for soft bodies)
+	atomic<uint32>			mIndexInActiveBodies = cInactiveIndex;							///< If the body is active, this is the index in the active body list or cInactiveIndex if it is not active (note that there are 2 lists, one for rigid and one for soft bodies)
 	uint32					mIslandIndex = cInactiveIndex;									///< Index of the island that this body is part of, when the body has not yet been updated or is not active this is cInactiveIndex
 
 	// 1 byte aligned

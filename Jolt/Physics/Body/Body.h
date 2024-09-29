@@ -49,7 +49,7 @@ public:
 	inline bool				IsSoftBody() const												{ return mBodyType == EBodyType::SoftBody; }
 
 	/// If this body is currently actively simulating (true) or sleeping (false)
-	inline bool				IsActive() const												{ return mMotionProperties != nullptr && mMotionProperties->mIndexInActiveBodies != cInactiveIndex; }
+	inline bool				IsActive() const												{ return mMotionProperties != nullptr && mMotionProperties->GetIndexInActiveBodiesInternal() != cInactiveIndex; }
 
 	/// Check if this body is static (not movable)
 	inline bool				IsStatic() const												{ return mMotionType == EMotionType::Static; }
@@ -325,7 +325,7 @@ public:
 	void					SetShapeInternal(const Shape *inShape, bool inUpdateMassProperties);
 
 	/// Access to the index in the BodyManager::mActiveBodies list
-	uint32					GetIndexInActiveBodiesInternal() const							{ return mMotionProperties != nullptr? mMotionProperties->mIndexInActiveBodies : cInactiveIndex; }
+	inline uint32			GetIndexInActiveBodiesInternal() const							{ return mMotionProperties != nullptr? mMotionProperties->GetIndexInActiveBodiesInternal() : cInactiveIndex; }
 
 	/// Update eligibility for sleeping
 	ECanSleep				UpdateSleepStateInternal(float inDeltaTime, float inMaxMovement, float inTimeBeforeSleep);
