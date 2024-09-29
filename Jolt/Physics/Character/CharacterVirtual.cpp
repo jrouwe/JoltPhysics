@@ -540,7 +540,7 @@ inline static bool sCorrectFractionForCharacterPadding(const Shape *inShape, Mat
 	}
 	else if (inShape->GetSubType() == EShapeSubType::RotatedTranslated)
 	{
-		const RotatedTranslatedShape *rt_shape = static_cast<const RotatedTranslatedShape *>(inShape);		
+		const RotatedTranslatedShape *rt_shape = static_cast<const RotatedTranslatedShape *>(inShape);
 		return sCorrectFractionForCharacterPadding(rt_shape->GetInnerShape(), inStart * Mat44::sRotation(rt_shape->GetRotation()), inDisplacement, rt_shape->TransformScale(inScale), inPolygon, ioFraction);
 	}
 	else if (inShape->GetSubType() == EShapeSubType::Scaled)
