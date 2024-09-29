@@ -41,7 +41,7 @@ public:
 	string				GetData() const												{ return mStream.str(); }
 
 	/// Get size of the binary data in bytes
-	size_t				GetDataSize() const											{ return size_t(const_cast<std::stringstream *>(&mStream)->tellp()); }
+	size_t				GetDataSize()												{ return size_t(mStream.tellp()); }
 
 private:
 	std::stringstream	mStream;
