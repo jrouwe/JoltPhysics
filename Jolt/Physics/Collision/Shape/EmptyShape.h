@@ -24,6 +24,13 @@ public:
 };
 
 /// An empty shape that has no volume and collides with nothing.
+///
+/// Possible use cases:
+/// - As a placeholder for a shape that will be created later. E.g. if you first need to create a body and only then know what shape it will have.
+/// - If you need a kinematic body to attach a constraint to, but you don't want the body to collide with anything.
+///
+/// Note that, if possible, you should also put your body in an ObjectLayer that doesn't collide with anything.
+/// This ensures that collisions will be filtered out at broad phase level instead of at narrow phase level, this is more efficient.
 class JPH_EXPORT EmptyShape final : public Shape
 {
 public:
