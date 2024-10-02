@@ -136,8 +136,13 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Math/Vec4.h
 	${JOLT_PHYSICS_ROOT}/Math/Vec4.inl
 	${JOLT_PHYSICS_ROOT}/Math/Vector.h
+	${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStream.h
+	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttribute.h
+	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttributeEnum.h
+	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttributeTyped.h
 	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableObject.cpp
 	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableObject.h
+	${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/AllowedDOFs.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.h
@@ -437,7 +442,6 @@ if (ENABLE_OBJECT_STREAM)
 		${JOLT_PHYSICS_SRC_FILES}
 		${JOLT_PHYSICS_ROOT}/ObjectStream/GetPrimitiveTypeOfType.h
 		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStream.cpp
-		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStream.h
 		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryIn.cpp
 		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryIn.h
 		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamBinaryOut.cpp
@@ -451,11 +455,7 @@ if (ENABLE_OBJECT_STREAM)
 		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextOut.cpp
 		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTextOut.h
 		${JOLT_PHYSICS_ROOT}/ObjectStream/ObjectStreamTypes.h
-		${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttribute.h
-		${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttributeEnum.h
-		${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableAttributeTyped.h
 		${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.cpp
-		${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.h
 	)
 endif()
 
