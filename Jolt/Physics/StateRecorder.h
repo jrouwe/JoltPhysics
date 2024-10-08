@@ -76,6 +76,9 @@ public:
 	/// Destructor
 	virtual				~StateRecorderFilter() = default;
 
+	///@name Functions called during SaveState
+	///@{
+
 	/// If the state of a specific body should be saved
 	virtual bool		ShouldSaveBody([[maybe_unused]] const Body &inBody) const					{ return true; }
 
@@ -84,6 +87,15 @@ public:
 
 	/// If the state of a specific contact should be saved
 	virtual bool		ShouldSaveContact([[maybe_unused]] const BodyID &inBody1, [[maybe_unused]] const BodyID &inBody2) const { return true; }
+
+	///@}
+	///@name Functions called during RestoreState
+	///@{
+
+	/// If the state of a specific contact should be restored
+	virtual bool		ShouldRestoreContact([[maybe_unused]] const BodyID &inBody1, [[maybe_unused]] const BodyID &inBody2) const { return true; }
+
+	///@}
 };
 
 /// Class that records the state of a physics system. Can be used to check if the simulation is deterministic by putting the recorder in validation mode.
