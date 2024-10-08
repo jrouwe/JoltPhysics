@@ -589,4 +589,11 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	#endif
 #endif
 
+// Attribute to disable Thread Sanitizer for a particular function
+#ifdef JPH_TSAN_ENABLED
+	#define JPH_TSAN_NO_SANITIZE __attribute__((no_sanitize("thread")))
+#else
+	#define JPH_TSAN_NO_SANITIZE
+#endif
+
 JPH_NAMESPACE_END

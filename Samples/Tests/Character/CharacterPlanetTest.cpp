@@ -170,19 +170,19 @@ void CharacterPlanetTest::RestoreInputState(StateRecorder &inStream)
 	inStream.Read(mJump);
 }
 
-void CharacterPlanetTest::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem)
+void CharacterPlanetTest::OnStep(const PhysicsStepListenerContext &inContext)
 {
 	// Use the length of the global gravity vector
-	float gravity = inPhysicsSystem.GetGravity().Length();
+	float gravity = inContext.mPhysicsSystem->GetGravity().Length();
 
 	// We don't need to lock the bodies since they're already locked in the OnStep callback.
 	// Note that this means we're responsible for avoiding race conditions with other step listeners while accessing bodies.
 	// We know that this is safe because in this demo there's only one step listener.
-	const BodyLockInterface &body_interface = inPhysicsSystem.GetBodyLockInterfaceNoLock();
+	const BodyLockInterface &body_interface = inContext.mPhysicsSystem->GetBodyLockInterfaceNoLock();
 
 	// Loop over all active bodies
 	BodyIDVector body_ids;
-	inPhysicsSystem.GetActiveBodies(EBodyType::RigidBody, body_ids);
+	inContext.mPhysicsSystem->GetActiveBodies(EBodyType::RigidBody, body_ids);
 	for (const BodyID &id : body_ids)
 	{
 		BodyLockWrite lock(body_interface, id);
