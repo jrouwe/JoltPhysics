@@ -1612,7 +1612,7 @@ TEST_SUITE("PhysicsTests")
 			if (mode == 1)
 			{
 				// Don't save the global state
-				state_to_save = EStateRecorderState(uint(EStateRecorderState::All) ^ uint(EStateRecorderState::Global));
+				state_to_save = EStateRecorderState::All ^ EStateRecorderState::Global;
 
 				// Don't save some bodies
 				filter.mIgnoreBodies.push_back(ground.GetID());
@@ -1765,6 +1765,108 @@ TEST_SUITE("PhysicsTests")
 			CHECK(box2.IsActive());
 			CHECK(!sphere2.IsActive());
 		}
+	}
+
+	TEST_CASE("TestMultiPartRestoreState")
+	{
+		class MyFilter : public StateRecorderFilter
+		{
+		public:
+										MyFilter(const Array<BodyID> &inStoredBodies) : mStoredBodies(inStoredBodies) { }
+
+			bool						ShouldSaveBody(const BodyID &inBodyID) const
+			{
+				return std::find(mStoredBodies.cbegin(), mStoredBodies.cend(), inBodyID) != mStoredBodies.cend();
+			}
+
+			virtual bool				ShouldSaveBody(const Body &inBody) const override
+			{
+				if (ShouldSaveBody(inBody.GetID()))
+				{
+					++mNumBodies;
+					return true;
+				}
+				return false;
+			}
+
+			virtual bool				ShouldSaveContact(const BodyID &inBody1, const BodyID &inBody2) const override
+			{
+				if (ShouldSaveBody(inBody1) || ShouldSaveBody(inBody2))
+				{
+					++mNumContacts;
+					return true;
+				}
+				return false;
+			}
+
+			const Array<BodyID> &		mStoredBodies;
+			mutable int					mNumBodies = 0;
+			mutable int					mNumContacts = 0;
+		};
+
+		PhysicsTestContext c;
+		c.CreateFloor();
+
+		// Create 1st set of moving bodies
+		constexpr int cNumMoving1 = 10;
+		Array<BodyID> moving1;
+		for (int i = 0; i < cNumMoving1; ++i)
+			moving1.push_back(c.CreateSphere(RVec3(0, 2.0f + 2.0f * i, 0.01f * i), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate).GetID());
+
+		// Create 2nd set of moving bodies, note that although the bodies overlap with the 1st set, they don't collide because of their layer.
+		// We need to create disjoint sets for restoring in parts to work.
+		constexpr int cNumMoving2 = 12;
+		Array<BodyID> moving2;
+		for (int i = 0; i < cNumMoving2; ++i)
+			moving2.push_back(c.CreateSphere(RVec3(1.0f, 2.0f + 2.0f * i, 0.01f * i), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING2, EActivation::Activate).GetID());
+
+		// Simulate for a short while to get some contacts
+		c.Simulate(2.0f);
+
+		// Save full snapshot
+		StateRecorderImpl initial_state;
+		c.GetSystem()->SaveState(initial_state);
+
+		// Save everything relating to 1st set of bodies
+		MyFilter filter1(moving1);
+		StateRecorderImpl state1;
+		c.GetSystem()->SaveState(state1, EStateRecorderState::All, &filter1);
+		CHECK(filter1.mNumBodies == cNumMoving1);
+		CHECK(filter1.mNumContacts > cNumMoving1 / 2); // Many bodies should be in contact now, if not we're not testing contact restoring
+		CHECK(state1.GetDataSize() < initial_state.GetDataSize()); // Should be smaller than the full state
+
+		// Save everything relating to 2nd set of bodies
+		MyFilter filter2(moving2);
+		StateRecorderImpl state2;
+		c.GetSystem()->SaveState(state2, EStateRecorderState::Bodies | EStateRecorderState::Contacts, &filter2);
+		CHECK(filter2.mNumBodies == cNumMoving2);
+		CHECK(filter2.mNumContacts > cNumMoving2 / 2);
+		CHECK(state2.GetDataSize() < initial_state.GetDataSize());
+
+		// Simulate for 2 seconds
+		c.Simulate(2.0f);
+
+		// Save result
+		StateRecorderImpl final_state;
+		c.GetSystem()->SaveState(final_state);
+
+		// Restore the initial state in parts
+		state1.SetIsLastPart(false);
+		c.GetSystem()->RestoreState(state1);
+		c.GetSystem()->RestoreState(state2);
+
+		// Verify we're back to the first state
+		StateRecorderImpl verify1;
+		c.GetSystem()->SaveState(verify1);
+		CHECK(initial_state.IsEqual(verify1));
+
+		// Simulate for 2 seconds again
+		c.Simulate(2.0f);
+
+		// Check we end up in the final state again
+		StateRecorderImpl verify2;
+		c.GetSystem()->SaveState(verify2);
+		CHECK(final_state.IsEqual(verify2));
 	}
 
 	// This tests that when switching UseManifoldReduction on/off we get the correct contact callbacks
