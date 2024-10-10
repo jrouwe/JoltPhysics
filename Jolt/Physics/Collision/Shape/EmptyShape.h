@@ -12,9 +12,9 @@ JPH_NAMESPACE_BEGIN
 /// Class that constructs an EmptyShape
 class JPH_EXPORT EmptyShapeSettings final : public ShapeSettings
 {
-public:
 	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, EmptyShapeSettings)
 
+public:
 							EmptyShapeSettings() = default;
 	explicit				EmptyShapeSettings(Vec3Arg inCenterOfMass) : mCenterOfMass(inCenterOfMass) { }
 

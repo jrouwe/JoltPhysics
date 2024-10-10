@@ -22,9 +22,9 @@ class PhysicsSystem;
 /// See: https://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
 class JPH_EXPORT VehicleConstraintSettings : public ConstraintSettings
 {
-public:
 	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, VehicleConstraintSettings)
 
+public:
 	/// Saves the contents of the constraint settings in binary form to inStream.
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
 

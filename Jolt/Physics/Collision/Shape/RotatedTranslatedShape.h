@@ -14,9 +14,9 @@ class CollideShapeSettings;
 /// Class that constructs a RotatedTranslatedShape
 class JPH_EXPORT RotatedTranslatedShapeSettings final : public DecoratedShapeSettings
 {
-public:
 	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, RotatedTranslatedShapeSettings)
 
+public:
 	/// Constructor
 									RotatedTranslatedShapeSettings() = default;
 
