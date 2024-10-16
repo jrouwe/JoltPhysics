@@ -144,7 +144,7 @@ If you're interested in how Jolt scales with multiple CPUs and compares to other
 
 ## Bindings for other languages
 
-* C [here](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics/libs) and [here](https://github.com/amerkoleci/JoltPhysicsSharp/tree/main/src/joltc)
+* C [here](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics/libs) and [here](https://github.com/amerkoleci/joltc)
 * [C#](https://github.com/amerkoleci/JoltPhysicsSharp)
 * [Java](https://github.com/stephengold/jolt-jni)
 * [JavaScript](https://github.com/jrouwe/JoltPhysics.js)
