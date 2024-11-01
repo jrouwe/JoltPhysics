@@ -185,6 +185,8 @@ TEST_SUITE("UVec4Tests")
 	{
 		CHECK(UVec4::sSelect(UVec4(1, 2, 3, 4), UVec4(5, 6, 7, 8), UVec4(0x80000000U, 0, 0x80000000U, 0)) == UVec4(5, 2, 7, 4));
 		CHECK(UVec4::sSelect(UVec4(1, 2, 3, 4), UVec4(5, 6, 7, 8), UVec4(0, 0x80000000U, 0, 0x80000000U)) == UVec4(1, 6, 3, 8));
+		CHECK(UVec4::sSelect(UVec4(1, 2, 3, 4), UVec4(5, 6, 7, 8), UVec4(0xffffffffU, 0x7fffffffU, 0xffffffffU, 0x7fffffffU)) == UVec4(5, 2, 7, 4));
+		CHECK(UVec4::sSelect(UVec4(1, 2, 3, 4), UVec4(5, 6, 7, 8), UVec4(0x7fffffffU, 0xffffffffU, 0x7fffffffU, 0xffffffffU)) == UVec4(1, 6, 3, 8));
 	}
 
 	TEST_CASE("TestUVec4BitOps")
