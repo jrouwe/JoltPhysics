@@ -109,8 +109,8 @@ public:
 	/// Calculates inMul1 * inMul2 + inAdd
 	static JPH_INLINE DVec3		sFusedMultiplyAdd(DVec3Arg inMul1, DVec3Arg inMul2, DVec3Arg inAdd);
 
-	/// Component wise select, returns inV1 when highest bit of inControl = 0 and inV2 when highest bit of inControl = 1
-	static JPH_INLINE DVec3		sSelect(DVec3Arg inV1, DVec3Arg inV2, DVec3Arg inControl);
+	/// Component wise select, returns inNotSet when highest bit of inControl = 0 and inSet when highest bit of inControl = 1
+	static JPH_INLINE DVec3		sSelect(DVec3Arg inNotSet, DVec3Arg inSet, DVec3Arg inControl);
 
 	/// Logical or (component wise)
 	static JPH_INLINE DVec3		sOr(DVec3Arg inV1, DVec3Arg inV2);
