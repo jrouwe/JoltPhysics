@@ -189,7 +189,7 @@ public:
 	/// Subtract two float vectors (component wise)
 	JPH_INLINE Vec3				operator - (Vec3Arg inV2) const;
 
-	/// Add two float vectors (component wise)
+	/// Subtract two float vectors (component wise)
 	JPH_INLINE Vec3 &			operator -= (Vec3Arg inV2);
 
 	/// Divide (component wise)

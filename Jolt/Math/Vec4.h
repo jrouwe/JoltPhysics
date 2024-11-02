@@ -175,7 +175,7 @@ public:
 	/// Subtract two float vectors (component wise)
 	JPH_INLINE Vec4				operator - (Vec4Arg inV2) const;
 
-	/// Add two float vectors (component wise)
+	/// Subtract two float vectors (component wise)
 	JPH_INLINE Vec4 &			operator -= (Vec4Arg inV2);
 
 	/// Divide (component wise)

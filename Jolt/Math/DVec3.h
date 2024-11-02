@@ -221,10 +221,10 @@ public:
 	/// Subtract two double vectors (component wise)
 	JPH_INLINE DVec3			operator - (DVec3Arg inV2) const;
 
-	/// Add two vectors (component wise)
+	/// Subtract two vectors (component wise)
 	JPH_INLINE DVec3 &			operator -= (Vec3Arg inV2);
 
-	/// Add two double vectors (component wise)
+	/// Subtract two vectors (component wise)
 	JPH_INLINE DVec3 &			operator -= (DVec3Arg inV2);
 
 	/// Divide (component wise)
