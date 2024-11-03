@@ -4,7 +4,7 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See [Saving Shapes](https://jrouwe.github.io/JoltPhysics/#saving-shapes) for further information.
 
-## Changes between v5.1.0 and latest
+## Changes between v5.1.0 and v5.2.0
 
 * 20240927 - PhysicsStepListener::OnStep now takes a single PhysicsStepListenerContext parameter. The old parameters 'delta time' and 'physics system' are part of this context. The VehicleConstraint step callbacks use the same context. (8153cd854ce0547b2def425118e1e2f68a9e365c)
 * 20240922 - SoftBodyManifold now has a separate interface to return collisions with sensors (GetNumSensorContacts/GetSensorContactBodyID), this means they can no longer be retrieved through GetContactBodyID. (4058e6a72edc6e11630b3ec6b67d97e2b9324473)
