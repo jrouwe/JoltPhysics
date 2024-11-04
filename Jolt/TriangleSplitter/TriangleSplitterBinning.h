@@ -35,7 +35,7 @@ private:
 	{
 		// Properties of this bin
 		AABox				mBounds;
-		float				mMinCentroid;
+		Vec3				mMinCentroid;
 		uint				mNumTriangles;
 
 		// Accumulated data from left most / right most bin to current (including this bin)
