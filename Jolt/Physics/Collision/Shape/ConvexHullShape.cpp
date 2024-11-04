@@ -125,7 +125,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 
 	// Convert polygons from the builder to our internal representation
 	using VtxMap = UnorderedMap<int, uint8>;
-	VtxMap vertex_map;
+	VtxMap vertex_map(/*empty key=*/std::numeric_limits<int>::max());
 	for (BuilderFace *builder_face : builder_faces)
 	{
 		// Determine where the vertices go

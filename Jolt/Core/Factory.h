@@ -15,6 +15,8 @@ class JPH_EXPORT Factory
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
+	Factory();
+
 	/// Create an object
 	void *						CreateObject(const char *inName);
 

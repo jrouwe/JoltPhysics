@@ -111,10 +111,10 @@ bool PhysicsScene::CreateBodies(PhysicsSystem *inSystem) const
 
 void PhysicsScene::SaveBinaryState(StreamOut &inStream, bool inSaveShapes, bool inSaveGroupFilter) const
 {
-	BodyCreationSettings::ShapeToIDMap shape_to_id;
-	BodyCreationSettings::MaterialToIDMap material_to_id;
-	BodyCreationSettings::GroupFilterToIDMap group_filter_to_id;
-	SoftBodyCreationSettings::SharedSettingsToIDMap settings_to_id;
+	BodyCreationSettings::ShapeToIDMap shape_to_id(/*empty key=*/nullptr);
+	BodyCreationSettings::MaterialToIDMap material_to_id(/*empty key=*/nullptr);
+	BodyCreationSettings::GroupFilterToIDMap group_filter_to_id(/*empty key=*/nullptr);
+	SoftBodyCreationSettings::SharedSettingsToIDMap settings_to_id(/*empty key=*/nullptr);
 
 	// Save bodies
 	inStream.Write((uint32)mBodies.size());
@@ -210,7 +210,7 @@ void PhysicsScene::FromPhysicsSystem(const PhysicsSystem *inSystem)
 {
 	// This map will track where each body went in mBodies
 	using BodyIDToIdxMap = UnorderedMap<BodyID, uint32>;
-	BodyIDToIdxMap body_id_to_idx;
+	BodyIDToIdxMap body_id_to_idx(/*empty key=*/BodyID(BodyID::cInvalidBodyID - 1));
 
 	// Map invalid ID
 	body_id_to_idx[BodyID()] = cFixedToWorld;

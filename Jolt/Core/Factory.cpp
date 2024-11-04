@@ -10,6 +10,11 @@ JPH_NAMESPACE_BEGIN
 
 Factory *Factory::sInstance = nullptr;
 
+Factory::Factory()
+:	mClassNameMap(/*empty key=*/string_view(nullptr, 0)),
+	mClassHashMap(/*empty key=*/std::numeric_limits<uint32>::max())
+{}
+
 void *Factory::CreateObject(const char *inName)
 {
 	const RTTI *ci = Find(inName);

@@ -258,9 +258,9 @@ void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices,
 
 void RagdollSettings::SaveBinaryState(StreamOut &inStream, bool inSaveShapes, bool inSaveGroupFilter) const
 {
-	BodyCreationSettings::ShapeToIDMap shape_to_id;
-	BodyCreationSettings::MaterialToIDMap material_to_id;
-	BodyCreationSettings::GroupFilterToIDMap group_filter_to_id;
+	BodyCreationSettings::ShapeToIDMap shape_to_id(/*empty key=*/nullptr);
+	BodyCreationSettings::MaterialToIDMap material_to_id(/*empty key=*/nullptr);
+	BodyCreationSettings::GroupFilterToIDMap group_filter_to_id(/*empty key=*/nullptr);
 
 	// Save skeleton
 	mSkeleton->SaveBinaryState(inStream);

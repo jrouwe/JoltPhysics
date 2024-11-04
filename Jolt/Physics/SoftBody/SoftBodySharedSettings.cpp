@@ -423,14 +423,12 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 		return;
 
 	// First collect all vertices that are skinned
-	UnorderedSet<uint32> skinned_vertices;
-	skinned_vertices.reserve(mSkinnedConstraints.size());
+	UnorderedSet<uint32> skinned_vertices(/*empty_key=*/std::numeric_limits<uint32>::max(), /*expected num items=*/mSkinnedConstraints.size());
 	for (const Skinned &s : mSkinnedConstraints)
 		skinned_vertices.insert(s.mVertex);
 
 	// Now collect all faces that connect only to skinned vertices
-	UnorderedMap<uint32, UnorderedSet<uint32>> connected_faces;
-	connected_faces.reserve(mVertices.size());
+	UnorderedMap<uint32, UnorderedSet<uint32>*> connected_faces(/*empty key=*/std::numeric_limits<uint32>::max(), /*expected num items=*/mVertices.size());
 	for (const Face &f : mFaces)
 	{
 		// Must connect to only skinned vertices
@@ -442,7 +440,12 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 
 		// Store faces that connect to vertices
 		for (uint32 v : f.mVertex)
-			connected_faces[v].insert(uint32(&f - mFaces.data()));
+		{
+			if(connected_faces.count(v) == 0)
+				connected_faces[v] = new UnorderedSet<uint32>(/*empty key=*/std::numeric_limits<uint32>::max());
+
+			connected_faces[v]->insert(uint32(&f - mFaces.data()));
+		}
 	}
 
 	// Populate the list of connecting faces per skinned vertex
@@ -451,14 +454,18 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 	{
 		uint32 start = uint32(mSkinnedConstraintNormals.size());
 		JPH_ASSERT((start >> 24) == 0);
-		const UnorderedSet<uint32> &faces = connected_faces[s.mVertex];
-		uint32 num = uint32(faces.size());
+		const UnorderedSet<uint32> *faces = connected_faces[s.mVertex];
+		uint32 num = uint32(faces->size());
 		JPH_ASSERT(num < 256);
-		mSkinnedConstraintNormals.insert(mSkinnedConstraintNormals.end(), faces.begin(), faces.end());
+		mSkinnedConstraintNormals.insert(mSkinnedConstraintNormals.end(), faces->begin(), faces->end());
 		QuickSort(mSkinnedConstraintNormals.begin() + start, mSkinnedConstraintNormals.begin() + start + num);
 		s.mNormalInfo = start + (num << 24);
 	}
 	mSkinnedConstraintNormals.shrink_to_fit();
+
+	// Free connected_faces UnorderedSets
+	for(auto it = connected_faces.begin(); it != connected_faces.end(); ++it)
+		delete it->second;
 }
 
 void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
