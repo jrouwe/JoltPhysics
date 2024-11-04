@@ -70,8 +70,8 @@ public:
 			uint *							mParentTrianglesStart = nullptr;			// Where to store mTriangleStart (to patch mChildTrianglesStart of my parent)
 		};
 
-		Deque<NodeData *> to_process;
-		Deque<NodeData *> to_process_triangles;
+		Array<NodeData *> to_process;
+		Array<NodeData *> to_process_triangles;
 		Array<NodeData> node_list;
 
 		node_list.reserve(node_count); // Needed to ensure that array is not reallocated, so we can keep pointers in the array
