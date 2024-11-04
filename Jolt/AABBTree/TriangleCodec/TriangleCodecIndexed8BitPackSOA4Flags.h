@@ -149,13 +149,13 @@ public:
 
 		/// Pack the triangles in inContainer to ioBuffer. This stores the mMaterialIndex of a triangle in the 8 bit flags.
 		/// Returns uint(-1) on error.
-		uint						Pack(const IndexedTriangleList &inTriangles, bool inStoreUserData, ByteBuffer &ioBuffer, const char *&outError)
+		uint						Pack(const IndexedTriangle* inTriangles, uint num_triangles, bool inStoreUserData, ByteBuffer &ioBuffer, const char *&outError)
 		{
 			// Determine position of triangles start
 			uint offset = (uint)ioBuffer.size();
 
 			// Update stats
-			uint tri_count = (uint)inTriangles.size();
+			uint tri_count = num_triangles;
 			mNumTriangles += tri_count;
 
 			// Allocate triangle block header

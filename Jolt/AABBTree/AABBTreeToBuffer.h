@@ -37,14 +37,14 @@ public:
 	static const int TriangleHeaderSize = TriangleCodec::TriangleHeaderSize;
 
 	/// Convert AABB tree. Returns false if failed.
-	bool							Convert(const VertexList &inVertices, const AABBTreeBuilder::Node *inRoot, bool inStoreUserData, const char *&outError)
+	bool							Convert(const Array<IndexedTriangle>& inTriangles, const Array<AABBTreeBuilder::Node>& inNodes, const VertexList &inVertices, const AABBTreeBuilder::Node *inRoot, bool inStoreUserData, const char *&outError)
 	{
 		const typename NodeCodec::EncodingContext node_ctx;
 		typename TriangleCodec::EncodingContext tri_ctx(inVertices);
 
 		// Estimate the amount of memory required
-		uint tri_count = inRoot->GetTriangleCountInTree();
-		uint node_count = inRoot->GetNodeCount();
+		uint tri_count = inRoot->GetTriangleCountInTree(inNodes);
+		uint node_count = inRoot->GetNodeCount(inNodes);
 		uint nodes_size = node_ctx.GetPessimisticMemoryEstimate(node_count);
 		uint total_size = HeaderSize + TriangleHeaderSize + nodes_size + tri_ctx.GetPessimisticMemoryEstimate(tri_count, inStoreUserData);
 		mTree.reserve(total_size);
@@ -100,7 +100,7 @@ public:
 
 				// Collect the first NumChildrenPerNode sub-nodes in the tree
 				child_nodes.clear(); // Won't free the memory
-				node_data->mNode->GetNChildren(NumChildrenPerNode, child_nodes);
+				node_data->mNode->GetNChildren(inNodes, NumChildrenPerNode, child_nodes);
 				node_data->mNumChildren = (uint)child_nodes.size();
 
 				// Fill in default child bounds
@@ -157,7 +157,7 @@ public:
 				else
 				{
 					// Add triangles
-					node_data->mTriangleStart = tri_ctx.Pack(node_data->mNode->mTriangles, inStoreUserData, mTree, outError);
+					node_data->mTriangleStart = tri_ctx.Pack(&inTriangles[node_data->mNode->tris_begin], node_data->mNode->num_tris, inStoreUserData, mTree, outError);
 					if (node_data->mTriangleStart == uint(-1))
 						return false;
 				}
