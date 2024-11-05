@@ -188,7 +188,7 @@ public:
 		num_items = other.num_items;
 		hash_mask = other.hash_mask;
 
-		buckets = (std::pair<Key, Value>*)MemAlloc::alignedMalloc(sizeof(std::pair<Key, Value>) * buckets_size, 64);
+		buckets = (std::pair<Key, Value>*)JPH::AlignedAllocate(sizeof(std::pair<Key, Value>) * buckets_size, 64);
 
 		// Initialise elements
 		for(size_t i=0; i<buckets_size; ++i)
