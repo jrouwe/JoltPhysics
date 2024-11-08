@@ -574,7 +574,7 @@ TEST_SUITE("PhysicsTests")
 		for (int i = 0; i < 1000; ++i)
 		{
 			// Simple simulation
-			double penetration = cRadius - pos.GetY();
+			Real penetration = cRadius - pos.GetY();
 			if (penetration > -penetration_slop && vel.GetY() < 0.0f)
 				vel = -cRestitution * vel;
 			else
