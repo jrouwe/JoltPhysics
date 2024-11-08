@@ -88,12 +88,6 @@ public:
 		return mDeltaTime / mCollisionSteps;
 	}
 
-	// Get the number of sub steps
-	inline int			GetCollisionSteps() const
-	{
-		return mCollisionSteps;
-	}
-
 #ifdef JPH_DEBUG_RENDERER
 	// Write the debug output to a file to be able to replay it with JoltViewer
 	void				RecordDebugOutput(const char *inFileName);
