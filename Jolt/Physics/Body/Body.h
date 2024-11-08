@@ -222,7 +222,7 @@ public:
 	/// @param outTotalVolume On return this contains the total volume of the shape
 	/// @param outSubmergedVolume On return this contains the submerged volume of the shape
 	/// @param outRelativeCenterOfBuoyancy On return this contains the center of mass of the submerged volume relative to the center of mass of the body
-	void					GetSubmergedVolume(RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outRelativeCenterOfBuoyancy);
+	void					GetSubmergedVolume(RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outRelativeCenterOfBuoyancy) const;
 
 	/// Applies an impulse to the body that simulates fluid buoyancy and drag.
 	/// If you want the body to wake up when it is sleeping, use BodyInterface::ApplyBuoyancyImpulse instead.

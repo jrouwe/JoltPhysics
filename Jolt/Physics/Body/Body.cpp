@@ -183,7 +183,7 @@ ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMovement,
 	return mMotionProperties->AccumulateSleepTime(inDeltaTime, inTimeBeforeSleep);
 }
 
-void Body::GetSubmergedVolume(RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outRelativeCenterOfBuoyancy)
+void Body::GetSubmergedVolume(RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outRelativeCenterOfBuoyancy) const
 {
 	// For GetSubmergedVolume we transform the surface relative to the body position for increased precision
 	Mat44 rotation = Mat44::sRotation(mRotation);
