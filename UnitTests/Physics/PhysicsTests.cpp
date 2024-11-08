@@ -347,6 +347,14 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(b1.GetMotionProperties()->GetInertiaRotation(), Quat::sIdentity());
 		CHECK_APPROX_EQUAL(b1.GetMotionProperties()->GetInverseInertiaDiagonal(), cExpectedInertiaDiagonal.Reciprocal());
 
+		// Scale the mass and check that the mass and inertia are correct
+		const float cNewMass = 2.0f;
+		b1.GetMotionProperties()->ScaleToMass(cNewMass);
+		const Vec3 cNewExpectedInertiaDiagonal = cNewMass / 12.0f * cSquaredExtents;
+		CHECK_APPROX_EQUAL(b1.GetMotionProperties()->GetInverseMass(), 1.0f / cNewMass);
+		CHECK_APPROX_EQUAL(b1.GetMotionProperties()->GetInertiaRotation(), Quat::sIdentity());
+		CHECK_APPROX_EQUAL(b1.GetMotionProperties()->GetInverseInertiaDiagonal(), cNewExpectedInertiaDiagonal.Reciprocal());
+
 		// Override only the mass
 		const float cOverriddenMass = 13.0f;
 		const Vec3 cOverriddenMassInertiaDiagonal = cOverriddenMass / 12.0f * cSquaredExtents;

@@ -259,14 +259,17 @@ int main(int argc, char** argv)
 
 	// Create mapping table from object layer to broadphase layer
 	// Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
+	// Also have a look at BroadPhaseLayerInterfaceTable or BroadPhaseLayerInterfaceMask for a simpler interface.
 	BPLayerInterfaceImpl broad_phase_layer_interface;
 
 	// Create class that filters object vs broadphase layers
 	// Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
+	// Also have a look at ObjectVsBroadPhaseLayerFilterTable or ObjectVsBroadPhaseLayerFilterMask for a simpler interface.
 	ObjectVsBroadPhaseLayerFilterImpl object_vs_broadphase_layer_filter;
 
 	// Create class that filters object vs object layers
 	// Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
+	// Also have a look at ObjectLayerPairFilterTable or ObjectLayerPairFilterMask for a simpler interface.
 	ObjectLayerPairFilterImpl object_vs_object_layer_filter;
 
 	// Now we can create the actual physics system.
