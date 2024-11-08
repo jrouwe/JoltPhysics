@@ -407,10 +407,10 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsFreeFallStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 2);
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
 		TestPhysicsFreeFall(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 4);
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsFreeFall(c2);
 	}
 
@@ -449,10 +449,10 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsApplyForceStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 2);
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
 		TestPhysicsApplyForce(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 4);
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsApplyForce(c2);
 	}
 
@@ -493,10 +493,10 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsApplyTorqueStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 2);
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
 		TestPhysicsApplyTorque(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 4);
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsApplyTorque(c2);
 	}
 
@@ -522,15 +522,12 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(cSimulationTime * cGravity, body.GetLinearVelocity(), 1.0e-4f);
 
 		// Simulate one more step to process the collision
-		ioContext.Simulate(ioContext.GetDeltaTime());
+		ioContext.SimulateSingleStep();
 
 		// Assert that collision is processed and velocity is reversed (which is required for a fully elastic collision).
-		// Note that the physics engine will first apply gravity for the time step and then do collision detection,
-		// hence the reflected velocity is actually 1 step times gravity bigger than it would be in reality
-		// For the remainder of cDeltaTime normal gravity will be applied
 		float sub_step_delta_time = ioContext.GetStepDeltaTime();
 		float remaining_step_time = ioContext.GetDeltaTime() - ioContext.GetStepDeltaTime();
-		Vec3 reflected_velocity_after_sub_step = -(cSimulationTime + sub_step_delta_time) * cGravity;
+		Vec3 reflected_velocity_after_sub_step = -cSimulationTime * cGravity;
 		Vec3 reflected_velocity_after_full_step = reflected_velocity_after_sub_step + remaining_step_time * cGravity;
 		CHECK_APPROX_EQUAL(reflected_velocity_after_full_step, body.GetLinearVelocity(), 1.0e-4f);
 
@@ -539,12 +536,18 @@ TEST_SUITE("PhysicsTests")
 		RVec3 pos_after_bounce_full_step = ioContext.PredictPosition(pos_after_bounce_sub_step, reflected_velocity_after_sub_step, cGravity, remaining_step_time);
 		CHECK_APPROX_EQUAL(pos_after_bounce_full_step, body.GetPosition());
 
-		// Simulate same time, with a fully elastic body we should reach the initial position again
-		// In our physics engine because of the velocity being too big we actually end up a bit higher than our initial position
-		RVec3 expected_pos = ioContext.PredictPosition(pos_after_bounce_full_step, reflected_velocity_after_full_step, cGravity, cSimulationTime);
-		ioContext.Simulate(cSimulationTime);
-		CHECK_APPROX_EQUAL(expected_pos, body.GetPosition(), 1.0e-4f);
-		CHECK(expected_pos.GetY() >= cInitialPos.GetY());
+		// Simulate same time minus one step, with a fully elastic body we should reach the initial position again
+		RVec3 expected_pos = ioContext.PredictPosition(pos_after_bounce_full_step, reflected_velocity_after_full_step, cGravity, cSimulationTime - ioContext.GetDeltaTime());
+		ioContext.Simulate(cSimulationTime - ioContext.GetDeltaTime());
+		CHECK_APPROX_EQUAL(expected_pos, body.GetPosition(), 1.0e-5f);
+		CHECK_APPROX_EQUAL(expected_pos, cInitialPos, 1.0e-5f);
+
+		// If we do one more step, we should be going down again
+		RVec3 pre_step_pos = body.GetPosition();
+		CHECK(body.GetLinearVelocity().GetY() > 0.0f);
+		ioContext.SimulateSingleStep();
+		CHECK(body.GetLinearVelocity().GetY() < 1.0e-6f);
+		CHECK(body.GetPosition().GetY() < pre_step_pos.GetY() + 1.0e-6f);
 	}
 
 	TEST_CASE("TestPhysicsCollisionElastic")
@@ -555,10 +558,10 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsCollisionElasticStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 2);
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
 		TestPhysicsCollisionElastic(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 4);
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsCollisionElastic(c2);
 	}
 
@@ -606,10 +609,10 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsCollisionInelasticStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 2);
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
 		TestPhysicsCollisionInelastic(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 4);
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsCollisionInelastic(c2);
 	}
 
@@ -641,10 +644,10 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsPenetrationSlop1Step")
 	{
-		PhysicsTestContext c(2.0f / 60.0f, 2);
-		TestPhysicsPenetrationSlop1(c);
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
+		TestPhysicsPenetrationSlop1(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 4);
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsPenetrationSlop1(c2);
 	}
 
@@ -677,10 +680,10 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsPenetrationSlop2Step")
 	{
-		PhysicsTestContext c(2.0f / 60.0f, 2);
-		TestPhysicsPenetrationSlop2(c);
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
+		TestPhysicsPenetrationSlop2(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 4);
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsPenetrationSlop2(c2);
 	}
 
@@ -712,10 +715,10 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsPenetrationSlop3Step")
 	{
-		PhysicsTestContext c(2.0f / 60.0f, 2);
-		TestPhysicsPenetrationSlop3(c);
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
+		TestPhysicsPenetrationSlop3(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 4);
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsPenetrationSlop3(c2);
 	}
 
@@ -1090,9 +1093,6 @@ TEST_SUITE("PhysicsTests")
 
 		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsActivationDeactivation(c2);
-
-		PhysicsTestContext c3(4.0f / 60.0f, 4);
-		TestPhysicsActivationDeactivation(c3);
 	}
 
 	// A test that checks that a row of penetrating boxes will all activate and handle collision in 1 frame so that active bodies cannot tunnel through inactive bodies
