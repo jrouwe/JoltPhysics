@@ -83,7 +83,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 		// Skip axis if too small
 		if (bounds_size[dim] <= cMinSize)
 			continue;
-			
+
 		// Get the bins for this dimension
 		Bin *bins_dim = &mBins[num_bins * dim];
 
