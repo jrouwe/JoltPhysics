@@ -61,8 +61,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 	{
 		Vec3 centroid_pos(mCentroids[mSortedTriangleIdx[t]]);
 
-		AABox triangle_bounds;
-		triangle_bounds.Encapsulate(mVertices, GetTriangle(t));
+		AABox triangle_bounds = AABox::sFromTriangle(mVertices, GetTriangle(t));
 
 		Vec3 bin_no_f = (centroid_pos - bounds_min) / bounds_size * float(num_bins);
 		UVec4 bin_no = UVec4::sMin(bin_no_f.ToInt(), UVec4::sReplicate(num_bins - 1));
