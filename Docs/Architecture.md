@@ -498,6 +498,14 @@ Now that we know about the basics, we list the order in which the collision dete
 
 To avoid work, try to filter out collisions as early as possible.
 
+## Level of Detail {#level-of-detail}
+
+Bodies can only exist in a single layer. If you want a body with a low detail collision shape for simulation (in the example above: MOVING layer) and a high detail collision shape for collision detection (BULLET layer), you'll need to create 2 Bodies.
+
+The low detail body should be dynamic. The high detail body should be kinematic, or if it doesn't interact with other dynamic objects it can also be static.
+
+After calling PhysicsSystem::Update, you'll need to loop over these dynamic bodies and call BodyInterface::MoveKinematic in case the high detail body is kinematic, or BodyInterface::SetPositionAndRotation in case the high detail body is static.
+
 ## Continuous Collision Detection {#continuous-collision-detection}
 
 Each body has a motion quality setting ([EMotionQuality](@ref EMotionQuality)). By default the motion quality is [Discrete](@ref Discrete). This means that at the beginning of each simulation step we will perform collision detection and if no collision is found, the body is free to move according to its velocity. This usually works fine for big or slow moving objects. Fast and small objects can easily 'tunnel' through thin objects because they can completely move through them in a single time step. For these objects there is the motion quality [LinearCast](@ref LinearCast). Objects that have this motion quality setting will do the same collision detection at the beginning of the simulation step, but once their new position is known, they will do an additional CastShape to check for any collisions that may have been missed. If this is the case, the object is placed back to where the collision occurred and will remain there until the next time step. This is called 'time stealing' and has the disadvantage that an object may appear to move much slower for a single time step and then speed up again. The alternative, back stepping the entire simulation, is computationally heavy so was not implemented.
