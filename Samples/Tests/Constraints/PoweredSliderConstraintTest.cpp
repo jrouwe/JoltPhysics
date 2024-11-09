@@ -36,7 +36,7 @@ void PoweredSliderConstraintTest::Initialize()
 
 	position += Vec3(box_size + 10.0f, 0, 0);
 
-	mBody2 = mBodyInterface->CreateBody(BodyCreationSettings(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING)));
+	mBody2 = mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	mBody2->SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
 	mBody2->GetMotionProperties()->SetLinearDamping(0.0f);
 	mBody2->SetAllowSleeping(false);
