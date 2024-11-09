@@ -195,13 +195,12 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	// Build tree
 	AABBTreeBuilder builder(splitter, inSettings.mMaxTrianglesPerLeaf);
 	AABBTreeBuilderStats builder_stats;
-	const uint root_node_index = builder.Build(builder_stats);
-	AABBTreeBuilder::Node *root = &builder.mNodes[root_node_index];
+	AABBTreeBuilder::Node *root = builder.Build(builder_stats);
 
 	// Convert to buffer
 	AABBTreeToBuffer<TriangleCodec, NodeCodec> buffer;
 	const char *error = nullptr;
-	if (!buffer.Convert(builder.mLeafTriangles, builder.mNodes, inSettings.mTriangleVertices, root, inSettings.mPerTriangleUserData, error))
+	if (!buffer.Convert(builder.GetTriangles(), builder.GetNodes(), inSettings.mTriangleVertices, root, inSettings.mPerTriangleUserData, error))
 	{
 		outResult.SetError(error);
 		delete root;

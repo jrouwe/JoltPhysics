@@ -8,13 +8,7 @@
 #include <Jolt/Core/ByteBuffer.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
 
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <deque>
-JPH_SUPPRESS_WARNINGS_STD_END
-
 JPH_NAMESPACE_BEGIN
-
-template <class T> using Deque = std::deque<T, STLAllocator<T>>;
 
 /// Conversion algorithm that converts an AABB tree to an optimized binary buffer
 template <class TriangleCodec, class NodeCodec>
@@ -37,7 +31,7 @@ public:
 	static const int TriangleHeaderSize = TriangleCodec::TriangleHeaderSize;
 
 	/// Convert AABB tree. Returns false if failed.
-	bool							Convert(const Array<IndexedTriangle>& inTriangles, const Array<AABBTreeBuilder::Node>& inNodes, const VertexList &inVertices, const AABBTreeBuilder::Node *inRoot, bool inStoreUserData, const char *&outError)
+	bool							Convert(const Array<IndexedTriangle> &inTriangles, const Array<AABBTreeBuilder::Node> &inNodes, const VertexList &inVertices, const AABBTreeBuilder::Node *inRoot, bool inStoreUserData, const char *&outError)
 	{
 		const typename NodeCodec::EncodingContext node_ctx;
 		typename TriangleCodec::EncodingContext tri_ctx(inVertices);
@@ -157,7 +151,7 @@ public:
 				else
 				{
 					// Add triangles
-					node_data->mTriangleStart = tri_ctx.Pack(&inTriangles[node_data->mNode->tris_begin], node_data->mNode->num_tris, inStoreUserData, mTree, outError);
+					node_data->mTriangleStart = tri_ctx.Pack(&inTriangles[node_data->mNode->mTrianglesBegin], node_data->mNode->mNumTriangles, inStoreUserData, mTree, outError);
 					if (node_data->mTriangleStart == uint(-1))
 						return false;
 				}
