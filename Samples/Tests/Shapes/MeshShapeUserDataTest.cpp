@@ -82,13 +82,14 @@ void MeshShapeUserDataTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		// Get the leaf shape (mesh shape in this case)
 		SubShapeID remainder;
 		const Shape *shape = lock.GetBody().GetShape()->GetLeafShape(hit.mSubShapeID2, remainder);
-		JPH_ASSERT(shape->GetType() == EShapeType::Mesh);
+		if (shape->GetType() == EShapeType::Mesh)
+		{
+			// Get user data from the triangle that was hit
+			uint32 user_data = static_cast<const MeshShape *>(shape)->GetTriangleUserData(remainder);
 
-		// Get user data from the triangle that was hit
-		uint32 user_data = static_cast<const MeshShape *>(shape)->GetTriangleUserData(remainder);
-
-		// Draw it on screen
-		RVec3 hit_pos = ray.GetPointOnRay(hit.mFraction);
-		mDebugRenderer->DrawText3D(hit_pos, StringFormat("UserData: %d", user_data).c_str());
+			// Draw it on screen
+			RVec3 hit_pos = ray.GetPointOnRay(hit.mFraction);
+			mDebugRenderer->DrawText3D(hit_pos, StringFormat("UserData: %d", user_data).c_str());
+		}
 	}
 }
