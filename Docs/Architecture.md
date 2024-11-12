@@ -457,7 +457,7 @@ As an example we will use a simple enum as ObjectLayer:
 * NON_MOVING - Layer for all static objects.
 * MOVING - Layer for all regular dynamic bodies.
 * DEBRIS - Layer for all debris dynamic bodies, we want to test these only against the static geometry because we want to save some simulation cost.
-* BULLET - Layer for high detail collision bodies that we attach to regular dynamic bodies. These are not used for simulation but we want extra precision when we shoot with bullets.
+* BULLET - Layer for high detail collision bodies that we co-locate with regular dynamic bodies. These are bodies that are not used for simulation but are moved to follow the dynamic bodies and provide more precise geometry for ray tests to simulate shooting bullets. See [Level of Detail](@ref level-of-detail) for more information.
 * WEAPON - This is a query layer so we don't create any bodies with this layer but we use it when doing ray cast querying for our weapon system.
 
 We define the following object layers to collide:
