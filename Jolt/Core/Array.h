@@ -36,7 +36,9 @@ class [[nodiscard]] Array : private Allocator
 {
 public:
 	using value_type = T;
+	using allocator_type = Allocator;
 	using size_type = size_t;
+	using difference_type = typename Allocator::difference_type;
 	using pointer = T *;
 	using const_pointer = const T *;
 	using reference = T &;
