@@ -25,7 +25,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Profiler.h>
-#include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/HashTable.h>
 #include <Jolt/Geometry/AABox4.h>
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Geometry/Indexify.h>
@@ -92,8 +92,8 @@ MeshShapeSettings::MeshShapeSettings(VertexList inVertices, IndexedTriangleList 
 void MeshShapeSettings::Sanitize()
 {
 	// Remove degenerate and duplicate triangles
-	UnorderedSet<IndexedTriangle> triangles;
-	triangles.reserve(mIndexedTriangles.size());
+	HashSet<IndexedTriangle> triangles;
+	triangles.reserve(HashSet<IndexedTriangle>::size_type(mIndexedTriangles.size()));
 	TriangleCodec::ValidationContext validation_ctx(mIndexedTriangles, mTriangleVertices);
 	for (int t = (int)mIndexedTriangles.size() - 1; t >= 0; --t)
 	{
@@ -259,9 +259,9 @@ void MeshShape::sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTri
 	};
 
 	// Build a list of edge to triangles
-	using EdgeToTriangle = UnorderedMap<Edge, TriangleIndices, EdgeHash>;
+	using EdgeToTriangle = HashMap<Edge, TriangleIndices, EdgeHash>;
 	EdgeToTriangle edge_to_triangle;
-	edge_to_triangle.reserve(ioIndices.size() * 3);
+	edge_to_triangle.reserve(EdgeToTriangle::size_type(ioIndices.size() * 3));
 	for (uint triangle_idx = 0; triangle_idx < ioIndices.size(); ++triangle_idx)
 	{
 		IndexedTriangle &triangle = ioIndices[triangle_idx];
