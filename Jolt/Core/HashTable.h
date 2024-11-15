@@ -49,7 +49,7 @@ private:
 		{
 			JPH_ASSERT(IsValid());
 
-			do 
+			do
 			{
 				++mIndex;
 			}
@@ -389,7 +389,7 @@ public:
 	{
 		std::pair<typename Base::iterator, bool> result = this->insert({ inKey, Value() });
 		return result.first->second;
-	}	
+	}
 };
 
 /// Internal helper class to provide context for HashSet
