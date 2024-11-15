@@ -15,8 +15,10 @@ template <class Key, class KeyValue, class HashTableDetail, class Hash, class Ke
 class HashTable
 {
 public:
+	/// Properties
 	using value_type = KeyValue;
 	using size_type = uint32;
+	using difference_type = ptrdiff_t;
 
 private:
 	/// Base class for iterators
@@ -24,6 +26,11 @@ private:
 	class IteratorBase
 	{
 	public:
+        /// Properties
+		using difference_type = typename Table::difference_type;
+        using value_type = typename Table::value_type;
+        using iterator_category = std::forward_iterator_tag;
+
 		/// Copy constructor
 							IteratorBase(const IteratorBase &inRHS) = default;
 
@@ -106,6 +113,39 @@ private:
 		size_type			mIndex;
 	};
 
+	/// Allocate space for the hash table
+	void					AllocateTable(size_type inMaxSize)
+	{
+		JPH_ASSERT(mData == nullptr);
+
+		mMaxSize = inMaxSize;
+		size_type required_size = mMaxSize * (sizeof(KeyValue) + 1) + 15; // Add 15 bytes to mirror the first 15 bytes of the control values
+		if constexpr (cNeedsAlignedAllocate)
+			mData = reinterpret_cast<KeyValue *>(AlignedAllocate(required_size, alignof(KeyValue)));
+		else
+			mData = reinterpret_cast<KeyValue *>(Allocate(required_size));
+		mControl = reinterpret_cast<uint8 *>(mData + mMaxSize);
+	}
+
+	/// Copy the contents of another hash table
+	void					CopyTable(const HashTable &inRHS)
+	{
+		if (inRHS.empty())
+			return;
+
+		AllocateTable(inRHS.mMaxSize);
+
+		// Copy control bytes
+		memcpy(mControl, inRHS.mControl, mMaxSize + 15);
+
+		// Copy elements
+		uint index = 0;
+		for (uint8 *control = mControl, *control_end = mControl + mMaxSize; control != control_end; ++control, ++index)
+			if (*control & cBucketUsed)
+				::new (mData + index) KeyValue(inRHS.mData[index]);
+		mSize = inRHS.mSize;
+	}
+
 public:
 	/// Non-const iterator
 	class iterator : public IteratorBase<HashTable, iterator>
@@ -113,6 +153,10 @@ public:
 		using Base = IteratorBase<HashTable, iterator>;
 
 	public:
+        /// Properties
+        using reference = typename Base::value_type &;
+        using pointer = typename Base::value_type *;
+
 		/// Constructors
 							iterator(HashTable *inTable) : Base(inTable) { }
 							iterator(HashTable *inTable, size_type inIndex) : Base(inTable, inIndex) { }
@@ -143,6 +187,10 @@ public:
 		using Base = IteratorBase<const HashTable, const_iterator>;
 
 	public:
+        /// Properties
+        using reference = const typename Base::value_type &;
+        using pointer = const typename Base::value_type *;
+
 		/// Constructors
 							const_iterator(const HashTable *inTable) : Base(inTable) { }
 							const_iterator(const HashTable *inTable, size_type inIndex) : Base(inTable, inIndex) { }
@@ -154,8 +202,10 @@ public:
 							HashTable() = default;
 
 	/// Copy constructor
-							HashTable(const HashTable &inRHS) = delete; // TODO
-							HashTable &operator = (const HashTable &) = delete; // TODO
+							HashTable(const HashTable &inRHS)
+	{
+		CopyTable(inRHS);
+	}
 
 	/// Move constructor
 							HashTable(HashTable &&ioRHS) :
@@ -170,39 +220,48 @@ public:
 		ioRHS.mMaxSize = 0;
 	}
 
+	/// Assignment operator
+	HashTable &				operator = (const HashTable &inRHS)
+	{
+		if (this != &inRHS)
+		{
+			clear();
+
+			CopyTable(inRHS);
+		}
+
+		return *this;
+	}
+
 	/// Destructor
-							~HashTable()								{ clear(); }
+							~HashTable()
+	{
+		clear();
+	}
 
 	/// Reserve memory for a certain number of elements
 	void					reserve(size_type inMaxSize)
 	{
-		JPH_ASSERT(mData == nullptr);
-
 		// Calculate max size based on load factor
-		mMaxSize = GetNextPowerOf2(max<uint32>(cMaxLoadFactorDenominator * inMaxSize / cMaxLoadFactorNumerator, 16));
+		size_type max_size = GetNextPowerOf2(max<uint32>(cMaxLoadFactorDenominator * inMaxSize / cMaxLoadFactorNumerator, 16));
 
-		// Allocate memory
-		size_type required_size = mMaxSize * (sizeof(KeyValue) + 1) + 15; // Add 15 bytes to mirror the first 15 bytes of the control values
-		if constexpr (cNeedsAlignedAllocate)
-			mData = reinterpret_cast<KeyValue *>(AlignedAllocate(required_size, alignof(KeyValue)));
-		else
-			mData = reinterpret_cast<KeyValue *>(Allocate(required_size));
+		// Allocate buffers
+		AllocateTable(max_size);
 
 		// Reset all control bytes
-		mControl = reinterpret_cast<uint8 *>(mData + mMaxSize);
 		memset(mControl, cBucketEmpty, mMaxSize + 15);
 	}
 
 	/// Destroy the entire hash table
 	void					clear()
 	{
-		if (mData != nullptr)
+		if (!empty())
 		{
 			// Delete all elements
 			if constexpr (!is_trivially_destructible<KeyValue>())
-				for (int i = 0; i < mMaxSize; ++i)
+				for (size_type i = 0; i < mMaxSize; ++i)
 					if (mControl[i] & cBucketUsed)
-						mData[i].~T();
+						mData[i].~KeyValue();
 
 			// Free memory
 			if constexpr (cNeedsAlignedAllocate)
@@ -274,6 +333,10 @@ public:
 	/// Insert a new element, returns iterator and if the element was inserted
 	std::pair<iterator, bool> insert(const value_type &inValue)
 	{
+		// Ensure we have enough space
+		if (mData == nullptr)
+			reserve(1);
+
 		// Calculate hash
 		const Key &key = HashTableDetail::sGetKey(inValue);
 		Hash hash;
@@ -370,6 +433,10 @@ public:
 	/// Find an element, returns iterator to element or end() if not found
 	const_iterator			find(const Key &inKey) const
 	{
+		// Check if we have any data
+		if (empty())
+			return cend();
+
 		// Calculate hash
 		Hash hash;
 		uint64 hash_value = hash(inKey); // TODO: Ensure we have 64 bit hash
@@ -427,7 +494,7 @@ public:
 				{
 					// An empty bucket was found, we didn't find the element
 					JPH_ASSERT(control_empty != 0);
-					return end();
+					return cend();
 				}
 			}
 
