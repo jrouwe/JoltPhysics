@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <Jolt/Math/BVec16.h>
+
 JPH_NAMESPACE_BEGIN
 
 /// Helper class for implementing a HashSet or HashMap
@@ -180,7 +182,7 @@ public:
 		mMaxSize = GetNextPowerOf2(max<uint32>(cMaxLoadFactorDenominator * inMaxSize / cMaxLoadFactorNumerator, 16));
 
 		// Allocate memory
-		size_type required_size = mMaxSize * (sizeof(KeyValue) + 1);
+		size_type required_size = mMaxSize * (sizeof(KeyValue) + 1) + 15; // Add 15 bytes to mirror the first 15 bytes of the control values
 		if constexpr (cNeedsAlignedAllocate)
 			mData = reinterpret_cast<KeyValue *>(AlignedAllocate(required_size, alignof(KeyValue)));
 		else
@@ -188,7 +190,7 @@ public:
 
 		// Reset all control bytes
 		mControl = reinterpret_cast<uint8 *>(mData + mMaxSize);
-		memset(mControl, cBucketEmpty, mMaxSize);
+		memset(mControl, cBucketEmpty, mMaxSize + 15);
 	}
 
 	/// Destroy the entire hash table
@@ -273,34 +275,95 @@ public:
 	std::pair<iterator, bool> insert(const value_type &inValue)
 	{
 		// Calculate hash
+		const Key &key = HashTableDetail::sGetKey(inValue);
 		Hash hash;
-		uint64 hash_value = hash(HashTableDetail::sGetKey(inValue)); // TODO: Ensure we have 64 bit hash
+		uint64 hash_value = hash(key); // TODO: Ensure we have 64 bit hash
 
 		// Split hash into control byte and index
-		uint8 control = cBucketUsed | uint8(hash_value & 0x7f);
-		size_type index = size_type(hash_value) & (mMaxSize - 1);
+		uint8 control = cBucketUsed | uint8(hash_value);
+		size_type index = size_type(hash_value >> 7) & (mMaxSize - 1);
+
+		BVec16 control16 = BVec16::sReplicate(control);
+		BVec16 bucket_empty = BVec16::sZero();
+		BVec16 bucket_deleted = BVec16::sReplicate(cBucketDeleted);
+
+		// Keeps track of the index of the first deleted bucket we found
+		constexpr size_type cNoDeleted = ~size_type(0);
+		size_type first_deleted_index = cNoDeleted;
 
 		// Linear probing
 		KeyEqual equal;
 		for (;;)
 		{
-			uint8 this_control = mControl[index];
-			if (this_control == control && equal(HashTableDetail::sGetKey(mData[index]), HashTableDetail::sGetKey(inValue)))
+			// Read 16 control values (note that we added 15 bytes at the end of the control values that mirror the first 15 bytes)
+			BVec16 control_bytes = BVec16::sLoadByte16(mControl + index);
+
+			// Check for the control value we're looking for
+			uint32 control_equal = uint32(BVec16::sEquals(control_bytes, control16).GetTrues());
+
+			// Check for empty buckets
+			uint32 control_empty = uint32(BVec16::sEquals(control_bytes, bucket_empty).GetTrues());
+
+			// Check if we're still scanning for deleted buckets
+			if (first_deleted_index == cNoDeleted)
 			{
-				// Element already exists
-				return std::make_pair(iterator(this, index), false);
-			}
-			else if (this_control == cBucketEmpty || this_control == cBucketDeleted)
-			{
-				// Insert new element
-				::new (mData + index) KeyValue(inValue);
-				mControl[index] = control;
-				++mSize;
-				return std::make_pair(iterator(this, index), true);
+				// Check if any buckets have been deleted, if so store the first one
+				uint32 control_deleted = uint32(BVec16::sEquals(control_bytes, bucket_deleted).GetTrues());
+				if (control_deleted != 0)
+					first_deleted_index = index + CountTrailingZeros(control_deleted);
 			}
 
-			// Move to next bucket
-			index = (index + 1) & (mMaxSize - 1);
+			// Index within the 16 buckets
+			size_type local_index = index;
+
+			// Loop while there's still buckets to process
+			while ((control_equal | control_empty) != 0)
+			{
+				// Get the index of the first bucket that is either equal or empty
+				uint first_equal = CountTrailingZeros(control_equal);
+				uint first_empty = CountTrailingZeros(control_empty);
+
+				// Check if we first found a bucket with equal control value before an empty bucket
+				if (first_equal < first_empty)
+				{
+					// Skip to the bucket
+					local_index += first_equal;
+
+					// We found a bucket with same control value
+					if (equal(HashTableDetail::sGetKey(mData[local_index]), key))
+					{
+						// Element already exists
+						return std::make_pair(iterator(this, local_index), false);
+					}
+
+					// Skip past this bucket
+					local_index++;
+					uint shift = first_equal + 1;
+					control_equal >>= shift;
+					control_empty >>= shift;
+				}
+				else
+				{
+					// An empty bucket was found, we can insert a new item
+					JPH_ASSERT(control_empty != 0);
+
+					// Get the location of the first empty or deleted bucket
+					local_index += first_empty;
+					if (first_deleted_index < local_index)
+						local_index = first_deleted_index;
+
+					// Insert new element
+					::new (mData + local_index) KeyValue(inValue);
+					mControl[local_index] = control;
+					if (local_index < 15)
+						mControl[mMaxSize + local_index] = control; // Mirror the first 15 bytes at the end of the control values
+					++mSize;
+					return std::make_pair(iterator(this, local_index), true);
+				}
+			}
+
+			// Move to next batch of 16 buckets
+			index = (index + 16) & (mMaxSize - 1);
 		}
 	}
 
@@ -312,27 +375,64 @@ public:
 		uint64 hash_value = hash(inKey); // TODO: Ensure we have 64 bit hash
 
 		// Split hash into control byte and index
-		uint8 control = cBucketUsed | uint8(hash_value & 0x7f);
-		size_type index = size_type(hash_value) & (mMaxSize - 1);
+		uint8 control = cBucketUsed | uint8(hash_value);
+		size_type index = size_type(hash_value >> 7) & (mMaxSize - 1);
+
+		BVec16 control16 = BVec16::sReplicate(control);
+		BVec16 bucket_empty = BVec16::sZero();
 
 		// Linear probing
 		KeyEqual equal;
 		for (;;)
 		{
-			uint8 this_control = mControl[index];
-			if (this_control == control && equal(HashTableDetail::sGetKey(mData[index]), inKey))
+			// Read 16 control values (note that we added 15 bytes at the end of the control values that mirror the first 15 bytes)
+			BVec16 control_bytes = BVec16::sLoadByte16(mControl + index);
+
+			// Check for the control value we're looking for
+			uint32 control_equal = uint32(BVec16::sEquals(control_bytes, control16).GetTrues());
+
+			// Check for empty buckets
+			uint32 control_empty = uint32(BVec16::sEquals(control_bytes, bucket_empty).GetTrues());
+
+			// Index within the 16 buckets
+			size_type local_index = index;
+
+			// Loop while there's still buckets to process
+			while ((control_equal | control_empty) != 0)
 			{
-				// Element found
-				return const_iterator(this, index);
-			}
-			else if (this_control == cBucketEmpty)
-			{
-				// Element not found
-				return end();
+				// Get the index of the first bucket that is either equal or empty
+				uint first_equal = CountTrailingZeros(control_equal);
+				uint first_empty = CountTrailingZeros(control_empty);
+
+				// Check if we first found a bucket with equal control value before an empty bucket
+				if (first_equal < first_empty)
+				{
+					// Skip to the bucket
+					local_index += first_equal;
+
+					// We found a bucket with same control value
+					if (equal(HashTableDetail::sGetKey(mData[local_index]), inKey))
+					{
+						// Element found
+						return const_iterator(this, local_index);
+					}
+
+					// Skip past this bucket
+					local_index++;
+					uint shift = first_equal + 1;
+					control_equal >>= shift;
+					control_empty >>= shift;
+				}
+				else
+				{
+					// An empty bucket was found, we didn't find the element
+					JPH_ASSERT(control_empty != 0);
+					return end();
+				}
 			}
 
 			// Move to next bucket
-			index = (index + 1) & (mMaxSize - 1);
+			index = (index + 16) & (mMaxSize - 1);
 		}
 	}
 
