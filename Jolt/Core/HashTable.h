@@ -146,6 +146,116 @@ private:
 		mSize = inRHS.mSize;
 	}
 
+protected:
+	/// Get an element by index
+	KeyValue &				GetElement(size_type inIndex) const
+	{
+		return mData[inIndex];
+	}
+
+	/// Insert a key into the map, returns true if the element was inserted, false if it already existed.
+	/// outIndex is the index at which the element should be constructed / where it is located.
+	bool					InsertKey(const Key &inKey, size_type &outIndex)
+	{
+		// Ensure we have enough space
+		if (mData == nullptr)
+			reserve(1);
+
+		// Calculate hash
+		Hash hash;
+		uint64 hash_value = hash(inKey); // TODO: Ensure we have 64 bit hash
+
+		// Split hash into control byte and index
+		uint8 control = cBucketUsed | uint8(hash_value);
+		size_type index = size_type(hash_value >> 7) & (mMaxSize - 1);
+
+		BVec16 control16 = BVec16::sReplicate(control);
+		BVec16 bucket_empty = BVec16::sZero();
+		BVec16 bucket_deleted = BVec16::sReplicate(cBucketDeleted);
+
+		// Keeps track of the index of the first deleted bucket we found
+		constexpr size_type cNoDeleted = ~size_type(0);
+		size_type first_deleted_index = cNoDeleted;
+
+		// Linear probing
+		KeyEqual equal;
+		for (;;)
+		{
+			// Read 16 control values (note that we added 15 bytes at the end of the control values that mirror the first 15 bytes)
+			BVec16 control_bytes = BVec16::sLoadByte16(mControl + index);
+
+			// Check for the control value we're looking for
+			uint32 control_equal = uint32(BVec16::sEquals(control_bytes, control16).GetTrues());
+
+			// Check for empty buckets
+			uint32 control_empty = uint32(BVec16::sEquals(control_bytes, bucket_empty).GetTrues());
+
+			// Check if we're still scanning for deleted buckets
+			if (first_deleted_index == cNoDeleted)
+			{
+				// Check if any buckets have been deleted, if so store the first one
+				uint32 control_deleted = uint32(BVec16::sEquals(control_bytes, bucket_deleted).GetTrues());
+				if (control_deleted != 0)
+					first_deleted_index = index + CountTrailingZeros(control_deleted);
+			}
+
+			// Index within the 16 buckets
+			size_type local_index = index;
+
+			// Loop while there's still buckets to process
+			while ((control_equal | control_empty) != 0)
+			{
+				// Get the index of the first bucket that is either equal or empty
+				uint first_equal = CountTrailingZeros(control_equal);
+				uint first_empty = CountTrailingZeros(control_empty);
+
+				// Check if we first found a bucket with equal control value before an empty bucket
+				if (first_equal < first_empty)
+				{
+					// Skip to the bucket
+					local_index += first_equal;
+
+					// We found a bucket with same control value
+					if (equal(HashTableDetail::sGetKey(mData[local_index]), inKey))
+					{
+						// Element already exists
+						outIndex = local_index;
+						return false;
+					}
+
+					// Skip past this bucket
+					local_index++;
+					uint shift = first_equal + 1;
+					control_equal >>= shift;
+					control_empty >>= shift;
+				}
+				else
+				{
+					// An empty bucket was found, we can insert a new item
+					JPH_ASSERT(control_empty != 0);
+
+					// Get the location of the first empty or deleted bucket
+					local_index += first_empty;
+					if (first_deleted_index < local_index)
+						local_index = first_deleted_index;
+
+					// Update control byte
+					mControl[local_index] = control;
+					if (local_index < 15)
+						mControl[mMaxSize + local_index] = control; // Mirror the first 15 bytes at the end of the control values
+					++mSize;
+
+					// Return index to newly allocated bucket
+					outIndex = local_index;
+					return true;
+				}
+			}
+
+			// Move to next batch of 16 buckets
+			index = (index + 16) & (mMaxSize - 1);
+		}
+	}
+
 public:
 	/// Non-const iterator
 	class iterator : public IteratorBase<HashTable, iterator>
@@ -333,101 +443,11 @@ public:
 	/// Insert a new element, returns iterator and if the element was inserted
 	std::pair<iterator, bool> insert(const value_type &inValue)
 	{
-		// Ensure we have enough space
-		if (mData == nullptr)
-			reserve(1);
-
-		// Calculate hash
-		const Key &key = HashTableDetail::sGetKey(inValue);
-		Hash hash;
-		uint64 hash_value = hash(key); // TODO: Ensure we have 64 bit hash
-
-		// Split hash into control byte and index
-		uint8 control = cBucketUsed | uint8(hash_value);
-		size_type index = size_type(hash_value >> 7) & (mMaxSize - 1);
-
-		BVec16 control16 = BVec16::sReplicate(control);
-		BVec16 bucket_empty = BVec16::sZero();
-		BVec16 bucket_deleted = BVec16::sReplicate(cBucketDeleted);
-
-		// Keeps track of the index of the first deleted bucket we found
-		constexpr size_type cNoDeleted = ~size_type(0);
-		size_type first_deleted_index = cNoDeleted;
-
-		// Linear probing
-		KeyEqual equal;
-		for (;;)
-		{
-			// Read 16 control values (note that we added 15 bytes at the end of the control values that mirror the first 15 bytes)
-			BVec16 control_bytes = BVec16::sLoadByte16(mControl + index);
-
-			// Check for the control value we're looking for
-			uint32 control_equal = uint32(BVec16::sEquals(control_bytes, control16).GetTrues());
-
-			// Check for empty buckets
-			uint32 control_empty = uint32(BVec16::sEquals(control_bytes, bucket_empty).GetTrues());
-
-			// Check if we're still scanning for deleted buckets
-			if (first_deleted_index == cNoDeleted)
-			{
-				// Check if any buckets have been deleted, if so store the first one
-				uint32 control_deleted = uint32(BVec16::sEquals(control_bytes, bucket_deleted).GetTrues());
-				if (control_deleted != 0)
-					first_deleted_index = index + CountTrailingZeros(control_deleted);
-			}
-
-			// Index within the 16 buckets
-			size_type local_index = index;
-
-			// Loop while there's still buckets to process
-			while ((control_equal | control_empty) != 0)
-			{
-				// Get the index of the first bucket that is either equal or empty
-				uint first_equal = CountTrailingZeros(control_equal);
-				uint first_empty = CountTrailingZeros(control_empty);
-
-				// Check if we first found a bucket with equal control value before an empty bucket
-				if (first_equal < first_empty)
-				{
-					// Skip to the bucket
-					local_index += first_equal;
-
-					// We found a bucket with same control value
-					if (equal(HashTableDetail::sGetKey(mData[local_index]), key))
-					{
-						// Element already exists
-						return std::make_pair(iterator(this, local_index), false);
-					}
-
-					// Skip past this bucket
-					local_index++;
-					uint shift = first_equal + 1;
-					control_equal >>= shift;
-					control_empty >>= shift;
-				}
-				else
-				{
-					// An empty bucket was found, we can insert a new item
-					JPH_ASSERT(control_empty != 0);
-
-					// Get the location of the first empty or deleted bucket
-					local_index += first_empty;
-					if (first_deleted_index < local_index)
-						local_index = first_deleted_index;
-
-					// Insert new element
-					::new (mData + local_index) KeyValue(inValue);
-					mControl[local_index] = control;
-					if (local_index < 15)
-						mControl[mMaxSize + local_index] = control; // Mirror the first 15 bytes at the end of the control values
-					++mSize;
-					return std::make_pair(iterator(this, local_index), true);
-				}
-			}
-
-			// Move to next batch of 16 buckets
-			index = (index + 16) & (mMaxSize - 1);
-		}
+		size_type index;
+		bool inserted = InsertKey(HashTableDetail::sGetKey(inValue), index);
+		if (inserted)
+			::new (mData + index) KeyValue(inValue);
+		return std::make_pair(iterator(this, index), inserted);
 	}
 
 	/// Find an element, returns iterator to element or end() if not found
@@ -552,10 +572,49 @@ class HashMap : public HashTable<Key, std::pair<Key, Value>, HashMapDetail<Key, 
 	using Base = HashTable<Key, std::pair<Key, Value>, HashMapDetail<Key, Value>, Hash, KeyEqual>;
 
 public:
+	using size_type = typename Base::size_type;
+	using iterator = typename Base::iterator;
+	using const_iterator = typename Base::const_iterator;
+	using value_type = typename Base::value_type;
+
 	Value &					operator [] (const Key &inKey)
 	{
-		std::pair<typename Base::iterator, bool> result = this->insert({ inKey, Value() });
-		return result.first->second;
+		size_type index;
+		bool inserted = this->InsertKey(inKey, index);
+		value_type &key_value = this->GetElement(index);
+		if (inserted)
+			::new (&key_value) value_type(inKey, Value());
+		return key_value.second;
+	}
+
+	template<class... Args>
+	std::pair<iterator, bool> try_emplace(const Key &inKey, Args &&...inArgs)
+	{
+		size_type index;
+		bool inserted = this->InsertKey(inKey, index);
+		if (inserted)
+			::new (&this->GetElement(index)) value_type(std::piecewise_construct, std::forward_as_tuple(inKey), std::forward_as_tuple(std::forward<Args>(inArgs)...));
+		return std::make_pair(iterator(this, index), inserted);
+	}
+
+	template<class... Args>
+	std::pair<iterator, bool> try_emplace(Key &&inKey, Args &&...inArgs)
+	{
+		size_type index;
+		bool inserted = this->InsertKey(inKey, index);
+		if (inserted)
+			::new (&this->GetElement(index)) value_type(std::piecewise_construct, std::forward_as_tuple(std::move(inKey)), std::forward_as_tuple(std::forward<Args>(inArgs)...));
+		return std::make_pair(iterator(this, index), inserted);
+	}
+
+	template<class K, class... Args>
+	std::pair<iterator, bool> try_emplace(K &&inKey, Args &&...inArgs)
+	{
+		size_type index;
+		bool inserted = this->InsertKey(inKey, index);
+		if (inserted)
+			::new (&this->GetElement(index)) value_type(std::piecewise_construct, std::forward_as_tuple(std::forward<K>(inKey)), std::forward_as_tuple(std::forward<Args>(inArgs)...));
+		return std::make_pair(iterator(this, index), inserted);
 	}
 };
 

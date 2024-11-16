@@ -59,6 +59,11 @@ TEST_SUITE("HashTableTest")
 		CHECK(map2.find(3)->second == 4);
 		CHECK(map2.find(5)->second == 7);
 		CHECK(map2.find(7) == map2.cend());
+
+		// Try emplace
+		map.try_emplace(7, 8);
+		CHECK(map.size() == 4);
+		CHECK(map.find(7)->second == 8);
 	}
 
 	TEST_CASE("TestHashSet")

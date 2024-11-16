@@ -268,7 +268,8 @@ void MeshShape::sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTri
 		for (uint edge_idx = 0; edge_idx < 3; ++edge_idx)
 		{
 			Edge edge(triangle.mIdx[edge_idx], triangle.mIdx[(edge_idx + 1) % 3]);
-			TriangleIndices &indices = edge_to_triangle[edge];
+			EdgeToTriangle::iterator edge_to_triangle_it = edge_to_triangle.try_emplace(edge, TriangleIndices()).first;
+			TriangleIndices &indices = edge_to_triangle_it->second;
 			if (indices.mNumTriangles < 2)
 			{
 				// Store index of triangle that connects to this edge
