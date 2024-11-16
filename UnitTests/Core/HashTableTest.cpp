@@ -12,7 +12,6 @@ TEST_SUITE("HashTableTest")
 	{
 		HashMap<int, int> map;
 		map.reserve(10);
-		CHECK(map.max_size() == 16);
 
 		// Insert some entries
 		map.insert({ 1, 2 });
@@ -66,11 +65,24 @@ TEST_SUITE("HashTableTest")
 		CHECK(map.find(7)->second == 8);
 	}
 
+	TEST_CASE("TestHashMapGrow")
+	{
+		HashMap<int, int> map;
+		for (int i = 0; i < 10000; ++i)
+			map.try_emplace(i, ~i);
+
+		CHECK(map.size() == 10000);
+
+		for (int i = 0; i < 10000; ++i)
+			CHECK(map.find(i)->second == ~i);
+
+		CHECK(map.find(10001) == map.cend());
+	}
+
 	TEST_CASE("TestHashSet")
 	{
 		HashSet<int> set;
 		set.reserve(10);
-		CHECK(set.max_size() == 16);
 
 		// Insert some entries
 		set.insert(1);
@@ -106,5 +118,19 @@ TEST_SUITE("HashTableTest")
 		CHECK(*set2.find(1) == 1);
 		CHECK(*set2.find(3) == 3);
 		CHECK(set2.find(5) == set2.cend());
+	}
+
+	TEST_CASE("TestHashSetGrow")
+	{
+		HashSet<int> set;
+		for (int i = 0; i < 10000; ++i)
+			set.insert(i);
+
+		CHECK(set.size() == 10000);
+
+		for (int i = 0; i < 10000; ++i)
+			CHECK(*set.find(i) == i);
+
+		CHECK(set.find(10001) == set.cend());
 	}
 }

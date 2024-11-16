@@ -119,6 +119,7 @@ private:
 		JPH_ASSERT(mData == nullptr);
 
 		mMaxSize = inMaxSize;
+		mMaxLoad = uint32((cMaxLoadFactorNumerator * inMaxSize) / cMaxLoadFactorDenominator);
 		size_type required_size = mMaxSize * (sizeof(KeyValue) + 1) + 15; // Add 15 bytes to mirror the first 15 bytes of the control values
 		if constexpr (cNeedsAlignedAllocate)
 			mData = reinterpret_cast<KeyValue *>(AlignedAllocate(required_size, alignof(KeyValue)));
@@ -146,6 +147,52 @@ private:
 		mSize = inRHS.mSize;
 	}
 
+	/// Grow the table to the next power of 2
+	void					GrowTable()
+	{
+		// Calculate new size
+		size_type new_max_size = max<size_type>(mMaxSize << 1, 16);
+		if (new_max_size < mMaxSize)
+		{
+			JPH_ASSERT(false, "Overflow in hash table size, can't grow!");
+			return;
+		}
+
+		// Move the old table to a temporary structure
+		size_type old_max_size = mMaxSize;
+		KeyValue *old_data = mData;
+		uint8 *old_control = mControl;
+		mData = nullptr;
+		mControl = nullptr;
+		mSize = 0;
+		mMaxSize = 0;
+		mMaxLoad = 0;
+
+		// Allocate new table
+		AllocateTable(new_max_size);
+
+		// Reset all control bytes
+		memset(mControl, cBucketEmpty, mMaxSize + 15);
+
+		// Copy all elements from the old table
+		for (size_type i = 0; i < old_max_size; ++i)
+			if (old_control[i] & cBucketUsed)
+			{
+				size_type index;
+				KeyValue *element = old_data + i;
+				JPH_IF_ENABLE_ASSERTS(bool inserted =) InsertKey</* AllowDeleted= */ false>(HashTableDetail::sGetKey(*element), index);
+				JPH_ASSERT(inserted);
+				::new (mData + index) KeyValue(std::move(*element));
+				element->~KeyValue();
+			}
+
+		// Free memory
+		if constexpr (cNeedsAlignedAllocate)
+			AlignedFree(old_data);
+		else
+			Free(old_data);
+	}
+
 protected:
 	/// Get an element by index
 	KeyValue &				GetElement(size_type inIndex) const
@@ -155,11 +202,12 @@ protected:
 
 	/// Insert a key into the map, returns true if the element was inserted, false if it already existed.
 	/// outIndex is the index at which the element should be constructed / where it is located.
+	template <bool AllowDeleted = true>
 	bool					InsertKey(const Key &inKey, size_type &outIndex)
 	{
 		// Ensure we have enough space
-		if (mData == nullptr)
-			reserve(1);
+		if (mSize + 1 >= mMaxLoad)
+			GrowTable();
 
 		// Calculate hash
 		Hash hash;
@@ -192,13 +240,14 @@ protected:
 			uint32 control_empty = uint32(BVec16::sEquals(control_bytes, bucket_empty).GetTrues());
 
 			// Check if we're still scanning for deleted buckets
-			if (first_deleted_index == cNoDeleted)
-			{
-				// Check if any buckets have been deleted, if so store the first one
-				uint32 control_deleted = uint32(BVec16::sEquals(control_bytes, bucket_deleted).GetTrues());
-				if (control_deleted != 0)
-					first_deleted_index = index + CountTrailingZeros(control_deleted);
-			}
+			if constexpr (AllowDeleted)
+				if (first_deleted_index == cNoDeleted)
+				{
+					// Check if any buckets have been deleted, if so store the first one
+					uint32 control_deleted = uint32(BVec16::sEquals(control_bytes, bucket_deleted).GetTrues());
+					if (control_deleted != 0)
+						first_deleted_index = index + CountTrailingZeros(control_deleted);
+				}
 
 			// Index within the 16 buckets
 			size_type local_index = index;
@@ -240,8 +289,9 @@ protected:
 
 					// Get the location of the first empty or deleted bucket
 					local_index += first_empty;
-					if (first_deleted_index < local_index)
-						local_index = first_deleted_index;
+					if constexpr (AllowDeleted)
+						if (first_deleted_index < local_index)
+							local_index = first_deleted_index;
 
 					// Make sure that our index is not beyond the end of the table
 					local_index &= bucket_mask;
@@ -360,7 +410,9 @@ public:
 	void					reserve(size_type inMaxSize)
 	{
 		// Calculate max size based on load factor
-		size_type max_size = GetNextPowerOf2(max<uint32>(cMaxLoadFactorDenominator * inMaxSize / cMaxLoadFactorNumerator, 16));
+		size_type max_size = GetNextPowerOf2(max<uint32>((cMaxLoadFactorDenominator * inMaxSize) / cMaxLoadFactorNumerator, 16));
+		if (max_size <= mMaxSize)
+			return;
 
 		// Allocate buffers
 		AllocateTable(max_size);
@@ -439,12 +491,6 @@ public:
 	size_type				size() const
 	{
 		return mSize;
-	}
-
-	/// Max number of elements that can be stored in the table
-	size_type				max_size() const
-	{
-		return mMaxSize;
 	}
 
 	/// Insert a new element, returns iterator and if the element was inserted
@@ -535,8 +581,8 @@ private:
 	static constexpr bool	cNeedsAlignedAllocate = alignof(KeyValue) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16);
 
 	/// Max load factor is cMaxLoadFactorNumerator / cMaxLoadFactorDenominator
-	static constexpr uint64	cMaxLoadFactorNumerator = 8;
-	static constexpr uint64	cMaxLoadFactorDenominator = 10;
+	static constexpr uint64	cMaxLoadFactorNumerator = 7;
+	static constexpr uint64	cMaxLoadFactorDenominator = 8;
 
 	/// Values that the control bytes can have
 	static constexpr uint8	cBucketEmpty = 0;
@@ -546,7 +592,7 @@ private:
 	/// The buckets, an array of size mMaxSize
 	KeyValue *				mData = nullptr;
 
-	/// Control bytes
+	/// Control bytes, an array of size mMaxSize + 15
 	uint8 *					mControl = nullptr;
 
 	/// Number of elements in the table
@@ -554,6 +600,9 @@ private:
 
 	/// Max number of elements that can be stored in the table
 	size_type				mMaxSize = 0;
+
+	/// Max number of elements in the table before it should grow
+	size_type				mMaxLoad = 0;
 };
 
 /// Internal helper class to provide context for HashMap
