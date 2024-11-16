@@ -18,13 +18,13 @@ void *Factory::CreateObject(const char *inName)
 
 const RTTI *Factory::Find(const char *inName)
 {
-	ClassNameMap::const_iterator c = mClassNameMap.find(inName);
+	ClassNameMap::iterator c = mClassNameMap.find(inName);
 	return c != mClassNameMap.end()? c->second : nullptr;
 }
 
 const RTTI *Factory::Find(uint32 inHash)
 {
-	ClassHashMap::const_iterator c = mClassHashMap.find(inHash);
+	ClassHashMap::iterator c = mClassHashMap.find(inHash);
 	return c != mClassHashMap.end()? c->second : nullptr;
 }
 

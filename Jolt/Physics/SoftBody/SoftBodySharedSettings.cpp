@@ -10,7 +10,8 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/QuickSort.h>
-#include <Jolt/Core/HashTable.h>
+#include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/UnorderedSet.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <queue>
@@ -422,14 +423,14 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 		return;
 
 	// First collect all vertices that are skinned
-	using VertexIndexSet = HashSet<uint32>;
+	using VertexIndexSet = UnorderedSet<uint32>;
 	VertexIndexSet skinned_vertices;
 	skinned_vertices.reserve(VertexIndexSet::size_type(mSkinnedConstraints.size()));
 	for (const Skinned &s : mSkinnedConstraints)
 		skinned_vertices.insert(s.mVertex);
 
 	// Now collect all faces that connect only to skinned vertices
-	using ConnectedFacesMap = HashMap<uint32, VertexIndexSet>;
+	using ConnectedFacesMap = UnorderedMap<uint32, VertexIndexSet>;
 	ConnectedFacesMap connected_faces;
 	connected_faces.reserve(ConnectedFacesMap::size_type(mVertices.size()));
 	for (const Face &f : mFaces)

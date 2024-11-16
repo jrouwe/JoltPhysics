@@ -8,7 +8,7 @@
 #include <Jolt/Geometry/ConvexHullBuilder2D.h>
 #include <Jolt/Geometry/ClosestPoint.h>
 #include <Jolt/Core/StringTools.h>
-#include <Jolt/Core/HashTable.h>
+#include <Jolt/Core/UnorderedSet.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
@@ -246,8 +246,8 @@ float ConvexHullBuilder::DetermineCoplanarDistance() const
 
 int ConvexHullBuilder::GetNumVerticesUsed() const
 {
-	HashSet<int> used_verts;
-	used_verts.reserve(HashSet<int>::size_type(mPositions.size()));
+	UnorderedSet<int> used_verts;
+	used_verts.reserve(UnorderedSet<int>::size_type(mPositions.size()));
 	for (Face *f : mFaces)
 	{
 		Edge *e = f->mFirstEdge;

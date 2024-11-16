@@ -8,7 +8,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Helper class for implementing a HashSet or HashMap
+/// Helper class for implementing an UnorderedSet or UnorderedMap
 /// Based on CppCon 2017: Matt Kulukundis "Designing a Fast, Efficient, Cache-friendly Hash Table, Step by Step"
 /// See: https://www.youtube.com/watch?v=ncHmEUmJZf4
 template <class Key, class KeyValue, class HashTableDetail, class Hash, class KeyEqual>
@@ -93,7 +93,7 @@ private:
 		/// Equality operator
 		bool				operator == (const Iterator &inRHS) const
 		{
-			return mTable == inRHS.mTable && mIndex == inRHS.mIndex;
+			return mIndex == inRHS.mIndex && mTable == inRHS.mTable;
 		}
 
 		/// Inequality operator
@@ -329,6 +329,9 @@ public:
 							iterator(HashTable *inTable, size_type inIndex) : Base(inTable, inIndex) { }
 							iterator(const iterator &inIterator) : Base(inIterator) { }
 
+		/// Assignment
+		iterator &			operator = (const iterator &inRHS) { Base::operator = (inRHS); return *this; }
+
 		using Base::operator *;
 
 		/// Non-const access to key value pair
@@ -363,6 +366,10 @@ public:
 							const_iterator(const HashTable *inTable, size_type inIndex) : Base(inTable, inIndex) { }
 							const_iterator(const const_iterator &inRHS) : Base(inRHS) { }
 							const_iterator(const iterator &inIterator) : Base(inIterator.mTable, inIterator.mIndex) { }
+
+		/// Assignment
+		const_iterator &	operator = (const iterator &inRHS) { this->mTable = inRHS.mTable; this->mIndex = inRHS.mIndex; return *this; }
+		const_iterator &	operator = (const const_iterator &inRHS) { Base::operator = (inRHS); return *this; }
 	};
 
 	/// Default constructor
@@ -576,6 +583,42 @@ public:
 		}
 	}
 
+	/// @brief Erase an element by iterator
+	void					erase(const const_iterator &inIterator)
+	{
+		JPH_ASSERT(inIterator.IsValid());
+
+		// Mark the bucket as deleted
+		mControl[inIterator.mIndex] = cBucketDeleted;
+
+		// Destruct the element
+		mData[inIterator.mIndex].~KeyValue();
+
+		// Decrease size
+		--mSize;
+	}
+
+	/// @brief Erase an element by key
+	size_type				erase(const Key &inKey)
+	{
+		const_iterator it = find(inKey);
+		if (it == cend())
+			return 0;
+
+		erase(it);
+		return 1;
+	}
+
+	/// Swap the contents of two hash tables
+	void					swap(HashTable &ioRHS)
+	{
+		std::swap(mData, ioRHS.mData);
+		std::swap(mControl, ioRHS.mControl);
+		std::swap(mSize, ioRHS.mSize);
+		std::swap(mMaxSize, ioRHS.mMaxSize);
+		std::swap(mMaxLoad, ioRHS.mMaxLoad);
+	}
+
 private:
 	/// If this allocator needs to fall back to aligned allocations because the type requires it
 	static constexpr bool	cNeedsAlignedAllocate = alignof(KeyValue) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16);
@@ -603,96 +646,6 @@ private:
 
 	/// Max number of elements in the table before it should grow
 	size_type				mMaxLoad = 0;
-};
-
-/// Internal helper class to provide context for HashMap
-template <class Key, class Value>
-class HashMapDetail
-{
-public:
-	/// Get key from key value pair
-	static const Key &		sGetKey(const std::pair<Key, Value> &inKeyValue)
-	{
-		return inKeyValue.first;
-	}
-};
-
-/// Hash Map class
-/// @tparam Key Key type
-/// @tparam Value Value type
-/// @tparam Hash Hash function (note should be 64-bits)
-/// @tparam KeyEqual Equality comparison function
-template <class Key, class Value, class Hash = std::hash<Key>, class KeyEqual = std::equal_to<Key>>
-class HashMap : public HashTable<Key, std::pair<Key, Value>, HashMapDetail<Key, Value>, Hash, KeyEqual>
-{
-	using Base = HashTable<Key, std::pair<Key, Value>, HashMapDetail<Key, Value>, Hash, KeyEqual>;
-
-public:
-	using size_type = typename Base::size_type;
-	using iterator = typename Base::iterator;
-	using const_iterator = typename Base::const_iterator;
-	using value_type = typename Base::value_type;
-
-	Value &					operator [] (const Key &inKey)
-	{
-		size_type index;
-		bool inserted = this->InsertKey(inKey, index);
-		value_type &key_value = this->GetElement(index);
-		if (inserted)
-			::new (&key_value) value_type(inKey, Value());
-		return key_value.second;
-	}
-
-	template<class... Args>
-	std::pair<iterator, bool> try_emplace(const Key &inKey, Args &&...inArgs)
-	{
-		size_type index;
-		bool inserted = this->InsertKey(inKey, index);
-		if (inserted)
-			::new (&this->GetElement(index)) value_type(std::piecewise_construct, std::forward_as_tuple(inKey), std::forward_as_tuple(std::forward<Args>(inArgs)...));
-		return std::make_pair(iterator(this, index), inserted);
-	}
-
-	template<class... Args>
-	std::pair<iterator, bool> try_emplace(Key &&inKey, Args &&...inArgs)
-	{
-		size_type index;
-		bool inserted = this->InsertKey(inKey, index);
-		if (inserted)
-			::new (&this->GetElement(index)) value_type(std::piecewise_construct, std::forward_as_tuple(std::move(inKey)), std::forward_as_tuple(std::forward<Args>(inArgs)...));
-		return std::make_pair(iterator(this, index), inserted);
-	}
-
-	template<class K, class... Args>
-	std::pair<iterator, bool> try_emplace(K &&inKey, Args &&...inArgs)
-	{
-		size_type index;
-		bool inserted = this->InsertKey(inKey, index);
-		if (inserted)
-			::new (&this->GetElement(index)) value_type(std::piecewise_construct, std::forward_as_tuple(std::forward<K>(inKey)), std::forward_as_tuple(std::forward<Args>(inArgs)...));
-		return std::make_pair(iterator(this, index), inserted);
-	}
-};
-
-/// Internal helper class to provide context for HashSet
-template <class Key>
-class HashSetDetail
-{
-public:
-	/// The key is the key, just return it
-	static const Key &		sGetKey(const Key &inKey)
-	{
-		return inKey;
-	}
-};
-
-/// Hash Set class
-/// @tparam Key Key type
-/// @tparam Hash Hash function (note should be 64-bits)
-/// @tparam KeyEqual Equality comparison function
-template <class Key, class Hash = std::hash<Key>, class KeyEqual = std::equal_to<Key>>
-class HashSet : public HashTable<Key, Key, HashSetDetail<Key>, Hash, KeyEqual>
-{
 };
 
 JPH_NAMESPACE_END
