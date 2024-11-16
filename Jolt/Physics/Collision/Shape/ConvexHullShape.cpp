@@ -18,8 +18,7 @@
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
-#include <Jolt/Core/UnorderedMap.h>
-#include <Jolt/Core/UnorderedSet.h>
+#include <Jolt/Core/HashTable.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -124,8 +123,9 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	mInertia = Mat44::sIdentity() * (covariance_matrix(0, 0) + covariance_matrix(1, 1) + covariance_matrix(2, 2)) - covariance_matrix;
 
 	// Convert polygons from the builder to our internal representation
-	using VtxMap = UnorderedMap<int, uint8>;
+	using VtxMap = HashMap<int, uint8>;
 	VtxMap vertex_map;
+	vertex_map.reserve(VtxMap::size_type(inSettings.mPoints.size()));
 	for (BuilderFace *builder_face : builder_faces)
 	{
 		// Determine where the vertices go
@@ -140,7 +140,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 			// Remap to new index, not all points in the original input set are required to form the hull
 			uint8 new_idx;
 			int original_idx = edge->mStartIdx;
-			VtxMap::iterator m = vertex_map.find(original_idx);
+			VtxMap::const_iterator m = vertex_map.find(original_idx);
 			if (m != vertex_map.end())
 			{
 				// Found, reuse
