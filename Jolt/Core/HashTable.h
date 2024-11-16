@@ -582,7 +582,7 @@ public:
 				}
 			}
 
-			// Move to next bucket
+			// Move to next batch of 16 buckets
 			index = (index + 16) & bucket_mask;
 		}
 	}
