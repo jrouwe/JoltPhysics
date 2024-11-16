@@ -10,8 +10,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/QuickSort.h>
-#include <Jolt/Core/UnorderedMap.h>
-#include <Jolt/Core/UnorderedSet.h>
+#include <Jolt/Core/HashTable.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <queue>
@@ -423,14 +422,16 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 		return;
 
 	// First collect all vertices that are skinned
-	UnorderedSet<uint32> skinned_vertices;
-	skinned_vertices.reserve(mSkinnedConstraints.size());
+	using VertexIndexSet = HashSet<uint32>;
+	VertexIndexSet skinned_vertices;
+	skinned_vertices.reserve(VertexIndexSet::size_type(mSkinnedConstraints.size()));
 	for (const Skinned &s : mSkinnedConstraints)
 		skinned_vertices.insert(s.mVertex);
 
 	// Now collect all faces that connect only to skinned vertices
-	UnorderedMap<uint32, UnorderedSet<uint32>> connected_faces;
-	connected_faces.reserve(mVertices.size());
+	using ConnectedFacesMap = HashMap<uint32, VertexIndexSet>;
+	ConnectedFacesMap connected_faces;
+	connected_faces.reserve(ConnectedFacesMap::size_type(mVertices.size()));
 	for (const Face &f : mFaces)
 	{
 		// Must connect to only skinned vertices
@@ -451,12 +452,18 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 	{
 		uint32 start = uint32(mSkinnedConstraintNormals.size());
 		JPH_ASSERT((start >> 24) == 0);
-		const UnorderedSet<uint32> &faces = connected_faces[s.mVertex];
-		uint32 num = uint32(faces.size());
-		JPH_ASSERT(num < 256);
-		mSkinnedConstraintNormals.insert(mSkinnedConstraintNormals.end(), faces.begin(), faces.end());
-		QuickSort(mSkinnedConstraintNormals.begin() + start, mSkinnedConstraintNormals.begin() + start + num);
-		s.mNormalInfo = start + (num << 24);
+		ConnectedFacesMap::const_iterator connected_faces_it = connected_faces.find(s.mVertex);
+		if (connected_faces_it != connected_faces.cend())
+		{
+			const VertexIndexSet &faces = connected_faces_it->second;
+			uint32 num = uint32(faces.size());
+			JPH_ASSERT(num < 256);
+			mSkinnedConstraintNormals.insert(mSkinnedConstraintNormals.end(), faces.begin(), faces.end());
+			QuickSort(mSkinnedConstraintNormals.begin() + start, mSkinnedConstraintNormals.begin() + start + num);
+			s.mNormalInfo = start + (num << 24);
+		}
+		else
+			s.mNormalInfo = 0;
 	}
 	mSkinnedConstraintNormals.shrink_to_fit();
 }

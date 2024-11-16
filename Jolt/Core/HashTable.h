@@ -176,6 +176,7 @@ protected:
 		// Keeps track of the index of the first deleted bucket we found
 		constexpr size_type cNoDeleted = ~size_type(0);
 		size_type first_deleted_index = cNoDeleted;
+		size_type bucket_mask = mMaxSize - 1;
 
 		// Linear probing
 		KeyEqual equal;
@@ -215,6 +216,9 @@ protected:
 					// Skip to the bucket
 					local_index += first_equal;
 
+					// Make sure that our index is not beyond the end of the table
+					local_index &= bucket_mask;
+
 					// We found a bucket with same control value
 					if (equal(HashTableDetail::sGetKey(mData[local_index]), inKey))
 					{
@@ -239,6 +243,9 @@ protected:
 					if (first_deleted_index < local_index)
 						local_index = first_deleted_index;
 
+					// Make sure that our index is not beyond the end of the table
+					local_index &= bucket_mask;
+
 					// Update control byte
 					mControl[local_index] = control;
 					if (local_index < 15)
@@ -252,7 +259,7 @@ protected:
 			}
 
 			// Move to next batch of 16 buckets
-			index = (index + 16) & (mMaxSize - 1);
+			index = (index + 16) & bucket_mask;
 		}
 	}
 
