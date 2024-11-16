@@ -527,6 +527,7 @@ public:
 
 		BVec16 control16 = BVec16::sReplicate(control);
 		BVec16 bucket_empty = BVec16::sZero();
+		size_type bucket_mask = mMaxSize - 1;
 
 		// Linear probing
 		KeyEqual equal;
@@ -557,6 +558,9 @@ public:
 					// Skip to the bucket
 					local_index += first_equal;
 
+					// Make sure that our index is not beyond the end of the table
+					local_index &= bucket_mask;
+
 					// We found a bucket with same control value
 					if (equal(HashTableDetail::sGetKey(mData[local_index]), inKey))
 					{
@@ -579,7 +583,7 @@ public:
 			}
 
 			// Move to next bucket
-			index = (index + 16) & (mMaxSize - 1);
+			index = (index + 16) & bucket_mask;
 		}
 	}
 
