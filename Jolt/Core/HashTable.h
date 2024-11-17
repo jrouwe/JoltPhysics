@@ -215,7 +215,8 @@ protected:
 
 		// Split hash into control byte and index
 		uint8 control = cBucketUsed | uint8(hash_value);
-		size_type index = size_type(hash_value >> 7) & (mMaxSize - 1);
+		size_type bucket_mask = mMaxSize - 1;
+		size_type index = size_type(hash_value >> 7) & bucket_mask;
 
 		BVec16 control16 = BVec16::sReplicate(control);
 		BVec16 bucket_empty = BVec16::sZero();
@@ -224,7 +225,6 @@ protected:
 		// Keeps track of the index of the first deleted bucket we found
 		constexpr size_type cNoDeleted = ~size_type(0);
 		size_type first_deleted_index = cNoDeleted;
-		size_type bucket_mask = mMaxSize - 1;
 
 		// Linear probing
 		KeyEqual equal;
@@ -524,11 +524,11 @@ public:
 
 		// Split hash into control byte and index
 		uint8 control = cBucketUsed | uint8(hash_value);
-		size_type index = size_type(hash_value >> 7) & (mMaxSize - 1);
+		size_type bucket_mask = mMaxSize - 1;
+		size_type index = size_type(hash_value >> 7) & bucket_mask;
 
 		BVec16 control16 = BVec16::sReplicate(control);
 		BVec16 bucket_empty = BVec16::sZero();
-		size_type bucket_mask = mMaxSize - 1;
 
 		// Linear probing
 		KeyEqual equal;
