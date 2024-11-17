@@ -24,7 +24,7 @@ public:
 /// @tparam Key Key type
 /// @tparam Hash Hash function (note should be 64-bits)
 /// @tparam KeyEqual Equality comparison function
-template <class Key, class Hash = std::hash<Key>, class KeyEqual = std::equal_to<Key>>
+template <class Key, class Hash = JPH::Hash<Key>, class KeyEqual = std::equal_to<Key>>
 class UnorderedSet : public HashTable<Key, Key, UnorderedSetDetail<Key>, Hash, KeyEqual>
 {
 };

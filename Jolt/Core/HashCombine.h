@@ -23,6 +23,19 @@ inline uint64 HashBytes(const void *inData, uint inSize, uint64 inSeed = 0xcbf29
 	return hash;
 }
 
+/// Calculate the FNV-1a hash of inString.
+/// @see https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+constexpr uint64 HashString(const char *inString, uint64 inSeed = 0xcbf29ce484222325UL)
+{
+	uint64 hash = inSeed;
+	for (const char *c = inString; *c != 0; ++c)
+	{
+		hash ^= uint64(*c);
+		hash = hash * 0x100000001b3UL;
+	}
+	return hash;
+}
+
 /// A 64 bit hash function by Thomas Wang, Jan 1997
 /// See: http://web.archive.org/web/20071223173210/http://www.concentric.net/~Ttwang/tech/inthash.htm
 /// @param inValue Value to hash
@@ -40,12 +53,107 @@ inline uint64 Hash64(uint64 inValue)
 	return hash;
 }
 
-/// @brief Helper function that hashes a single value into ioSeed
-/// Taken from: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
-template <typename T>
-inline void HashCombineHelper(size_t &ioSeed, const T &inValue)
+/// Fallback hash function that calls T::GetHash()
+template <class T>
+class Hash
 {
-	std::hash<T> hasher;
+public:
+	uint64		operator () (const T &inValue) const
+	{
+		return inValue.GetHash();
+	}
+};
+
+/// A hash function for floats
+template <>
+class Hash<float>
+{
+public:
+	uint64		operator () (float inValue) const
+	{
+		float value = inValue == 0.0f? 0.0f : inValue; // Convert -0.0f to 0.0f
+		return HashBytes(&value, sizeof(value));
+	}
+};
+
+/// A hash function for doubles
+template <>
+class Hash<double>
+{
+public:
+	uint64		operator () (double inValue) const
+	{
+		double value = inValue == 0.0? 0.0 : inValue; // Convert -0.0 to 0.0
+		return HashBytes(&value, sizeof(value));
+	}
+};
+
+/// A hash function for character pointers
+template <>
+class Hash<const char *>
+{
+public:
+	uint64		operator () (const char *inValue) const
+	{
+		return HashString(inValue);
+	}
+};
+
+/// A hash function for std::string_view
+template <>
+class Hash<std::string_view>
+{
+public:
+	uint64		operator () (const std::string_view &inValue) const
+	{
+		return HashBytes(inValue.data(), uint(inValue.size()));
+	}
+};
+
+/// A hash function for String
+template <>
+class Hash<String>
+{
+public:
+	uint64		operator () (const String &inValue) const
+	{
+		return HashBytes(inValue.data(), uint(inValue.size()));
+	}
+};
+
+/// A fallback function for generic pointers
+template <class T>
+class Hash<T *>
+{
+public:
+	uint64		operator () (T *inValue) const
+	{
+		return HashBytes(&inValue, sizeof(inValue));
+	}
+};
+
+/// Helper macro to define a hash function for trivial types
+#define JPH_DEFINE_HASH(type)								\
+template <>													\
+class Hash<type>											\
+{															\
+public:														\
+	uint64		operator () (const type &inValue) const		\
+	{														\
+		return HashBytes(&inValue, sizeof(inValue));		\
+	}														\
+};
+
+/// Commonly used types
+JPH_DEFINE_HASH(uint64)
+JPH_DEFINE_HASH(uint32)
+JPH_DEFINE_HASH(int)
+JPH_DEFINE_HASH(char)
+
+template <typename T>
+inline void HashCombineHelper(uint64 &ioSeed, const T &inValue)
+{
+	Hash<T> hasher;
 	ioSeed ^= hasher(inValue) + 0x9e3779b9 + (ioSeed << 6) + (ioSeed >> 2);
 }
 
@@ -62,7 +170,7 @@ inline void HashCombineHelper(size_t &ioSeed, const T &inValue)
 ///
 ///		JPH_MAKE_HASHABLE(SomeHashKey, t.key1, t.key2, t.key3)
 template <typename... Values>
-inline void HashCombine(std::size_t &ioSeed, Values... inValues)
+inline void HashCombine(uint64 &ioSeed, Values... inValues)
 {
 	// Hash all values together using a fold expression
 	(HashCombineHelper(ioSeed, inValues), ...);
@@ -76,9 +184,9 @@ JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 #define JPH_MAKE_HASH_STRUCT(type, name, ...)				\
 	struct [[nodiscard]] name								\
 	{														\
-		std::size_t operator()(const type &t) const			\
+		::JPH::uint64 operator()(const type &t) const		\
 		{													\
-			std::size_t ret = 0;							\
+			::JPH::uint64 ret = 0;							\
 			::JPH::HashCombine(ret, __VA_ARGS__);			\
 			return ret;										\
 		}													\
@@ -90,7 +198,20 @@ JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 	namespace std											\
 	{														\
 		template<>											\
-		JPH_MAKE_HASH_STRUCT(type, hash<type>, __VA_ARGS__)	\
+		struct [[nodiscard]] hash<type>						\
+		{													\
+			std::size_t operator()(const type &t) const		\
+			{												\
+				::JPH::uint64 ret = 0;						\
+				::JPH::HashCombine(ret, __VA_ARGS__);		\
+				return std::size_t(ret);					\
+			}												\
+		};													\
+	}														\
+	namespace JPH											\
+	{														\
+		template<>											\
+		JPH_MAKE_HASH_STRUCT(type, Hash<type>, __VA_ARGS__) \
 	}														\
 	JPH_SUPPRESS_WARNING_POP
 

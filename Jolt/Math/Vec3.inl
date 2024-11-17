@@ -10,7 +10,7 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <random>
 JPH_SUPPRESS_WARNINGS_STD_END
 
-// Create a std::hash for Vec3
+// Create a std::hash/JPH::Hash for Vec3
 JPH_MAKE_HASHABLE(JPH::Vec3, t.GetX(), t.GetY(), t.GetZ())
 
 JPH_NAMESPACE_BEGIN

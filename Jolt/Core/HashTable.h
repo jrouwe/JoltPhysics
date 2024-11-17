@@ -213,7 +213,7 @@ protected:
 
 		// Calculate hash
 		Hash hash;
-		uint64 hash_value = hash(inKey); // TODO: Ensure we have 64 bit hash
+		uint64 hash_value = hash(inKey);
 
 		// Split hash into control byte and index
 		uint8 control = cBucketUsed | uint8(hash_value);
@@ -526,7 +526,7 @@ public:
 
 		// Calculate hash
 		Hash hash;
-		uint64 hash_value = hash(inKey); // TODO: Ensure we have 64 bit hash
+		uint64 hash_value = hash(inKey);
 
 		// Split hash into control byte and index
 		uint8 control = cBucketUsed | uint8(hash_value);

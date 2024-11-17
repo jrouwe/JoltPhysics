@@ -245,11 +245,14 @@ void MeshShape::sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTri
 			return mIdx1 == inRHS.mIdx1 && mIdx2 == inRHS.mIdx2;
 		}
 
+		uint64	GetHash() const
+		{
+			return HashBytes(this, sizeof(*this));
+		}
+
 		int		mIdx1;
 		int		mIdx2;
 	};
-
-	JPH_MAKE_HASH_STRUCT(Edge, EdgeHash, t.mIdx1, t.mIdx2)
 
 	// A struct to hold the triangles that are connected to an edge
 	struct TriangleIndices
@@ -259,7 +262,7 @@ void MeshShape::sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTri
 	};
 
 	// Build a list of edge to triangles
-	using EdgeToTriangle = UnorderedMap<Edge, TriangleIndices, EdgeHash>;
+	using EdgeToTriangle = UnorderedMap<Edge, TriangleIndices>;
 	EdgeToTriangle edge_to_triangle;
 	edge_to_triangle.reserve(EdgeToTriangle::size_type(ioIndices.size() * 3));
 	for (uint triangle_idx = 0; triangle_idx < ioIndices.size(); ++triangle_idx)
