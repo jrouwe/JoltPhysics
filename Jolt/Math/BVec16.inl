@@ -7,7 +7,7 @@ JPH_NAMESPACE_BEGIN
 BVec16::BVec16(uint8 inB0, uint8 inB1, uint8 inB2, uint8 inB3, uint8 inB4, uint8 inB5, uint8 inB6, uint8 inB7, uint8 inB8, uint8 inB9, uint8 inB10, uint8 inB11, uint8 inB12, uint8 inB13, uint8 inB14, uint8 inB15)
 {
 #if defined(JPH_USE_SSE)
-	mValue = _mm_set_epi8(inB15, inB14, inB13, inB12, inB11, inB10, inB9, inB8, inB7, inB6, inB5, inB4, inB3, inB2, inB1, inB0);
+	mValue = _mm_set_epi8(char(inB15), char(inB14), char(inB13), char(inB12), char(inB11), char(inB10), char(inB9), char(inB8), char(inB7), char(inB6), char(inB5), char(inB4), char(inB3), char(inB2), char(inB1), char(inB0));
 #elif defined(JPH_USE_NEON)
 	uint8x8_t v1 = vcreate_u8(uint64(inB0) | (uint64(inB1) << 8) | (uint64(inB2) << 16) | (uint64(inB3) << 24) | (uint64(inB4) << 32) | (uint64(inB5) << 40) | (uint64(inB6) << 48) | (uint64(inB7) << 56));
 	uint8x8_t v2 = vcreate_u8(uint64(inB8) | (uint64(inB9) << 8) | (uint64(inB10) << 16) | (uint64(inB11) << 24) | (uint64(inB12) << 32) | (uint64(inB13) << 40) | (uint64(inB14) << 48) | (uint64(inB15) << 56));
@@ -57,7 +57,7 @@ BVec16 BVec16::sZero()
 BVec16 BVec16::sReplicate(uint8 inV)
 {
 #if defined(JPH_USE_SSE)
-	return _mm_set1_epi8(inV);
+	return _mm_set1_epi8(char(inV));
 #elif defined(JPH_USE_NEON)
 	return vdupq_n_u8(inV);
 #else
