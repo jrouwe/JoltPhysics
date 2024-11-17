@@ -173,23 +173,26 @@ private:
 		// Reset all control bytes
 		memset(mControl, cBucketEmpty, mMaxSize + 15);
 
-		// Copy all elements from the old table
-		for (size_type i = 0; i < old_max_size; ++i)
-			if (old_control[i] & cBucketUsed)
-			{
-				size_type index;
-				KeyValue *element = old_data + i;
-				JPH_IF_ENABLE_ASSERTS(bool inserted =) InsertKey</* AllowDeleted= */ false>(HashTableDetail::sGetKey(*element), index);
-				JPH_ASSERT(inserted);
-				::new (mData + index) KeyValue(std::move(*element));
-				element->~KeyValue();
-			}
+		if (old_data != nullptr)
+		{
+			// Copy all elements from the old table
+			for (size_type i = 0; i < old_max_size; ++i)
+				if (old_control[i] & cBucketUsed)
+				{
+					size_type index;
+					KeyValue *element = old_data + i;
+					JPH_IF_ENABLE_ASSERTS(bool inserted =) InsertKey</* AllowDeleted= */ false>(HashTableDetail::sGetKey(*element), index);
+					JPH_ASSERT(inserted);
+					::new (mData + index) KeyValue(std::move(*element));
+					element->~KeyValue();
+				}
 
-		// Free memory
-		if constexpr (cNeedsAlignedAllocate)
-			AlignedFree(old_data);
-		else
-			Free(old_data);
+			// Free memory
+			if constexpr (cNeedsAlignedAllocate)
+				AlignedFree(old_data);
+			else
+				Free(old_data);
+		}
 	}
 
 protected:

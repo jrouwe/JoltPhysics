@@ -103,4 +103,53 @@ TEST_SUITE("UnorderedSetTest")
 
 		CHECK(set.find(10001) == set.cend());
 	}
+
+	TEST_CASE("TestUnorderedSetHashCollision")
+	{
+		// A hash function that's guaranteed to collide
+		class MyBadHash
+		{
+		public:
+			size_t operator () (int inValue) const
+			{
+				return 0;
+			}
+		};
+
+		UnorderedSet<int, MyBadHash> set;
+		for (int i = 0; i < 10; ++i)
+			CHECK(set.insert(i).second);
+
+		CHECK(set.size() == 10);
+
+		for (int i = 0; i < 10; ++i)
+			CHECK(*set.find(i) == i);
+
+		CHECK(set.find(11) == set.cend());
+
+		for (int i = 0; i < 5; ++i)
+			CHECK(set.erase(i) == 1);
+
+		CHECK(set.size() == 5);
+
+		for (int i = 0; i < 5; ++i)
+			CHECK(set.find(i) == set.end());
+
+		for (int i = 5; i < 10; ++i)
+			CHECK(*set.find(i) == i);
+
+		CHECK(set.find(11) == set.cend());
+
+		for (int i = 0; i < 5; ++i)
+			CHECK(set.insert(i).second);
+
+		CHECK(!set.insert(0).second);
+
+		CHECK(set.size() == 10);
+
+		for (int i = 0; i < 10; ++i)
+			CHECK(*set.find(i) == i);
+
+		CHECK(set.find(11) == set.cend());
+	}
 }
