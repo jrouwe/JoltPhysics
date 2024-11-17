@@ -38,7 +38,7 @@ private:
 		IteratorBase &		operator = (const IteratorBase &inRHS) = default;
 
 		/// Iterator at start of table
-							IteratorBase(Table *inTable) :
+		explicit			IteratorBase(Table *inTable) :
 			mTable(inTable),
 			mIndex(0)
 		{
@@ -141,7 +141,7 @@ private:
 
 		// Copy elements
 		uint index = 0;
-		for (uint8 *control = mControl, *control_end = mControl + mMaxSize; control != control_end; ++control, ++index)
+		for (const uint8 *control = mControl, *control_end = mControl + mMaxSize; control != control_end; ++control, ++index)
 			if (*control & cBucketUsed)
 				::new (mData + index) KeyValue(inRHS.mData[index]);
 		mSize = inRHS.mSize;
@@ -161,7 +161,7 @@ private:
 		// Move the old table to a temporary structure
 		size_type old_max_size = mMaxSize;
 		KeyValue *old_data = mData;
-		uint8 *old_control = mControl;
+		const uint8 *old_control = mControl;
 		mData = nullptr;
 		mControl = nullptr;
 		mSize = 0;
@@ -325,7 +325,7 @@ public:
         using pointer = typename Base::value_type *;
 
 		/// Constructors
-							iterator(HashTable *inTable) : Base(inTable) { }
+		explicit			iterator(HashTable *inTable) : Base(inTable) { }
 							iterator(HashTable *inTable, size_type inIndex) : Base(inTable, inIndex) { }
 							iterator(const iterator &inIterator) : Base(inIterator) { }
 
@@ -362,7 +362,7 @@ public:
         using pointer = const typename Base::value_type *;
 
 		/// Constructors
-							const_iterator(const HashTable *inTable) : Base(inTable) { }
+		explicit			const_iterator(const HashTable *inTable) : Base(inTable) { }
 							const_iterator(const HashTable *inTable, size_type inIndex) : Base(inTable, inIndex) { }
 							const_iterator(const const_iterator &inRHS) : Base(inRHS) { }
 							const_iterator(const iterator &inIterator) : Base(inIterator.mTable, inIterator.mIndex) { }
@@ -382,7 +382,7 @@ public:
 	}
 
 	/// Move constructor
-							HashTable(HashTable &&ioRHS) :
+							HashTable(HashTable &&ioRHS) noexcept :
 		mData(ioRHS.mData),
 		mControl(ioRHS.mControl),
 		mSize(ioRHS.mSize),
@@ -614,7 +614,7 @@ public:
 	}
 
 	/// Swap the contents of two hash tables
-	void					swap(HashTable &ioRHS)
+	void					swap(HashTable &ioRHS) noexcept
 	{
 		std::swap(mData, ioRHS.mData);
 		std::swap(mControl, ioRHS.mControl);

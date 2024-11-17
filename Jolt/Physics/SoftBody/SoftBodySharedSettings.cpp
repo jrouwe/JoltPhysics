@@ -962,7 +962,7 @@ void SoftBodySharedSettings::SaveWithMaterials(StreamOut &inStream, SharedSettin
 	if (settings_iter == ioSettingsMap.end())
 	{
 		// Write settings ID
-		uint32 settings_id = (uint32)ioSettingsMap.size();
+		uint32 settings_id = ioSettingsMap.size();
 		ioSettingsMap[this] = settings_id;
 		inStream.Write(settings_id);
 

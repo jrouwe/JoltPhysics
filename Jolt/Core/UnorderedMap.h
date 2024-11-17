@@ -1,5 +1,5 @@
 // Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
-// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-FileCopyrightText: 2024 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -14,7 +14,7 @@ class UnorderedMapDetail
 {
 public:
 	/// Get key from key value pair
-	static const Key &		sGetKey(const std::pair<Key, Value> &inKeyValue)
+	static const Key &			sGetKey(const std::pair<Key, Value> &inKeyValue)
 	{
 		return inKeyValue.first;
 	}
@@ -36,7 +36,7 @@ public:
 	using const_iterator = typename Base::const_iterator;
 	using value_type = typename Base::value_type;
 
-	Value &					operator [] (const Key &inKey)
+	Value &						operator [] (const Key &inKey)
 	{
 		size_type index;
 		bool inserted = this->InsertKey(inKey, index);
@@ -47,7 +47,7 @@ public:
 	}
 
 	template<class... Args>
-	std::pair<iterator, bool> try_emplace(const Key &inKey, Args &&...inArgs)
+	std::pair<iterator, bool>	try_emplace(const Key &inKey, Args &&...inArgs)
 	{
 		size_type index;
 		bool inserted = this->InsertKey(inKey, index);
@@ -57,7 +57,7 @@ public:
 	}
 
 	template<class... Args>
-	std::pair<iterator, bool> try_emplace(Key &&inKey, Args &&...inArgs)
+	std::pair<iterator, bool>	try_emplace(Key &&inKey, Args &&...inArgs)
 	{
 		size_type index;
 		bool inserted = this->InsertKey(inKey, index);
@@ -66,21 +66,11 @@ public:
 		return std::make_pair(iterator(this, index), inserted);
 	}
 
-	template<class K, class... Args>
-	std::pair<iterator, bool> try_emplace(K &&inKey, Args &&...inArgs)
-	{
-		size_type index;
-		bool inserted = this->InsertKey(inKey, index);
-		if (inserted)
-			::new (&this->GetElement(index)) value_type(std::piecewise_construct, std::forward_as_tuple(std::forward<K>(inKey)), std::forward_as_tuple(std::forward<Args>(inArgs)...));
-		return std::make_pair(iterator(this, index), inserted);
-	}
-
 	/// Const version of find
 	using Base::find;
 
 	/// Non-const version of find
-	iterator			find(const Key &inKey)
+	iterator					find(const Key &inKey)
 	{
 		const_iterator it = Base::find(inKey);
 		return iterator(this, it.mIndex);
