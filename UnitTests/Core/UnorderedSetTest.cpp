@@ -14,8 +14,9 @@ TEST_SUITE("UnorderedSetTest")
 		set.reserve(10);
 
 		// Insert some entries
-		set.insert(1);
-		set.insert(3);
+		CHECK(*set.insert(1).first == 1);
+		CHECK(set.insert(3).second);
+		CHECK(!set.insert(3).second);
 		CHECK(set.size() == 2);
 		CHECK(*set.find(1) == 1);
 		CHECK(*set.find(3) == 3);
@@ -47,13 +48,28 @@ TEST_SUITE("UnorderedSetTest")
 		CHECK(*set2.find(1) == 1);
 		CHECK(*set2.find(3) == 3);
 		CHECK(set2.find(5) == set2.cend());
+
+		// Swap
+		UnorderedSet<int> set3;
+		set3.swap(set);
+		CHECK(*set3.find(1) == 1);
+		CHECK(*set3.find(3) == 3);
+		CHECK(set3.find(5) == set3.end());
+		CHECK(set.empty());
+
+		// Move construct
+		UnorderedSet<int> set4(std::move(set3));
+		CHECK(*set4.find(1) == 1);
+		CHECK(*set4.find(3) == 3);
+		CHECK(set4.find(5) == set4.end());
+		CHECK(set3.empty());
 	}
 
 	TEST_CASE("TestUnorderedSetGrow")
 	{
 		UnorderedSet<int> set;
 		for (int i = 0; i < 10000; ++i)
-			set.insert(i);
+			CHECK(set.insert(i).second);
 
 		CHECK(set.size() == 10000);
 
@@ -63,7 +79,9 @@ TEST_SUITE("UnorderedSetTest")
 		CHECK(set.find(10001) == set.cend());
 
 		for (int i = 0; i < 5000; ++i)
-			set.erase(i);
+			CHECK(set.erase(i) == 1);
+
+		CHECK(set.size() == 5000);
 
 		for (int i = 0; i < 5000; ++i)
 			CHECK(set.find(i) == set.end());
@@ -74,7 +92,11 @@ TEST_SUITE("UnorderedSetTest")
 		CHECK(set.find(10001) == set.cend());
 
 		for (int i = 0; i < 5000; ++i)
-			set.insert(i);
+			CHECK(set.insert(i).second);
+
+		CHECK(!set.insert(0).second);
+
+		CHECK(set.size() == 10000);
 
 		for (int i = 0; i < 10000; ++i)
 			CHECK(*set.find(i) == i);

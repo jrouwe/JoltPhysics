@@ -70,7 +70,6 @@ private:
 		/// Postfix increment
 		Iterator			operator ++ (int)
 		{
-			JPH_ASSERT(IsValid());
 			Iterator result(mTable, mIndex);
 			++(*this);
 			return result;
@@ -386,12 +385,14 @@ public:
 		mData(ioRHS.mData),
 		mControl(ioRHS.mControl),
 		mSize(ioRHS.mSize),
-		mMaxSize(ioRHS.mMaxSize)
+		mMaxSize(ioRHS.mMaxSize),
+		mMaxLoad(ioRHS.mMaxLoad)
 	{
 		ioRHS.mData = nullptr;
 		ioRHS.mControl = nullptr;
 		ioRHS.mSize = 0;
 		ioRHS.mMaxSize = 0;
+		ioRHS.mMaxLoad = 0;
 	}
 
 	/// Assignment operator
@@ -448,8 +449,10 @@ public:
 
 			// Reset members
 			mData = nullptr;
+			mControl = nullptr;
 			mSize = 0;
 			mMaxSize = 0;
+			mMaxLoad = 0;
 		}
 	}
 

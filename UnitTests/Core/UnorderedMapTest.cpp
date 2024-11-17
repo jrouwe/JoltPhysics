@@ -14,8 +14,9 @@ TEST_SUITE("UnorderedMapTest")
 		map.reserve(10);
 
 		// Insert some entries
-		map.insert({ 1, 2 });
-		map.insert({ 3, 4 });
+		CHECK(map.insert({ 1, 2 }).first->first == 1);
+		CHECK(map.insert({ 3, 4 }).second);
+		CHECK(!map.insert({ 3, 5 }).second);
 		CHECK(map.size() == 2);
 		CHECK(map.find(1)->second == 2);
 		CHECK(map.find(3)->second == 4);
@@ -63,13 +64,32 @@ TEST_SUITE("UnorderedMapTest")
 		map.try_emplace(7, 8);
 		CHECK(map.size() == 4);
 		CHECK(map.find(7)->second == 8);
+
+		// Swap
+		UnorderedMap<int, int> map3;
+		map3.swap(map);
+		CHECK(map3.find(1)->second == 2);
+		CHECK(map3.find(3)->second == 4);
+		CHECK(map3.find(5)->second == 7);
+		CHECK(map3.find(7)->second == 8);
+		CHECK(map3.find(9) == map3.end());
+		CHECK(map.empty());
+
+		// Move construct
+		UnorderedMap<int, int> map4(std::move(map3));
+		CHECK(map4.find(1)->second == 2);
+		CHECK(map4.find(3)->second == 4);
+		CHECK(map4.find(5)->second == 7);
+		CHECK(map4.find(7)->second == 8);
+		CHECK(map4.find(9) == map4.end());
+		CHECK(map3.empty());
 	}
 
 	TEST_CASE("TestUnorderedMapGrow")
 	{
 		UnorderedMap<int, int> map;
 		for (int i = 0; i < 10000; ++i)
-			map.try_emplace(i, ~i);
+			CHECK(map.try_emplace(i, ~i).second);
 
 		CHECK(map.size() == 10000);
 
@@ -79,7 +99,9 @@ TEST_SUITE("UnorderedMapTest")
 		CHECK(map.find(10001) == map.end());
 
 		for (int i = 0; i < 5000; ++i)
-			map.erase(i);
+			CHECK(map.erase(i) == 1);
+
+		CHECK(map.size() == 5000);
 
 		for (int i = 0; i < 5000; ++i)
 			CHECK(map.find(i) == map.end());
@@ -90,7 +112,11 @@ TEST_SUITE("UnorderedMapTest")
 		CHECK(map.find(10001) == map.end());
 
 		for (int i = 0; i < 5000; ++i)
-			map.try_emplace(i, i + 1);
+			CHECK(map.try_emplace(i, i + 1).second);
+
+		CHECK(!map.try_emplace(0, 0).second);
+
+		CHECK(map.size() == 10000);
 
 		for (int i = 0; i < 5000; ++i)
 			CHECK(map.find(i)->second == i + 1);
