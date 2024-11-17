@@ -431,14 +431,15 @@ public:
 	/// Destroy the entire hash table
 	void					clear()
 	{
-		if (!empty())
-		{
-			// Delete all elements
-			if constexpr (!is_trivially_destructible<KeyValue>())
+		// Delete all elements
+		if constexpr (!is_trivially_destructible<KeyValue>())
+			if (!empty())
 				for (size_type i = 0; i < mMaxSize; ++i)
 					if (mControl[i] & cBucketUsed)
 						mData[i].~KeyValue();
 
+		if (mData != nullptr)
+		{
 			// Free memory
 			if constexpr (cNeedsAlignedAllocate)
 				AlignedFree(mData);
