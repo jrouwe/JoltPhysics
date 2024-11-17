@@ -595,6 +595,8 @@ public:
 
 		// Mark the bucket as deleted
 		mControl[inIterator.mIndex] = cBucketDeleted;
+		if (inIterator.mIndex < 15)
+			mControl[inIterator.mIndex + mMaxSize] = cBucketDeleted;
 
 		// Destruct the element
 		mData[inIterator.mIndex].~KeyValue();
