@@ -115,7 +115,7 @@ BVec16 BVec16::sXor(BVec16Arg inV1, BVec16Arg inV2)
 #if defined(JPH_USE_SSE)
 	return _mm_xor_si128(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
-	return veorq_u32(inV1.mValue, inV2.mValue);
+	return veorq_u8(inV1.mValue, inV2.mValue);
 #else
 	return BVec16(inV1.mU64[0] ^ inV2.mU64[0], inV1.mU64[1] ^ inV2.mU64[1]);
 #endif
@@ -126,7 +126,7 @@ BVec16 BVec16::sAnd(BVec16Arg inV1, BVec16Arg inV2)
 #if defined(JPH_USE_SSE)
 	return _mm_and_si128(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
-	return vandq_u32(inV1.mValue, inV2.mValue);
+	return vandq_u8(inV1.mValue, inV2.mValue);
 #else
 	return BVec16(inV1.mU64[0] & inV2.mU64[0], inV1.mU64[1] & inV2.mU64[1]);
 #endif
@@ -138,7 +138,7 @@ BVec16 BVec16::sNot(BVec16Arg inV1)
 #if defined(JPH_USE_SSE)
 	return sXor(inV1, sReplicate(0xff));
 #elif defined(JPH_USE_NEON)
-	return vmvnq_u32(inV1.mValue);
+	return vmvnq_u8(inV1.mValue);
 #else
 	return BVec16(~inV1.mU64[0], ~inV1.mU64[1]);
 #endif
