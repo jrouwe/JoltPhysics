@@ -77,10 +77,10 @@ public:
 	/// To String
 	friend ostream &			operator << (ostream &inStream, BVec16Arg inV)
 	{
-		inStream << inV.mU8[0] << ", " << inV.mU8[1] << ", " << inV.mU8[2] << ", " << inV.mU8[3]
-				 << inV.mU8[4] << ", " << inV.mU8[5] << ", " << inV.mU8[6] << ", " << inV.mU8[7]
-				 << inV.mU8[8] << ", " << inV.mU8[9] << ", " << inV.mU8[10] << ", " << inV.mU8[11]
-				 << inV.mU8[12] << ", " << inV.mU8[13] << ", " << inV.mU8[14] << ", " << inV.mU8[15];
+		inStream << uint(inV.mU8[0]) << ", " << uint(inV.mU8[1]) << ", " << uint(inV.mU8[2]) << ", " << uint(inV.mU8[3]) << ", "
+				 << uint(inV.mU8[4]) << ", " << uint(inV.mU8[5]) << ", " << uint(inV.mU8[6]) << ", " << uint(inV.mU8[7]) << ", "
+				 << uint(inV.mU8[8]) << ", " << uint(inV.mU8[9]) << ", " << uint(inV.mU8[10]) << ", " << uint(inV.mU8[11]) << ", "
+				 << uint(inV.mU8[12]) << ", " << uint(inV.mU8[13]) << ", " << uint(inV.mU8[14]) << ", " << uint(inV.mU8[15]);
 		return inStream;
 	}
 

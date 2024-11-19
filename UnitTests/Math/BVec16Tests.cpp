@@ -5,6 +5,7 @@
 #include "UnitTestFramework.h"
 
 #include <Jolt/Math/BVec16.h>
+#include <Jolt/Core/StringTools.h>
 
 TEST_SUITE("BVec16Tests")
 {
@@ -32,6 +33,11 @@ TEST_SUITE("BVec16Tests")
 		// Test == and != operators
 		CHECK(v == BVec16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
 		CHECK(v != BVec16(1, 2, 3, 4, 5, 6, 7, 8, 10, 9, 11, 12, 13, 14, 15, 16));
+
+		// Check element modification
+		v[15] = 17;
+		CHECK(v[15] == 17);
+		CHECK(v == BVec16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17));
 	}
 
 	TEST_CASE("TestBVec16LoadByte16")
@@ -73,5 +79,12 @@ TEST_SUITE("BVec16Tests")
 
 		CHECK(BVec16::sNot(v1) == BVec16(0b11111100, 0b11111001, 0b11110011, 0b11100111, 0b11001111, 0b10011111, 0b11111100, 0b11111001, 0b11110011, 0b11100111, 0b11001111, 0b10011111, 0b11111100, 0b11111001, 0b11110011, 0b11100111));
 		CHECK(BVec16::sNot(v2) == BVec16(0b11111010, 0b11110101, 0b11101011, 0b11010111, 0b10101111, 0b01011111, 0b11111010, 0b11110101, 0b11101011, 0b11010111, 0b10101111, 0b01011111, 0b11111010, 0b11110101, 0b11101011, 0b11010111));
+	}
+
+	TEST_CASE("TestBVec16ToString")
+	{
+		BVec16 v(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+
+		CHECK(ConvertToString(v) == "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16");
 	}
 }
