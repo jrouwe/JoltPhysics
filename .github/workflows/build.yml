@@ -16,7 +16,7 @@ env:
   EMSCRIPTEN_VERSION: 3.1.64
   UBUNTU_CLANG_VERSION: clang++-15
   UBUNTU_GCC_VERSION: g++-12
-  VS_INSTALLER: 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe'
+  VS_INSTALLER: '& "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe"'
 
 jobs:
   msvc_cl_arm_32_bit:
