@@ -212,8 +212,7 @@ protected:
 			GrowTable();
 
 		// Calculate hash
-		Hash hash;
-		uint64 hash_value = hash(inKey);
+		uint64 hash_value = Hash { } (inKey);
 
 		// Split hash into control byte and index
 		uint8 control = cBucketUsed | uint8(hash_value);
@@ -525,8 +524,7 @@ public:
 			return cend();
 
 		// Calculate hash
-		Hash hash;
-		uint64 hash_value = hash(inKey);
+		uint64 hash_value = Hash { } (inKey);
 
 		// Split hash into control byte and index
 		uint8 control = cBucketUsed | uint8(hash_value);

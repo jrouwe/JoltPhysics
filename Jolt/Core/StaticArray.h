@@ -285,10 +285,8 @@ public:
 	/// Get hash for this array
 	uint64					GetHash() const
 	{
-		uint64 ret = 0;
-
 		// Hash length first
-		JPH::HashCombine(ret, size());
+		uint64 ret = Hash<uint32> { } (uint32(size()));
 
 		// Then hash elements
 		for (const T *element = reinterpret_cast<const T *>(mElements), *element_end = reinterpret_cast<const T *>(mElements) + mSize; element < element_end; ++element)

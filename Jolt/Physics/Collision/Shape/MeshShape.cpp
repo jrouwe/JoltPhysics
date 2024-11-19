@@ -247,6 +247,7 @@ void MeshShape::sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTri
 
 		uint64	GetHash() const
 		{
+			static_assert(sizeof(*this) == 2 * sizeof(int), "No padding expected");
 			return HashBytes(this, sizeof(*this));
 		}
 
