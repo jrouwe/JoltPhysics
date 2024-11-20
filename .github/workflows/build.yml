@@ -317,7 +317,9 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/VS2022_CL_ARM_32_BIT -G "Visual Studio 17 2022" -A ARM Build
+      # Windows 11 SDK 10.0.22621.0 is the last SDK to support 32-bit ARM, in the future if the github image no longer includes it, it can be installed with:
+      # Start-Process -wait -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList "modify", "--installPath", """C:\Program Files\Microsoft Visual Studio\2022\Enterprise""", "--quiet", "--norestart", "--nocache", "--add", "Microsoft.VisualStudio.Component.Windows11SDK.22621" -Verb RunAs
+      run: cmake -B ${{github.workspace}}/Build/VS2022_CL_ARM_32_BIT -G "Visual Studio 17 2022" -A ARM -DCMAKE_SYSTEM_VERSION="10.0.22621.0" -DCMAKE_CXX_COMPILER_WORKS=1 Build 
     - name: Build
       run: msbuild Build\VS2022_CL_ARM_32_BIT\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
 
