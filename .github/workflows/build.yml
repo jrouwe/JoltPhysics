@@ -32,7 +32,7 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
     - name: Install ARM 32 Tools
-      run: Start-Process -wait "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe" -ArgumentList "modify","--installPath","C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise","--quiet","--norestart","--nocache","--add","Microsoft.VisualStudio.Component.VC.Tools.ARM"
+      run: Start-Process -wait -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList "modify", "--installPath", """C:\Program Files\Microsoft Visual Studio\2022\Enterprise""", "--quiet", "--norestart", "--nocache", "--add", "Microsoft.VisualStudio.Component.VC.Tools.ARM" -Verb RunAs
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/VS2022_CL_ARM_32_BIT -G "Visual Studio 17 2022" -A ARM Build
     - name: Build
