@@ -2,6 +2,19 @@
 
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
+## Unreleased changes
+
+### New functionality
+
+* Optimized creation of MeshShape. Improves build speed by about 25% and reduces number of allocations by a factor of 1000. Allocations caused contention when building meshes from multiple threads.
+* Removed the use of std::unordered_map and std::unordered_set and replaced them with our own implementation: UnorderedMap and UnorderedSet.
+* Added MotionProperties::ScaleToMass. This lets you easily change the mass and inertia tensor of a body after creation.
+* Split up Body::ApplyBuoyancyImpulse into Body::GetSubmergedVolume and Body::ApplyBuoyancyImpulse. This allows you to use the calculated submerged volume for other purposes.
+
+### Bug fixes
+
+* Fixed bodies gaining more energy than intended due to restitution. E.g. A restitution of 1 could lead to bodies bouncing ever higher.
+
 ## v5.2.0
 
 ### New functionality
