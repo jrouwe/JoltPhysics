@@ -346,23 +346,16 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 	settings.mBackFaceMode = mBackFaceMode;
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
 	settings.mMaxSeparationDistance = mCharacterPadding + inMaxSeparationDistance;
+	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
 
 	// Body filter
 	IgnoreSingleBodyFilterChained body_filter(mInnerBodyID, inBodyFilter);
 
-	// Collide shape
-	if (mEnhancedInternalEdgeRemoval)
-	{
-		// Version that does additional work to remove internal edges
-		mSystem->GetNarrowPhaseQuery().CollideShapeWithInternalEdgeRemoval(inShape, Vec3::sReplicate(1.0f), transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, body_filter, inShapeFilter);
-	}
-	else
-	{
-		// Version that uses the cached active edges
-		settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
+	// Select the right function
+	auto collide_shape_function = mEnhancedInternalEdgeRemoval? &NarrowPhaseQuery::CollideShapeWithInternalEdgeRemoval : &NarrowPhaseQuery::CollideShape;
 
-		mSystem->GetNarrowPhaseQuery().CollideShape(inShape, Vec3::sReplicate(1.0f), transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, body_filter, inShapeFilter);
-	}
+	// Collide shape
+	(mSystem->GetNarrowPhaseQuery().*collide_shape_function)(inShape, Vec3::sReplicate(1.0f), transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, body_filter, inShapeFilter);
 
 	// Also collide with other characters
 	if (mCharacterVsCharacterCollision != nullptr)

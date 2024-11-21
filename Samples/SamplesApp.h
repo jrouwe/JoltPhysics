@@ -157,6 +157,7 @@ private:
 		RayCollector,
 		CollidePoint,
 		CollideShape,
+		CollideShapeWithInternalEdgeRemoval,
 		CastShape,
 		CollideSoftBody,
 		TransformedShape,
