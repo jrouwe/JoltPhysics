@@ -141,7 +141,7 @@ public:
 		}
 
 		/// Get an upper bound on the amount of bytes needed to store inTriangleCount triangles
-		uint						GetPessimisticMemoryEstimate(uint inTriangleCount, bool inStoreUserData) const
+		size_t						GetPessimisticMemoryEstimate(uint inTriangleCount, bool inStoreUserData) const
 		{
 			// Worst case each triangle is alone in a block, none of the vertices are shared and we need to add 3 bytes to align the vertices
 			return inTriangleCount * (sizeof(TriangleBlockHeader) + sizeof(TriangleBlock) + (inStoreUserData? sizeof(uint32) : 0) + 3 * sizeof(VertexData)) + 3;

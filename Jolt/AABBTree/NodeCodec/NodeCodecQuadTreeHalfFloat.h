@@ -62,7 +62,7 @@ public:
 	{
 	public:
 		/// Get an upper bound on the amount of bytes needed for a node tree with inNodeCount nodes
-		uint							GetPessimisticMemoryEstimate(uint inNodeCount) const
+		size_t							GetPessimisticMemoryEstimate(uint inNodeCount) const
 		{
 			return inNodeCount * (sizeof(Node) + Alignment - 1);
 		}

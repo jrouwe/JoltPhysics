@@ -39,8 +39,8 @@ public:
 		// Estimate the amount of memory required
 		uint tri_count = inRoot->GetTriangleCountInTree(inNodes);
 		uint node_count = inRoot->GetNodeCount(inNodes);
-		uint nodes_size = node_ctx.GetPessimisticMemoryEstimate(node_count);
-		uint total_size = HeaderSize + TriangleHeaderSize + nodes_size + tri_ctx.GetPessimisticMemoryEstimate(tri_count, inStoreUserData);
+		size_t nodes_size = node_ctx.GetPessimisticMemoryEstimate(node_count);
+		size_t total_size = HeaderSize + TriangleHeaderSize + nodes_size + tri_ctx.GetPessimisticMemoryEstimate(tri_count, inStoreUserData);
 		mTree.reserve(total_size);
 
 		// Reset counters
