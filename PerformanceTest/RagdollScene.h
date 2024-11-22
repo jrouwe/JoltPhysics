@@ -82,8 +82,6 @@ public:
 		mBackground->CreateBodies(&inPhysicsSystem);
 
 		// Create ragdoll piles
-		mt19937 random;
-		uniform_real_distribution<float> angle(0.0f, JPH_PI);
 		CollisionGroup::GroupID group_id = 1;
 		for (int row = 0; row < mNumPilesPerAxis; ++row)
 			for (int col = 0; col < mNumPilesPerAxis; ++col)
@@ -108,7 +106,8 @@ public:
 					pose_copy.SetRootOffset(start);
 					SkeletonPose::JointState &root = pose_copy.GetJoint(0);
 					root.mTranslation = Vec3(0, mVerticalSeparation * (i + 1), 0);
-					root.mRotation = Quat::sRotation(Vec3::sAxisY(), angle(random)) * root.mRotation;
+					float angle = 2.0f * JPH_PI * float(i) / float(mPileSize);
+					root.mRotation = Quat::sRotation(Vec3::sAxisY(), angle) * root.mRotation;
 					pose_copy.CalculateJointMatrices();
 
 					// Drive to pose
