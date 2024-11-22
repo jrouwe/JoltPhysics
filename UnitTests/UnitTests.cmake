@@ -4,6 +4,7 @@ set(UNIT_TESTS_ROOT ${PHYSICS_REPO_ROOT}/UnitTests)
 # Source files
 set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Core/ArrayTest.cpp
+	${UNIT_TESTS_ROOT}/Core/BinaryHeapTest.cpp
 	${UNIT_TESTS_ROOT}/Core/FPFlushDenormalsTest.cpp
 	${UNIT_TESTS_ROOT}/Core/HashCombineTest.cpp
 	${UNIT_TESTS_ROOT}/Core/InsertionSortTest.cpp
