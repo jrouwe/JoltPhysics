@@ -17,7 +17,7 @@ void BinaryHeapPush(Iterator inBegin, Iterator inEnd, Pred inPred)
 	using elem_t = typename std::iterator_traits<Iterator>::value_type;
 
 	// New heap size
-	diff_t count = inEnd - inBegin;
+	diff_t count = std::distance(inBegin, inEnd);
 
 	// Start from the last element
 	diff_t current = count - 1;
@@ -27,7 +27,7 @@ void BinaryHeapPush(Iterator inBegin, Iterator inEnd, Pred inPred)
 		elem_t &current_elem = *(inBegin + current);
 
 		// Get parent element
-		diff_t parent = (current - 1) / 2;
+		diff_t parent = (current - 1) >> 1;
 		elem_t &parent_elem = *(inBegin + parent);
 
 		// Sort them so that the parent is larger than the child
@@ -57,7 +57,7 @@ void BinaryHeapPop(Iterator inBegin, Iterator inEnd, Pred inPred)
 	std::swap(*(inEnd - 1), *inBegin);
 
 	// New heap size
-	diff_t count = inEnd - inBegin - 1;
+	diff_t count = std::distance(inBegin, inEnd) - 1;
 
 	// Start from the root
 	diff_t largest = 0;
