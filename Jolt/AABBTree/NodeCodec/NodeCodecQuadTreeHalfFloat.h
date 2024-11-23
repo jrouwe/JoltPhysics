@@ -100,7 +100,7 @@ public:
 				return (uint)ioBuffer.size();
 
 			// Remember the start of the node
-			uint node_start = (uint)ioBuffer.size();
+			uint64 node_start = ioBuffer.size();
 
 			// Fill in bounds
 			Node *node = ioBuffer.Allocate<Node>();

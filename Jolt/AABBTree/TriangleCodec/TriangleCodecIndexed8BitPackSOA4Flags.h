@@ -211,7 +211,11 @@ public:
 			// Store the start vertex offset, this will later be patched to give the delta offset relative to the triangle block
 			mOffsetsToPatch.push_back(uint((uint8 *)&header->mFlags - &ioBuffer[0]));
 			header->mFlags = start_vertex * sizeof(VertexData);
-			JPH_ASSERT(header->mFlags <= OFFSET_TO_VERTICES_MASK, "Offset to vertices doesn't fit");
+			if (header->mFlags > OFFSET_TO_VERTICES_MASK)
+			{
+				outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit";
+				return false;
+			}
 
 			// When we store user data we need to store the offset to the user data in TriangleBlocks
 			uint padded_triangle_count = AlignUp(inNumTriangles, 4);
@@ -274,11 +278,11 @@ public:
 		}
 
 		/// After all triangles have been packed, this finalizes the header and triangle buffer
-		void						Finalize(const VertexList &inVertices, TriangleHeader *ioHeader, ByteBuffer &ioBuffer) const
+		bool						Finalize(const VertexList &inVertices, TriangleHeader *ioHeader, ByteBuffer &ioBuffer, const char *&outError) const
 		{
 			// Check if anything to do
 			if (mVertices.empty())
-				return;
+				return true;
 
 			// Align buffer to 4 bytes
 			uint vertices_idx = (uint)ioBuffer.Align(4);
@@ -289,7 +293,10 @@ public:
 				uint32 *flags = ioBuffer.Get<uint32>(o);
 				uint32 delta = vertices_idx - o;
 				if ((*flags & OFFSET_TO_VERTICES_MASK) + delta > OFFSET_TO_VERTICES_MASK)
-					JPH_ASSERT(false, "Offset to vertices doesn't fit");
+				{
+					outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit";
+					return false;
+				}
 				*flags += delta;
 			}
 
@@ -315,6 +322,8 @@ public:
 			// Store decompression information
 			bounds.mMin.StoreFloat3(&ioHeader->mOffset);
 			(bounds.GetSize() / Vec3::sReplicate(COMPONENT_MASK)).StoreFloat3(&ioHeader->mScale);
+
+			return true;
 		}
 
 	private:

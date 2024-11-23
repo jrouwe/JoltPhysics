@@ -232,7 +232,8 @@ public:
 				return false;
 
 		// Finalize the triangles
-		tri_ctx.Finalize(inVertices, triangle_header, mTree);
+		if (!tri_ctx.Finalize(inVertices, triangle_header, mTree, outError))
+			return false;
 
 		// Validate that our reservations were correct
 		if (node_count != uint(node_list.size()))
