@@ -36,15 +36,70 @@ public:
 		const typename NodeCodec::EncodingContext node_ctx;
 		typename TriangleCodec::EncodingContext tri_ctx(inVertices);
 
-		// Estimate the amount of memory required
-		uint tri_count = inRoot->GetTriangleCountInTree(inNodes);
-		uint node_count = inRoot->GetNodeCount(inNodes);
-		uint nodes_size = node_ctx.GetPessimisticMemoryEstimate(node_count);
-		uint total_size = HeaderSize + TriangleHeaderSize + nodes_size + tri_ctx.GetPessimisticMemoryEstimate(tri_count, inStoreUserData);
-		mTree.reserve(total_size);
+		// Child nodes out of loop so we don't constantly realloc it
+		Array<const AABBTreeBuilder::Node *> child_nodes;
+		child_nodes.reserve(NumChildrenPerNode);
 
-		// Reset counters
-		mNodesSize = 0;
+		// First calculate how big the tree is going to be.
+		// Since the tree can be huge for very large meshes, we don't want
+		// to reallocate the buffer as it may cause out of memory situations.
+		// This loop mimics the construction loop below.
+		Array<const AABBTreeBuilder::Node *> to_estimate;
+		Array<const AABBTreeBuilder::Node *> to_estimate_triangles;
+		to_estimate.push_back(inRoot);
+		uint32 total_size = HeaderSize + TriangleHeaderSize;
+		uint32 node_count = 1; // Start with root node
+		for (;;)
+		{
+			while (!to_estimate.empty())
+			{
+				// Get the next node to process
+				const AABBTreeBuilder::Node *node = to_estimate.back();
+				to_estimate.pop_back();
+
+				// Update total size
+				node_ctx.PrepareNodeAllocate(node, total_size);
+
+				if (node->HasChildren())
+				{
+					// Collect the first NumChildrenPerNode sub-nodes in the tree
+					child_nodes.clear(); // Won't free the memory
+					node->GetNChildren(inNodes, NumChildrenPerNode, child_nodes);
+
+					// Insert in reverse order so we estimate left child first when taking nodes from the back
+					for (int idx = int(child_nodes.size()) - 1; idx >= 0; --idx)
+					{
+						const AABBTreeBuilder::Node *child = child_nodes[idx];
+
+						// Increment the number of nodes we're going to store
+						++node_count;
+
+						// Store triangles in separate list so we process them last
+						if (child->HasChildren())
+							to_estimate.push_back(child);
+						else
+							to_estimate_triangles.push_back(child);
+					}
+				}
+				else
+				{
+					// Update total size
+					tri_ctx.PreparePack(&inTriangles[node->mTrianglesBegin], node->mNumTriangles, inStoreUserData, total_size);
+				}
+			}
+
+			// If we've got triangles to estimate, loop again with just the triangles
+			if (to_estimate_triangles.empty())
+				break;
+			else
+				to_estimate.swap(to_estimate_triangles);
+		}
+
+		// Add vertex size to total
+		total_size += tri_ctx.FinalizePreparePack();
+
+		// Reserve the buffer
+		mTree.reserve(total_size);
 
 		// Add headers
 		NodeHeader *header = HeaderSize > 0? mTree.Allocate<NodeHeader>() : nullptr;
@@ -77,10 +132,6 @@ public:
 		node_list.push_back(root);
 		to_process.push_back(&node_list.back());
 
-		// Child nodes out of loop so we don't constantly realloc it
-		Array<const AABBTreeBuilder::Node *> child_nodes;
-		child_nodes.reserve(NumChildrenPerNode);
-
 		for (;;)
 		{
 			while (!to_process.empty())
@@ -112,37 +163,31 @@ public:
 					}
 
 				// Start a new node
-				uint old_size = (uint)mTree.size();
 				node_data->mNodeStart = node_ctx.NodeAllocate(node_data->mNode, node_data->mNodeBoundsMin, node_data->mNodeBoundsMax, child_nodes, child_bounds_min, child_bounds_max, mTree, outError);
 				if (node_data->mNodeStart == uint(-1))
 					return false;
-				mNodesSize += (uint)mTree.size() - old_size;
 
 				if (node_data->mNode->HasChildren())
 				{
 					// Insert in reverse order so we process left child first when taking nodes from the back
 					for (int idx = int(child_nodes.size()) - 1; idx >= 0; --idx)
 					{
+						const AABBTreeBuilder::Node *child_node = child_nodes[idx];
+
 						// Due to quantization box could have become bigger, not smaller
-						JPH_ASSERT(AABox(child_bounds_min[idx], child_bounds_max[idx]).Contains(child_nodes[idx]->mBounds), "AABBTreeToBuffer: Bounding box became smaller!");
+						JPH_ASSERT(AABox(child_bounds_min[idx], child_bounds_max[idx]).Contains(child_node->mBounds), "AABBTreeToBuffer: Bounding box became smaller!");
 
 						// Add child to list of nodes to be processed
 						NodeData child;
-						child.mNode = child_nodes[idx];
+						child.mNode = child_node;
 						child.mNodeBoundsMin = child_bounds_min[idx];
 						child.mNodeBoundsMax = child_bounds_max[idx];
 						child.mParentChildNodeStart = &node_data->mChildNodeStart[idx];
 						child.mParentTrianglesStart = &node_data->mChildTrianglesStart[idx];
-						NodeData *old = &node_list[0];
 						node_list.push_back(child);
-						if (old != &node_list[0])
-						{
-							outError = "Internal Error: Array reallocated, memory corruption!";
-							return false;
-						}
 
 						// Store triangles in separate list so we process them last
-						if (node_list.back().mNode->HasChildren())
+						if (child_node->HasChildren())
 							to_process.push_back(&node_list.back());
 						else
 							to_process_triangles.push_back(&node_list.back());
@@ -179,26 +224,20 @@ public:
 		// Finalize the triangles
 		tri_ctx.Finalize(inVertices, triangle_header, mTree);
 
-		// Validate that we reserved enough memory
-		if (nodes_size < mNodesSize)
+		// Validate that our reservations were correct
+		if (node_count != (uint)node_list.size())
 		{
-			outError = "Internal Error: Not enough memory reserved for nodes!";
+			outError = "Internal Error: Node memory estimate was incorrect, memory corruption!";
 			return false;
 		}
-		if (total_size < (uint)mTree.size())
+		if (total_size != (uint)mTree.size())
 		{
-			outError = "Internal Error: Not enough memory reserved for triangles!";
+			outError = "Internal Error: Tree memory estimate was incorrect, memory corruption!";
 			return false;
 		}
 
 		// Finalize the nodes
-		if (!node_ctx.Finalize(header, inRoot, node_list[0].mNodeStart, node_list[0].mTriangleStart, outError))
-			return false;
-
-		// Shrink the tree, this will invalidate the header and triangle_header variables
-		mTree.shrink_to_fit();
-
-		return true;
+		return node_ctx.Finalize(header, inRoot, node_list[0].mNodeStart, node_list[0].mTriangleStart, outError);
 	}
 
 	/// Get resulting data

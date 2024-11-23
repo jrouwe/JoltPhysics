@@ -140,11 +140,54 @@ public:
 			mVertices.reserve(inVertices.size());
 		}
 
-		/// Get an upper bound on the amount of bytes needed to store inTriangleCount triangles
-		uint						GetPessimisticMemoryEstimate(uint inTriangleCount, bool inStoreUserData) const
+		/// Add the size of the triangles to ioBufferSize
+		void						PreparePack(const IndexedTriangle *inTriangles, uint inNumTriangles, bool inStoreUserData, uint32 &ioBufferSize)
 		{
-			// Worst case each triangle is alone in a block, none of the vertices are shared and we need to add 3 bytes to align the vertices
-			return inTriangleCount * (sizeof(TriangleBlockHeader) + sizeof(TriangleBlock) + (inStoreUserData? sizeof(uint32) : 0) + 3 * sizeof(VertexData)) + 3;
+			// Update stats
+			mNumTriangles += inNumTriangles;
+
+			// Add triangle block header
+			ioBufferSize += sizeof(TriangleBlockHeader);
+
+			// Compute first vertex that this batch will use (ensuring there's enough room if none of the vertices are shared)
+			uint start_vertex = Clamp((int)mVertexCount - 256 + (int)inNumTriangles * 3, 0, (int)mVertexCount);
+
+			// Pack vertices
+			uint padded_triangle_count = AlignUp(inNumTriangles, 4);
+			for (uint t = 0; t < padded_triangle_count; t += 4)
+			{
+				ioBufferSize += sizeof(TriangleBlock);
+				for (uint vertex_nr = 0; vertex_nr < 3; ++vertex_nr)
+					for (uint block_tri_idx = 0; block_tri_idx < 4; ++block_tri_idx)
+					{
+						// Fetch vertex index. Create degenerate triangles for padding triangles.
+						bool triangle_available = t + block_tri_idx < inNumTriangles;
+						uint32 src_vertex_index = triangle_available? inTriangles[t + block_tri_idx].mIdx[vertex_nr] : inTriangles[inNumTriangles - 1].mIdx[0];
+
+						// Check if we've seen this vertex before and if it is in the range that we can encode
+						uint32 &vertex_index = mVertexMap[src_vertex_index];
+						if (vertex_index == 0xffffffff || vertex_index < start_vertex)
+						{
+							// Add vertex
+							vertex_index = mVertexCount;
+							mVertexCount++;
+						}
+					}
+			}
+
+			// Add user data
+			if (inStoreUserData)
+				ioBufferSize += inNumTriangles * sizeof(uint32);
+		}
+
+		/// Finish the pre-pack stage and return total vertex size
+		uint32						FinalizePreparePack()
+		{
+			// Set vertex map back to 'not found'
+			for (uint32 &v : mVertexMap)
+				v = 0xffffffff;
+
+			return mVertexCount * sizeof(VertexData);
 		}
 
 		/// Pack the triangles in inContainer to ioBuffer. This stores the mMaterialIndex of a triangle in the 8 bit flags.
@@ -155,9 +198,6 @@ public:
 
 			// Determine position of triangles start
 			uint offset = (uint)ioBuffer.size();
-
-			// Update stats
-			mNumTriangles += inNumTriangles;
 
 			// Allocate triangle block header
 			TriangleBlockHeader *header = ioBuffer.Allocate<TriangleBlockHeader>();
@@ -277,7 +317,8 @@ public:
 	private:
 		using VertexMap = Array<uint32>;
 
-		uint						mNumTriangles = 0;
+		uint						mNumTriangles = 0;		///< Number of triangles calculated during PreparePack
+		uint32						mVertexCount = 0;		///< Number of vertices calculated during PreparePack
 		Array<uint32>				mVertices;				///< Output vertices as an index into the original vertex list (inVertices), sorted according to occurrence
 		VertexMap					mVertexMap;				///< Maps from the original mesh vertex index (inVertices) to the index in our output vertices (mVertices)
 		Array<uint>					mOffsetsToPatch;		///< Offsets to the vertex buffer that need to be patched in once all nodes have been packed

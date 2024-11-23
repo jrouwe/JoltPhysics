@@ -10,7 +10,6 @@
 
 JPH_NAMESPACE_BEGIN
 
-template <int Alignment>
 class NodeCodecQuadTreeHalfFloat
 {
 public:
@@ -61,10 +60,15 @@ public:
 	class EncodingContext
 	{
 	public:
-		/// Get an upper bound on the amount of bytes needed for a node tree with inNodeCount nodes
-		uint							GetPessimisticMemoryEstimate(uint inNodeCount) const
+		/// Add the size of this node to ioBufferSize
+		void							PrepareNodeAllocate(const AABBTreeBuilder::Node *inNode, uint32 &ioBufferSize) const
 		{
-			return inNodeCount * (sizeof(Node) + Alignment - 1);
+			// We don't emit nodes for leafs
+			if (!inNode->HasChildren())
+				return;
+
+			// Add size of node
+			ioBufferSize += sizeof(Node);
 		}
 
 		/// Allocate a new node for inNode.
@@ -78,8 +82,7 @@ public:
 			if (!inNode->HasChildren())
 				return (uint)ioBuffer.size();
 
-			// Align the buffer
-			ioBuffer.Align(Alignment);
+			// Remember the start of the node
 			uint node_start = (uint)ioBuffer.size();
 
 			// Fill in bounds
