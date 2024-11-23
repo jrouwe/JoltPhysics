@@ -435,7 +435,7 @@ public:
 	void					clear()
 	{
 		// Delete all elements
-		if constexpr (!is_trivially_destructible<KeyValue>())
+		if constexpr (!std::is_trivially_destructible<KeyValue>())
 			if (!empty())
 				for (size_type i = 0; i < mMaxSize; ++i)
 					if (mControl[i] & cBucketUsed)

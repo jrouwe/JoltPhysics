@@ -102,7 +102,7 @@ private:
 	/// Destruct elements [inStart, inEnd - 1]
 	inline void				destruct(size_type inStart, size_type inEnd)
 	{
-		if constexpr (!is_trivially_destructible<T>())
+		if constexpr (!std::is_trivially_destructible<T>())
 			if (inStart < inEnd)
 				for (T *element = mElements + inStart, *element_end = mElements + inEnd; element < element_end; ++element)
 					element->~T();
@@ -122,7 +122,7 @@ public:
 		destruct(inNewSize, mSize);
 		reserve(inNewSize);
 
-		if constexpr (!is_trivially_constructible<T>())
+		if constexpr (!std::is_trivially_constructible<T>())
 			for (T *element = mElements + mSize, *element_end = mElements + inNewSize; element < element_end; ++element)
 				::new (element) T;
 		mSize = inNewSize;

@@ -497,7 +497,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 				if (!found)
 					connectivity[inV1].push_back({ inV2, 1 });
 
-				swap(inV1, inV2);
+				std::swap(inV1, inV2);
 			}
 		};
 	for (const Edge &c : mEdgeConstraints)

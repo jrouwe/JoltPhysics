@@ -421,7 +421,7 @@ void MeshShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDire
 
 	// Flip triangle if scaled inside out
 	if (ScaleHelpers::IsInsideOut(inScale))
-		swap(outVertices[1], outVertices[2]);
+		std::swap(outVertices[1], outVertices[2]);
 
 	// Calculate transform with scale
 	Mat44 transform = inCenterOfMassTransform.PreScaled(inScale);
