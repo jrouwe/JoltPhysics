@@ -3,6 +3,7 @@ name: Determinism Check
 env:
   CONVEX_VS_MESH_HASH: '0x16ca5bf7f9da5f74'
   RAGDOLL_HASH: '0xa50ce2dc5684626d'
+  PYRAMID_HASH: '0x198b8eeaee57e29a'
   EMSCRIPTEN_VERSION: 3.1.64
   UBUNTU_CLANG_VERSION: clang++-15
   UBUNTU_GCC_VERSION: g++-12
@@ -42,6 +43,9 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+    - name: Test Pyramid
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   linux_gcc:
     runs-on: ubuntu-latest
@@ -64,6 +68,9 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+    - name: Test Pyramid
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   msvc_cl:
     runs-on: windows-latest
@@ -88,6 +95,9 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
+    - name: Test Pyramid
+      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid "-validate_hash=$env:PYRAMID_HASH"
 
   msvc_cl_32:
     runs-on: windows-latest
@@ -112,6 +122,9 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
+    - name: Test Pyramid
+      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid "-validate_hash=$env:PYRAMID_HASH"
 
   macos:
     runs-on: macos-latest
@@ -134,6 +147,9 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+    - name: Test Pyramid
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   arm_clang:
     runs-on: ubuntu-latest
@@ -159,6 +175,9 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+    - name: Test Pyramid
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   arm_gcc:
     runs-on: ubuntu-latest
@@ -184,6 +203,9 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+    - name: Test Pyramid
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   emscripten:
     runs-on: ubuntu-latest
@@ -216,3 +238,6 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
       run: node PerformanceTest.js -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+    - name: Test Pyramid
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}

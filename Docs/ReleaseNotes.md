@@ -14,6 +14,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 ### Bug fixes
 
 * Fixed bodies gaining more energy than intended due to restitution. E.g. A restitution of 1 could lead to bodies bouncing ever higher.
+* std::push_heap/pop_heap behave differently on macOS vs Windows/Linux when elements compare equal, this made the cross platform deterministic build not deterministic in some cases.
 
 ## v5.2.0
 
