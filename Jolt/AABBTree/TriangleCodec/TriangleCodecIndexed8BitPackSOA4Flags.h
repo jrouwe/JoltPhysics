@@ -140,8 +140,8 @@ public:
 			mVertices.reserve(inVertices.size());
 		}
 
-		/// Add the size of the triangles to ioBufferSize
-		void						PreparePack(const IndexedTriangle *inTriangles, uint inNumTriangles, bool inStoreUserData, uint32 &ioBufferSize)
+		/// Mimics the size a call to Pack() would add to the buffer
+		void						PreparePack(const IndexedTriangle *inTriangles, uint inNumTriangles, bool inStoreUserData, uint64 &ioBufferSize)
 		{
 			// Update stats
 			mNumTriangles += inNumTriangles;
@@ -156,7 +156,9 @@ public:
 			uint padded_triangle_count = AlignUp(inNumTriangles, 4);
 			for (uint t = 0; t < padded_triangle_count; t += 4)
 			{
+				// Add triangle block header
 				ioBufferSize += sizeof(TriangleBlock);
+
 				for (uint vertex_nr = 0; vertex_nr < 3; ++vertex_nr)
 					for (uint block_tri_idx = 0; block_tri_idx < 4; ++block_tri_idx)
 					{
@@ -180,24 +182,25 @@ public:
 				ioBufferSize += inNumTriangles * sizeof(uint32);
 		}
 
-		/// Finish the pre-pack stage and return total vertex size
-		uint32						FinalizePreparePack()
+		/// Mimics the size the Finalize() call would add to ioBufferSize
+		void						FinalizePreparePack(uint64 &ioBufferSize)
 		{
+			// Add vertices to buffer
+			ioBufferSize += uint64(mVertexCount) * sizeof(VertexData);
+
 			// Set vertex map back to 'not found'
 			for (uint32 &v : mVertexMap)
 				v = 0xffffffff;
-
-			return mVertexCount * sizeof(VertexData);
 		}
 
 		/// Pack the triangles in inContainer to ioBuffer. This stores the mMaterialIndex of a triangle in the 8 bit flags.
-		/// Returns uint(-1) on error.
-		uint						Pack(const IndexedTriangle *inTriangles, uint inNumTriangles, bool inStoreUserData, ByteBuffer &ioBuffer, const char *&outError)
+		/// Returns uint64(-1) on error.
+		uint64						Pack(const IndexedTriangle *inTriangles, uint inNumTriangles, bool inStoreUserData, ByteBuffer &ioBuffer, const char *&outError)
 		{
 			JPH_ASSERT(inNumTriangles > 0);
 
 			// Determine position of triangles start
-			uint offset = (uint)ioBuffer.size();
+			uint64 offset = ioBuffer.size();
 
 			// Allocate triangle block header
 			TriangleBlockHeader *header = ioBuffer.Allocate<TriangleBlockHeader>();
@@ -244,7 +247,7 @@ public:
 						if (vertex_offset > 0xff)
 						{
 							outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset doesn't fit in 8 bit";
-							return uint(-1);
+							return uint64(-1);
 						}
 						block->mIndices[vertex_nr][block_tri_idx] = (uint8)vertex_offset;
 
@@ -253,7 +256,7 @@ public:
 						if (flags > 0xff)
 						{
 							outError = "TriangleCodecIndexed8BitPackSOA4Flags: Material index doesn't fit in 8 bit";
-							return uint(-1);
+							return uint64(-1);
 						}
 						block->mFlags[block_tri_idx] = (uint8)flags;
 					}
