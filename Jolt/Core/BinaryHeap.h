@@ -63,25 +63,33 @@ void BinaryHeapPop(Iterator inBegin, Iterator inEnd, Pred inPred)
 	diff_t largest = 0;
 	for (;;)
 	{
-		// Get children
-		diff_t i = largest;
-		diff_t left = 2 * i + 1;
-		diff_t right = 2 * i + 2;
+		// Get first child
+		diff_t child = (largest << 1) + 1;
 
-		// Check if left child is bigger, if so select it
-		if (left < count && inPred(*(inBegin + largest), *(inBegin + left)))
-			largest = left;
+		// Check if we're beyond the end of the heap, if so the 2nd child is also beyond the end
+		if (child >= count)
+			break;
 
-		// Check if right child is bigger, if so select it
-		if (right < count && inPred(*(inBegin + largest), *(inBegin + right)))
-			largest = right;
+		// Remember the largest element from the previous iteration
+		diff_t prev_largest = largest;
+
+		// Check if first child is bigger, if so select it
+		if (inPred(*(inBegin + largest), *(inBegin + child)))
+			largest = child;
+
+		// Switch to the second child
+		++child;
+
+		// Check if second child is bigger, if so select it
+		if (child < count && inPred(*(inBegin + largest), *(inBegin + child)))
+			largest = child;
 
 		// If there was no change, we're done
-		if (largest == i)
+		if (prev_largest == largest)
 			break;
 
 		// Swap element
-		std::swap(*(inBegin + i), *(inBegin + largest));
+		std::swap(*(inBegin + prev_largest), *(inBegin + largest));
 	}
 }
 
