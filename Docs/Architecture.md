@@ -634,9 +634,10 @@ The most important things to look out for in your own application:
 * Compile your application mode in Precise mode (clang: -ffp-model=precise, MSVC: /fp:precise)
 * Turn off floating point contract operations (clang: -ffp-contract=off)
 * Make sure the FPU state is consistent across platforms / threads. Check the floating point rounding behavior (should be nearest). Check that the denormals are zero (DAZ) and flush to zero (FTZ) flags are set consistently.
-* Do not use the standard trigonometry functions (`sin`, `cos` etc.) as they have different implementations on different platforms, use Jolt's functions ([Sin](@ref Sin), [Cos](@ref Cos) etc.)
-* Do not use `std::sort` as it has a different implementation on different platforms, use Jolt's [QuickSort](@ref QuickSort) function
-* Do not use `std::push_heap` and `std::pop_heap` as it has a different implementation on different platforms when elements are equal, use Jolt's [BinaryHeapPush](@ref BinaryHeapPush)/[BinaryHeapPop](@ref BinaryHeapPop) functions
+* Do not use the standard trigonometry functions (`sin`, `cos` etc.) as they have different implementations on different platforms, use Jolt's functions ([Sin](@ref Sin), [Cos](@ref Cos) etc.).
+* Do not use `std::sort` as it has a different implementation on different platforms, use [QuickSort](@ref QuickSort) instead.
+* Do not use `std::push_heap` and `std::pop_heap` as it has a different implementation on different platforms when elements are equal, use [BinaryHeapPush](@ref BinaryHeapPush)/[BinaryHeapPop](@ref BinaryHeapPop) instead.
+* Do not use `std::hash` as it is also platform dependent, use [Hash](@ref Hash) instead.
 
 When running the Samples Application you can press ESC, Physics Settings and check the 'Check Determinism' checkbox. Before every simulation step we will record the state using the [StateRecorder](@ref StateRecorder) interface, rewind the simulation and do the step again to validate that the simulation runs deterministically. Some of the tests (e.g. the MultiThreaded) test will explicitly disable the check because they randomly add/remove bodies from different threads. This violates the rule that the API calls must be done in the same order so will not result in a deterministic simulation.
 

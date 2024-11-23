@@ -993,7 +993,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 	// Ensure that body1 id < body2 id when motion types are the same.
 	if (body1->GetMotionType() < body2->GetMotionType()
 		|| (body1->GetMotionType() == body2->GetMotionType() && inBodyPair.mBodyB < inBodyPair.mBodyA))
-		swap(body1, body2);
+		std::swap(body1, body2);
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false, constraint_created = false;

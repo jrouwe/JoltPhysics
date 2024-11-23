@@ -230,7 +230,7 @@ struct LogReporter : public ConsoleReporter
 	void func(type arg) override								\
 	{															\
 		ConsoleReporter::func(arg);								\
-		string str = mStream.str();								\
+		std::string str = mStream.str();						\
 		if (!str.empty())										\
 			__android_log_write(ANDROID_LOG_INFO, "Jolt", str.c_str());	\
 		mStream.str("");										\
