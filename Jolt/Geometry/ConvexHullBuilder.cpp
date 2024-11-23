@@ -10,9 +10,11 @@
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/UnorderedSet.h>
 
+#ifdef JPH_CONVEX_BUILDER_DUMP_SHAPE
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
+#endif // JPH_CONVEX_BUILDER_DUMP_SHAPE
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	#include <Jolt/Renderer/DebugRenderer.h>
