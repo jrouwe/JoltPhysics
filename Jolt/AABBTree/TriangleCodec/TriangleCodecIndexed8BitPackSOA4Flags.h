@@ -194,13 +194,13 @@ public:
 		}
 
 		/// Pack the triangles in inContainer to ioBuffer. This stores the mMaterialIndex of a triangle in the 8 bit flags.
-		/// Returns uint64(-1) on error.
-		uint64						Pack(const IndexedTriangle *inTriangles, uint inNumTriangles, bool inStoreUserData, ByteBuffer &ioBuffer, const char *&outError)
+		/// Returns size_t(-1) on error.
+		size_t						Pack(const IndexedTriangle *inTriangles, uint inNumTriangles, bool inStoreUserData, ByteBuffer &ioBuffer, const char *&outError)
 		{
 			JPH_ASSERT(inNumTriangles > 0);
 
 			// Determine position of triangles start
-			uint64 offset = ioBuffer.size();
+			size_t offset = ioBuffer.size();
 
 			// Allocate triangle block header
 			TriangleBlockHeader *header = ioBuffer.Allocate<TriangleBlockHeader>();
@@ -209,13 +209,14 @@ public:
 			uint start_vertex = Clamp((int)mVertices.size() - 256 + (int)inNumTriangles * 3, 0, (int)mVertices.size());
 
 			// Store the start vertex offset, this will later be patched to give the delta offset relative to the triangle block
-			mOffsetsToPatch.push_back(uint((uint8 *)&header->mFlags - &ioBuffer[0]));
-			header->mFlags = start_vertex * sizeof(VertexData);
-			if (header->mFlags > OFFSET_TO_VERTICES_MASK)
+			mOffsetsToPatch.push_back(size_t((uint8 *)&header->mFlags - &ioBuffer[0]));
+			size_t offset_to_vertices = start_vertex * sizeof(VertexData);
+			if (offset_to_vertices > OFFSET_TO_VERTICES_MASK)
 			{
 				outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit";
 				return false;
 			}
+			header->mFlags = uint32(offset_to_vertices);
 
 			// When we store user data we need to store the offset to the user data in TriangleBlocks
 			uint padded_triangle_count = AlignUp(inNumTriangles, 4);
@@ -251,7 +252,7 @@ public:
 						if (vertex_offset > 0xff)
 						{
 							outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset doesn't fit in 8 bit";
-							return uint64(-1);
+							return size_t(-1);
 						}
 						block->mIndices[vertex_nr][block_tri_idx] = (uint8)vertex_offset;
 
@@ -260,7 +261,7 @@ public:
 						if (flags > 0xff)
 						{
 							outError = "TriangleCodecIndexed8BitPackSOA4Flags: Material index doesn't fit in 8 bit";
-							return uint64(-1);
+							return size_t(-1);
 						}
 						block->mFlags[block_tri_idx] = (uint8)flags;
 					}
@@ -285,19 +286,19 @@ public:
 				return true;
 
 			// Align buffer to 4 bytes
-			uint vertices_idx = (uint)ioBuffer.Align(4);
+			size_t vertices_idx = ioBuffer.Align(4);
 
 			// Patch the offsets
-			for (uint o : mOffsetsToPatch)
+			for (size_t o : mOffsetsToPatch)
 			{
 				uint32 *flags = ioBuffer.Get<uint32>(o);
-				uint32 delta = vertices_idx - o;
-				if ((*flags & OFFSET_TO_VERTICES_MASK) + delta > OFFSET_TO_VERTICES_MASK)
+				size_t offset_to_vertices = size_t(*flags & OFFSET_TO_VERTICES_MASK) + vertices_idx - o;
+				if (offset_to_vertices > OFFSET_TO_VERTICES_MASK)
 				{
 					outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit";
 					return false;
 				}
-				*flags += delta;
+				*flags = uint32(offset_to_vertices);
 			}
 
 			// Calculate bounding box
@@ -333,7 +334,7 @@ public:
 		uint32						mVertexCount = 0;		///< Number of vertices calculated during PreparePack
 		Array<uint32>				mVertices;				///< Output vertices as an index into the original vertex list (inVertices), sorted according to occurrence
 		VertexMap					mVertexMap;				///< Maps from the original mesh vertex index (inVertices) to the index in our output vertices (mVertices)
-		Array<uint>					mOffsetsToPatch;		///< Offsets to the vertex buffer that need to be patched in once all nodes have been packed
+		Array<size_t>				mOffsetsToPatch;		///< Offsets to the vertex buffer that need to be patched in once all nodes have been packed
 	};
 
 	/// This class is used to decode and decompress triangle data packed by the EncodingContext

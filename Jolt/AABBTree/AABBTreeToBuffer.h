@@ -48,7 +48,7 @@ public:
 		Array<const AABBTreeBuilder::Node *> to_estimate_triangles;
 		to_estimate.push_back(inRoot);
 		uint64 total_size = HeaderSize + TriangleHeaderSize;
-		uint32 node_count = 1; // Start with root node
+		size_t node_count = 1; // Start with root node
 		for (;;)
 		{
 			while (!to_estimate.empty())
@@ -66,15 +66,14 @@ public:
 					child_nodes.clear(); // Won't free the memory
 					node->GetNChildren(inNodes, NumChildrenPerNode, child_nodes);
 
+					// Increment the number of nodes we're going to store
+					node_count += child_nodes.size();
+
 					// Insert in reverse order so we estimate left child first when taking nodes from the back
 					for (int idx = int(child_nodes.size()) - 1; idx >= 0; --idx)
 					{
-						const AABBTreeBuilder::Node *child = child_nodes[idx];
-
-						// Increment the number of nodes we're going to store
-						++node_count;
-
 						// Store triangles in separate list so we process them last
+						const AABBTreeBuilder::Node *child = child_nodes[idx];
 						if (child->HasChildren())
 							to_estimate.push_back(child);
 						else
@@ -94,11 +93,6 @@ public:
 			else
 				to_estimate.swap(to_estimate_triangles);
 		}
-
-		// Finalize the prepare stage for the node context
-		// Must happen before we finalize the triangle context as we need to memory before adding vertices
-		if (!node_ctx.FinalizePrepareNodeAllocate(total_size, outError))
-			return false;
 
 		// Finalize the prepare stage for the triangle context
 		tri_ctx.FinalizePreparePack(total_size);
@@ -120,12 +114,12 @@ public:
 			const AABBTreeBuilder::Node *	mNode = nullptr;							// Node that this entry belongs to
 			Vec3							mNodeBoundsMin;								// Quantized node bounds
 			Vec3							mNodeBoundsMax;
-			uint64							mNodeStart = uint64(-1);					// Start of node in mTree
-			uint64							mTriangleStart = uint64(-1);				// Start of the triangle data in mTree
-			uint64							mChildNodeStart[NumChildrenPerNode];		// Start of the children of the node in mTree
-			uint64							mChildTrianglesStart[NumChildrenPerNode];	// Start of the triangle data in mTree
-			uint64 *						mParentChildNodeStart = nullptr;			// Where to store mNodeStart (to patch mChildNodeStart of my parent)
-			uint64 *						mParentTrianglesStart = nullptr;			// Where to store mTriangleStart (to patch mChildTrianglesStart of my parent)
+			size_t							mNodeStart = size_t(-1);					// Start of node in mTree
+			size_t							mTriangleStart = size_t(-1);				// Start of the triangle data in mTree
+			size_t							mChildNodeStart[NumChildrenPerNode];		// Start of the children of the node in mTree
+			size_t							mChildTrianglesStart[NumChildrenPerNode];	// Start of the triangle data in mTree
+			size_t *						mParentChildNodeStart = nullptr;			// Where to store mNodeStart (to patch mChildNodeStart of my parent)
+			size_t *						mParentTrianglesStart = nullptr;			// Where to store mTriangleStart (to patch mChildTrianglesStart of my parent)
 			uint							mNumChildren = 0;							// Number of children
 		};
 
@@ -174,7 +168,7 @@ public:
 
 				// Start a new node
 				node_data->mNodeStart = node_ctx.NodeAllocate(node_data->mNode, node_data->mNodeBoundsMin, node_data->mNodeBoundsMax, child_nodes, child_bounds_min, child_bounds_max, mTree, outError);
-				if (node_data->mNodeStart == uint64(-1))
+				if (node_data->mNodeStart == size_t(-1))
 					return false;
 
 				if (node_data->mNode->HasChildren())
@@ -207,7 +201,7 @@ public:
 				{
 					// Add triangles
 					node_data->mTriangleStart = tri_ctx.Pack(&inTriangles[node_data->mNode->mTrianglesBegin], node_data->mNode->mNumTriangles, inStoreUserData, mTree, outError);
-					if (node_data->mTriangleStart == uint64(-1))
+					if (node_data->mTriangleStart == size_t(-1))
 						return false;
 				}
 
@@ -236,12 +230,12 @@ public:
 			return false;
 
 		// Validate that our reservations were correct
-		if (node_count != uint(node_list.size()))
+		if (node_count != node_list.size())
 		{
 			outError = "Internal Error: Node memory estimate was incorrect, memory corruption!";
 			return false;
 		}
-		if (total_size != uint64(mTree.size()))
+		if (total_size != mTree.size())
 		{
 			outError = "Internal Error: Tree memory estimate was incorrect, memory corruption!";
 			return false;
