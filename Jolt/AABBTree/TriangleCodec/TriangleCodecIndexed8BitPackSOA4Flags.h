@@ -132,12 +132,13 @@ public:
 	class EncodingContext
 	{
 	public:
+		/// Indicates a vertex hasn't been seen yet in the triangle list
+		static constexpr uint32		cNotFound = 0xffffffff;
+
 		/// Construct the encoding context
 		explicit					EncodingContext(const VertexList &inVertices) :
-			mVertexMap(inVertices.size(), 0xffffffff) // Fill vertex map with 'not found'
+			mVertexMap(inVertices.size(), cNotFound)
 		{
-			// Reserve for worst case to avoid allocating in the inner loop
-			mVertices.reserve(inVertices.size());
 		}
 
 		/// Mimics the size a call to Pack() would add to the buffer
@@ -145,6 +146,9 @@ public:
 		{
 			// Update stats
 			mNumTriangles += inNumTriangles;
+
+			// This will result in an offset to patch
+			mOffsetsToPatchCount++;
 
 			// Add triangle block header
 			ioBufferSize += sizeof(TriangleBlockHeader);
@@ -168,7 +172,7 @@ public:
 
 						// Check if we've seen this vertex before and if it is in the range that we can encode
 						uint32 &vertex_index = mVertexMap[src_vertex_index];
-						if (vertex_index == 0xffffffff || vertex_index < start_vertex)
+						if (vertex_index == cNotFound || vertex_index < start_vertex)
 						{
 							// Add vertex
 							vertex_index = mVertexCount;
@@ -188,9 +192,15 @@ public:
 			// Add vertices to buffer
 			ioBufferSize += uint64(mVertexCount) * sizeof(VertexData);
 
+			// Reserve the amount of memory we need for the vertices
+			mVertices.reserve(mVertexCount);
+
+			// Reserve the amount of memory we need for the offsets
+			mOffsetsToPatch.reserve(mOffsetsToPatchCount);
+
 			// Set vertex map back to 'not found'
 			for (uint32 &v : mVertexMap)
-				v = 0xffffffff;
+				v = cNotFound;
 		}
 
 		/// Pack the triangles in inContainer to ioBuffer. This stores the mMaterialIndex of a triangle in the 8 bit flags.
@@ -240,7 +250,7 @@ public:
 
 						// Check if we've seen this vertex before and if it is in the range that we can encode
 						uint32 &vertex_index = mVertexMap[src_vertex_index];
-						if (vertex_index == 0xffffffff || vertex_index < start_vertex)
+						if (vertex_index == cNotFound || vertex_index < start_vertex)
 						{
 							// Add vertex
 							vertex_index = (uint32)mVertices.size();
@@ -281,6 +291,10 @@ public:
 		/// After all triangles have been packed, this finalizes the header and triangle buffer
 		bool						Finalize(const VertexList &inVertices, TriangleHeader *ioHeader, ByteBuffer &ioBuffer, const char *&outError) const
 		{
+			// Assert that our reservations were correct
+			JPH_ASSERT(mVertices.size() == mVertexCount);
+			JPH_ASSERT(mOffsetsToPatch.size() == mOffsetsToPatchCount);
+
 			// Check if anything to do
 			if (mVertices.empty())
 				return true;
@@ -331,11 +345,12 @@ public:
 	private:
 		using VertexMap = Array<uint32>;
 
-		uint						mNumTriangles = 0;		///< Number of triangles calculated during PreparePack
-		uint32						mVertexCount = 0;		///< Number of vertices calculated during PreparePack
-		Array<uint32>				mVertices;				///< Output vertices as an index into the original vertex list (inVertices), sorted according to occurrence
-		VertexMap					mVertexMap;				///< Maps from the original mesh vertex index (inVertices) to the index in our output vertices (mVertices)
-		Array<size_t>				mOffsetsToPatch;		///< Offsets to the vertex buffer that need to be patched in once all nodes have been packed
+		uint						mNumTriangles = 0;			///< Number of triangles calculated during PreparePack
+		uint32						mVertexCount = 0;			///< Number of vertices calculated during PreparePack
+		uint32						mOffsetsToPatchCount = 0;	///< Number of offsets that need to be patched calculated during PreparePack
+		Array<uint32>				mVertices;					///< Output vertices as an index into the original vertex list (inVertices), sorted according to occurrence
+		VertexMap					mVertexMap;					///< Maps from the original mesh vertex index (inVertices) to the index in our output vertices (mVertices)
+		Array<size_t>				mOffsetsToPatch;			///< Offsets to the vertex buffer that need to be patched in once all nodes have been packed
 	};
 
 	/// This class is used to decode and decompress triangle data packed by the EncodingContext

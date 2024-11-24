@@ -44,54 +44,64 @@ public:
 		// Since the tree can be huge for very large meshes, we don't want
 		// to reallocate the buffer as it may cause out of memory situations.
 		// This loop mimics the construction loop below.
-		Array<const AABBTreeBuilder::Node *> to_estimate;
-		Array<const AABBTreeBuilder::Node *> to_estimate_triangles;
-		to_estimate.push_back(inRoot);
 		uint64 total_size = HeaderSize + TriangleHeaderSize;
 		size_t node_count = 1; // Start with root node
-		for (;;)
-		{
-			while (!to_estimate.empty())
+		size_t to_process_max_size = 1; // Track size of queues so we can do a single reserve below
+		size_t to_process_triangles_max_size = 0;
+		{	// A scope to free the memory associated with to_estimate and to_estimate_triangles
+			Array<const AABBTreeBuilder::Node *> to_estimate;
+			Array<const AABBTreeBuilder::Node *> to_estimate_triangles;
+			to_estimate.push_back(inRoot);
+			for (;;)
 			{
-				// Get the next node to process
-				const AABBTreeBuilder::Node *node = to_estimate.back();
-				to_estimate.pop_back();
-
-				// Update total size
-				node_ctx.PrepareNodeAllocate(node, total_size);
-
-				if (node->HasChildren())
+				while (!to_estimate.empty())
 				{
-					// Collect the first NumChildrenPerNode sub-nodes in the tree
-					child_nodes.clear(); // Won't free the memory
-					node->GetNChildren(inNodes, NumChildrenPerNode, child_nodes);
+					// Get the next node to process
+					const AABBTreeBuilder::Node *node = to_estimate.back();
+					to_estimate.pop_back();
 
-					// Increment the number of nodes we're going to store
-					node_count += child_nodes.size();
+					// Update total size
+					node_ctx.PrepareNodeAllocate(node, total_size);
 
-					// Insert in reverse order so we estimate left child first when taking nodes from the back
-					for (int idx = int(child_nodes.size()) - 1; idx >= 0; --idx)
+					if (node->HasChildren())
 					{
-						// Store triangles in separate list so we process them last
-						const AABBTreeBuilder::Node *child = child_nodes[idx];
-						if (child->HasChildren())
-							to_estimate.push_back(child);
-						else
-							to_estimate_triangles.push_back(child);
+						// Collect the first NumChildrenPerNode sub-nodes in the tree
+						child_nodes.clear(); // Won't free the memory
+						node->GetNChildren(inNodes, NumChildrenPerNode, child_nodes);
+
+						// Increment the number of nodes we're going to store
+						node_count += child_nodes.size();
+
+						// Insert in reverse order so we estimate left child first when taking nodes from the back
+						for (int idx = int(child_nodes.size()) - 1; idx >= 0; --idx)
+						{
+							// Store triangles in separate list so we process them last
+							const AABBTreeBuilder::Node *child = child_nodes[idx];
+							if (child->HasChildren())
+							{
+								to_estimate.push_back(child);
+								to_process_max_size = max(to_estimate.size(), to_process_max_size);
+							}
+							else
+							{
+								to_estimate_triangles.push_back(child);
+								to_process_triangles_max_size = max(to_estimate_triangles.size(), to_process_triangles_max_size);
+							}
+						}
+					}
+					else
+					{
+						// Update total size
+						tri_ctx.PreparePack(&inTriangles[node->mTrianglesBegin], node->mNumTriangles, inStoreUserData, total_size);
 					}
 				}
-				else
-				{
-					// Update total size
-					tri_ctx.PreparePack(&inTriangles[node->mTrianglesBegin], node->mNumTriangles, inStoreUserData, total_size);
-				}
-			}
 
-			// If we've got triangles to estimate, loop again with just the triangles
-			if (to_estimate_triangles.empty())
-				break;
-			else
-				to_estimate.swap(to_estimate_triangles);
+				// If we've got triangles to estimate, loop again with just the triangles
+				if (to_estimate_triangles.empty())
+					break;
+				else
+					to_estimate.swap(to_estimate_triangles);
+			}
 		}
 
 		// Finalize the prepare stage for the triangle context
@@ -124,9 +134,10 @@ public:
 		};
 
 		Array<NodeData *> to_process;
+		to_process.reserve(to_process_max_size);
 		Array<NodeData *> to_process_triangles;
+		to_process_triangles.reserve(to_process_triangles_max_size);
 		Array<NodeData> node_list;
-
 		node_list.reserve(node_count); // Needed to ensure that array is not reallocated, so we can keep pointers in the array
 
 		NodeData root;
@@ -219,6 +230,10 @@ public:
 			else
 				to_process.swap(to_process_triangles);
 		}
+
+		// Assert that our reservation was correct (we don't know if we swapped the arrays or not)
+		JPH_ASSERT(to_process_max_size == to_process.capacity() || to_process_triangles_max_size == to_process.capacity());
+		JPH_ASSERT(to_process_max_size == to_process_triangles.capacity() || to_process_triangles_max_size == to_process_triangles.capacity());
 
 		// Finalize all nodes
 		for (NodeData &n : node_list)
