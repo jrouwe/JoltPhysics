@@ -210,7 +210,7 @@ public:
 
 			// Store the start vertex offset, this will later be patched to give the delta offset relative to the triangle block
 			mOffsetsToPatch.push_back(size_t((uint8 *)&header->mFlags - &ioBuffer[0]));
-			size_t offset_to_vertices = start_vertex * sizeof(VertexData);
+			size_t offset_to_vertices = size_t(start_vertex) * sizeof(VertexData);
 			if (offset_to_vertices > OFFSET_TO_VERTICES_MASK)
 			{
 				outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit";
