@@ -195,7 +195,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	// Build tree
 	AABBTreeBuilder builder(splitter, inSettings.mMaxTrianglesPerLeaf);
 	AABBTreeBuilderStats builder_stats;
-	AABBTreeBuilder::Node *root = builder.Build(builder_stats);
+	const AABBTreeBuilder::Node *root = builder.Build(builder_stats);
 
 	// Convert to buffer
 	AABBTreeToBuffer<TriangleCodec, NodeCodec> buffer;
