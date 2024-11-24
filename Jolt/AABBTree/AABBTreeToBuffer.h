@@ -292,7 +292,6 @@ public:
 
 private:
 	ByteBuffer						mTree;									///< Resulting tree structure
-	uint							mNodesSize;								///< Size in bytes of the nodes in the buffer
 };
 
 JPH_NAMESPACE_END
