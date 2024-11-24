@@ -196,10 +196,14 @@ public:
 				return false;
 			}
 
+			// If the root has triangles, we need to take that offset instead since the mHighestTriangleBlock will be zero
+			size_t highest_triangle_block = inRootTrianglesStart != size_t(-1)? inRootTrianglesStart : mHighestTriangleBlock;
+			highest_triangle_block >>= OFFSET_NON_SIGNIFICANT_BITS;
+
 			inRoot->mBounds.mMin.StoreFloat3(&outHeader->mRootBoundsMin);
 			inRoot->mBounds.mMax.StoreFloat3(&outHeader->mRootBoundsMax);
 			outHeader->mRootProperties = uint32(offset) + (inRoot->GetTriangleCount() << TRIANGLE_COUNT_SHIFT);
-			outHeader->mBlockIDBits = uint8(32 - CountLeadingZeros(uint32(mHighestTriangleBlock >> OFFSET_NON_SIGNIFICANT_BITS)));
+			outHeader->mBlockIDBits = uint8(32 - CountLeadingZeros(uint32(highest_triangle_block)));
 			if (inRoot->GetTriangleCount() >= TRIANGLE_COUNT_MASK)
 			{
 				outError = "NodeCodecQuadTreeHalfFloat: Too many triangles";

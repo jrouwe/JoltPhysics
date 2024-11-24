@@ -298,7 +298,8 @@ public:
 					outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit";
 					return false;
 				}
-				*flags = uint32(offset_to_vertices);
+				*flags &= ~OFFSET_TO_VERTICES_MASK;
+				*flags |= uint32(offset_to_vertices);
 			}
 
 			// Calculate bounding box
