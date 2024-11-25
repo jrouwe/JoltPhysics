@@ -10,6 +10,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Removed the use of std::unordered_map and std::unordered_set and replaced them with our own implementation: UnorderedMap and UnorderedSet.
 * Added MotionProperties::ScaleToMass. This lets you easily change the mass and inertia tensor of a body after creation.
 * Split up Body::ApplyBuoyancyImpulse into Body::GetSubmergedVolume and Body::ApplyBuoyancyImpulse. This allows you to use the calculated submerged volume for other purposes.
+* Fixed a number of issues when creating very large MeshShapes. MeshShapes of up to 110M triangles are possible now, but the actual maximum is very dependent on how the triangles in the mesh are connected.
 
 ### Bug fixes
 
