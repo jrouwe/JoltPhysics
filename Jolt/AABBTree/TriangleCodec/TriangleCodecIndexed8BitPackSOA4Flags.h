@@ -205,7 +205,7 @@ public:
 			JPH_ASSERT(inNumTriangles > 0);
 
 			// Determine position of triangles start
-			size_t offset = ioBuffer.size();
+			size_t triangle_block_start = ioBuffer.size();
 
 			// Allocate triangle block header
 			TriangleBlockHeader *header = ioBuffer.Allocate<TriangleBlockHeader>();
@@ -214,7 +214,7 @@ public:
 			uint start_vertex = Clamp((int)mVertices.size() - 256 + (int)inNumTriangles * 3, 0, (int)mVertices.size());
 
 			// Store the start vertex offset relative to TriangleBlockHeader
-			size_t offset_to_vertices = mVerticesStartIdx - offset + size_t(start_vertex) * sizeof(VertexData);
+			size_t offset_to_vertices = mVerticesStartIdx - triangle_block_start + size_t(start_vertex) * sizeof(VertexData);
 			if (offset_to_vertices > OFFSET_TO_VERTICES_MASK)
 			{
 				outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit. Too much data.";
@@ -279,7 +279,7 @@ public:
 					user_data[t] = inTriangles[t].mUserData;
 			}
 
-			return offset;
+			return triangle_block_start;
 		}
 
 		/// After all triangles have been packed, this finalizes the header and triangle buffer
