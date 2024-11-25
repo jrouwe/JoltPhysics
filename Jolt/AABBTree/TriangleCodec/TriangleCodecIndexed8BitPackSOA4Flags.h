@@ -144,12 +144,6 @@ public:
 		/// Mimics the size a call to Pack() would add to the buffer
 		void						PreparePack(const IndexedTriangle *inTriangles, uint inNumTriangles, bool inStoreUserData, uint64 &ioBufferSize)
 		{
-			// Update stats
-			mNumTriangles += inNumTriangles;
-
-			// This will result in an offset to patch
-			mOffsetsToPatchCount++;
-
 			// Add triangle block header
 			ioBufferSize += sizeof(TriangleBlockHeader);
 
@@ -189,14 +183,15 @@ public:
 		/// Mimics the size the Finalize() call would add to ioBufferSize
 		void						FinalizePreparePack(uint64 &ioBufferSize)
 		{
+			// Remember where the vertices are going to start in the output buffer
+			JPH_ASSERT(IsAligned(ioBufferSize, 4));
+			mVerticesStartIdx = size_t(ioBufferSize);
+
 			// Add vertices to buffer
 			ioBufferSize += uint64(mVertexCount) * sizeof(VertexData);
 
 			// Reserve the amount of memory we need for the vertices
 			mVertices.reserve(mVertexCount);
-
-			// Reserve the amount of memory we need for the offsets
-			mOffsetsToPatch.reserve(mOffsetsToPatchCount);
 
 			// Set vertex map back to 'not found'
 			for (uint32 &v : mVertexMap)
@@ -218,12 +213,11 @@ public:
 			// Compute first vertex that this batch will use (ensuring there's enough room if none of the vertices are shared)
 			uint start_vertex = Clamp((int)mVertices.size() - 256 + (int)inNumTriangles * 3, 0, (int)mVertices.size());
 
-			// Store the start vertex offset, this will later be patched to give the delta offset relative to the triangle block
-			mOffsetsToPatch.push_back(size_t((uint8 *)&header->mFlags - &ioBuffer[0]));
-			size_t offset_to_vertices = size_t(start_vertex) * sizeof(VertexData);
+			// Store the start vertex offset relative to TriangleBlockHeader
+			size_t offset_to_vertices = mVerticesStartIdx - offset + size_t(start_vertex) * sizeof(VertexData);
 			if (offset_to_vertices > OFFSET_TO_VERTICES_MASK)
 			{
-				outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit";
+				outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit. Too much data.";
 				return false;
 			}
 			header->mFlags = uint32(offset_to_vertices);
@@ -293,29 +287,12 @@ public:
 		{
 			// Assert that our reservations were correct
 			JPH_ASSERT(mVertices.size() == mVertexCount);
-			JPH_ASSERT(mOffsetsToPatch.size() == mOffsetsToPatchCount);
+			JPH_ASSERT(ioBuffer.size() == mVerticesStartIdx);
 
 			// Check if anything to do
 			if (mVertices.empty())
 				return true;
-
-			// Align buffer to 4 bytes
-			size_t vertices_idx = ioBuffer.Align(4);
-
-			// Patch the offsets
-			for (size_t o : mOffsetsToPatch)
-			{
-				uint32 *flags = ioBuffer.Get<uint32>(o);
-				size_t offset_to_vertices = size_t(*flags & OFFSET_TO_VERTICES_MASK) + vertices_idx - o;
-				if (offset_to_vertices > OFFSET_TO_VERTICES_MASK)
-				{
-					outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit";
-					return false;
-				}
-				*flags &= ~OFFSET_TO_VERTICES_MASK;
-				*flags |= uint32(offset_to_vertices);
-			}
-
+					
 			// Calculate bounding box
 			AABox bounds;
 			for (uint32 v : mVertices)
@@ -345,12 +322,10 @@ public:
 	private:
 		using VertexMap = Array<uint32>;
 
-		uint						mNumTriangles = 0;			///< Number of triangles calculated during PreparePack
 		uint32						mVertexCount = 0;			///< Number of vertices calculated during PreparePack
-		uint32						mOffsetsToPatchCount = 0;	///< Number of offsets that need to be patched calculated during PreparePack
+		size_t						mVerticesStartIdx = 0;		///< Start of the vertices in the output buffer, calculated during PreparePack
 		Array<uint32>				mVertices;					///< Output vertices as an index into the original vertex list (inVertices), sorted according to occurrence
 		VertexMap					mVertexMap;					///< Maps from the original mesh vertex index (inVertices) to the index in our output vertices (mVertices)
-		Array<size_t>				mOffsetsToPatch;			///< Offsets to the vertex buffer that need to be patched in once all nodes have been packed
 	};
 
 	/// This class is used to decode and decompress triangle data packed by the EncodingContext
