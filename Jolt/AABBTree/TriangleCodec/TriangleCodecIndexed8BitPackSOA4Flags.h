@@ -218,7 +218,7 @@ public:
 			if (offset_to_vertices > OFFSET_TO_VERTICES_MASK)
 			{
 				outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit. Too much data.";
-				return false;
+				return size_t(-1);
 			}
 			header->mFlags = uint32(offset_to_vertices);
 
