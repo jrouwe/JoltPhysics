@@ -43,6 +43,7 @@ JPH_SUPPRESS_WARNINGS
 #include "RagdollScene.h"
 #include "ConvexVsMeshScene.h"
 #include "PyramidScene.h"
+#include "LargeMeshScene.h"
 
 // Time step for physics
 constexpr float cDeltaTime = 1.0f / 60.0f;
@@ -112,6 +113,8 @@ int main(int argc, char** argv)
 				scene = unique_ptr<PerformanceTestScene>(new ConvexVsMeshScene);
 			else if (strcmp(arg + 3, "Pyramid") == 0)
 				scene = unique_ptr<PerformanceTestScene>(new PyramidScene);
+			else if (strcmp(arg + 3, "LargeMesh") == 0)
+				scene = unique_ptr<PerformanceTestScene>(new LargeMeshScene);
 			else
 			{
 				Trace("Invalid scene");
@@ -211,17 +214,17 @@ int main(int argc, char** argv)
 	// Create temp allocator
 	TempAllocatorImpl temp_allocator(32 * 1024 * 1024);
 
-	// Load the scene
-	if (scene == nullptr)
-		scene = create_ragdoll_scene();
-	if (!scene->Load())
-		return 1;
-
 	// Show used instruction sets
 	Trace(GetConfigurationString());
 
 	// Output scene we're running
 	Trace("Running scene: %s", scene->GetName());
+
+	// Load the scene
+	if (scene == nullptr)
+		scene = create_ragdoll_scene();
+	if (!scene->Load())
+		return 1;
 
 	// Create mapping table from object layer to broadphase layer
 	BPLayerInterfaceImpl broad_phase_layer_interface;
