@@ -82,6 +82,8 @@ public:
 	{
 		OFFSET_TO_VERTICES_BITS = 29,							///< Offset from current block to start of vertices in bytes
 		OFFSET_TO_VERTICES_MASK = (1 << OFFSET_TO_VERTICES_BITS) - 1,
+		OFFSET_NON_SIGNIFICANT_BITS = 2,						///< The offset from the current block to the start of the vertices must be a multiple of 4 bytes
+		OFFSET_NON_SIGNIFICANT_MASK = (1 << OFFSET_NON_SIGNIFICANT_BITS) - 1,
 		OFFSET_TO_USERDATA_BITS = 3,							///< When user data is stored, this is the number of blocks to skip to get to the user data (0 = no user data)
 		OFFSET_TO_USERDATA_MASK = (1 << OFFSET_TO_USERDATA_BITS) - 1,
 	};
@@ -89,7 +91,7 @@ public:
 	/// A triangle header, will be followed by one or more TriangleBlocks
 	struct TriangleBlockHeader
 	{
-		const VertexData *			GetVertexData() const		{ return reinterpret_cast<const VertexData *>(reinterpret_cast<const uint8 *>(this) + (mFlags & OFFSET_TO_VERTICES_MASK)); }
+		const VertexData *			GetVertexData() const		{ return reinterpret_cast<const VertexData *>(reinterpret_cast<const uint8 *>(this) + ((mFlags & OFFSET_TO_VERTICES_MASK) << OFFSET_NON_SIGNIFICANT_BITS)); }
 		const TriangleBlock *		GetTriangleBlock() const	{ return reinterpret_cast<const TriangleBlock *>(reinterpret_cast<const uint8 *>(this) + sizeof(TriangleBlockHeader)); }
 		const uint32 *				GetUserData() const			{ uint32 offset = mFlags >> OFFSET_TO_VERTICES_BITS; return offset == 0? nullptr : reinterpret_cast<const uint32 *>(GetTriangleBlock() + offset); }
 
@@ -215,6 +217,12 @@ public:
 
 			// Store the start vertex offset relative to TriangleBlockHeader
 			size_t offset_to_vertices = mVerticesStartIdx - triangle_block_start + size_t(start_vertex) * sizeof(VertexData);
+			if (offset_to_vertices & OFFSET_NON_SIGNIFICANT_MASK)
+			{
+				outError = "TriangleCodecIndexed8BitPackSOA4Flags: Internal Error: Offset has non-significant bits set";
+				return size_t(-1);
+			}
+			offset_to_vertices >>= OFFSET_NON_SIGNIFICANT_BITS;
 			if (offset_to_vertices > OFFSET_TO_VERTICES_MASK)
 			{
 				outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset to vertices doesn't fit. Too much data.";
