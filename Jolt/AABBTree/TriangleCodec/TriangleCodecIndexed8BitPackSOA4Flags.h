@@ -291,7 +291,7 @@ public:
 		}
 
 		/// After all triangles have been packed, this finalizes the header and triangle buffer
-		bool						Finalize(const VertexList &inVertices, TriangleHeader *ioHeader, ByteBuffer &ioBuffer, const char *&outError) const
+		void						Finalize(const VertexList &inVertices, TriangleHeader *ioHeader, ByteBuffer &ioBuffer) const
 		{
 			// Assert that our reservations were correct
 			JPH_ASSERT(mVertices.size() == mVertexCount);
@@ -299,7 +299,7 @@ public:
 
 			// Check if anything to do
 			if (mVertices.empty())
-				return true;
+				return;
 					
 			// Calculate bounding box
 			AABox bounds;
@@ -323,8 +323,6 @@ public:
 			// Store decompression information
 			bounds.mMin.StoreFloat3(&ioHeader->mOffset);
 			(bounds.GetSize() / Vec3::sReplicate(COMPONENT_MASK)).StoreFloat3(&ioHeader->mScale);
-
-			return true;
 		}
 
 	private:
