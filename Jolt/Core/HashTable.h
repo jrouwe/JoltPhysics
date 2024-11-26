@@ -270,7 +270,7 @@ protected:
 					control_equal >>= first_equal + 1;
 					local_index++;
 				}
-	
+
 				// Check if we're still scanning for deleted buckets
 				if (first_deleted_index == cNoDeleted)
 				{
@@ -504,7 +504,7 @@ public:
 	}
 
 	/// Max number of buckets that the table can have
-	constexpr size_type		max_bucket_count()
+	constexpr size_type		max_bucket_count() const
 	{
 		return size_type(1) << (sizeof(size_type) * 8 - 1);
 	}
@@ -522,7 +522,7 @@ public:
 	}
 
 	/// Max number of elements that the table can hold
-	constexpr size_type		max_size()
+	constexpr size_type		max_size() const
 	{
 		return size_type((uint64(max_bucket_count()) * cMaxLoadFactorNumerator) / cMaxLoadFactorDenominator);
 	}
