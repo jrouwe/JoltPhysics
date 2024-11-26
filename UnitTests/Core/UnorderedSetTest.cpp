@@ -11,7 +11,13 @@ TEST_SUITE("UnorderedSetTest")
 	TEST_CASE("TestUnorderedSet")
 	{
 		UnorderedSet<int> set;
+		CHECK(set.bucket_count() == 0);
 		set.reserve(10);
+		CHECK(set.bucket_count() == 16);
+
+		// Check system limits
+		CHECK(set.max_bucket_count() == 0x80000000);
+		CHECK(set.max_size() == uint64(0x80000000) * 7 / 8);
 
 		// Insert some entries
 		CHECK(*set.insert(1).first == 1);
@@ -151,5 +157,30 @@ TEST_SUITE("UnorderedSetTest")
 			CHECK(*set.find(i) == i);
 
 		CHECK(set.find(11) == set.cend());
+	}
+
+	TEST_CASE("TestUnorderedSetAddRemoveCyles")
+	{
+		UnorderedSet<int> set;
+		constexpr int cNumElements = 64 * 7 / 8; // We add the max amount of elements possible when the bucket count is 64
+		set.reserve(cNumElements);
+		CHECK(set.bucket_count() == 64);
+
+		// Repeatedly add and remove elements to see if the set cleans up tombstones
+		int add_counter = 0;
+		int remove_counter = 0;
+		for (int i = 0; i < 100; ++i)
+		{
+			for (int j = 0; j < cNumElements; ++j)
+				CHECK(set.insert(add_counter++).second);
+
+			for (int j = 0; j < cNumElements; ++j)
+			{
+				CHECK(set.erase(remove_counter) == 1);
+				CHECK(set.erase(remove_counter++) == 0);
+			}
+		}
+
+		// TODO: enable CHECK(set.bucket_count() == 64);
 	}
 }
