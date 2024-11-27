@@ -112,13 +112,30 @@ private:
 		size_type			mIndex;
 	};
 
+	/// Get the maximum number of elements that we can support given a number of buckets
+	JPH_INLINE size_type	GetMaxLoad(size_type inBucketCount)
+	{
+		return uint32((cMaxLoadFactorNumerator * inBucketCount) / cMaxLoadFactorDenominator);
+	}
+
+	/// Update the control value for a bucket
+	JPH_INLINE void			SetControlValue(size_type inIndex, uint8 inValue)
+	{
+		JPH_ASSERT(inIndex < mMaxSize);
+		mControl[inIndex] = inValue;
+
+		// Mirror the first 15 bytes at the end of the control values
+		if (inIndex < 15)
+			mControl[mMaxSize + inIndex] = inValue;
+	}
+
 	/// Allocate space for the hash table
 	void					AllocateTable(size_type inMaxSize)
 	{
 		JPH_ASSERT(mData == nullptr);
 
 		mMaxSize = inMaxSize;
-		mLoadLeft = uint32((cMaxLoadFactorNumerator * inMaxSize) / cMaxLoadFactorDenominator);
+		mLoadLeft = GetMaxLoad(inMaxSize);
 		size_t required_size = size_t(mMaxSize) * (sizeof(KeyValue) + 1) + 15; // Add 15 bytes to mirror the first 15 bytes of the control values
 		if constexpr (cNeedsAlignedAllocate)
 			mData = reinterpret_cast<KeyValue *>(AlignedAllocate(required_size, alignof(KeyValue)));
@@ -209,7 +226,18 @@ protected:
 	{
 		// Ensure we have enough space
 		if (mLoadLeft == 0)
-			GrowTable();
+		{
+			// Should not be growing if we're already growing!
+			if constexpr (InsertAfterGrow)
+				JPH_ASSERT(false);
+
+			// Decide if we need to clean up all tombstones or if we need to grow the map
+			size_type num_deleted = GetMaxLoad(mMaxSize) - mSize;
+			if (num_deleted * cMaxDeletedElementsDenominator > mMaxSize * cMaxDeletedElementsNumerator)
+				rehash(0);
+			else
+				GrowTable();
+		}
 
 		// Calculate hash
 		uint64 hash_value = Hash { } (inKey);
@@ -302,9 +330,7 @@ protected:
 				index &= bucket_mask;
 
 				// Update control byte
-				mControl[index] = control;
-				if (index < 15)
-					mControl[mMaxSize + index] = control; // Mirror the first 15 bytes at the end of the control values
+				SetControlValue(index, control);
 				++mSize;
 
 				// Return index to newly allocated bucket
@@ -527,6 +553,12 @@ public:
 		return size_type((uint64(max_bucket_count()) * cMaxLoadFactorNumerator) / cMaxLoadFactorDenominator);
 	}
 
+	/// Get the max load factor for this table (max number of elements / number of buckets)
+	constexpr float			max_load_factor() const
+	{
+		return float(cMaxLoadFactorNumerator) / float(cMaxLoadFactorDenominator);
+	}
+
 	/// Insert a new element, returns iterator and if the element was inserted
 	std::pair<iterator, bool> insert(const value_type &inValue)
 	{
@@ -628,10 +660,8 @@ public:
 		// Note that we use: CountLeadingZeros(uint16) = CountLeadingZeros(uint32) - 16.
 		uint8 control_value = CountLeadingZeros(control_empty_before) - 16 + CountTrailingZeros(control_empty_after) < 16? cBucketEmpty : cBucketDeleted;
 
-		// Mark the bucket as deleted
-		mControl[inIterator.mIndex] = control_value;
-		if (inIterator.mIndex < 15)
-			mControl[inIterator.mIndex + mMaxSize] = control_value;
+		// Mark the bucket as empty/deleted
+		SetControlValue(inIterator.mIndex, control_value);
 
 		// Destruct the element
 		mData[inIterator.mIndex].~KeyValue();
@@ -665,6 +695,96 @@ public:
 		std::swap(mLoadLeft, ioRHS.mLoadLeft);
 	}
 
+	/// In place re-hashing of all elements in the table. Removes all cBucketDeleted elements
+	/// The std version takes a bucket count, but we just re-hash to the same size.
+	void					rehash(size_type)
+	{
+		// Update the control value for all buckets
+		for (size_type i = 0; i < mMaxSize; ++i)
+		{
+			uint8 &control = mControl[i];
+			switch (control)
+			{
+			case cBucketDeleted:
+				// Deleted buckets become empty
+				control = cBucketEmpty;
+				break;
+			case cBucketEmpty:
+				// Remains empty
+				break;
+			default:
+				// Mark all occupied as deleted, to indicate it needs to move to the correct place
+				control = cBucketDeleted;
+				break;
+			}
+		}
+
+		// Replicate control values to the last 15 entries
+		for (size_type i = 0; i < 15; ++i)
+			mControl[mMaxSize + i] = mControl[i];
+
+		// Loop over all elements that have been 'deleted' and move them to their new spot
+		BVec16 bucket_used = BVec16::sReplicate(cBucketUsed);
+		size_type bucket_mask = mMaxSize - 1;
+		uint32 probe_mask = bucket_mask & ~0b1111; // Mask out lower 4 bits because we test 16 buckets at a time
+		for (size_type src = 0; src < mMaxSize; ++src)
+			if (mControl[src] == cBucketDeleted)
+				for (;;)
+				{
+					// Calculate hash and new index and control value for this element
+					uint64 src_hash = Hash { } (HashTableDetail::sGetKey(mData[src]));
+					size_type src_index = size_type(src_hash >> 7) & bucket_mask;
+					uint8 src_control = cBucketUsed | uint8(src_hash);
+
+					// Linear probing
+					size_type dst = src_index;
+					for (;;)
+					{
+						// Check if any buckets are free
+						BVec16 control_bytes = BVec16::sLoadByte16(mControl + dst);
+						uint32 control_free = uint32(BVec16::sAnd(control_bytes, bucket_used).GetTrues()) ^ 0xffff;
+						if (control_free != 0)
+						{
+							// Select this bucket as destination
+							dst += CountTrailingZeros(control_free);
+							dst &= bucket_mask;
+							break;
+						}
+
+						// Move to next batch of 16 buckets
+						dst = (dst + 16) & bucket_mask;
+					}
+
+					// Check if we stay in the same probe group
+					if (((dst - src_index) & probe_mask) == ((src - src_index) & probe_mask))
+					{
+						// We stay in the same group, we can stay where we are
+						SetControlValue(src, src_control);
+						break;
+					}
+					else if (mControl[dst] == cBucketEmpty)
+					{
+						// There's an empty bucket, move us there
+						SetControlValue(dst, src_control);
+						SetControlValue(src, cBucketEmpty);
+						::new (mData + dst) KeyValue(std::move(mData[src]));
+						mData[src].~KeyValue();
+						break;
+					}
+					else
+					{
+						// There's an element in the bucket we want to move to, swap them
+						JPH_ASSERT(mControl[dst] == cBucketDeleted);
+						SetControlValue(dst, src_control);
+						std::swap(mData[src], mData[dst]);
+						// Iterate again with the same source bucket
+					}
+				}
+
+		// Reinitialize load left
+		mLoadLeft = GetMaxLoad(mMaxSize) - mSize;
+	}
+
 private:
 	/// If this allocator needs to fall back to aligned allocations because the type requires it
 	static constexpr bool	cNeedsAlignedAllocate = alignof(KeyValue) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16);
@@ -672,6 +792,10 @@ private:
 	/// Max load factor is cMaxLoadFactorNumerator / cMaxLoadFactorDenominator
 	static constexpr uint64	cMaxLoadFactorNumerator = 7;
 	static constexpr uint64	cMaxLoadFactorDenominator = 8;
+
+	/// If we can recover this fraction of deleted elements, we'll reshuffle the buckets in place rather than growing the table
+	static constexpr uint64 cMaxDeletedElementsNumerator = 1;
+	static constexpr uint64 cMaxDeletedElementsDenominator = 8;
 
 	/// Values that the control bytes can have
 	static constexpr uint8	cBucketEmpty = 0;
