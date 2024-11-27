@@ -124,9 +124,14 @@ private:
 		JPH_ASSERT(inIndex < mMaxSize);
 		mControl[inIndex] = inValue;
 
-		// Mirror the first 15 bytes at the end of the control values
-		if (inIndex < 15)
-			mControl[mMaxSize + inIndex] = inValue;
+		// Mirror the first 15 bytes to the 15 bytes beyond mMaxSize
+		// Note that this is equivalent to:
+		// if (inIndex < 15)
+		//   mControl[inIndex + mMaxSize] = inValue
+		// else
+		//   mControl[inIndex] = inValue
+		// Which performs a needless write if inIndex >= 15 but at least it is branch-less
+		mControl[((inIndex - 15) & (mMaxSize - 1)) + 15] = inValue;
 	}
 
 	/// Get the index and control value for a particular key
