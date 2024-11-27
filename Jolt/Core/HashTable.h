@@ -448,7 +448,7 @@ public:
 	}
 
 	/// Move assignment operator
-	HashTable &				operator = (HashTable &&ioRHS)
+	HashTable &				operator = (HashTable &&ioRHS) noexcept
 	{
 		if (this != &ioRHS)
 		{
