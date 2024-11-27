@@ -113,7 +113,7 @@ private:
 	};
 
 	/// Get the maximum number of elements that we can support given a number of buckets
-	JPH_INLINE size_type	GetMaxLoad(size_type inBucketCount)
+	static constexpr size_type sGetMaxLoad(size_type inBucketCount)
 	{
 		return uint32((cMaxLoadFactorNumerator * inBucketCount) / cMaxLoadFactorDenominator);
 	}
@@ -129,13 +129,24 @@ private:
 			mControl[mMaxSize + inIndex] = inValue;
 	}
 
+	/// Get the index and control value for a particular key
+	JPH_INLINE void			GetIndexAndControlValue(const Key &inKey, size_type &outIndex, uint8 &outControl) const
+	{
+		// Calculate hash
+		uint64 hash_value = Hash { } (inKey);
+
+		// Split hash into index and control value
+		outIndex = size_type(hash_value >> 7) & (mMaxSize - 1);
+		outControl = cBucketUsed | uint8(hash_value);
+	}
+
 	/// Allocate space for the hash table
 	void					AllocateTable(size_type inMaxSize)
 	{
 		JPH_ASSERT(mData == nullptr);
 
 		mMaxSize = inMaxSize;
-		mLoadLeft = GetMaxLoad(inMaxSize);
+		mLoadLeft = sGetMaxLoad(inMaxSize);
 		size_t required_size = size_t(mMaxSize) * (sizeof(KeyValue) + 1) + 15; // Add 15 bytes to mirror the first 15 bytes of the control values
 		if constexpr (cNeedsAlignedAllocate)
 			mData = reinterpret_cast<KeyValue *>(AlignedAllocate(required_size, alignof(KeyValue)));
@@ -232,24 +243,17 @@ protected:
 				JPH_ASSERT(false);
 
 			// Decide if we need to clean up all tombstones or if we need to grow the map
-			size_type num_deleted = GetMaxLoad(mMaxSize) - mSize;
+			size_type num_deleted = sGetMaxLoad(mMaxSize) - mSize;
 			if (num_deleted * cMaxDeletedElementsDenominator > mMaxSize * cMaxDeletedElementsNumerator)
 				rehash(0);
 			else
 				GrowTable();
 		}
 
-		// Calculate hash
-		uint64 hash_value = Hash { } (inKey);
-
-		// Split hash into control byte and index
-		uint8 control = cBucketUsed | uint8(hash_value);
-		size_type bucket_mask = mMaxSize - 1;
-		size_type index = size_type(hash_value >> 7) & bucket_mask;
-
-		BVec16 control16 = BVec16::sReplicate(control);
-		BVec16 bucket_empty = BVec16::sZero();
-		BVec16 bucket_deleted = BVec16::sReplicate(cBucketDeleted);
+		// Split hash into index and control value
+		size_type index;
+		uint8 control;
+		GetIndexAndControlValue(inKey, index, control);
 
 		// Keeps track of the index of the first deleted bucket we found
 		constexpr size_type cNoDeleted = ~size_type(0);
@@ -257,6 +261,10 @@ protected:
 
 		// Linear probing
 		KeyEqual equal;
+		size_type bucket_mask = mMaxSize - 1;
+		BVec16 control16 = BVec16::sReplicate(control);
+		BVec16 bucket_empty = BVec16::sZero();
+		BVec16 bucket_deleted = BVec16::sReplicate(cBucketDeleted);
 		for (;;)
 		{
 			// Read 16 control values (note that we added 15 bytes at the end of the control values that mirror the first 15 bytes)
@@ -439,6 +447,29 @@ public:
 		return *this;
 	}
 
+	/// Move assignment operator
+	HashTable &				operator = (HashTable &&ioRHS)
+	{
+		if (this != &ioRHS)
+		{
+			clear();
+
+			mData = ioRHS.mData;
+			mControl = ioRHS.mControl;
+			mSize = ioRHS.mSize;
+			mMaxSize = ioRHS.mMaxSize;
+			mLoadLeft = ioRHS.mLoadLeft;
+
+			ioRHS.mData = nullptr;
+			ioRHS.mControl = nullptr;
+			ioRHS.mSize = 0;
+			ioRHS.mMaxSize = 0;
+			ioRHS.mLoadLeft = 0;
+		}
+
+		return *this;
+	}
+
 	/// Destructor
 							~HashTable()
 	{
@@ -576,19 +607,16 @@ public:
 		if (empty())
 			return cend();
 
-		// Calculate hash
-		uint64 hash_value = Hash { } (inKey);
-
-		// Split hash into control byte and index
-		uint8 control = cBucketUsed | uint8(hash_value);
-		size_type bucket_mask = mMaxSize - 1;
-		size_type index = size_type(hash_value >> 7) & bucket_mask;
-
-		BVec16 control16 = BVec16::sReplicate(control);
-		BVec16 bucket_empty = BVec16::sZero();
+		// Split hash into index and control value
+		size_type index;
+		uint8 control;
+		GetIndexAndControlValue(inKey, index, control);
 
 		// Linear probing
 		KeyEqual equal;
+		size_type bucket_mask = mMaxSize - 1;
+		BVec16 control16 = BVec16::sReplicate(control);
+		BVec16 bucket_empty = BVec16::sZero();
 		for (;;)
 		{
 			// Read 16 control values
@@ -731,10 +759,10 @@ public:
 			if (mControl[src] == cBucketDeleted)
 				for (;;)
 				{
-					// Calculate hash and new index and control value for this element
-					uint64 src_hash = Hash { } (HashTableDetail::sGetKey(mData[src]));
-					size_type src_index = size_type(src_hash >> 7) & bucket_mask;
-					uint8 src_control = cBucketUsed | uint8(src_hash);
+					// Split hash into index and control value
+					size_type src_index;
+					uint8 src_control;
+					GetIndexAndControlValue(HashTableDetail::sGetKey(mData[src]), src_index, src_control);
 
 					// Linear probing
 					size_type dst = src_index;
@@ -782,7 +810,7 @@ public:
 				}
 
 		// Reinitialize load left
-		mLoadLeft = GetMaxLoad(mMaxSize) - mSize;
+		mLoadLeft = sGetMaxLoad(mMaxSize) - mSize;
 	}
 
 private:

@@ -69,6 +69,16 @@ TEST_SUITE("UnorderedSetTest")
 		CHECK(*set4.find(3) == 3);
 		CHECK(set4.find(5) == set4.end());
 		CHECK(set3.empty());
+
+		// Move assign
+		UnorderedSet<int> set5;
+		set5.insert(999);
+		CHECK(*set5.find(999) == 999);
+		set5 = std::move(set4);
+		CHECK(set5.find(999) == set5.end());
+		CHECK(*set5.find(1) == 1);
+		CHECK(*set5.find(3) == 3);
+		CHECK(set4.empty());
 	}
 
 	TEST_CASE("TestUnorderedSetGrow")
