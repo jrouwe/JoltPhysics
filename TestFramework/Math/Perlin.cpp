@@ -99,9 +99,9 @@ float PerlinNoise3(float x, float y, float z, int x_wrap, int y_wrap, int z_wrap
    float n00,n01,n10,n11;
    float n0,n1;
 
-   unsigned int x_mask = (x_wrap-1) & 255;
-   unsigned int y_mask = (y_wrap-1) & 255;
-   unsigned int z_mask = (z_wrap-1) & 255;
+   int x_mask = (x_wrap-1) & 255;
+   int y_mask = (y_wrap-1) & 255;
+   int z_mask = (z_wrap-1) & 255;
    int px = stb_perlin_fastfloor(x);
    int py = stb_perlin_fastfloor(y);
    int pz = stb_perlin_fastfloor(z);
