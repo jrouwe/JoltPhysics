@@ -754,7 +754,7 @@ public:
 		// Loop over all elements that have been 'deleted' and move them to their new spot
 		BVec16 bucket_used = BVec16::sReplicate(cBucketUsed);
 		size_type bucket_mask = mMaxSize - 1;
-		uint32 probe_mask = bucket_mask & ~0b1111; // Mask out lower 4 bits because we test 16 buckets at a time
+		uint32 probe_mask = bucket_mask & ~uint32(0b1111); // Mask out lower 4 bits because we test 16 buckets at a time
 		for (size_type src = 0; src < mMaxSize; ++src)
 			if (mControl[src] == cBucketDeleted)
 				for (;;)
