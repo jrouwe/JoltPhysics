@@ -300,7 +300,7 @@ public:
 			// Check if anything to do
 			if (mVertices.empty())
 				return;
-					
+
 			// Calculate bounding box
 			AABox bounds;
 			for (uint32 v : mVertices)
