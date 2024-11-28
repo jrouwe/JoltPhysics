@@ -5,7 +5,6 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Jolt/Physics/Body/BodyActivationListener.h>
 
 // This test shows how to use a shape filter during the simulation to disable contacts between certain sub shapes
 class SimulationShapeFilterTest : public Test
