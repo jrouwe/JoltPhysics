@@ -12,7 +12,7 @@ We use a pretty traditional physics engine setup, so \ref Body "bodies" in our s
 
 Bodies can either be:
 - [static](@ref EMotionType) (not moving or simulating)
-- [dynamic](@ref EMotionType) (moved by forces) or 
+- [dynamic](@ref EMotionType) (moved by forces) or
 - [kinematic](@ref EMotionType) (moved by velocities only).
 
 Moving bodies have a [MotionProperties](@ref MotionProperties) object that contains information about the movement of the object. Static bodies do not have this to save space (but they can be configured to have it if a static body needs to become dynamic during its lifetime by setting [BodyCreationSettings::mAllowDynamicOrKinematic](@ref BodyCreationSettings::mAllowDynamicOrKinematic)).
@@ -39,7 +39,7 @@ Always use the batch adding functions when possible! Adding many bodies, one at 
 
 You can call AddBody, RemoveBody, AddBody, RemoveBody to temporarily remove and later reinsert a body into the simulation.
 
-## Multithreaded Access 
+## Multithreaded Access
 
 Jolt is designed to be accessed from multiple threads so the body interface comes in two flavors: A locking and a non-locking variant. The locking variant uses a mutex array (a fixed size array of mutexes, bodies are associated with a mutex through hashing and multiple bodies use the same mutex, see [MutexArray](@ref MutexArray)) to prevent concurrent access to the same body. The non-locking variant doesn't use mutexes, so requires the user to be careful.
 
@@ -245,10 +245,10 @@ A safer way of scaling shapes is provided by the Shape::ScaleShape function:
 
 	JPH::Shape::ShapeResult my_scaled_shape = my_non_scaled_shape->ScaleShape(JPH::Vec3(x_scale, y_scale, z_scale));
 
-This function will check if a scale is valid for a particular shape and if a scale is not valid, it will produce the closest scale that is valid. 
+This function will check if a scale is valid for a particular shape and if a scale is not valid, it will produce the closest scale that is valid.
 For example, if you scale a CompoundShape that has rotated sub shapes, a non-uniform scale would cause shearing. In that case the Shape::ScaleShape function will create a new compound shape and scale the sub shapes (losing the shear) rather than creating a ScaledShape around the entire CompoundShape.
 
-Updating scaling after a body is created is also possible, but should be done with care. Imagine a sphere in a pipe, scaling the sphere so that it becomes bigger than the pipe creates an impossible situation as there is no way to resolve the collision anymore. 
+Updating scaling after a body is created is also possible, but should be done with care. Imagine a sphere in a pipe, scaling the sphere so that it becomes bigger than the pipe creates an impossible situation as there is no way to resolve the collision anymore.
 Please take a look at the [DynamicScaledShape](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/ScaledShapes/DynamicScaledShape.cpp) demo. The reason that no ScaledShape::SetScale function exists is to ensure thread safety when collision queries are being executed while shapes are modified.
 
 Note that there are many functions that take a scale in Jolt (e.g. CollisionDispatch::sCollideShapeVsShape), usually the shape is scaled relative to its center of mass. The Shape::ScaleShape function scales the shape relative to the origin of the shape.
@@ -420,7 +420,7 @@ The following sections describe the collision detection system in more detail.
 
 ## Broad Phase {#broad-phase}
 
-When bodies are added to the PhysicsSystem, they are inserted in the broad phase ([BroadPhaseQuadTree](@ref BroadPhaseQuadTree)). This provides quick coarse collision detection based on the axis aligned bounding box (AABB) of a body. 
+When bodies are added to the PhysicsSystem, they are inserted in the broad phase ([BroadPhaseQuadTree](@ref BroadPhaseQuadTree)). This provides quick coarse collision detection based on the axis aligned bounding box (AABB) of a body.
 
 ![To quickly test if two objects overlap you can check if their axis aligned bounding boxes overlap. If they do, a check between the actual shapes is needed to be sure.](Images/EllipsoidAABB.png)
 
@@ -491,20 +491,22 @@ Now that we know about the basics, we list the order in which the collision dete
 
 * Broadphase layer: At this stage, the object layer is tested against the broad phase trees that are relevant by checking the [ObjectVsBroadPhaseLayerFilter](@ref ObjectVsBroadPhaseLayerFilter).
 * Object layer: Once the broad phase layer test succeeds, we will test object layers vs object layers through [ObjectLayerPairFilter](@ref ObjectLayerPairFilter) (used for simulation) and [ObjectLayerFilter](@ref ObjectLayerFilter) (used for collision queries). The default implementation of ObjectLayerFilter is DefaultObjectLayerFilter and uses ObjectLayerPairFilter so the behavior is consistent between simulation and collision queries.
-* Group filter: Most expensive filtering (bounding boxes already overlap), used only during simulation. Allows you fine tune collision e.g. by discarding collisions between bodies connected by a constraint. See [GroupFilter](@ref GroupFilter) and implementation for ragdolls [GroupFilterTable](@ref GroupFilterTable).
-* Body filter: This filter is used instead of the group filter if you do collision queries like CastRay. See [BodyFilter](@ref BodyFilter).
-* Shape filter: This filter is used only during collision queries and can be used to filter out individual (sub)shapes. See [ShapeFilter](@ref ShapeFilter).
-* Contact listener: During simulation, after all collision detection work has been performed you can still choose to discard a contact point. This is a very expensive way of rejecting collisions as most of the work is already done. See [ContactListener](@ref ContactListener).
+* [GroupFilter](@ref GroupFilter): Used only during simulation and runs after bounding boxes have found to be overlapping. Allows you fine tune collision e.g. by discarding collisions between bodies connected by a constraint. See e.g. [GroupFilterTable](@ref GroupFilterTable) which implements filtering for bodies within a ragdoll.
+* [BodyFilter](@ref BodyFilter): This filter is used instead of the group filter if you do collision queries like CastRay.
+* [ShapeFilter](@ref ShapeFilter): This filter is used both during queries and simulation and can be used to filter out individual shapes of a compound. To set the shape filter for the simulation use PhysicsSystem::SetSimulationShapeFilter.
+* [ContactListener](@ref ContactListener): During simulation, after all collision detection work has been performed you can still choose to discard a contact point. This is a very expensive way of rejecting collisions as most of the work is already done.
 
 To avoid work, try to filter out collisions as early as possible.
 
 ## Level of Detail {#level-of-detail}
 
 Bodies can only exist in a single layer. If you want a body with a low detail collision shape for simulation (in the example above: MOVING layer) and a high detail collision shape for collision detection (BULLET layer), you'll need to create 2 Bodies.
-
 The low detail body should be dynamic. The high detail body should be kinematic, or if it doesn't interact with other dynamic objects it can also be static.
-
 After calling PhysicsSystem::Update, you'll need to loop over these dynamic bodies and call BodyInterface::MoveKinematic in case the high detail body is kinematic, or BodyInterface::SetPositionAndRotation in case the high detail body is static.
+
+Alternatively, you can put a high detail and a low detail shape in a StaticCompoundShape and use PhysicsSystem::SetSimulationShapeFilter to filter out the high detail shape during simulation.
+Another ShapeFilter would filter out the low detail shape during collision queries (e.g. through NarrowPhaseQuery).
+You can use Shape::GetUserData to determine if a shape is a high or a low detail shape.
 
 ## Continuous Collision Detection {#continuous-collision-detection}
 
@@ -532,7 +534,7 @@ Whenever a body hits an inactive edge, the contact normal is the face normal. Wh
 
 By tweaking MeshShapeSettings::mActiveEdgeCosThresholdAngle or HeightFieldShapeSettings::mActiveEdgeCosThresholdAngle you can determine the angle at which an edge is considered an active edge. By default this is 5 degrees, making this bigger reduces the amount of ghost collisions but can create simulation artifacts if you hit the edge straight on.
 
-To further reduce ghost collisions, you can turn on BodyCreationSettings::mEnhancedInternalEdgeRemoval. When enabling this setting, additional checks will be made at run-time to detect if an edge is active or inactive based on all of the contact points between the two bodies. Beware that this algorithm only considers 2 bodies at a time, so if the two green boxes above belong to two different bodies, the ghost collision can still occur. Use a StaticCompoundShape to combine the boxes in a single body to allow the system to eliminate ghost collisions between the blue and the two green boxes. You can also use this functionality for your custom collision tests by making use of InternalEdgeRemovingCollector. 
+To further reduce ghost collisions, you can turn on BodyCreationSettings::mEnhancedInternalEdgeRemoval. When enabling this setting, additional checks will be made at run-time to detect if an edge is active or inactive based on all of the contact points between the two bodies. Beware that this algorithm only considers 2 bodies at a time, so if the two green boxes above belong to two different bodies, the ghost collision can still occur. Use a StaticCompoundShape to combine the boxes in a single body to allow the system to eliminate ghost collisions between the blue and the two green boxes. You can also use this functionality for your custom collision tests by making use of InternalEdgeRemovingCollector.
 
 # Character Controllers {#character-controllers}
 

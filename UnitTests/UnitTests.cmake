@@ -64,6 +64,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/PhysicsTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/RayShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SensorTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/ShapeFilterTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SixDOFConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SliderConstraintTests.cpp

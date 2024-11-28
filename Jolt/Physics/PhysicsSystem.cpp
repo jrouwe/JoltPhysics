@@ -1019,6 +1019,12 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		settings.mMaxSeparationDistance = body1->IsSensor() || body2->IsSensor()? 0.0f : mPhysicsSettings.mSpeculativeContactDistance;
 		settings.mActiveEdgeMovementDirection = body1->GetLinearVelocity() - body2->GetLinearVelocity();
 
+		// Create shape filter
+		ShapeFilter default_shape_filter;
+		const ShapeFilter &shape_filter = mSimulationShapeFilter != nullptr? *mSimulationShapeFilter : default_shape_filter;
+		shape_filter.mBodyID1 = body1->GetID();
+		shape_filter.mBodyID2 = body2->GetID();
+
 		// Get transforms relative to body1
 		RVec3 offset = body1->GetCenterOfMassPosition();
 		Mat44 transform1 = Mat44::sRotation(body1->GetRotation());
@@ -1140,7 +1146,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
 			auto f = enhanced_active_edges? InternalEdgeRemovingCollector::sCollideShapeVsShape : CollisionDispatch::sCollideShapeVsShape;
-			f(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector, { });
+			f(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector, shape_filter);
 
 			// Add the contacts
 			for (ContactManifold &manifold : collector.mManifolds)
@@ -1241,7 +1247,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
 			auto f = enhanced_active_edges? InternalEdgeRemovingCollector::sCollideShapeVsShape : CollisionDispatch::sCollideShapeVsShape;
-			f(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector, { });
+			f(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector, shape_filter);
 
 			constraint_created = collector.mConstraintCreated;
 		}
@@ -1814,12 +1820,13 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		class CCDBroadPhaseCollector : public CastShapeBodyCollector
 		{
 		public:
-										CCDBroadPhaseCollector(const CCDBody &inCCDBody, const Body &inBody1, const RShapeCast &inShapeCast, ShapeCastSettings &inShapeCastSettings, CCDNarrowPhaseCollector &ioCollector, const BodyManager &inBodyManager, PhysicsUpdateContext::Step *inStep, float inDeltaTime) :
+										CCDBroadPhaseCollector(const CCDBody &inCCDBody, const Body &inBody1, const RShapeCast &inShapeCast, ShapeCastSettings &inShapeCastSettings, const ShapeFilter &inShapeFilter, CCDNarrowPhaseCollector &ioCollector, const BodyManager &inBodyManager, PhysicsUpdateContext::Step *inStep, float inDeltaTime) :
 				mCCDBody(inCCDBody),
 				mBody1(inBody1),
 				mBody1Extent(inShapeCast.mShapeWorldBounds.GetExtent()),
 				mShapeCast(inShapeCast),
 				mShapeCastSettings(inShapeCastSettings),
+				mShapeFilter(inShapeFilter),
 				mCollector(ioCollector),
 				mBodyManager(inBodyManager),
 				mStep(inStep),
@@ -1871,12 +1878,15 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 				mCollector.mValidateBodyPair = true;
 				mCollector.mRejectAll = false;
 
+				// Set body ID on shape filter
+				mShapeFilter.mBodyID2 = inResult.mBodyID;
+
 				// Provide direction as hint for the active edges algorithm
 				mShapeCastSettings.mActiveEdgeMovementDirection = direction;
 
 				// Do narrow phase collision check
 				RShapeCast relative_cast(mShapeCast.mShape, mShapeCast.mScale, mShapeCast.mCenterOfMassStart, direction, mShapeCast.mShapeWorldBounds);
-				body2.GetTransformedShape().CastShape(relative_cast, mShapeCastSettings, mShapeCast.mCenterOfMassStart.GetTranslation(), mCollector);
+				body2.GetTransformedShape().CastShape(relative_cast, mShapeCastSettings, mShapeCast.mCenterOfMassStart.GetTranslation(), mCollector, mShapeFilter);
 
 				// Update early out fraction based on narrow phase collector
 				if (!mCollector.mRejectAll)
@@ -1888,15 +1898,21 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			Vec3						mBody1Extent;
 			RShapeCast					mShapeCast;
 			ShapeCastSettings &			mShapeCastSettings;
+			const ShapeFilter &			mShapeFilter;
 			CCDNarrowPhaseCollector &	mCollector;
 			const BodyManager &			mBodyManager;
 			PhysicsUpdateContext::Step *mStep;
 			float						mDeltaTime;
 		};
 
+		// Create shape filter
+		ShapeFilter default_shape_filter;
+		const ShapeFilter &shape_filter = mSimulationShapeFilter != nullptr? *mSimulationShapeFilter : default_shape_filter;
+		shape_filter.mBodyID1 = ccd_body.mBodyID1;
+
 		// Check if we collide with any other body. Note that we use the non-locking interface as we know the broadphase cannot be modified at this point.
 		RShapeCast shape_cast(body.GetShape(), Vec3::sReplicate(1.0f), body.GetCenterOfMassTransform(), ccd_body.mDeltaPosition);
-		CCDBroadPhaseCollector bp_collector(ccd_body, body, shape_cast, settings, np_collector, mBodyManager, ioStep, ioContext->mStepDeltaTime);
+		CCDBroadPhaseCollector bp_collector(ccd_body, body, shape_cast, settings, shape_filter, np_collector, mBodyManager, ioStep, ioContext->mStepDeltaTime);
 		mBroadPhase->CastAABoxNoLock({ shape_cast.mShapeWorldBounds, shape_cast.mDirection }, bp_collector, broadphase_layer_filter, object_layer_filter);
 
 		// Check if there was a hit
