@@ -25,14 +25,14 @@ SimulationShapeFilterTest::~SimulationShapeFilterTest()
 
 void SimulationShapeFilterTest::Initialize()
 {
-	// Register activation listener
+	// Register shape filter
 	mPhysicsSystem->SetSimulationShapeFilter(&mShapeFilter);
 
 	// Floor
 	CreateFloor();
 
 	// Platform
-	mShapeFilter.mPlatformID = mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(5.0f, 0.5f, 5.0f)), Vec3(0, 7.5f, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	mShapeFilter.mPlatformID = mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(5.0f, 0.5f, 5.0f)), RVec3(0, 7.5f, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Compound shape
 	Ref<Shape> capsule = new CapsuleShape(2, 0.1f);
