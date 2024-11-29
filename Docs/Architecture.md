@@ -489,6 +489,8 @@ For convenience two filtering implementations are provided:
 
 Now that we know about the basics, we list the order in which the collision detection pipeline goes through the various collision filters:
 
+![Collision engine flow.](Images/CollisionFlow.jpg)
+
 * Broadphase layer: At this stage, the object layer is tested against the broad phase trees that are relevant by checking the [ObjectVsBroadPhaseLayerFilter](@ref ObjectVsBroadPhaseLayerFilter).
 * Object layer: Once the broad phase layer test succeeds, we will test object layers vs object layers through [ObjectLayerPairFilter](@ref ObjectLayerPairFilter) (used for simulation) and [ObjectLayerFilter](@ref ObjectLayerFilter) (used for collision queries). The default implementation of ObjectLayerFilter is DefaultObjectLayerFilter and uses ObjectLayerPairFilter so the behavior is consistent between simulation and collision queries.
 * [GroupFilter](@ref GroupFilter): Used only during simulation and runs after bounding boxes have found to be overlapping. Allows you fine tune collision e.g. by discarding collisions between bodies connected by a constraint. See e.g. [GroupFilterTable](@ref GroupFilterTable) which implements filtering for bodies within a ragdoll.
