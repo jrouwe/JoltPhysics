@@ -27,7 +27,8 @@ private:
 		virtual bool	ShouldCollide(const Body &inBody1, const Shape *inShape1, const SubShapeID &inSubShapeIDOfShape1, const Body &inBody2, const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override;
 
 		BodyID			mPlatformID;
-		BodyID			mCompoundID;
+		BodyID			mClothID;
+		BodyID			mCompoundID[2];
 	};
 
 	Filter				mShapeFilter;
