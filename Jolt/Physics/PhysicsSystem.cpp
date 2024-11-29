@@ -19,7 +19,7 @@
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
-#include <Jolt/Physics/Collision/SimShapeFilter.h>
+#include <Jolt/Physics/Collision/SimShapeFilterWrapper.h>
 #include <Jolt/Physics/Collision/InternalEdgeRemovingCollector.h>
 #include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
@@ -966,74 +966,6 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 		}
 	}
 }
-
-// Helper class to forward ShapeFilter calls to the simulation shape filter
-class SimShapeFilterWrapper : public ShapeFilter
-{
-public:
-	// Constructor
-							SimShapeFilterWrapper(const SimShapeFilter *inFilter, const Body *inBody1) :
-		mFilter(inFilter),
-		mBody1(inBody1)
-	{
-	}
-
-	// Forward to the simulation shape filter
-	virtual bool			ShouldCollide(const Shape *inShape1, const SubShapeID &inSubShapeIDOfShape1, const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override
-	{
-		return mFilter->ShouldCollide(*mBody1, inShape1, inSubShapeIDOfShape1, *mBody2, inShape2, inSubShapeIDOfShape2);
-	}
-
-	// Set the body we're colliding against
-	void					SetBody2(const Body *inBody2)
-	{
-		mBody2 = inBody2;
-	}
-
-private:
-	// Dummy implemention to satisfy the ShapeFilter interface
-	virtual bool			ShouldCollide(const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override
-	{
-		JPH_ASSERT(false); // Should not be called
-		return true;
-	}
-
-	const SimShapeFilter *	mFilter;
-	const Body *			mBody1;
-	const Body *			mBody2;
-};
-
-// In case we don't have a simulation shape filter, we fall back to using a default shape filter that always returns true
-union SimShapeFilterWrapperUnion
-{
-public:
-	// Constructor
-							SimShapeFilterWrapperUnion(const SimShapeFilter *inFilter, const Body *inBody1)
-	{
-		// Dirty trick: if we don't have a filter, placement new a standard ShapeFilter so that we
-		// don't have to check for nullptr in the ShouldCollide function
-		if (inFilter != nullptr)
-			new (&mSimShapeFilterWrapper) SimShapeFilterWrapper(inFilter, inBody1);
-		else
-			new (&mSimShapeFilterWrapper) ShapeFilter();
-	}
-
-	// Destructor
-							~SimShapeFilterWrapperUnion()
-	{
-		// Doesn't need to be destructed
-	}
-
-	// Accessor
-	SimShapeFilterWrapper &	GetSimShapeFilterWrapper()
-	{
-		return mSimShapeFilterWrapper;
-	}
-
-private:
-	SimShapeFilterWrapper	mSimShapeFilterWrapper;
-	ShapeFilter				mShapeFilter;
-};
 
 void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair)
 {
