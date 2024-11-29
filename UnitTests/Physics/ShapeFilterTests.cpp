@@ -9,12 +9,13 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/SimShapeFilter.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 
 TEST_SUITE("ShapeFilterTests")
 {
 	// Tests two spheres in one simulated body, one collides with a static platform, the other doesn't
-	TEST_CASE("TestSimulationShapeFilter")
+	TEST_CASE("TestSimShapeFilter")
 	{
 		// Test once per motion quality type
 		for (int q = 0; q < 2; ++q)
@@ -25,28 +26,25 @@ TEST_SUITE("ShapeFilterTests")
 			LoggingContactListener contact_listener;
 			c.GetSystem()->SetContactListener(&contact_listener);
 
-			// Install shape filter
-			class Filter : public ShapeFilter
+			// Install simulation shape filter
+			class Filter : public SimShapeFilter
 			{
 			public:
-				virtual bool	ShouldCollide(const Shape *inShape1, const SubShapeID &inSubShapeIDOfShape1, const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override
+				virtual bool	ShouldCollide(const Body &inBody1, const Shape *inShape1, const SubShapeID &inSubShapeIDOfShape1, const Body &inBody2, const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override
 				{
 					// If the platform is colliding with the compound, filter out collisions where the shape has user data 1
-					if (mBodyID1 == mPlatformID && mBodyID2 == mCompoundID)
+					if (inBody1.GetID() == mPlatformID && inBody2.GetID() == mCompoundID)
 						return inShape2->GetUserData() != 1;
-					else if (mBodyID1 == mCompoundID && mBodyID2 == mPlatformID)
+					else if (inBody1.GetID() == mCompoundID && inBody2.GetID() == mPlatformID)
 						return inShape1->GetUserData() != 1;
 					return true;
 				}
-
-				// We're not interested in the other overload as it is only used by collision queries and not by the simulation
-				using ShapeFilter::ShouldCollide;
 
 				BodyID			mPlatformID;
 				BodyID			mCompoundID;
 			};
 			Filter shape_filter;
-			c.GetSystem()->SetSimulationShapeFilter(&shape_filter);
+			c.GetSystem()->SetSimShapeFilter(&shape_filter);
 
 			// Floor
 			BodyID floor_id = c.CreateFloor().GetID();

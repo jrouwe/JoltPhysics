@@ -21,6 +21,7 @@ class StateRecorder;
 class TempAllocator;
 class PhysicsStepListener;
 class SoftBodyContactListener;
+class SimShapeFilter;
 
 /// The main class for the physics system. It contains all rigid bodies and simulates them.
 ///
@@ -72,8 +73,8 @@ public:
 	/// to exclude the high detail collision model when simulating and exclude the low detail collision model when casting rays. Note that in this case
 	/// you would need to pass the inverse of inShapeFilter to the CastRay function. Pass a nullptr to disable the shape filter.
 	/// The PhysicsSystem does not own the ShapeFilter, make sure it stays alive during the lifetime of the PhysicsSystem.
-	void						SetSimulationShapeFilter(const ShapeFilter *inShapeFilter)	{ mSimulationShapeFilter = inShapeFilter; }
-	const ShapeFilter *			GetSimulationShapeFilter() const							{ return mSimulationShapeFilter; }
+	void						SetSimShapeFilter(const SimShapeFilter *inShapeFilter)		{ mSimShapeFilter = inShapeFilter; }
+	const SimShapeFilter *		GetSimShapeFilter() const									{ return mSimShapeFilter; }
 
 	/// Control the main constants of the physics simulation
 	void						SetPhysicsSettings(const PhysicsSettings &inSettings)		{ mPhysicsSettings = inSettings; }
@@ -303,7 +304,7 @@ private:
 	SoftBodyContactListener *	mSoftBodyContactListener = nullptr;
 
 	/// The shape filter that is used to filter out sub shapes during simulation
-	const ShapeFilter *			mSimulationShapeFilter = nullptr;
+	const SimShapeFilter *		mSimShapeFilter = nullptr;
 
 	/// Simulation settings
 	PhysicsSettings				mPhysicsSettings;

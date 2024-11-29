@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#include <Tests/General/SimulationShapeFilterTest.h>
+#include <Tests/General/SimShapeFilterTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
@@ -12,21 +12,21 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SimulationShapeFilterTest)
+JPH_IMPLEMENT_RTTI_VIRTUAL(SimShapeFilterTest)
 {
-	JPH_ADD_BASE_CLASS(SimulationShapeFilterTest, Test)
+	JPH_ADD_BASE_CLASS(SimShapeFilterTest, Test)
 }
 
-SimulationShapeFilterTest::~SimulationShapeFilterTest()
+SimShapeFilterTest::~SimShapeFilterTest()
 {
 	// Unregister shape filter
-	mPhysicsSystem->SetSimulationShapeFilter(nullptr);
+	mPhysicsSystem->SetSimShapeFilter(nullptr);
 }
 
-void SimulationShapeFilterTest::Initialize()
+void SimShapeFilterTest::Initialize()
 {
 	// Register shape filter
-	mPhysicsSystem->SetSimulationShapeFilter(&mShapeFilter);
+	mPhysicsSystem->SetSimShapeFilter(&mShapeFilter);
 
 	// Floor
 	CreateFloor();
@@ -47,12 +47,12 @@ void SimulationShapeFilterTest::Initialize()
 	mShapeFilter.mCompoundID = mBodyInterface->CreateAndAddBody(BodyCreationSettings(compound, RVec3(0, 15, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }
 
-bool SimulationShapeFilterTest::Filter::ShouldCollide(const Shape *inShape1, const SubShapeID &inSubShapeIDOfShape1, const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const
+bool SimShapeFilterTest::Filter::ShouldCollide(const Body &inBody1, const Shape *inShape1, const SubShapeID &inSubShapeIDOfShape1, const Body &inBody2, const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const
 {
 	// If the platform is colliding with the compound, filter out collisions where the shape has user data 1
-	if (mBodyID1 == mPlatformID && mBodyID2 == mCompoundID)
+	if (inBody1.GetID() == mPlatformID && inBody2.GetID() == mCompoundID)
 		return inShape2->GetUserData() != 1;
-	else if (mBodyID1 == mCompoundID && mBodyID2 == mPlatformID)
+	else if (inBody1.GetID() == mCompoundID && inBody2.GetID() == mPlatformID)
 		return inShape1->GetUserData() != 1;
 	return true;
 }

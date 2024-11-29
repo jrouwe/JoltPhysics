@@ -11,7 +11,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added MotionProperties::ScaleToMass. This lets you easily change the mass and inertia tensor of a body after creation.
 * Split up Body::ApplyBuoyancyImpulse into Body::GetSubmergedVolume and Body::ApplyBuoyancyImpulse. This allows you to use the calculated submerged volume for other purposes.
 * Fixed a number of issues when creating very large MeshShapes. MeshShapes of up to 110M triangles are possible now, but the actual maximum is very dependent on how the triangles in the mesh are connected.
-* Added PhysicsSystem::SetSimulationShapeFilter. This allows filtering out collisions between sub shapes within a body and can for example be used to have a single body that contains a low detail simulation shape an a high detail collision query shape.
+* Added PhysicsSystem::SetSimShapeFilter. This allows filtering out collisions between sub shapes within a body and can for example be used to have a single body that contains a low detail simulation shape an a high detail collision query shape.
 
 ### Bug fixes
 
