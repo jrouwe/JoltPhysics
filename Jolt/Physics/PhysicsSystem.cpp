@@ -19,6 +19,7 @@
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#include <Jolt/Physics/Collision/SimShapeFilter.h>
 #include <Jolt/Physics/Collision/InternalEdgeRemovingCollector.h>
 #include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
@@ -966,6 +967,74 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 	}
 }
 
+// Helper class to forward ShapeFilter calls to the simulation shape filter
+class SimShapeFilterWrapper : public ShapeFilter
+{
+public:
+	// Constructor
+							SimShapeFilterWrapper(const SimShapeFilter *inFilter, const Body *inBody1) :
+		mFilter(inFilter),
+		mBody1(inBody1)
+	{
+	}
+
+	// Forward to the simulation shape filter
+	virtual bool			ShouldCollide(const Shape *inShape1, const SubShapeID &inSubShapeIDOfShape1, const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override
+	{
+		return mFilter->ShouldCollide(*mBody1, inShape1, inSubShapeIDOfShape1, *mBody2, inShape2, inSubShapeIDOfShape2);
+	}
+
+	// Set the body we're colliding against
+	void					SetBody2(const Body *inBody2)
+	{
+		mBody2 = inBody2;
+	}
+
+private:
+	// Dummy implemention to satisfy the ShapeFilter interface
+	virtual bool			ShouldCollide(const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override
+	{
+		JPH_ASSERT(false); // Should not be called
+		return true;
+	}
+
+	const SimShapeFilter *	mFilter;
+	const Body *			mBody1;
+	const Body *			mBody2;
+};
+
+// In case we don't have a simulation shape filter, we fall back to using a default shape filter that always returns true
+union SimShapeFilterWrapperUnion
+{
+public:
+	// Constructor
+							SimShapeFilterWrapperUnion(const SimShapeFilter *inFilter, const Body *inBody1)
+	{
+		// Dirty trick: if we don't have a filter, placement new a standard ShapeFilter so that we
+		// don't have to check for nullptr in the ShouldCollide function
+		if (inFilter != nullptr)
+			new (&mSimShapeFilterWrapper) SimShapeFilterWrapper(inFilter, inBody1);
+		else
+			new (&mSimShapeFilterWrapper) ShapeFilter();
+	}
+
+	// Destructor
+							~SimShapeFilterWrapperUnion()
+	{
+		// Doesn't need to be destructed
+	}
+
+	// Accessor
+	SimShapeFilterWrapper &	GetSimShapeFilterWrapper()
+	{
+		return mSimShapeFilterWrapper;
+	}
+
+private:
+	SimShapeFilterWrapper	mSimShapeFilterWrapper;
+	ShapeFilter				mShapeFilter;
+};
+
 void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair)
 {
 	JPH_PROFILE_FUNCTION();
@@ -1020,10 +1089,9 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		settings.mActiveEdgeMovementDirection = body1->GetLinearVelocity() - body2->GetLinearVelocity();
 
 		// Create shape filter
-		ShapeFilter default_shape_filter;
-		const ShapeFilter &shape_filter = mSimulationShapeFilter != nullptr? *mSimulationShapeFilter : default_shape_filter;
-		shape_filter.mBodyID1 = body1->GetID();
-		shape_filter.mBodyID2 = body2->GetID();
+		SimShapeFilterWrapperUnion shape_filter_union(mSimShapeFilter, body1);
+		SimShapeFilterWrapper &shape_filter = shape_filter_union.GetSimShapeFilterWrapper();
+		shape_filter.SetBody2(body2);
 
 		// Get transforms relative to body1
 		RVec3 offset = body1->GetCenterOfMassPosition();
@@ -1820,7 +1888,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		class CCDBroadPhaseCollector : public CastShapeBodyCollector
 		{
 		public:
-										CCDBroadPhaseCollector(const CCDBody &inCCDBody, const Body &inBody1, const RShapeCast &inShapeCast, ShapeCastSettings &inShapeCastSettings, const ShapeFilter &inShapeFilter, CCDNarrowPhaseCollector &ioCollector, const BodyManager &inBodyManager, PhysicsUpdateContext::Step *inStep, float inDeltaTime) :
+										CCDBroadPhaseCollector(const CCDBody &inCCDBody, const Body &inBody1, const RShapeCast &inShapeCast, ShapeCastSettings &inShapeCastSettings, SimShapeFilterWrapper &inShapeFilter, CCDNarrowPhaseCollector &ioCollector, const BodyManager &inBodyManager, PhysicsUpdateContext::Step *inStep, float inDeltaTime) :
 				mCCDBody(inCCDBody),
 				mBody1(inBody1),
 				mBody1Extent(inShapeCast.mShapeWorldBounds.GetExtent()),
@@ -1879,7 +1947,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 				mCollector.mRejectAll = false;
 
 				// Set body ID on shape filter
-				mShapeFilter.mBodyID2 = inResult.mBodyID;
+				mShapeFilter.SetBody2(&body2);
 
 				// Provide direction as hint for the active edges algorithm
 				mShapeCastSettings.mActiveEdgeMovementDirection = direction;
@@ -1898,7 +1966,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			Vec3						mBody1Extent;
 			RShapeCast					mShapeCast;
 			ShapeCastSettings &			mShapeCastSettings;
-			const ShapeFilter &			mShapeFilter;
+			SimShapeFilterWrapper &		mShapeFilter;
 			CCDNarrowPhaseCollector &	mCollector;
 			const BodyManager &			mBodyManager;
 			PhysicsUpdateContext::Step *mStep;
@@ -1906,9 +1974,8 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		};
 
 		// Create shape filter
-		ShapeFilter default_shape_filter;
-		const ShapeFilter &shape_filter = mSimulationShapeFilter != nullptr? *mSimulationShapeFilter : default_shape_filter;
-		shape_filter.mBodyID1 = ccd_body.mBodyID1;
+		SimShapeFilterWrapperUnion shape_filter_union(mSimShapeFilter, &body);
+		SimShapeFilterWrapper &shape_filter = shape_filter_union.GetSimShapeFilterWrapper();
 
 		// Check if we collide with any other body. Note that we use the non-locking interface as we know the broadphase cannot be modified at this point.
 		RShapeCast shape_cast(body.GetShape(), Vec3::sReplicate(1.0f), body.GetCenterOfMassTransform(), ccd_body.mDeltaPosition);
