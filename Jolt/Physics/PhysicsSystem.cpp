@@ -228,7 +228,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 			step.mUpdateBroadphaseFinalize = inJobSystem->CreateJob("UpdateBroadPhaseFinalize", cColorUpdateBroadPhaseFinalize, [&context, &step]()
 				{
 					// Validate that all find collision jobs have stopped
-					JPH_ASSERT(step.mActiveFindCollisionJobs == 0);
+					JPH_ASSERT(step.mActiveFindCollisionJobs.load(memory_order_relaxed) == 0);
 
 					// Finalize the broadphase update
 					context.mPhysicsSystem->mBroadPhase->UpdateFinalize(step.mBroadPhaseUpdateState);
@@ -255,7 +255,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 			// This job will find all collisions
 			step.mBodyPairQueues.resize(max_concurrency);
 			step.mMaxBodyPairsPerQueue = mPhysicsSettings.mMaxInFlightBodyPairs / max_concurrency;
-			step.mActiveFindCollisionJobs = ~PhysicsUpdateContext::JobMask(0) >> (sizeof(PhysicsUpdateContext::JobMask) * 8 - num_find_collisions_jobs);
+			step.mActiveFindCollisionJobs.store(~PhysicsUpdateContext::JobMask(0) >> (sizeof(PhysicsUpdateContext::JobMask) * 8 - num_find_collisions_jobs), memory_order_release);
 			step.mFindCollisions.resize(num_find_collisions_jobs);
 			for (int i = 0; i < num_find_collisions_jobs; ++i)
 			{
@@ -355,7 +355,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 			step.mFinalizeIslands = inJobSystem->CreateJob("FinalizeIslands", cColorFinalizeIslands, [&context, &step]()
 				{
 					// Validate that all find collision jobs have stopped
-					JPH_ASSERT(step.mActiveFindCollisionJobs == 0);
+					JPH_ASSERT(step.mActiveFindCollisionJobs.load(memory_order_relaxed) == 0);
 
 					context.mPhysicsSystem->JobFinalizeIslands(&context);
 
@@ -768,7 +768,7 @@ void PhysicsSystem::TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep
 {
 	// Get how many jobs we can spawn and check if we can spawn more
 	uint max_jobs = ioStep->mBodyPairQueues.size();
-	if (CountBits(ioStep->mActiveFindCollisionJobs) >= max_jobs)
+	if (CountBits(ioStep->mActiveFindCollisionJobs.load(memory_order_relaxed)) >= max_jobs)
 		return;
 
 	// Count how many body pairs we have waiting
@@ -785,38 +785,31 @@ void PhysicsSystem::TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep
 	for (;;)
 	{
 		// Get the bit mask of active jobs and see if we can spawn more
-		PhysicsUpdateContext::JobMask current_active_jobs = ioStep->mActiveFindCollisionJobs;
-		if (CountBits(current_active_jobs) >= desired_num_jobs)
+		PhysicsUpdateContext::JobMask current_active_jobs = ioStep->mActiveFindCollisionJobs.load(memory_order_relaxed);
+		uint job_index = CountTrailingZeros(~current_active_jobs);
+		if (job_index >= desired_num_jobs)
 			break;
 
-		// Loop through all possible job indices
-		for (uint job_index = 0; job_index < max_jobs; ++job_index)
+		// Try to claim the job index
+		PhysicsUpdateContext::JobMask job_mask = PhysicsUpdateContext::JobMask(1) << job_index;
+		PhysicsUpdateContext::JobMask prev_value = ioStep->mActiveFindCollisionJobs.fetch_or(job_mask, memory_order_acquire);
+		if ((prev_value & job_mask) == 0)
 		{
-			// Test if it has been started
-			PhysicsUpdateContext::JobMask job_mask = PhysicsUpdateContext::JobMask(1) << job_index;
-			if ((current_active_jobs & job_mask) == 0)
-			{
-				// Try to claim the job index
-				PhysicsUpdateContext::JobMask prev_value = ioStep->mActiveFindCollisionJobs.fetch_or(job_mask);
-				if ((prev_value & job_mask) == 0)
+			// Add dependencies from the find collisions job to the next jobs
+			ioStep->mUpdateBroadphaseFinalize.AddDependency();
+			ioStep->mFinalizeIslands.AddDependency();
+
+			// Start the job
+			JobHandle job = ioStep->mContext->mJobSystem->CreateJob("FindCollisions", cColorFindCollisions, [step = ioStep, job_index]()
 				{
-					// Add dependencies from the find collisions job to the next jobs
-					ioStep->mUpdateBroadphaseFinalize.AddDependency();
-					ioStep->mFinalizeIslands.AddDependency();
+					step->mContext->mPhysicsSystem->JobFindCollisions(step, job_index);
+				});
 
-					// Start the job
-					JobHandle job = ioStep->mContext->mJobSystem->CreateJob("FindCollisions", cColorFindCollisions, [step = ioStep, job_index]()
-						{
-							step->mContext->mPhysicsSystem->JobFindCollisions(step, job_index);
-						});
+			// Add the job to the job barrier so the main updating thread can execute the job too
+			ioStep->mContext->mBarrier->AddJob(job);
 
-					// Add the job to the job barrier so the main updating thread can execute the job too
-					ioStep->mContext->mBarrier->AddJob(job);
-
-					// Spawn only 1 extra job at a time
-					return;
-				}
-			}
+			// Spawn only 1 extra job at a time
+			return;
 		}
 	}
 }
@@ -940,7 +933,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 						sFinalizeContactAllocator(*ioStep, contact_allocator);
 
 						// Mark this job as inactive
-						ioStep->mActiveFindCollisionJobs.fetch_and(~PhysicsUpdateContext::JobMask(1 << inJobIndex));
+						ioStep->mActiveFindCollisionJobs.fetch_and(~PhysicsUpdateContext::JobMask(1 << inJobIndex), memory_order_release);
 
 						// Trigger the next jobs
 						ioStep->mUpdateBroadphaseFinalize.RemoveDependency();
@@ -1320,7 +1313,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	float warm_start_impulse_ratio = ioStep->mIsFirst? ioContext->mWarmStartImpulseRatio : 1.0f;
 
 	bool check_islands = true, check_split_islands = mPhysicsSettings.mUseLargeIslandSplitter;
-	do
+	for (;;)
 	{
 		// First try to get work from large islands
 		if (check_split_islands)
@@ -1357,8 +1350,10 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 					// We processed work, loop again
 					continue;
 				}
+
 			case LargeIslandSplitter::EStatus::WaitingForBatch:
 				break;
+
 			case LargeIslandSplitter::EStatus::AllBatchesDone:
 				check_split_islands = false;
 				break;
@@ -1441,10 +1436,22 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			continue;
 		}
 
-		// If we didn't find any work, give up a time slice
-		std::this_thread::yield();
+		if (check_islands)
+		{
+			// If there are islands, we don't need to wait and can pick up new work
+			continue;
+		}
+		else if (check_split_islands)
+		{
+			// If there are split islands, but we did't do any work, give up a time slice
+			std::this_thread::yield();
+		}
+		else
+		{
+			// No more work
+			break;
+		}
 	}
-	while (check_islands || check_split_islands);
 }
 
 JPH_SUPPRESS_WARNING_POP
@@ -2367,7 +2374,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 	BodiesToSleep bodies_to_sleep(mBodyManager, (BodyID *)JPH_STACK_ALLOC(BodiesToSleep::cBodiesToSleepSize * sizeof(BodyID)));
 
 	bool check_islands = true, check_split_islands = mPhysicsSettings.mUseLargeIslandSplitter;
-	do
+	for (;;)
 	{
 		// First try to get work from large islands
 		if (check_split_islands)
@@ -2392,8 +2399,10 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 
 				// We processed work, loop again
 				continue;
+
 			case LargeIslandSplitter::EStatus::WaitingForBatch:
 				break;
+
 			case LargeIslandSplitter::EStatus::AllBatchesDone:
 				check_split_islands = false;
 				break;
@@ -2446,10 +2455,22 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 			continue;
 		}
 
-		// If we didn't find any work, give up a time slice
-		std::this_thread::yield();
+		if (check_islands)
+		{
+			// If there are islands, we don't need to wait and can pick up new work
+			continue;
+		}
+		else if (check_split_islands)
+		{
+			// If there are split islands, but we did't do any work, give up a time slice
+			std::this_thread::yield();
+		}
+		else
+		{
+			// No more work
+			break;
+		}
 	}
-	while (check_islands || check_split_islands);
 }
 
 void PhysicsSystem::JobSoftBodyPrepare(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
