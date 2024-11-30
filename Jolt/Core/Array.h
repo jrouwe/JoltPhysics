@@ -79,23 +79,23 @@ private:
 	{
 		JPH_ASSERT(inNewCapacity > 0 && inNewCapacity >= mSize);
 
-		pointer pointer;
+		pointer ptr;
 		if constexpr (AllocatorHasReallocate<Allocator>::sValue)
 		{
 			// Reallocate data block
-			pointer = get_allocator().reallocate(mElements, mCapacity, inNewCapacity);
+			ptr = get_allocator().reallocate(mElements, mCapacity, inNewCapacity);
 		}
 		else
 		{
 			// Copy data to a new location
-			pointer = get_allocator().allocate(inNewCapacity);
+			ptr = get_allocator().allocate(inNewCapacity);
 			if (mElements != nullptr)
 			{
-				move(pointer, mElements, mSize);
+				move(ptr, mElements, mSize);
 				get_allocator().deallocate(mElements, mCapacity);
 			}
 		}
-		mElements = pointer;
+		mElements = ptr;
 		mCapacity = inNewCapacity;
 	}
 
