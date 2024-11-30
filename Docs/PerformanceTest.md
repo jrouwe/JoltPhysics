@@ -9,6 +9,7 @@ The performance test application contains a couple of simple scenes to test perf
 	- RagdollSinglePile: A single pile of 160 ragdolls (3680 bodies) with motors active dropping on a level section.
     - ConvexVsMesh: A simpler scene of 484 convex shapes (sphere, box, convex hull, capsule) falling on a 2000 triangle mesh.
 	- Pyramid: A pyramid of 1240 boxes stacked on top of each other to profile large island splitting.
+	- LargeMesh: Searches for the biggest MeshShape that can be created and then drops 4410 boxes on that mesh.
 - -i=[iterations]: Number of physics steps before the test finishes.
 - -q=[quality]: This limits the motion quality types that the test will run on. By default it will test both. [quality] can be:
     - Discrete: Discrete collision detection
