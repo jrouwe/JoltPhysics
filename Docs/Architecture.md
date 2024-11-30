@@ -715,7 +715,7 @@ shape = nullptr;
 
 The Body class is a special case, it is destroyed through BodyInterface::DestroyBody (which internally destroys the Body).
 
-Jolt also supports routing all of its internal allocations through a custom allocation function. See: [Allocate](@ref Allocate), [Free](@ref Free), [AlignedAllocate](@ref AlignedAllocate) and [AlignedFree](@ref AlignedFree).
+Jolt also supports routing all of its internal allocations through a custom allocation function. See: [Allocate](@ref Allocate), [Reallocate](@ref Reallocate), [Free](@ref Free), [AlignedAllocate](@ref AlignedAllocate) and [AlignedFree](@ref AlignedFree).
 
 # The Simulation Step in Detail {#the-simulation-step-in-detail}
 

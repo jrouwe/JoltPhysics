@@ -85,7 +85,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 	* Collision with simulated rigid bodies.
 	* Collision tests against soft bodies.
 * Water buoyancy calculations.
-* An optional double precision mode that allows large simulations.
+* An optional double precision mode that allows large worlds.
 
 ## Supported platforms
 
