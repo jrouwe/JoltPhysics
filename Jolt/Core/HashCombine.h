@@ -142,12 +142,33 @@ JPH_DEFINE_TRIVIAL_HASH(int)
 JPH_DEFINE_TRIVIAL_HASH(uint32)
 JPH_DEFINE_TRIVIAL_HASH(uint64)
 
-/// @brief Helper function that hashes a single value into ioSeed
-/// Taken from: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
+/// Helper function that hashes a single value into ioSeed
+/// Based on https://github.com/jonmaiga/mx3 by Jon Maiga
 template <typename T>
 inline void HashCombine(uint64 &ioSeed, const T &inValue)
 {
-	ioSeed ^= Hash<T> { } (inValue) + 0x9e3779b9 + (ioSeed << 6) + (ioSeed >> 2);
+	constexpr uint64 c = 0xbea225f9eb34556dUL;
+
+	uint64 h = ioSeed;
+	uint64 x = Hash<T> { } (inValue);
+
+	// See: https://github.com/jonmaiga/mx3/blob/master/mx3.h
+	// mix_stream(h, x)
+	x *= c;
+	x ^= x >> 39;
+	h += x * c;
+	h *= c;
+
+	// mix(h)
+	h ^= h >> 32;
+	h *= c;
+	h ^= h >> 29;
+	h *= c;
+	h ^= h >> 32;
+	h *= c;
+	h ^= h >> 29;
+
+	ioSeed = h;
 }
 
 /// Hash combiner to use a custom struct in an unordered map or set
