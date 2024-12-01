@@ -176,9 +176,6 @@ inline uint64 HashCombineArgs(const FirstValue &inFirstValue, Values... inValues
 
 JPH_NAMESPACE_END
 
-JPH_SUPPRESS_WARNING_PUSH
-JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
-
 #define JPH_MAKE_HASH_STRUCT(type, name, ...)				\
 	struct [[nodiscard]] name								\
 	{														\
@@ -188,6 +185,22 @@ JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 		}													\
 	};
 
+#define JPH_MAKE_STD_HASH(type)								\
+	JPH_SUPPRESS_WARNING_PUSH								\
+	JPH_SUPPRESS_WARNINGS									\
+	namespace std											\
+	{														\
+		template<>											\
+		struct [[nodiscard]] hash<type>						\
+		{													\
+			size_t operator()(const type &t) const			\
+			{												\
+				return size_t(::JPH::Hash<type>{ }(t));		\
+			}												\
+		};													\
+	}														\
+	JPH_SUPPRESS_WARNING_POP
+
 #define JPH_MAKE_HASHABLE(type, ...)						\
 	JPH_SUPPRESS_WARNING_PUSH								\
 	JPH_SUPPRESS_WARNINGS									\
@@ -196,17 +209,5 @@ JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 		template<>											\
 		JPH_MAKE_HASH_STRUCT(type, Hash<type>, __VA_ARGS__) \
 	}														\
-	namespace std											\
-	{														\
-		template<>											\
-		struct [[nodiscard]] hash<type>						\
-		{													\
-			std::size_t operator()(const type &t) const		\
-			{												\
-				return std::size_t(::JPH::Hash<type>{ }(t));\
-			}												\
-		};													\
-	}														\
-	JPH_SUPPRESS_WARNING_POP
-
-JPH_SUPPRESS_WARNING_POP
+	JPH_SUPPRESS_WARNING_POP								\
+	JPH_MAKE_STD_HASH(type)
