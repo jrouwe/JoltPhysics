@@ -195,8 +195,6 @@ inline uint64 HashCombineArgs(const FirstValue &inFirstValue, Values... inValues
 	return seed;
 }
 
-JPH_NAMESPACE_END
-
 #define JPH_MAKE_HASH_STRUCT(type, name, ...)				\
 	struct [[nodiscard]] name								\
 	{														\
@@ -232,3 +230,5 @@ JPH_NAMESPACE_END
 	}														\
 	JPH_SUPPRESS_WARNING_POP								\
 	JPH_MAKE_STD_HASH(type)
+
+JPH_NAMESPACE_END
