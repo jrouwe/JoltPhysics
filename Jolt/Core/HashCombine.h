@@ -17,8 +17,8 @@ inline uint64 HashBytes(const void *inData, uint inSize, uint64 inSeed = 0xcbf29
 	uint64 hash = inSeed;
 	for (const uint8 *data = reinterpret_cast<const uint8 *>(inData); data < reinterpret_cast<const uint8 *>(inData) + inSize; ++data)
 	{
-		hash = hash ^ uint64(*data);
-		hash = hash * 0x100000001b3UL;
+		hash ^= uint64(*data);
+		hash *= 0x100000001b3UL;
 	}
 	return hash;
 }
@@ -31,7 +31,7 @@ constexpr uint64 HashString(const char *inString, uint64 inSeed = 0xcbf29ce48422
 	for (const char *c = inString; *c != 0; ++c)
 	{
 		hash ^= uint64(*c);
-		hash = hash * 0x100000001b3UL;
+		hash *= 0x100000001b3UL;
 	}
 	return hash;
 }
