@@ -369,8 +369,6 @@ void CharacterBaseTest::Initialize()
 
 				triangles.push_back(Triangle(s2, b2, rs2));
 				triangles.push_back(Triangle(rs2, b2, rb2));
-
-				p1 = p2;
 			}
 
 			MeshShapeSettings mesh(triangles);
@@ -416,7 +414,6 @@ void CharacterBaseTest::Initialize()
 				triangles.push_back(Triangle(b1, s2, b2));
 				triangles.push_back(Triangle(s1, p1, p2));
 				triangles.push_back(Triangle(s1, p2, s2));
-				p1 = p2;
 			}
 
 			MeshShapeSettings mesh(triangles);
