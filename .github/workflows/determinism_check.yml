@@ -4,7 +4,7 @@ env:
   CONVEX_VS_MESH_HASH: '0x610d538e15420778'
   RAGDOLL_HASH: '0x275057ded572c916'
   PYRAMID_HASH: '0x198b8eeaee57e29a'
-  EMSCRIPTEN_VERSION: 3.1.64
+  EMSCRIPTEN_VERSION: 3.1.73
   UBUNTU_CLANG_VERSION: clang++-15
   UBUNTU_GCC_VERSION: g++-12
   UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-12
@@ -266,7 +266,7 @@ jobs:
 
   emscripten:
     runs-on: ubuntu-latest
-    name: Emscripten
+    name: Emscripten Determinism Check
 
     steps:
     - name: Checkout Code
