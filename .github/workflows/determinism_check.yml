@@ -180,7 +180,7 @@ jobs:
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
-  arm_clang:
+  arm_clang_32:
     runs-on: ubuntu-latest
     name: ARM Clang 32-bit Determinism Check
     steps:
@@ -236,7 +236,7 @@ jobs:
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
-  arm_gcc:
+  arm_gcc_32:
     runs-on: ubuntu-latest
     name: ARM GCC 32-bit Determinism Check
     steps:
