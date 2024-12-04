@@ -629,8 +629,10 @@ It is quite difficult to verify cross platform determinism, so this feature is l
 * macOS clang ARM 64-bit with NEON
 * Linux clang x86 64-bit with AVX2
 * Linux clang ARM 64-bit with NEON
+* Linux clang ARM 32-bit
 * Linux gcc x86 64-bit with AVX2
 * Linux gcc ARM 64-bit with NEON
+* Linux gcc ARM 32-bit
 * WASM emscripten running in nodejs
 
 The most important things to look out for in your own application:
