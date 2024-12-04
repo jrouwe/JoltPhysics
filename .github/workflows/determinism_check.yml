@@ -4,7 +4,7 @@ env:
   CONVEX_VS_MESH_HASH: '0x610d538e15420778'
   RAGDOLL_HASH: '0x275057ded572c916'
   PYRAMID_HASH: '0x198b8eeaee57e29a'
-  EMSCRIPTEN_VERSION: 3.1.72
+  EMSCRIPTEN_VERSION: 3.1.64
   UBUNTU_CLANG_VERSION: clang++-15
   UBUNTU_GCC_VERSION: g++-12
   UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-12
@@ -197,16 +197,16 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/arm-linux-gnueabihf/ ./UnitTests
+      run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./UnitTests
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+      run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   arm_gcc:
     runs-on: ubuntu-latest
@@ -253,20 +253,20 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/arm-linux-gnueabihf/ ./UnitTests
+      run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./UnitTests
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+      run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   emscripten:
     runs-on: ubuntu-latest
-    name: Emscripten Determinism Check
+    name: Emscripten
 
     steps:
     - name: Checkout Code
