@@ -8,7 +8,6 @@ env:
   UBUNTU_CLANG_VERSION: clang++-15
   UBUNTU_GCC_VERSION: g++-12
   UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-12
-  UBUNTU_GCC_ARMV7_VERSION: arm-linux-gnueabihf-g++-12
 
 on:
   push:
