@@ -20,8 +20,11 @@ option(OVERRIDE_CXX_FLAGS "Override CMAKE_CXX_FLAGS_DEBUG/RELEASE" ON)
 # When turning this option on, the library will be compiled in such a way to attempt to keep the simulation deterministic across platforms
 option(CROSS_PLATFORM_DETERMINISTIC "Cross platform deterministic" OFF)
 
-# When turning this option on, the library will be compiled for ARM (aarch64-linux-gnu), requires compiling with clang
-option(CROSS_COMPILE_ARM "Cross compile to aarch64-linux-gnu" OFF)
+# When turning this option on, the library will be compiled for ARM using the CROSS_COMPILE_ARM_TARGET architecture, requires compiling with clang
+option(CROSS_COMPILE_ARM "Cross compile to the CROSS_COMPILE_ARM_TARGET architecture" OFF)
+
+# When cross compiling to ARM this specifies which target to use. Can be 'aarch64-linux-gnu' for 64-bit or 'arm-linux-gnueabihf' for 32-bit
+set(CROSS_COMPILE_ARM_TARGET "aarch64-linux-gnu" CACHE STRING "The target to use")
 
 # When turning this option on, Jolt will be compiled as a shared library and public symbols will be exported.
 option(BUILD_SHARED_LIBS "Compile Jolt as a shared library" OFF)
@@ -215,8 +218,9 @@ else()
 
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		# Also disable -Wstringop-overflow or it will generate false positives that can't be disabled from code when link-time optimizations are enabled
+		# Also disable -Wno-psabi to avoid messages of the form note: parameter passing for argument of type '...' changed in GCC 7.1
 		# Also turn off automatic fused multiply add contractions, there doesn't seem to be a way to do this selectively through the macro JPH_PRECISE_MATH_OFF
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-stringop-overflow -ffp-contract=off")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-stringop-overflow -Wno-psabi -ffp-contract=off")
 	else()
 		# Do not use -ffast-math since it cannot be turned off in a single compilation unit under clang, see Core.h
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-model=precise")
@@ -233,8 +237,8 @@ else()
 		endif()
 
 		# Cross compiler flags
-		if (CROSS_COMPILE_ARM)
-			set(CMAKE_CXX_FLAGS "--target=aarch64-linux-gnu ${CMAKE_CXX_FLAGS}")
+		if (CROSS_COMPILE_ARM AND NOT ("${CROSS_COMPILE_ARM_TARGET}" STREQUAL ""))
+			set(CMAKE_CXX_FLAGS "--target=${CROSS_COMPILE_ARM_TARGET} ${CMAKE_CXX_FLAGS}")
 		endif()
 	endif()
 
@@ -265,7 +269,11 @@ function(SET_INTERPROCEDURAL_OPTIMIZATION)
 
 	# On ARM, whole program optimization triggers an internal compiler error during code gen, so we don't turn it on
 	# When compiling as a shared lib with MinGW, turning on LTO causes errors of the form 'ld.exe: cannot export symbol X wrong type (4 vs 3)'
-	if (INTERPROCEDURAL_OPTIMIZATION AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM64") AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM") AND NOT (MINGW AND BUILD_SHARED_LIBS))
+	if (INTERPROCEDURAL_OPTIMIZATION
+		AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM64")
+		AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")
+		AND NOT (CROSS_COMPILE_ARM AND CROSS_COMPILE_ARM_TARGET MATCHES "arm-.*")
+		AND NOT (MINGW AND BUILD_SHARED_LIBS))
 		include(CheckIPOSupported)
 		check_ipo_supported(RESULT IS_IPO_SUPPORTED OUTPUT IPO_CHECK_OUTPUT)
 
