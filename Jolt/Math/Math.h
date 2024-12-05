@@ -122,6 +122,14 @@ inline uint CountTrailingZeros(uint32 inValue)
 	#endif
 #elif defined(JPH_CPU_E2K)
 		return inValue ? __builtin_ctz(inValue) : 32;
+#elif defined(JPH_CPU_PPC64)
+		if (inValue == 0)
+			return 32;
+		return __builtin_ctz(inValue);
+#elif defined(JPH_CPU_PPC32)
+		if (inValue == 0)
+			return 32;
+		return __builtin_ctz(inValue);
 #else
 	#error Undefined
 #endif
@@ -152,6 +160,14 @@ inline uint CountLeadingZeros(uint32 inValue)
 	#endif
 #elif defined(JPH_CPU_E2K)
 		return inValue ? __builtin_clz(inValue) : 32;
+#elif defined(JPH_CPU_PPC64)
+		if (inValue == 0)
+			return 32;
+		return __builtin_clz(inValue);
+#elif defined(JPH_CPU_PPC32)
+		if (inValue == 0)
+			return 32;
+		return __builtin_clz(inValue);
 #else
 	#error Undefined
 #endif
