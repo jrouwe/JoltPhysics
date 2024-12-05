@@ -19,16 +19,16 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(KinematicRigTest)
 
 const char *KinematicRigTest::sAnimations[] =
 {
-	"Neutral",
-	"Walk",
-	"Sprint",
-	"Dead_Pose1",
-	"Dead_Pose2",
-	"Dead_Pose3",
-	"Dead_Pose4"
+	"neutral",
+	"walk",
+	"sprint",
+	"dead_pose1",
+	"dead_pose2",
+	"dead_pose3",
+	"dead_pose4"
 };
 
-const char *KinematicRigTest::sAnimationName = "Walk";
+const char *KinematicRigTest::sAnimationName = "walk";
 
 KinematicRigTest::~KinematicRigTest()
 {
