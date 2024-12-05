@@ -43,7 +43,7 @@ void BigWorldTest::Initialize()
 
 	// Load animation
 	Ref<SkeletalAnimation> animation;
-	if (!ObjectStreamIn::sReadObject("Assets/Human/Dead_Pose1.tof", animation))
+	if (!ObjectStreamIn::sReadObject("Assets/Human/dead_pose1.tof", animation))
 		FatalError("Could not open animation");
 	SkeletonPose pose;
 	pose.SetSkeleton(settings->GetSkeleton());
