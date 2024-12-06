@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
+#include <Jolt/Core/StringTools.h>
 
 TEST_SUITE("UVec4Tests")
 {
@@ -23,6 +24,16 @@ TEST_SUITE("UVec4Tests")
 		// Test == and != operators
 		CHECK(v == UVec4(1, 2, 3, 4));
 		CHECK(v != UVec4(1, 2, 4, 3));
+	}
+
+	TEST_CASE("TestUVec4Components")
+	{
+		UVec4 v(1, 2, 3, 4);
+		v.SetX(5);
+		v.SetY(6);
+		v.SetZ(7);
+		v.SetW(8);
+		CHECK(v == UVec4(5, 6, 7, 8));
 	}
 
 	TEST_CASE("TestUVec4LoadStoreInt4")
@@ -543,5 +554,11 @@ TEST_SUITE("UVec4Tests")
 		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0x00000000U, 0xffffffffU, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(1, 3, 4, 4));
 		CHECK(UVec4::sSort4True(UVec4(0x00000000U, 0xffffffffU, 0xffffffffU, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(2, 3, 4, 4));
 		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0xffffffffU, 0xffffffffU, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(1, 2, 3, 4));
+	}
+
+	TEST_CASE("TestUVec4ConvertToString")
+	{
+		UVec4 v(1, 2, 3, 4);
+		CHECK(ConvertToString(v) == "1, 2, 3, 4");
 	}
 }

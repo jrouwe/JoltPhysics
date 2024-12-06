@@ -4,6 +4,7 @@
 
 #include "UnitTestFramework.h"
 #include <Jolt/Math/Mat44.h>
+#include <Jolt/Core/StringTools.h>
 
 TEST_SUITE("Mat44Tests")
 {
@@ -14,6 +15,38 @@ TEST_SUITE("Mat44Tests")
 		for (int row = 0; row < 4; ++row)
 			for (int col = 0; col < 4; ++col)
 				CHECK(zero(row, col) == 0.0f);
+	}
+
+	TEST_CASE("TestMat44Column")
+	{
+		Mat44 mat = Mat44::sZero();
+		mat.SetColumn4(0, Vec4(1, 2, 3, 4));
+		CHECK(mat.GetColumn4(0) == Vec4(1, 2, 3, 4));
+		mat.SetColumn3(0, Vec3(5, 6, 7));
+		CHECK(mat.GetColumn3(0) == Vec3(5, 6, 7));
+		CHECK(mat.GetColumn4(0) == Vec4(5, 6, 7, 0));
+
+		mat.SetAxisX(Vec3(8, 9, 10));
+		mat.SetAxisY(Vec3(11, 12, 13));
+		mat.SetAxisZ(Vec3(14, 15, 16));
+		mat.SetTranslation(Vec3(17, 18, 19));
+		CHECK(mat.GetAxisX() == Vec3(8, 9, 10));
+		CHECK(mat.GetAxisY() == Vec3(11, 12, 13));
+		CHECK(mat.GetAxisZ() == Vec3(14, 15, 16));
+		CHECK(mat.GetTranslation() == Vec3(17, 18, 19));
+
+		mat.SetDiagonal3(Vec3(20, 21, 22));
+		CHECK(mat.GetDiagonal3() == Vec3(20, 21, 22));
+		CHECK(mat.GetAxisX() == Vec3(20, 9, 10));
+		CHECK(mat.GetAxisY() == Vec3(11, 21, 13));
+		CHECK(mat.GetAxisZ() == Vec3(14, 15, 22));
+
+		mat.SetDiagonal4(Vec4(23, 24, 25, 26));
+		CHECK(mat.GetDiagonal4() == Vec4(23, 24, 25, 26));
+		CHECK(mat.GetAxisX() == Vec3(23, 9, 10));
+		CHECK(mat.GetAxisY() == Vec3(11, 24, 13));
+		CHECK(mat.GetAxisZ() == Vec3(14, 15, 25));
+		CHECK(mat.GetColumn4(3) == Vec4(17, 18, 19, 26));
 	}
 
 	TEST_CASE("TestMat44NaN")
@@ -520,5 +553,18 @@ TEST_SUITE("Mat44Tests")
 		CHECK_APPROX_EQUAL(m2.GetAxisZ(), skewed_rotation_translation.GetAxisZ().Normalized(), 0.02f); // Z axis may move a bit
 		CHECK_APPROX_EQUAL(m2.GetAxisX().Cross(m2.GetAxisY()).Dot(m2.GetAxisZ()), 1.0f); // Check perpendicular
 		CHECK_APPROX_EQUAL(scale, scale_out, 0.05f); // Scale may change a bit
+	}
+
+	TEST_CASE("TestDMat44GetQuaternion")
+	{
+		Quat rot = Quat::sRotation(Vec3(1, 1, 1).Normalized(), 0.2f * JPH_PI);
+		Mat44 mat = Mat44::sRotation(rot);
+		CHECK_APPROX_EQUAL(mat.GetQuaternion(), rot);
+	}
+
+	TEST_CASE("TestDMat44ConvertToString")
+	{
+		Mat44 v(Vec4(1, 2, 3, 4), Vec4(5, 6, 7, 8), Vec4(9, 10, 11, 12), Vec4(13, 14, 15, 16));
+		CHECK(ConvertToString(v) == "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16");
 	}
 }

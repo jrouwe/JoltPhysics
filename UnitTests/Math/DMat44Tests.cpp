@@ -4,6 +4,7 @@
 
 #include "UnitTestFramework.h"
 #include <Jolt/Math/DMat44.h>
+#include <Jolt/Core/StringTools.h>
 
 TEST_SUITE("DMat44Tests")
 {
@@ -11,6 +12,7 @@ TEST_SUITE("DMat44Tests")
 	{
 		DMat44 zero = DMat44::sZero();
 
+		CHECK(zero == DMat44(Vec4(0, 0, 0, 0), Vec4(0, 0, 0, 0), Vec4(0, 0, 0, 0), DVec3(0, 0, 0)));
 		CHECK(zero.GetAxisX() == Vec3::sZero());
 		CHECK(zero.GetAxisY() == Vec3::sZero());
 		CHECK(zero.GetAxisZ() == Vec3::sZero());
@@ -22,6 +24,12 @@ TEST_SUITE("DMat44Tests")
 		DMat44 identity = DMat44::sIdentity();
 
 		CHECK(identity == DMat44(Vec4(1, 0, 0, 0), Vec4(0, 1, 0, 0), Vec4(0, 0, 1, 0), DVec3(0, 0, 0)));
+
+		// Check non-equality
+		CHECK(identity != DMat44(Vec4(0, 0, 0, 0), Vec4(0, 1, 0, 0), Vec4(0, 0, 1, 0), DVec3(0, 0, 0)));
+		CHECK(identity != DMat44(Vec4(1, 0, 0, 0), Vec4(0, 0, 0, 0), Vec4(0, 0, 1, 0), DVec3(0, 0, 0)));
+		CHECK(identity != DMat44(Vec4(1, 0, 0, 0), Vec4(0, 1, 0, 0), Vec4(0, 0, 0, 0), DVec3(0, 0, 0)));
+		CHECK(identity != DMat44(Vec4(1, 0, 0, 0), Vec4(0, 1, 0, 0), Vec4(0, 0, 1, 0), DVec3(1, 0, 0)));
 	}
 
 	TEST_CASE("TestDMat44Construct")
@@ -59,6 +67,23 @@ TEST_SUITE("DMat44Tests")
 
 		mat.SetRotation(mat2);
 		CHECK(mat == DMat44(Vec4(17, 18, 19, 20), Vec4(21, 22, 23, 24), Vec4(25, 26, 27, 28), DVec3(13, 14, 15)));
+	}
+
+	TEST_CASE("TestDMat44Rotation")
+	{
+		Quat q = Quat::sRotation(Vec3(1, 1, 1).Normalized(), 0.2f * JPH_PI);
+		CHECK(DMat44::sRotation(q).ToMat44() == Mat44::sRotation(q));
+	}
+
+	TEST_CASE("TestDMat44Translation")
+	{
+		CHECK(DMat44::sTranslation(DVec3(1, 2, 3)) == DMat44(Vec4(1, 0, 0, 0), Vec4(0, 1, 0, 0), Vec4(0, 0, 1, 0), DVec3(1, 2, 3)));
+	}
+
+	TEST_CASE("TestDMat44RotationTranslation")
+	{
+		Quat q = Quat::sRotation(Vec3(1, 1, 1).Normalized(), 0.2f * JPH_PI);
+		CHECK(DMat44::sRotationTranslation(q, DVec3(1, 2, 3)).ToMat44() == Mat44::sRotationTranslation(q, Vec3(1, 2, 3)));
 	}
 
 	TEST_CASE("TestDMat44MultiplyMat44")
@@ -163,5 +188,59 @@ TEST_SUITE("DMat44Tests")
 		// Check individual components
 		CHECK_APPROX_EQUAL(rotation_translation, m2);
 		CHECK_APPROX_EQUAL(scale, scale_out);
+	}
+
+	TEST_CASE("TestDMat44ToMat44")
+	{
+		DMat44 mat(Vec4(1, 2, 3, 4), Vec4(5, 6, 7, 8), Vec4(9, 10, 11, 12), DVec3(13, 14, 15));
+		CHECK(mat.ToMat44() == Mat44(Vec4(1, 2, 3, 4), Vec4(5, 6, 7, 8), Vec4(9, 10, 11, 12), Vec4(13, 14, 15, 1)));
+	}
+
+	TEST_CASE("TestDMat44Column")
+	{
+		DMat44 mat = DMat44::sZero();
+		mat.SetColumn4(0, Vec4(1, 2, 3, 4));
+		CHECK(mat.GetColumn4(0) == Vec4(1, 2, 3, 4));
+		mat.SetColumn3(0, Vec3(5, 6, 7));
+		CHECK(mat.GetColumn3(0) == Vec3(5, 6, 7));
+		CHECK(mat.GetColumn4(0) == Vec4(5, 6, 7, 0));
+
+		mat.SetAxisX(Vec3(8, 9, 10));
+		mat.SetAxisY(Vec3(11, 12, 13));
+		mat.SetAxisZ(Vec3(14, 15, 16));
+		mat.SetTranslation(DVec3(17, 18, 19));
+		CHECK(mat.GetAxisX() == Vec3(8, 9, 10));
+		CHECK(mat.GetAxisY() == Vec3(11, 12, 13));
+		CHECK(mat.GetAxisZ() == Vec3(14, 15, 16));
+		CHECK(mat.GetTranslation() == DVec3(17, 18, 19));
+	}
+
+	TEST_CASE("TestDMat44Transposed")
+	{
+		DMat44 mat(Vec4(1, 2, 3, 4), Vec4(5, 6, 7, 8), Vec4(9, 10, 11, 12), DVec3(13, 14, 15));
+		Mat44 result = mat.Transposed3x3();
+		CHECK(result == Mat44(Vec4(1, 5, 9, 0), Vec4(2, 6, 10, 0), Vec4(3, 7, 11, 0), Vec4(0, 0, 0, 1)));
+	}
+
+	TEST_CASE("TestDMat44GetQuaternion")
+	{
+		Quat rot = Quat::sRotation(Vec3(1, 1, 1).Normalized(), 0.2f * JPH_PI);
+		DMat44 mat = DMat44::sRotation(rot);
+		CHECK_APPROX_EQUAL(mat.GetQuaternion(), rot);
+	}
+
+	TEST_CASE("TestDMat44PrePostTranslated")
+	{
+		DMat44 m(Vec4(2, 3, 4, 0), Vec4(5, 6, 7, 0), Vec4(8, 9, 10, 0), DVec3(11, 12, 13));
+		DVec3 v(14, 15, 16);
+
+		CHECK(m.PreTranslated(v) == m * DMat44::sTranslation(v));
+		CHECK(m.PostTranslated(v) == DMat44::sTranslation(v) * m);
+	}
+
+	TEST_CASE("TestDMat44ConvertToString")
+	{
+		DMat44 v(Vec4(1, 2, 3, 4), Vec4(5, 6, 7, 8), Vec4(9, 10, 11, 12), DVec3(13, 14, 15));
+		CHECK(ConvertToString(v) == "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15");
 	}
 }

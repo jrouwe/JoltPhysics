@@ -5,6 +5,7 @@
 #include "UnitTestFramework.h"
 #include <Jolt/Math/Mat44.h>
 #include <Jolt/Math/Quat.h>
+#include <Jolt/Core/StringTools.h>
 #include <random>
 
 TEST_SUITE("QuatTests")
@@ -64,6 +65,16 @@ TEST_SUITE("QuatTests")
 		CHECK(Quat(1, 2, 3, 4) * 5.0f == Quat(5, 10, 15, 20));
 		CHECK(5.0f * Quat(1, 2, 3, 4) == Quat(5, 10, 15, 20));
 		CHECK(Quat(2, 4, 6, 8) / 2.0f == Quat(1, 2, 3, 4));
+
+		Quat v(1, 2, 3, 4);
+		v += Quat(5, 6, 7, 8);
+		CHECK(v == Quat(6, 8, 10, 12));
+		v -= Quat(4, 3, 2, 1);
+		CHECK(v == Quat(2, 5, 8, 11));
+		v *= 2.0f;
+		CHECK(v == Quat(4, 10, 16, 22));
+		v /= 2.0f;
+		CHECK(v == Quat(2, 5, 8, 11));
 	}
 
 	TEST_CASE("TestQuatPerpendicular")
@@ -342,6 +353,8 @@ TEST_SUITE("QuatTests")
 		CHECK_APPROX_EQUAL(twist2, q2);
 		Quat swing2 = twist2.Inversed() * swing1;
 		CHECK_APPROX_EQUAL(swing2, Quat::sIdentity());
+
+		CHECK(Quat::sZero().GetTwist(Vec3::sAxisX()) == Quat::sIdentity());
 	}
 
 	TEST_CASE("TestQuatGetRotationAngle")
@@ -448,5 +461,29 @@ TEST_SUITE("QuatTests")
 			Vec3 v2t = v2.Normalized();
 			CHECK_APPROX_EQUAL(v2t, v1t, 1.0e-5f);
 		}
+	}
+
+	TEST_CASE("TestQuatConvertToString")
+	{
+		Quat v(1, 2, 3, 4);
+		CHECK(ConvertToString(v) == "1, 2, 3, 4");
+	}
+
+	TEST_CASE("TestQuatLERP")
+	{
+		Quat v1(1, 2, 3, 4);
+		Quat v2(5, 6, 7, 8);
+		CHECK(v1.LERP(v2, 0.25f) == Quat(2, 3, 4, 5));
+	}
+
+	TEST_CASE("TestQuatSLERP")
+	{
+		Quat v1 = Quat::sIdentity();
+		Quat v2 = Quat::sRotation(Vec3::sAxisX(), 0.99f * JPH_PI);
+		CHECK_APPROX_EQUAL(v1.SLERP(v2, 0.25f), Quat::sRotation(Vec3::sAxisX(), 0.25f * 0.99f * JPH_PI));
+
+		// Check that we ignore the sign
+		Quat v3 = Quat(1, 2, 3, 4).Normalized();
+		CHECK_APPROX_EQUAL(v3.SLERP(-v3, 0.5f), v3);
 	}
 }

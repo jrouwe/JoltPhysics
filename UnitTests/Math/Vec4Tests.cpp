@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
+#include <Jolt/Core/StringTools.h>
 
 TEST_SUITE("Vec4Tests")
 {
@@ -723,5 +724,11 @@ TEST_SUITE("Vec4Tests")
 		}
 
 		CHECK(ma < 3.0e-7);
+	}
+
+	TEST_CASE("TestVec4ConvertToString")
+	{
+		Vec4 v(1, 2, 3, 4);
+		CHECK(ConvertToString(v) == "1, 2, 3, 4");
 	}
 }
