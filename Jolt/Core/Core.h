@@ -191,6 +191,16 @@
 		#define JPH_USE_SSE4_1
 		#define JPH_USE_SSE4_2
 	#endif
+#elif defined(__ppc64__) || defined(_M_PPC64) || defined(__powerpc__) || defined(_M_PPC)
+//	#if defined(__ppc64__)
+	#define JPH_CPU_PPC64
+		#define JPH_CPU_ADDRESS_BITS 64
+/*	#else
+	#define JPH_CPU_PPC32
+		#define JPH_CPU_ADDRESS_BITS 32
+	#endif */
+		#define JPH_VECTOR_ALIGNMENT 16
+		#define JPH_DVECTOR_ALIGNMENT 32
 #elif defined(__e2k__)
 	// E2K CPU architecture (MCST Elbrus 2000)
 	#define JPH_CPU_E2K
