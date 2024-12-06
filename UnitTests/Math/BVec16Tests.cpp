@@ -35,6 +35,7 @@ TEST_SUITE("BVec16Tests")
 		CHECK(v != BVec16(1, 2, 3, 4, 5, 6, 7, 8, 10, 9, 11, 12, 13, 14, 15, 16));
 
 		// Check element modification
+		CHECK(const_cast<const BVec16 &>(v)[15] == 16); // Check const operator
 		v[15] = 17;
 		CHECK(v[15] == 17);
 		CHECK(v == BVec16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17));

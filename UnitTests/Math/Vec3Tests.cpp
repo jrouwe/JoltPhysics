@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
+#include <Jolt/Core/StringTools.h>
 
 TEST_SUITE("Vec3Tests")
 {
@@ -29,6 +30,16 @@ TEST_SUITE("Vec3Tests")
 		v.SetComponent(1, 5);
 		v.SetComponent(2, 6);
 		CHECK(v == Vec3(4, 5, 6));
+
+		// Set the components
+		v.SetX(7);
+		v.SetY(8);
+		v.SetZ(9);
+		CHECK(v == Vec3(7, 8, 9));		
+
+		// Set all components
+		v.Set(10, 11, 12);
+		CHECK(v == Vec3(10, 11, 12));
 	}
 
 	TEST_CASE("TestVec3LoadStoreFloat3")
@@ -359,4 +370,10 @@ TEST_SUITE("Vec3Tests")
 		}
 	}
 #endif // JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+
+	TEST_CASE("TestVec3ConvertToString")
+	{
+		Vec3 v(1, 2, 3);
+		CHECK(ConvertToString(v) == "1, 2, 3");
+	}
 }

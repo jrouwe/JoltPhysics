@@ -53,4 +53,32 @@ TEST_SUITE("Mat44Tests")
 		CHECK(GetNextPowerOf2(0x8000000U - 1) == 0x8000000U);
 		CHECK(GetNextPowerOf2(0x8000000U) == 0x8000000U);
 	}
+
+	TEST_CASE("TestCenterAngleAroundZero")
+	{
+		for (int i = 0; i < 10; i += 2)
+		{
+			CHECK_APPROX_EQUAL(CenterAngleAroundZero(i * JPH_PI), 0, 1.0e-5f);
+			CHECK_APPROX_EQUAL(CenterAngleAroundZero((0.5f + i) * JPH_PI), 0.5f * JPH_PI, 1.0e-5f);
+			CHECK_APPROX_EQUAL(CenterAngleAroundZero((1.5f + i) * JPH_PI), -0.5f * JPH_PI, 1.0e-5f);
+			CHECK_APPROX_EQUAL(CenterAngleAroundZero(-(0.5f + i) * JPH_PI), -0.5f * JPH_PI, 1.0e-5f);
+			CHECK_APPROX_EQUAL(CenterAngleAroundZero(-(1.5f + i) * JPH_PI), 0.5f * JPH_PI, 1.0e-5f);
+			CHECK_APPROX_EQUAL(CenterAngleAroundZero(-(0.99f + i) * JPH_PI), -0.99f * JPH_PI, 1.0e-5f);
+			CHECK_APPROX_EQUAL(CenterAngleAroundZero((0.99f + i) * JPH_PI), 0.99f * JPH_PI, 1.0e-5f);
+		}
+	}
+
+	TEST_CASE("TestIsPowerOf2")
+	{
+		for (int i = 0; i < 63; ++i)
+			CHECK(IsPowerOf2(uint64(1) << 1));
+		CHECK(!IsPowerOf2(-2));
+		CHECK(!IsPowerOf2(0));
+		CHECK(!IsPowerOf2(3));
+		CHECK(!IsPowerOf2(5));
+		CHECK(!IsPowerOf2(15));
+		CHECK(!IsPowerOf2(17));
+		CHECK(!IsPowerOf2(65535));
+		CHECK(!IsPowerOf2(65537));
+	}
 }
