@@ -26,7 +26,7 @@ void ContactListenerTest::Initialize()
 
 	RefConst<Shape> box_shape = new BoxShape(Vec3(0.5f, 1.0f, 2.0f));
 
-	// Dynamic body 1
+	// Dynamic body 1, this body will have restitution 1 for new contacts and restitution 0 for persisting contacts
 	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	body1.SetAllowSleeping(false);
 	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
@@ -50,11 +50,22 @@ void ContactListenerTest::Initialize()
 	body4.SetAllowSleeping(false);
 	mBodyInterface->AddBody(body4.GetID(), EActivation::Activate);
 
+	// Dynamic body 5, a cube with a bigger cube surrounding it that acts as a sensor
+	Ref<StaticCompoundShapeSettings> compound_shape2 = new StaticCompoundShapeSettings;
+	compound_shape2->AddShape(Vec3::sZero(), Quat::sIdentity(), new BoxShape(Vec3::sReplicate(1)));
+	compound_shape2->AddShape(Vec3::sZero(), Quat::sIdentity(), new BoxShape(Vec3::sReplicate(2))); // This will become a sensor in the contact callback
+	BodyCreationSettings bcs5(compound_shape2, RVec3(20, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	bcs5.mUseManifoldReduction = false; // Needed in order to prevent the physics system from combining contacts between sensor and non-sensor sub shapes
+	Body &body5 = *mBodyInterface->CreateBody(bcs5);
+	body5.SetAllowSleeping(false);
+	mBodyInterface->AddBody(body5.GetID(), EActivation::Activate);
+
 	// Store bodies for later use
 	mBody[0] = &body1;
 	mBody[1] = &body2;
 	mBody[2] = &body3;
 	mBody[3] = &body4;
+	mBody[4] = &body5;
 }
 
 void ContactListenerTest::PostPhysicsUpdate(float inDeltaTime)
@@ -89,6 +100,18 @@ ValidateResult ContactListenerTest::OnContactValidate(const Body &inBody1, const
 	return ((&inBody1 == mBody[0] && &inBody2 == mBody[1]) || (&inBody1 == mBody[1] && &inBody2 == mBody[0]))? ValidateResult::RejectAllContactsForThisBodyPair : ValidateResult::AcceptAllContactsForThisBodyPair;
 }
 
+void ContactListenerTest::MakeBody5PartialSensor(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+{
+	// Make the 2nd shape of body 5 a sensor
+	SubShapeID body5_subshape_1 = StaticCast<CompoundShape>(mBody[4]->GetShape())->GetSubShapeIDFromIndex(1, SubShapeIDCreator()).GetID();
+	if ((&inBody1 == mBody[4] && inManifold.mSubShapeID1 == body5_subshape_1)
+		|| (&inBody2 == mBody[4] && inManifold.mSubShapeID2 == body5_subshape_1))
+	{
+		Trace("Sensor contact detected between body %08x and body %08x", inBody1.GetID().GetIndexAndSequenceNumber(), inBody2.GetID().GetIndexAndSequenceNumber());
+		ioSettings.mIsSensor = true;
+	}
+}
+
 void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
 {
 	// Make body 1 bounce only when a new contact point is added but not when it is persisted (its restitution is normally 0)
@@ -97,6 +120,8 @@ void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody
 		JPH_ASSERT(ioSettings.mCombinedRestitution == 0.0f);
 		ioSettings.mCombinedRestitution = 1.0f;
 	}
+
+	MakeBody5PartialSensor(inBody1, inBody2, inManifold, ioSettings);
 
 	// Estimate the contact impulses.
 	CollisionEstimationResult result;
@@ -118,4 +143,9 @@ void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody
 		mPredictedVelocities.push_back({ inBody1.GetID(), result.mLinearVelocity1, result.mAngularVelocity1 });
 		mPredictedVelocities.push_back({ inBody2.GetID(), result.mLinearVelocity2, result.mAngularVelocity2 });
 	}
+}
+
+void ContactListenerTest::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+{
+	MakeBody5PartialSensor(inBody1, inBody2, inManifold, ioSettings);
 }
