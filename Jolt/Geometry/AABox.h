@@ -17,8 +17,11 @@ class [[nodiscard]] AABox
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
+	/// Max half size of AABox is 0.5 * FLT_MAX so that the size remains finite
+	static constexpr float cMaxValue = 0.5f * FLT_MAX;
+
 	/// Constructor
-					AABox()												: mMin(Vec3::sReplicate(FLT_MAX)), mMax(Vec3::sReplicate(-FLT_MAX)) { }
+					AABox()												: mMin(Vec3::sReplicate(cMaxValue)), mMax(Vec3::sReplicate(-cMaxValue)) { }
 					AABox(Vec3Arg inMin, Vec3Arg inMax)					: mMin(inMin), mMax(inMax) { }
 					AABox(DVec3Arg inMin, DVec3Arg inMax)				: mMin(inMin.ToVec3RoundDown()), mMax(inMax.ToVec3RoundUp()) { }
 					AABox(Vec3Arg inCenter, float inRadius)				: mMin(inCenter - Vec3::sReplicate(inRadius)), mMax(inCenter + Vec3::sReplicate(inRadius)) { }
@@ -34,10 +37,10 @@ public:
 		return box;
 	}
 
-	/// Get bounding box of size 2 * FLT_MAX
+	/// Get bounding box of size FLT_MAX
 	static AABox	sBiggest()
 	{
-		return AABox(Vec3::sReplicate(-FLT_MAX), Vec3::sReplicate(FLT_MAX));
+		return AABox(Vec3::sReplicate(-cMaxValue), Vec3::sReplicate(cMaxValue));
 	}
 
 	/// Comparison operators
@@ -47,8 +50,8 @@ public:
 	/// Reset the bounding box to an empty bounding box
 	void			SetEmpty()
 	{
-		mMin = Vec3::sReplicate(FLT_MAX);
-		mMax = Vec3::sReplicate(-FLT_MAX);
+		mMin = Vec3::sReplicate(cMaxValue);
+		mMax = Vec3::sReplicate(-cMaxValue);
 	}
 
 	/// Check if the bounding box is valid (max >= min)

@@ -73,10 +73,10 @@ public:
 	uint32							mSampleCount = 0;
 
 	/// Artificial minimal value of mHeightSamples, used for compression and can be used to update the terrain after creating with lower height values. If there are any lower values in mHeightSamples, this value will be ignored.
-	float							mMinHeightValue = FLT_MAX;
+	float							mMinHeightValue = cLargeFloat;
 
 	/// Artificial maximum value of mHeightSamples, used for compression and can be used to update the terrain after creating with higher height values. If there are any higher values in mHeightSamples, this value will be ignored.
-	float							mMaxHeightValue = -FLT_MAX;
+	float							mMaxHeightValue = -cLargeFloat;
 
 	/// When bigger than mMaterials.size() the internal material list will be preallocated to support this number of materials.
 	/// This avoids reallocations when calling HeightFieldShape::SetMaterials with new materials later.
