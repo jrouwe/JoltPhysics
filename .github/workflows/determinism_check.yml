@@ -248,7 +248,7 @@ jobs:
       run: sudo apt-get install g++-12-riscv64-linux-gnu gcc-12-multilib g++-12-multilib qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_RISCV_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_RISCV_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests

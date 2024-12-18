@@ -218,6 +218,13 @@
 	#error Unsupported CPU architecture
 #endif
 
+// CPU helper macros
+#ifdef JPH_CPU_RISCV
+	#define JPH_IF_RISCV(x) x
+#else
+	#define JPH_IF_RISCV(x)
+#endif
+
 // If this define is set, Jolt is compiled as a shared library
 #ifdef JPH_SHARED_LIBRARY
 	#ifdef JPH_BUILD_SHARED_LIBRARY
@@ -332,6 +339,7 @@
 	JPH_GCC_SUPPRESS_WARNING("-Wpedantic")														\
 	JPH_GCC_SUPPRESS_WARNING("-Wunused-parameter")												\
 	JPH_GCC_SUPPRESS_WARNING("-Wmaybe-uninitialized")											\
+	JPH_IF_RISCV(JPH_GCC_SUPPRESS_WARNING("-Wuninitialized"))									\
 																								\
 	JPH_MSVC_SUPPRESS_WARNING(4619) /* #pragma warning: there is no warning number 'XXXX' */	\
 	JPH_MSVC_SUPPRESS_WARNING(4514) /* 'X' : unreferenced inline function has been removed */	\
