@@ -180,6 +180,18 @@
 		#define JPH_VECTOR_ALIGNMENT 8 // 32-bit ARM does not support aligning on the stack on 16 byte boundaries
 		#define JPH_DVECTOR_ALIGNMENT 8
 	#endif
+#elif defined(__riscv)
+	// RISC-V CPU architecture
+	#define JPH_CPU_RISCV
+	#if __riscv_xlen == 64
+		#define JPH_CPU_ADDRESS_BITS 64
+		#define JPH_VECTOR_ALIGNMENT 16
+		#define JPH_DVECTOR_ALIGNMENT 32
+	#else
+		#define JPH_CPU_ADDRESS_BITS 32
+		#define JPH_VECTOR_ALIGNMENT 16
+		#define JPH_DVECTOR_ALIGNMENT 8
+	#endif
 #elif defined(JPH_PLATFORM_WASM)
 	// WebAssembly CPU architecture
 	#define JPH_CPU_WASM
@@ -358,10 +370,10 @@
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_FREEBSD)
 	#if defined(JPH_CPU_X86)
 		#define JPH_BREAKPOINT	__asm volatile ("int $0x3")
-	#elif defined(JPH_CPU_ARM)
+	#elif defined(JPH_CPU_ARM) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_E2K)
 		#define JPH_BREAKPOINT	__builtin_trap()
-	#elif defined(JPH_CPU_E2K)
-		#define JPH_BREAKPOINT	__builtin_trap()
+	#else
+		#error Unknown CPU architecture
 	#endif
 #elif defined(JPH_PLATFORM_WASM)
 	#define JPH_BREAKPOINT		do { } while (false) // Not supported
@@ -409,6 +421,9 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <cstdint>
 #ifdef JPH_COMPILER_MSVC
 	#include <malloc.h> // for alloca
+#endif
+#ifdef JPH_CPU_RISCV
+	#include <cfenv>
 #endif
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>

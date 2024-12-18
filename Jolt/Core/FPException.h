@@ -56,6 +56,17 @@ class FPExceptionDisableInvalid : public FPControlWord<0, FP_IOE> { };
 /// Disable division by zero floating point exceptions
 class FPExceptionDisableDivByZero : public FPControlWord<0, FP_DZE> { };
 
+#elif defined(JPH_CPU_RISCV)
+
+/// Enable floating point divide by zero exception and exceptions on invalid numbers
+class FPExceptionsEnable : public FPControlWord<0, FE_DIVBYZERO | FE_INVALID> { };
+
+/// Disable invalid floating point value exceptions
+class FPExceptionDisableInvalid : public FPControlWord<FE_INVALID, FE_INVALID> { };
+
+/// Disable division by zero floating point exceptions
+class FPExceptionDisableDivByZero : public FPControlWord<FE_DIVBYZERO, FE_DIVBYZERO> { };
+
 #else
 
 #error Unsupported CPU architecture
