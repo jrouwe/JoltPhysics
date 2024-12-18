@@ -20,7 +20,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 * Fixed bodies gaining more energy than intended due to restitution. E.g. A restitution of 1 could lead to bodies bouncing ever higher.
 * `std::push_heap`/`pop_heap` behave differently on macOS vs Windows/Linux when elements compare equal, this made the cross platform deterministic build not deterministic in some cases.
-* Added overloads for placement new in the `JPH_OVERRIDE_NEW_DELETE` macro, this means it is no longer needed to do `::new (address) JPH::class_name(constructor_arguments)` but you can do `new (address) JPH::class_name(constructor_arguments)`.
+* Added overloads for placement new in the `JPH_OVERRIDE_NEW_DELETE` macro, this means it is no longer needed to do `:: new (address) JPH::class_name(constructor_arguments)` but you can do `new (address) JPH::class_name(constructor_arguments)`.
 * Fixed a GCC warning `-Wshadow=global`.
 
 ## v5.2.0
