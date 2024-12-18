@@ -4,6 +4,7 @@
 
 #include "UnitTestFramework.h"
 #include <Jolt/Math/DVec3.h>
+#include <Jolt/Core/StringTools.h>
 
 TEST_SUITE("DVec3Tests")
 {
@@ -14,6 +15,13 @@ TEST_SUITE("DVec3Tests")
 		CHECK(v.GetX() == 0);
 		CHECK(v.GetY() == 0);
 		CHECK(v.GetZ() == 0);
+	}
+
+	TEST_CASE("TestDVec3Axis")
+	{
+		CHECK(DVec3::sAxisX() == DVec3(1, 0, 0));
+		CHECK(DVec3::sAxisY() == DVec3(0, 1, 0));
+		CHECK(DVec3::sAxisZ() == DVec3(0, 0, 1));
 	}
 
 	TEST_CASE("TestVec3NaN")
@@ -56,6 +64,16 @@ TEST_SUITE("DVec3Tests")
 		v.SetComponent(1, 5);
 		v.SetComponent(2, 6);
 		CHECK(v == DVec3(4, 5, 6));
+
+		// Set the components again
+		v.SetX(7);
+		v.SetY(8);
+		v.SetZ(9);
+		CHECK(v == DVec3(7, 8, 9));
+
+		// Set all components
+		v.Set(10, 11, 12);
+		CHECK(v == DVec3(10, 11, 12));
 	}
 
 	TEST_CASE("TestVec4ToDVec3")
@@ -280,5 +298,11 @@ TEST_SUITE("DVec3Tests")
 	{
 		CHECK(DVec3(1.2345, -6.7891, 0).GetSign() == DVec3(1, -1, 1));
 		CHECK(DVec3(0, 2.3456, -7.8912).GetSign() == DVec3(1, 1, -1));
+	}
+
+	TEST_CASE("TestDVec3ConvertToString")
+	{
+		DVec3 v(1, 2, 3);
+		CHECK(ConvertToString(v) == "1, 2, 3");
 	}
 }

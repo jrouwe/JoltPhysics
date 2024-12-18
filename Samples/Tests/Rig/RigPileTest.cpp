@@ -80,7 +80,7 @@ void RigPileTest::Initialize()
 	Ref<SkeletalAnimation> animation[cAnimationCount];
 	for (int i = 0; i < cAnimationCount; ++i)
 	{
-		if (!ObjectStreamIn::sReadObject(StringFormat("Assets/Human/Dead_Pose%d.tof", i + 1).c_str(), animation[i]))
+		if (!ObjectStreamIn::sReadObject(StringFormat("Assets/Human/dead_pose%d.tof", i + 1).c_str(), animation[i]))
 			FatalError("Could not open animation");
 	}
 

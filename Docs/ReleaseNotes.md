@@ -6,17 +6,22 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### New functionality
 
-* Optimized creation of MeshShape. Improves build speed by about 25% and reduces number of allocations by a factor of 1000. Allocations caused contention when building meshes from multiple threads.
-* Removed the use of std::unordered_map and std::unordered_set and replaced them with our own implementation: UnorderedMap and UnorderedSet.
-* Added MotionProperties::ScaleToMass. This lets you easily change the mass and inertia tensor of a body after creation.
-* Split up Body::ApplyBuoyancyImpulse into Body::GetSubmergedVolume and Body::ApplyBuoyancyImpulse. This allows you to use the calculated submerged volume for other purposes.
+* Optimized creation of `MeshShape`. Improves build speed by about 25% and reduces number of allocations by a factor of 1000. Allocations caused contention when building meshes from multiple threads.
+* Removed the use of `std::unordered_map` and `std::unordered_set` and replaced them with our own implementation: `UnorderedMap` and `UnorderedSet`.
+* Added `MotionProperties::ScaleToMass`. This lets you easily change the mass and inertia tensor of a body after creation.
+* Split up `Body::ApplyBuoyancyImpulse` into `Body::GetSubmergedVolume` and `Body::ApplyBuoyancyImpulse`. This allows you to use the calculated submerged volume for other purposes.
 * Fixed a number of issues when creating very large MeshShapes. MeshShapes of up to 110M triangles are possible now, but the actual maximum is very dependent on how the triangles in the mesh are connected.
-* Added PhysicsSystem::SetSimShapeFilter. This allows filtering out collisions between sub shapes within a body and can for example be used to have a single body that contains a low detail simulation shape an a high detail collision query shape.
+* Added `PhysicsSystem::SetSimShapeFilter`. This allows filtering out collisions between sub shapes within a body and can for example be used to have a single body that contains a low detail simulation shape an a high detail collision query shape.
+* Added an example of a body that's both a sensor and a rigid body in `ContactListenerTest`.
+* Added binary serialization to `SkeletalAnimation`.
+* Added support for RISC-V CPUs.
 
 ### Bug fixes
 
 * Fixed bodies gaining more energy than intended due to restitution. E.g. A restitution of 1 could lead to bodies bouncing ever higher.
-* std::push_heap/pop_heap behave differently on macOS vs Windows/Linux when elements compare equal, this made the cross platform deterministic build not deterministic in some cases.
+* `std::push_heap`/`pop_heap` behave differently on macOS vs Windows/Linux when elements compare equal, this made the cross platform deterministic build not deterministic in some cases.
+* Added overloads for placement new in the `JPH_OVERRIDE_NEW_DELETE` macro, this means it is no longer needed to do `:: new (address) JPH::class_name(constructor_arguments)` but you can do `new (address) JPH::class_name(constructor_arguments)`.
+* Fixed a GCC warning `-Wshadow=global`.
 
 ## v5.2.0
 

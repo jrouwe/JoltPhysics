@@ -155,6 +155,10 @@ private:
 	uint64		mPrevState;
 };
 
+#elif defined(JPH_CPU_RISCV)
+
+// RISC-V only implements manually checking if exceptions occurred by reading the fcsr register. It doesn't generate exceptions.
+
 #else
 
 #error Unsupported CPU architecture

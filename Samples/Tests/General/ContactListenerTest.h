@@ -23,10 +23,13 @@ public:
 	// See: ContactListener
 	virtual ValidateResult	OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) override;
 	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override;
+	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override;
 
 private:
-	// The 4 bodies that we create
-	Body *					mBody[4];
+	void					MakeBody5PartialSensor(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings);
+
+	// The 5 bodies that we create
+	Body *					mBody[5];
 
 	// Tracks predicted velocities so we can compare them with the actual velocities after time step
 	struct PredictedVelocity

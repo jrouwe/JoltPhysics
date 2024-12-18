@@ -18,16 +18,16 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(PoweredRigTest)
 
 const char *PoweredRigTest::sAnimations[] =
 {
-	"Neutral",
-	"Walk",
-	"Sprint",
-	"Dead_Pose1",
-	"Dead_Pose2",
-	"Dead_Pose3",
-	"Dead_Pose4"
+	"neutral",
+	"walk",
+	"sprint",
+	"dead_pose1",
+	"dead_pose2",
+	"dead_pose3",
+	"dead_pose4"
 };
 
-const char *PoweredRigTest::sAnimationName = "Sprint";
+const char *PoweredRigTest::sAnimationName = "sprint";
 
 PoweredRigTest::~PoweredRigTest()
 {

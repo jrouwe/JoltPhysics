@@ -151,7 +151,7 @@ void MultithreadedTest::RagdollSpawner()
 	{
 #ifdef JPH_OBJECT_STREAM
 		Ref<SkeletalAnimation> animation;
-		if (!ObjectStreamIn::sReadObject("Assets/Human/Dead_Pose1.tof", animation))
+		if (!ObjectStreamIn::sReadObject("Assets/Human/dead_pose1.tof", animation))
 			FatalError("Could not open animation");
 		animation->Sample(0.0f, ragdoll_pose);
 #else
