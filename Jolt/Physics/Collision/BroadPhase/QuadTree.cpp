@@ -110,7 +110,6 @@ bool QuadTree::Node::EncapsulateChildBounds(int inChildIndex, const AABox &inBou
 // QuadTree
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const float QuadTree::cLargeFloat = 1.0e30f;
 const AABox QuadTree::cInvalidBounds(Vec3::sReplicate(cLargeFloat), Vec3::sReplicate(-cLargeFloat));
 
 void QuadTree::GetBodyLocation(const TrackingVector &inTracking, BodyID inBodyID, uint32 &outNodeIdx, uint32 &outChildIdx) const

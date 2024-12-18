@@ -51,7 +51,7 @@ TEST_SUITE("GJKTests")
 		{
 			// Test sphere s1 and s2, they should not collide, verify their closest points
 			Vec3 pa, pb, v = Vec3::sZero();
-			float d = sqrt(gjk.GetClosestPoints(s1, s2, 1.0e-4f, FLT_MAX, v, pa, pb));
+			float d = sqrt(gjk.GetClosestPoints(s1, s2, 1.0e-4f, cLargeFloat, v, pa, pb));
 			CHECK_APPROX_EQUAL(c2.Length() - 2.0f, d, 1.0e-4f);
 			CHECK_APPROX_EQUAL(c2.Normalized(), pa, 1.0e-4f);
 			CHECK_APPROX_EQUAL(c2 - c2.Normalized(), pb, 1.0e-4f);
@@ -60,7 +60,7 @@ TEST_SUITE("GJKTests")
 		{
 			// Test sphere s1 and s3, they should touch exactly, verify their closest points
 			Vec3 pa, pb, v = Vec3::sZero();
-			float d = sqrt(gjk.GetClosestPoints(s1, s3, 1.0e-4f, FLT_MAX, v, pa, pb));
+			float d = sqrt(gjk.GetClosestPoints(s1, s3, 1.0e-4f, cLargeFloat, v, pa, pb));
 			CHECK_APPROX_EQUAL(0.0f, d, 1.0e-4f);
 			CHECK_APPROX_EQUAL(c2.Normalized(), pa, 1.0e-4f);
 			CHECK_APPROX_EQUAL(c2.Normalized(), pb, 1.0e-4f);
