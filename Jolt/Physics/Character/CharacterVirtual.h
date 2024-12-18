@@ -177,6 +177,9 @@ public:
 	/// Constructor without user data
 										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) : CharacterVirtual(inSettings, inPosition, inRotation, 0, inSystem) { }
 
+	/// Constructor with BodyID and no user data
+										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, BodyID inBodyID, PhysicsSystem *inSystem);
+
 	/// Destructor
 	virtual								~CharacterVirtual() override;
 

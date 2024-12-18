@@ -18,6 +18,7 @@
 #include <Jolt/Geometry/GJKClosestPoint.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
+#include "CharacterVirtual.h"
 #endif // JPH_DEBUG_RENDERER
 
 JPH_NAMESPACE_BEGIN
@@ -113,6 +114,38 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 		settings.mAllowSleeping = false; // Disable sleeping so that we will receive sensor callbacks
 		settings.mUserData = inUserData;
 		mInnerBodyID = inSystem->GetBodyInterface().CreateAndAddBody(settings, EActivation::Activate);
+	}
+}
+
+CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, BodyID inBodyID, PhysicsSystem *inSystem) :
+	CharacterBase(inSettings, inSystem),
+	mBackFaceMode(inSettings->mBackFaceMode),
+	mPredictiveContactDistance(inSettings->mPredictiveContactDistance),
+	mMaxCollisionIterations(inSettings->mMaxCollisionIterations),
+	mMaxConstraintIterations(inSettings->mMaxConstraintIterations),
+	mMinTimeRemaining(inSettings->mMinTimeRemaining),
+	mCollisionTolerance(inSettings->mCollisionTolerance),
+	mCharacterPadding(inSettings->mCharacterPadding),
+	mMaxNumHits(inSettings->mMaxNumHits),
+	mHitReductionCosMaxAngle(inSettings->mHitReductionCosMaxAngle),
+	mPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed),
+	mEnhancedInternalEdgeRemoval(inSettings->mEnhancedInternalEdgeRemoval),
+	mShapeOffset(inSettings->mShapeOffset),
+	mPosition(inPosition),
+	mRotation(inRotation),
+	mInnerBodyID(inBodyID)
+{
+	// Copy settings
+	SetMaxStrength(inSettings->mMaxStrength);
+	SetMass(inSettings->mMass);
+
+	// Create an inner rigid body if requested
+	if (inSettings->mInnerBodyShape != nullptr)
+	{
+		BodyCreationSettings settings(inSettings->mInnerBodyShape, GetInnerBodyPosition(), mRotation, EMotionType::Kinematic, inSettings->mInnerBodyLayer);
+		settings.mAllowSleeping = false; // Disable sleeping so that we will receive sensor callbacks
+		JPH::Body *body	= inSystem->GetBodyInterface().CreateBodyWithID(inBodyID, settings);
+		inSystem->GetBodyInterface().AddBody(body->GetID(), EActivation::Activate);
 	}
 }
 
