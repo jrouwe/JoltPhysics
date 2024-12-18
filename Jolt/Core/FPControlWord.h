@@ -128,29 +128,7 @@ private:
 
 #elif defined(JPH_CPU_RISCV)
 
-/// Helper class that needs to be put on the stack to update the state of the floating point control word.
-/// This state is kept per thread.
-template <int Value, int Mask>
-class FPControlWord : public NonCopyable
-{
-public:
-	FPControlWord()
-	{
-		std::fexcept_t val;
-		fegetexceptflag(&val, Mask);
-		mPrevState = val;
-		val |= Value;
-		fesetexceptflag(&val, Mask);
-	}
-
-	~FPControlWord()
-	{
-		fesetexceptflag(&mPrevState, Mask);
-	}
-
-private:
-	std::fexcept_t	mPrevState;
-};
+// RISC-V only implements manually checking if exceptions occurred by reading the fcsr register. It doesn't generate exceptions.
 
 #else
 

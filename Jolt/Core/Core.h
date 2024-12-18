@@ -422,9 +422,6 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #ifdef JPH_COMPILER_MSVC
 	#include <malloc.h> // for alloca
 #endif
-#ifdef JPH_CPU_RISCV
-	#include <cfenv>
-#endif
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>
 #elif defined(JPH_USE_NEON)
