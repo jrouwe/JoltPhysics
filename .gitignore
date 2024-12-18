@@ -6,3 +6,4 @@
 /snapshot.bin
 /*.jor
 /detlog.txt
+**/*.obj
