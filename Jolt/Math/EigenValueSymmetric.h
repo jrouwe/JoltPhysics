@@ -11,7 +11,7 @@ JPH_NAMESPACE_BEGIN
 /// Function to determine the eigen vectors and values of a N x N real symmetric matrix
 /// by Jacobi transformations. This method is most suitable for N < 10.
 ///
-/// Taken and adapted from Numerical Recipies paragraph 11.1
+/// Taken and adapted from Numerical Recipes paragraph 11.1
 ///
 /// An eigen vector is a vector v for which \f$A \: v = \lambda \: v\f$
 ///
