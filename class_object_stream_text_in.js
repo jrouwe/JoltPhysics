@@ -1,0 +1,25 @@
+var class_object_stream_text_in =
+[
+    [ "ObjectStreamTextIn", "class_object_stream_text_in.html#af134b8a2a22f563c4b550f48aff21741", null ],
+    [ "ReadCount", "class_object_stream_text_in.html#acaef815639a4298f6a576140de8cb6a8", null ],
+    [ "ReadDataType", "class_object_stream_text_in.html#adc4196beb9e42a5b479b5cf7c9fbd736", null ],
+    [ "ReadIdentifier", "class_object_stream_text_in.html#a92609c6794b05cee7bf47018ade56136", null ],
+    [ "ReadName", "class_object_stream_text_in.html#a79116e71f7cc0373156904e3d9a74ac6", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#af69f711f9957bacae5aebfdac9d60b56", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#aa53bdd6294f7c0ead2e977e91d5c108f", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#ac9b5883bbe2ef7b8bba215fa2fecf042", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#addcd289d1d73738db0d48f8a0f8992fd", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#aa9713b3c0ccaf7ea3c569e84021651f2", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#abee43bfb201ecee249daef30070b42b1", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#a23b4394afd8cb0aaba9a91f6adfa34ce", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#adb602b716adef6cb25d1a2393adc25b9", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#a66f3b34ded6e7856aab86ee49eb88ac0", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#a26c738ce8e470bdf9e98108ead591c8a", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#afb0ef76d9a22441970eec9a347bbb66a", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#ad407eb47eed065b9f39745535715de21", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#ae795d421fc37ecbfc8b38acfcfbeb872", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#a5b6bbd4b188c814bc0008e1a8730c00f", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#ab7c8919080f8614b28e097fd11324dae", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#ac5db7ff153f5b4efcd5760a21fb6723f", null ],
+    [ "ReadPrimitiveData", "class_object_stream_text_in.html#ab52271c6de1325d7d302095812d588bf", null ]
+];
