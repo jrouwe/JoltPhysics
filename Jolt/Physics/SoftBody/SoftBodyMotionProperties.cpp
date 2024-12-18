@@ -599,7 +599,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 	JPH_PROFILE_FUNCTION();
 
 	float dt = inContext.mSubStepDeltaTime;
-	float restitution_treshold = -2.0f * inContext.mGravity.Length() * dt;
+	float restitution_threshold = -2.0f * inContext.mGravity.Length() * dt;
 	float vertex_radius = mSettings->mVertexRadius;
 	for (Vertex &v : mVertices)
 		if (v.mInvMass > 0.0f)
@@ -674,7 +674,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 							// Calculate delta relative velocity due to restitution (equation 35)
 							dv += v_normal;
 							float prev_v_normal = (prev_v - v2).Dot(contact_normal);
-							if (prev_v_normal < restitution_treshold)
+							if (prev_v_normal < restitution_threshold)
 								dv += cs.mRestitution * prev_v_normal * contact_normal;
 
 							// Calculate impulse
@@ -707,7 +707,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 						// Apply restitution (equation 35)
 						v.mVelocity -= v_normal;
 						float prev_v_normal = prev_v.Dot(contact_normal);
-						if (prev_v_normal < restitution_treshold)
+						if (prev_v_normal < restitution_threshold)
 							v.mVelocity -= cs.mRestitution * prev_v_normal * contact_normal;
 					}
 				}
