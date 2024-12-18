@@ -37,6 +37,10 @@ JPH_INLINE uint64 GetProcessorTickCount()
 	return val;
 #elif defined(JPH_CPU_ARM) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_WASM)
 	return 0; // Not supported
+#elif defined(JPH_CPU_PPC64)
+	return 0;
+#elif defined(JPH_CPU_PPC32)
+	return 0;
 #else
 	#error Undefined
 #endif
