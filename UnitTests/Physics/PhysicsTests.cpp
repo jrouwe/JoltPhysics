@@ -671,6 +671,50 @@ TEST_SUITE("PhysicsTests")
 		TestPhysicsCollisionInelastic(c4);
 	}
 
+	TEST_CASE("TestMinVelocityForRestitution")
+	{
+		for (int i = 0; i < 2; ++i)
+		{
+			// Create a context
+			PhysicsTestContext c;
+			c.ZeroGravity();
+
+			Body &sphere1 = c.CreateSphere(RVec3(0, -2, 0), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING);
+			sphere1.SetRestitution(1.0f);
+			sphere1.SetLinearVelocity(Vec3(0, 1, 0));
+
+			Body &sphere2 = c.CreateSphere(RVec3(0, +2, 0), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING);
+			sphere2.SetRestitution(1.0f);
+			sphere2.SetLinearVelocity(Vec3::sZero());
+
+			Vec3 expected1, expected2;
+			PhysicsSettings s = c.GetSystem()->GetPhysicsSettings();
+			if (i == 0)
+			{
+				// Make the minimum velocity for restitution bigger than the speed of the sphere
+				s.mMinVelocityForRestitution = 2.0f;
+
+				// Non elastic collision will make both spheres move at half speed
+				expected1 = expected2 = 0.5f * sphere1.GetLinearVelocity();
+			}
+			else
+			{
+				// Make the minimum velocity for restitution smaller than the speed of the sphere
+				s.mMinVelocityForRestitution = 0.5f;
+
+				// Elastic collision will transfer all velocity to sphere 2
+				expected1 = Vec3::sZero();
+				expected2 = sphere1.GetLinearVelocity();
+			}
+			c.GetSystem()->SetPhysicsSettings(s);
+
+			c.Simulate(2.5f);
+
+			CHECK_APPROX_EQUAL(sphere1.GetLinearVelocity(), expected1);
+			CHECK_APPROX_EQUAL(sphere2.GetLinearVelocity(), expected2);
+		}
+	}
+
 	// Let box intersect with floor by cPenetrationSlop. It should not move, this is the maximum penetration allowed.
 	static void TestPhysicsPenetrationSlop1(PhysicsTestContext &ioContext)
 	{
