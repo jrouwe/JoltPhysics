@@ -692,7 +692,7 @@ TEST_SUITE("PhysicsTests")
 			if (i == 0)
 			{
 				// Make the minimum velocity for restitution bigger than the speed of the sphere
-				s.mMinVelocityForRestitution = 2.0f;
+				s.mMinVelocityForRestitution = 1.01f;
 
 				// Non elastic collision will make both spheres move at half speed
 				expected1 = expected2 = 0.5f * sphere1.GetLinearVelocity();
@@ -700,7 +700,7 @@ TEST_SUITE("PhysicsTests")
 			else
 			{
 				// Make the minimum velocity for restitution smaller than the speed of the sphere
-				s.mMinVelocityForRestitution = 0.5f;
+				s.mMinVelocityForRestitution = 0.99f;
 
 				// Elastic collision will transfer all velocity to sphere 2
 				expected1 = Vec3::sZero();
