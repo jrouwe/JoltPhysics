@@ -126,38 +126,13 @@ private:
 	uint32		mPrevState;
 };
 
-#elif defined(JPH_CPU_PPC64)
-
-template <uint64 Value, uint64 Mask>
-class FPControlWord : public NonCopyable
-{
-public:
-				FPControlWord()
-	{
-		uint64 val;
-		asm volatile("mrs %0, fpcr" : "=r" (val));
-		mPrevState = val;
-		val &= ~Mask;
-		val |= Value;
-		asm volatile("msr fpcr, %0" : /* no output */ : "r" (val));
-	}
-
-				~FPControlWord()
-	{
-		uint64 val;
-		asm volatile("mrs %0, fpcr" : "=r" (val));
-		val &= ~Mask;
-		val |= mPrevState & Mask;
-		asm volatile("msr fpcr, %0" : /* no output */ : "r" (val));
-	}
-
-private:
-	uint64		mPrevState;
-};
-
 #elif defined(JPH_CPU_RISCV)
 
 // RISC-V only implements manually checking if exceptions occurred by reading the fcsr register. It doesn't generate exceptions.
+
+#elif defined(JPH_CPU_PPC)
+
+// Not implemented right now
 
 #else
 

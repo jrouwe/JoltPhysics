@@ -60,6 +60,10 @@ class FPExceptionDisableDivByZero : public FPControlWord<0, FP_DZE> { };
 
 #error "RISC-V only implements manually checking if exceptions occurred by reading the fcsr register. It doesn't generate exceptions. JPH_FLOATING_POINT_EXCEPTIONS_ENABLED must be disabled."
 
+#elif defined(JPH_CPU_PPC)
+
+#error PowerPC floating point exception handling to be implemented. JPH_FLOATING_POINT_EXCEPTIONS_ENABLED must be disabled.
+
 #else
 
 #error Unsupported CPU architecture

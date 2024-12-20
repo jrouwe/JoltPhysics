@@ -16,6 +16,8 @@ inline const char *GetConfigurationString()
 		"ARM "
 #elif defined(JPH_CPU_RISCV)
 		"RISC-V "
+#elif defined(JPH_CPU_PPC)
+		"PowerPC "
 #elif defined(JPH_CPU_E2K)
 		"E2K "
 #elif defined(JPH_CPU_WASM)
