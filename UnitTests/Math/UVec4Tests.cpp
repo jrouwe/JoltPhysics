@@ -507,17 +507,17 @@ TEST_SUITE("UVec4Tests")
 
 	TEST_CASE("TestUVec4ExtractUInt16")
 	{
-		uint16 ints[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
-		UVec4 vector = UVec4::sLoadInt4((const uint32 *)ints);
+		uint32 data[] = { 0x0b020a01, 0x0d040c03, 0x0b060a05, 0x0d080c07 };
+		UVec4 vector = UVec4::sLoadInt4(data);
 
-		CHECK(vector.Expand4Uint16Lo() == UVec4(1, 2, 3, 4));
-		CHECK(vector.Expand4Uint16Hi() == UVec4(5, 6, 7, 8));
+		CHECK(vector.Expand4Uint16Lo() == UVec4(0x0a01, 0x0b02, 0x0c03, 0x0d04));
+		CHECK(vector.Expand4Uint16Hi() == UVec4(0x0a05, 0x0b06, 0x0c07, 0x0d08));
 	}
 
 	TEST_CASE("TestUVec4ExtractBytes")
 	{
-		uint8 bytes[] = { 0x11, 0x12, 0x13, 0x14, 0x21, 0x22, 0x23, 0x24, 0x31, 0x32, 0x33, 0x34, 0x41, 0x42, 0x43, 0x44 };
-		UVec4 vector = UVec4::sLoadInt4((const uint32 *)bytes);
+		uint32 data[] = { 0x14131211, 0x24232221, 0x34333231, 0x44434241 };
+		UVec4 vector = UVec4::sLoadInt4(data);
 
 		CHECK(vector.Expand4Byte0()  == UVec4(0x11, 0x12, 0x13, 0x14));
 		CHECK(vector.Expand4Byte4()  == UVec4(0x21, 0x22, 0x23, 0x24));
