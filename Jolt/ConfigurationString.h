@@ -18,6 +18,11 @@ inline const char *GetConfigurationString()
 		"RISC-V "
 #elif defined(JPH_CPU_PPC)
 		"PowerPC "
+	#ifdef JPH_CPU_BIG_ENDIAN
+		"(Big Endian) "
+	#else
+		"(Little Endian) "
+	#endif
 #elif defined(JPH_CPU_E2K)
 		"E2K "
 #elif defined(JPH_CPU_WASM)
