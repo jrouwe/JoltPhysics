@@ -8,3 +8,4 @@
 /detlog.txt
 **/*.obj
 **/*.os
+**/*.universal.o
