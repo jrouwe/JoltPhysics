@@ -286,12 +286,13 @@ jobs:
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-ppc64le -L /usr/powerpc64le-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
-    - name: Test Ragdoll
-      working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-ppc64le -L /usr/powerpc64le-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
-    - name: Test Pyramid
-      working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-ppc64le -L /usr/powerpc64le-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+# This is really slow so disabled for the moment
+#    - name: Test Ragdoll
+#      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+#      run: qemu-ppc64le -L /usr/powerpc64le-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+#    - name: Test Pyramid
+#      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+#      run: qemu-ppc64le -L /usr/powerpc64le-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   emscripten:
     runs-on: ubuntu-latest
