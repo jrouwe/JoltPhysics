@@ -35,7 +35,7 @@ JPH_INLINE uint64 GetProcessorTickCount()
 	uint64 val;
 	asm volatile("mrs %0, cntvct_el0" : "=r" (val));
 	return val;
-#elif defined(JPH_CPU_ARM) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_WASM)
+#elif defined(JPH_CPU_ARM) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_WASM) || defined(JPH_CPU_PPC)
 	return 0; // Not supported
 #else
 	#error Undefined

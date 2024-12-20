@@ -203,6 +203,19 @@
 		#define JPH_USE_SSE4_1
 		#define JPH_USE_SSE4_2
 	#endif
+#elif defined(__powerpc__) || defined(__powerpc64__)
+	// PowerPC CPU architecture
+	#define JPH_CPU_PPC
+	#if defined(__powerpc64__)
+		#define JPH_CPU_ADDRESS_BITS 64
+	#else
+		#define JPH_CPU_ADDRESS_BITS 32
+	#endif
+	#ifdef _BIG_ENDIAN
+		#define JPH_CPU_BIG_ENDIAN
+	#endif
+	#define JPH_VECTOR_ALIGNMENT 16
+	#define JPH_DVECTOR_ALIGNMENT 8
 #elif defined(__e2k__)
 	// E2K CPU architecture (MCST Elbrus 2000)
 	#define JPH_CPU_E2K
@@ -223,6 +236,11 @@
 	#define JPH_IF_RISCV(x) x
 #else
 	#define JPH_IF_RISCV(x)
+#endif
+#ifdef JPH_CPU_PPC
+	#define JPH_IF_PPC(x) x
+#else
+	#define JPH_IF_PPC(x)
 #endif
 
 // If this define is set, Jolt is compiled as a shared library
@@ -340,6 +358,7 @@
 	JPH_GCC_SUPPRESS_WARNING("-Wunused-parameter")												\
 	JPH_GCC_SUPPRESS_WARNING("-Wmaybe-uninitialized")											\
 	JPH_IF_RISCV(JPH_GCC_SUPPRESS_WARNING("-Wuninitialized"))									\
+	JPH_IF_PPC(JPH_GCC_SUPPRESS_WARNING("-Wuninitialized"))										\
 																								\
 	JPH_MSVC_SUPPRESS_WARNING(4619) /* #pragma warning: there is no warning number 'XXXX' */	\
 	JPH_MSVC_SUPPRESS_WARNING(4514) /* 'X' : unreferenced inline function has been removed */	\
@@ -378,7 +397,7 @@
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_FREEBSD)
 	#if defined(JPH_CPU_X86)
 		#define JPH_BREAKPOINT	__asm volatile ("int $0x3")
-	#elif defined(JPH_CPU_ARM) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_E2K)
+	#elif defined(JPH_CPU_ARM) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_E2K) || defined(JPH_CPU_PPC)
 		#define JPH_BREAKPOINT	__builtin_trap()
 	#else
 		#error Unknown CPU architecture

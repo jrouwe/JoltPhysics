@@ -130,6 +130,10 @@ private:
 
 // RISC-V only implements manually checking if exceptions occurred by reading the fcsr register. It doesn't generate exceptions.
 
+#elif defined(JPH_CPU_PPC)
+
+// Not implemented right now
+
 #else
 
 #error Unsupported CPU architecture
