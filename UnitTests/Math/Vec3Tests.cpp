@@ -35,7 +35,7 @@ TEST_SUITE("Vec3Tests")
 		v.SetX(7);
 		v.SetY(8);
 		v.SetZ(9);
-		CHECK(v == Vec3(7, 8, 9));		
+		CHECK(v == Vec3(7, 8, 9));
 
 		// Set all components
 		v.Set(10, 11, 12);

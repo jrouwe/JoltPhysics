@@ -1032,7 +1032,10 @@ void SoftBodyMotionProperties::SkinVertices([[maybe_unused]] RMat44Arg inCenterO
 	const Mat44 *skin_matrices_end = skin_matrices + num_skin_matrices;
 	const InvBind *inv_bind_matrix = mSettings->mInvBindMatrices.data();
 	for (Mat44 *s = skin_matrices; s < skin_matrices_end; ++s, ++inv_bind_matrix)
+	{
+		JPH_ASSERT(inv_bind_matrix->mJointIndex < inNumJoints);
 		*s = inJointMatrices[inv_bind_matrix->mJointIndex] * inv_bind_matrix->mInvBind;
+	}
 
 	// Skin the vertices
 	JPH_IF_DEBUG_RENDERER(mSkinStateTransform = inCenterOfMassTransform;)

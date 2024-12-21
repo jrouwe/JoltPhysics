@@ -506,7 +506,7 @@ Bodies can only exist in a single layer. If you want a body with a low detail co
 The low detail body should be dynamic. The high detail body should be kinematic, or if it doesn't interact with other dynamic objects it can also be static.
 After calling PhysicsSystem::Update, you'll need to loop over these dynamic bodies and call BodyInterface::MoveKinematic in case the high detail body is kinematic, or BodyInterface::SetPositionAndRotation in case the high detail body is static.
 
-Alternatively, you can put a high detail and a low detail shape in a StaticCompoundShape and use PhysicsSystem::SetSimulationShapeFilter to filter out the high detail shape during simulation.
+Alternatively, you can put a high detail and a low detail shape in a StaticCompoundShape and use PhysicsSystem::SetSimShapeFilter to filter out the high detail shape during simulation.
 Another ShapeFilter would filter out the low detail shape during collision queries (e.g. through NarrowPhaseQuery).
 You can use Shape::GetUserData to determine if a shape is a high or a low detail shape.
 
@@ -632,6 +632,9 @@ It is quite difficult to verify cross platform determinism, so this feature is l
 * Linux clang ARM 32-bit
 * Linux gcc x86 64-bit with AVX2
 * Linux gcc ARM 64-bit with NEON
+* Linux gcc RISC-V 64-bit
+* Linux gcc PowerPC (Little Endian) 64-bit
+* Linux gcc LoongArch 64-bit
 * WASM emscripten running in nodejs
 
 The most important things to look out for in your own application:

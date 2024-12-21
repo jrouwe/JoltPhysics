@@ -6,7 +6,7 @@
 #include <Jolt/Core/FPFlushDenormals.h>
 #include <atomic>
 
-#ifndef JPH_CPU_WASM
+#if !defined(JPH_CPU_WASM) && !defined(JPH_CPU_RISCV) && !defined(JPH_CPU_PPC) && !defined(JPH_CPU_LOONGARCH)
 
 // Implemented as a global atomic so the compiler can't optimize it to a constant
 extern atomic<float> TestFltMin;

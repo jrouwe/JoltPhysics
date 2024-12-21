@@ -90,7 +90,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 ## Supported platforms
 
 * Windows (Desktop or UWP) x86/x64/ARM32/ARM64
-* Linux (tested on Ubuntu) x64/ARM64
+* Linux (tested on Ubuntu) x86/x64/ARM32/ARM64/RISC-V64/LoongArch64/PowerPC64LE
 * FreeBSD
 * Android x86/x64/ARM32/ARM64
 * Platform Blue (a popular game console) x64
