@@ -14,7 +14,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added `PhysicsSystem::SetSimShapeFilter`. This allows filtering out collisions between sub shapes within a body and can for example be used to have a single body that contains a low detail simulation shape an a high detail collision query shape.
 * Added an example of a body that's both a sensor and a rigid body in `ContactListenerTest`.
 * Added binary serialization to `SkeletalAnimation`.
-* Added support for RISC-V and PowerPC (Little Endian) CPUs.
+* Added support for RISC-V, LoongArch and PowerPC (Little Endian) CPUs.
 
 ### Bug fixes
 

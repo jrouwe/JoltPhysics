@@ -23,6 +23,8 @@ inline const char *GetConfigurationString()
 	#else
 		"(Little Endian) "
 	#endif
+#elif defined(JPH_CPU_LOONGARCH)
+		"LoongArch "
 #elif defined(JPH_CPU_E2K)
 		"E2K "
 #elif defined(JPH_CPU_WASM)
