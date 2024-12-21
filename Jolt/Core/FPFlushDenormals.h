@@ -8,7 +8,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-#if defined(JPH_CPU_WASM) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_PPC)
+#if defined(JPH_CPU_WASM) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_PPC) || defined(JPH_CPU_LOONGARCH)
 
 // Not supported
 class FPFlushDenormals { };

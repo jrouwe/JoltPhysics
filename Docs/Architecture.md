@@ -634,6 +634,7 @@ It is quite difficult to verify cross platform determinism, so this feature is l
 * Linux gcc ARM 64-bit with NEON
 * Linux gcc RISC-V 64-bit
 * Linux gcc PowerPC (Little Endian) 64-bit
+* Linux gcc LoongArch 64-bit
 * WASM emscripten running in nodejs
 
 The most important things to look out for in your own application:
