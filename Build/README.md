@@ -231,6 +231,16 @@ you have a mismatch in defines between your own code and the Jolt library. In th
 
 The `RegisterTypes` function (which you have to call to initialize the library) checks the other important defines and will trace and abort if there are more mismatches.
 
+### Link Error: Undefined Symbol
+
+If you receive a link error that looks like:
+
+```
+error: undefined symbol: typeinfo for JPH::DebugRenderer
+```
+
+you have a mismatch between RTTI settings (MSVC: `/GR`/`/GR-`, clang: `-frtti`/`-fno-rtti`). Jolt by default compiles without RTTI and if your project compiles with RTTI you can get this error. Either turn RTTI off for your project or turn it on for Jolt using the CPP_RTTI_ENABLED cmake option.
+
 ### DirectX Error
 
 The samples use DirectX for the graphics implementation, when attempting to run the samples you may get a DirectX error pop-up which may say "The GPU device instance has been suspended", in your debugger you may see the message "Using the Redistributable D3D12 SDKLayers dll also requires that the latest SDKLayers for Windows 10 is installed.". 
