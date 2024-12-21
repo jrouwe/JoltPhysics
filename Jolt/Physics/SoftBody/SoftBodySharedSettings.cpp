@@ -541,6 +541,10 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			if (group_idx[i] == -1)
 				bounds.Encapsulate(Vec3(mVertices[i].mPosition));
 
+		// If the bounds are invalid, it means that there were no ungrouped vertices
+		if (!bounds.IsValid())
+			break;
+
 		// Determine longest and shortest axis
 		Vec3 bounds_size = bounds.GetSize();
 		uint max_axis = bounds_size.GetHighestComponentIndex();
