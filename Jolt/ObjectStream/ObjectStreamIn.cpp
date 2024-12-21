@@ -304,7 +304,7 @@ bool ObjectStreamIn::ReadRTTI()
 			for (int idx = 0; idx < rtti->GetAttributeCount(); ++idx)
 			{
 				const SerializableAttribute &attr = rtti->GetAttribute(idx);
-				if (strcmp(attr.GetName(), attribute_name.c_str()) == 0)
+				if (attribute_name.compare(attr.GetName()) == 0)
 				{
 					attribute.mIndex = idx;
 					break;

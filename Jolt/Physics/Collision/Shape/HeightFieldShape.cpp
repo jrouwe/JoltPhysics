@@ -1710,7 +1710,7 @@ public:
 	JPH_INLINE explicit			DecodingContext(const HeightFieldShape *inShape) :
 		mShape(inShape)
 	{
-		static_assert(sizeof(sGridOffsets) / sizeof(uint) == cNumBitsXY + 1, "Offsets array is not long enough");
+		static_assert(std::size(sGridOffsets) == cNumBitsXY + 1, "Offsets array is not long enough");
 
 		// Construct root stack entry
 		mPropertiesStack[0] = 0; // level: 0, x: 0, y: 0
