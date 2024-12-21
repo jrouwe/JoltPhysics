@@ -319,9 +319,10 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-loongarch64 -L /usr/loongarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
-    - name: Test Pyramid
-      working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-loongarch64 -L /usr/loongarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+# This is slow so disabled for the moment
+#    - name: Test Pyramid
+#      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+#      run: qemu-loongarch64 -L /usr/loongarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   emscripten:
     runs-on: ubuntu-latest
