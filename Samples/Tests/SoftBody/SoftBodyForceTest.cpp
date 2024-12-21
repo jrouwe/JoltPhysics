@@ -37,7 +37,7 @@ void SoftBodyForceTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	mTime += inParams.mDeltaTime;
 
 	// Apply a fluctuating force
-	constexpr float cMaxForce = 15.0f;
+	constexpr float cMaxForce = 10000.0f;
 	constexpr float cMaxAngle = DegreesToRadians(90.0f);
 	Vec3 force(0, 0, 0.5f * cMaxForce * (1.0f + PerlinNoise3(0, 0, mTime / 2.0f, 256, 256, 256)));
 	force = Mat44::sRotationY(cMaxAngle * PerlinNoise3(mTime / 10.0f, 0, 0, 256, 256, 256)) * force;
@@ -45,7 +45,7 @@ void SoftBodyForceTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Draw the force
 	RVec3 offset(0, 10, 0);
-	DebugRenderer::sInstance->DrawArrow(offset, offset + force, Color::sGreen, 0.1f);
+	DebugRenderer::sInstance->DrawArrow(offset, offset + 10.0f * force.Normalized(), Color::sGreen, 0.1f);
 }
 
 void SoftBodyForceTest::SaveState(StateRecorder &inStream) const

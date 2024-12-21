@@ -39,7 +39,7 @@ void SoftBodyShapesTest::Initialize()
 	mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 
 	// Create cube
-	SoftBodyCreationSettings cube(SoftBodyCreator::CreateCube(), RVec3(20.0f, 10.0f, 0.0f), cCubeOrientation, Layers::MOVING);
+	SoftBodyCreationSettings cube(SoftBodySharedSettings::sCreateCube(5, 0.5f), RVec3(20.0f, 10.0f, 0.0f), cCubeOrientation, Layers::MOVING);
 	cube.mRestitution = 0.0f;
 	mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate);
 

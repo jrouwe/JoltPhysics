@@ -1020,7 +1020,7 @@ void SamplesApp::ShootObject()
 	}
 	else
 	{
-		Ref<SoftBodySharedSettings> shared_settings = SoftBodyCreator::CreateCube(5, 0.5f * GetWorldScale());
+		Ref<SoftBodySharedSettings> shared_settings = SoftBodySharedSettings::sCreateCube(5, 0.5f * GetWorldScale());
 		for (SoftBodySharedSettings::Vertex &v : shared_settings->mVertices)
 		{
 			v.mInvMass = 0.025f;

@@ -34,7 +34,7 @@ void SoftBodyFrictionTest::Initialize()
 		mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
 	}
 
-	Ref<SoftBodySharedSettings> cube_settings = SoftBodyCreator::CreateCube();
+	Ref<SoftBodySharedSettings> cube_settings = SoftBodySharedSettings::sCreateCube(5, 0.5f);
 	for (SoftBodySharedSettings::Vertex &v : cube_settings->mVertices)
 		v.mVelocity = Float3(0, 0, 10);
 	SoftBodyCreationSettings cube(cube_settings, RVec3::sZero(), Quat::sIdentity(), Layers::MOVING);

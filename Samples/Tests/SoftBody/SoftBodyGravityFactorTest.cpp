@@ -30,7 +30,7 @@ void SoftBodyGravityFactorTest::Initialize()
 		mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
 	}
 
-	SoftBodyCreationSettings cube(SoftBodyCreator::CreateCube(), RVec3::sZero(), Quat::sIdentity(), Layers::MOVING);
+	SoftBodyCreationSettings cube(SoftBodySharedSettings::sCreateCube(5, 0.5f), RVec3::sZero(), Quat::sIdentity(), Layers::MOVING);
 
 	for (int i = 0; i <= 10; ++i)
 	{
