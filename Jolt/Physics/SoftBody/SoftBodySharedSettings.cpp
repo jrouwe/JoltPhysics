@@ -1045,7 +1045,7 @@ Ref<SoftBodySharedSettings> SoftBodySharedSettings::sCreateCube(uint inGridSize,
 			}
 
 	// Function to get the vertex index of a point on the cube
-	auto vertex_index = [inGridSize](uint inX, uint inY, uint inZ) -> uint
+	auto vertex_index = [inGridSize](uint inX, uint inY, uint inZ)
 	{
 		return inX + inY * inGridSize + inZ * inGridSize * inGridSize;
 	};
