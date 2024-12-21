@@ -189,7 +189,7 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 	scene->AddConstraint(dist_constraint, 3, 4);
 
 	// Add soft body cube
-	Ref<SoftBodySharedSettings> sb_cube_settings = SoftBodyCreator::CreateCube(5, 0.2f);
+	Ref<SoftBodySharedSettings> sb_cube_settings = SoftBodySharedSettings::sCreateCube(5, 0.2f);
 	sb_cube_settings->mMaterials = { new PhysicsMaterialSimple("Soft Body Cube Material", next_color()) };
 	SoftBodyCreationSettings sb_cube(sb_cube_settings, next_pos(), Quat::sIdentity(), Layers::MOVING);
 	scene->AddSoftBody(sb_cube);

@@ -20,7 +20,7 @@ void SoftBodyUpdatePositionTest::Initialize()
 	CreateFloor();
 
 	// Bodies with various settings for 'make rotation identity' and 'update position'
-	SoftBodyCreationSettings sphere(SoftBodyCreator::CreateCube(), RVec3::sZero(), Quat::sRotation(Vec3::sReplicate(1.0f / sqrt(3.0f)), 0.25f * JPH_PI), Layers::MOVING);
+	SoftBodyCreationSettings sphere(SoftBodySharedSettings::sCreateCube(5, 0.5f), RVec3::sZero(), Quat::sRotation(Vec3::sReplicate(1.0f / sqrt(3.0f)), 0.25f * JPH_PI), Layers::MOVING);
 
 	for (int update_position = 0; update_position < 2; ++update_position)
 		for (int make_rotation_identity = 0; make_rotation_identity < 2; ++make_rotation_identity)

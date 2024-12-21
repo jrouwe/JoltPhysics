@@ -18,11 +18,6 @@ namespace SoftBodyCreator
 	/// Same as above but fixates the corners of the cloth
 	Ref<SoftBodySharedSettings>	CreateClothWithFixatedCorners(uint inGridSizeX = 30, uint inGridSizeZ = 30, float inGridSpacing = 0.75f);
 
-	/// Create a cube
-	/// @param inGridSize Number of points along each axis
-	/// @param inGridSpacing Distance between points
-	Ref<SoftBodySharedSettings>	CreateCube(uint inGridSize = 5, float inGridSpacing = 0.5f);
-
 	/// Create a hollow sphere
 	/// @param inRadius Radius of the sphere
 	/// @param inNumTheta Number of segments in the theta direction
