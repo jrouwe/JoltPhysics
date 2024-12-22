@@ -206,29 +206,37 @@ void MutableCompoundShape::CalculateSubShapeBounds(uint inStartIdx, uint inNumbe
 	CalculateLocalBounds();
 }
 
-uint MutableCompoundShape::AddShape(Vec3Arg inPosition, QuatArg inRotation, const Shape *inShape, uint32 inUserData)
+uint MutableCompoundShape::AddShape(Vec3Arg inPosition, QuatArg inRotation, const Shape *inShape, uint32 inUserData, uint inIndex)
 {
 	SubShape sub_shape;
 	sub_shape.mShape = inShape;
 	sub_shape.mUserData = inUserData;
 	sub_shape.SetTransform(inPosition, inRotation, mCenterOfMass);
-	mSubShapes.push_back(sub_shape);
-	uint shape_idx = (uint)mSubShapes.size() - 1;
 
-	CalculateSubShapeBounds(shape_idx, 1);
-
-	return shape_idx;
+	if (inIndex >= mSubShapes.size())
+	{
+		uint shape_idx = uint(mSubShapes.size());
+		mSubShapes.push_back(sub_shape);
+		CalculateSubShapeBounds(shape_idx, 1);
+		return shape_idx;
+	}
+	else
+	{
+		mSubShapes.insert(mSubShapes.begin() + inIndex, sub_shape);
+		CalculateSubShapeBounds(inIndex, uint(mSubShapes.size()) - inIndex);
+		return inIndex;
+	}
 }
 
 void MutableCompoundShape::RemoveShape(uint inIndex)
 {
 	mSubShapes.erase(mSubShapes.begin() + inIndex);
 
+	// We always need to recalculate the bounds of the sub shapes as we test blocks
+	// of 4 sub shapes at a time and removed shapes get their bounds updated
+	// to repeat the bounds of the previous sub shape
 	uint num_bounds = (uint)mSubShapes.size() - inIndex;
-	if (num_bounds > 0)
-		CalculateSubShapeBounds(inIndex, num_bounds);
-	else
-		CalculateLocalBounds();
+	CalculateSubShapeBounds(inIndex, num_bounds);
 }
 
 void MutableCompoundShape::ModifyShape(uint inIndex, Vec3Arg inPosition, QuatArg inRotation)
