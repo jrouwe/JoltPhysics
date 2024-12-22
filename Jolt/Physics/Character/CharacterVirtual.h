@@ -52,6 +52,8 @@ public:
 
 	/// Layer that the inner rigid body will be added to
 	ObjectLayer							mInnerBodyLayer = 0;
+	
+	BodyID 								mInnerBodyID;
 };
 
 /// This class contains settings that allow you to override the behavior of a character's collision response
@@ -176,9 +178,6 @@ public:
 
 	/// Constructor without user data
 										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) : CharacterVirtual(inSettings, inPosition, inRotation, 0, inSystem) { }
-
-	/// Constructor with BodyID and no user data
-										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, BodyID inBodyID, PhysicsSystem *inSystem);
 
 	/// Destructor
 	virtual								~CharacterVirtual() override;
@@ -360,6 +359,9 @@ public:
 
 	/// Get the transformed shape that represents the volume of the character, can be used for collision checks.
 	TransformedShape					GetTransformedShape() const								{ return TransformedShape(GetCenterOfMassPosition(), mRotation, mShape, mInnerBodyID); }
+	
+	void 								CreateInnerBody(const RefConst<Shape> inInnerBodyShape, const ObjectLayer inInnerBodyLayer, const BodyID inInnerBodyID, const uint64 inUserData);
+	BodyID 								DestroyInnerBody();
 
 	/// @brief Get all contacts for the character at a particular location.
 	/// When colliding with another character virtual, this pointer will be provided through CollideShapeCollector::SetUserContext before adding a hit.
