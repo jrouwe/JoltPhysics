@@ -15,6 +15,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added an example of a body that's both a sensor and a rigid body in `ContactListenerTest`.
 * Added binary serialization to `SkeletalAnimation`.
 * Added support for RISC-V, LoongArch and PowerPC (Little Endian) CPUs.
+* Added the ability to add a sub shape at a specified index in a MutableCompoundShape rather than at the end.
 
 ### Bug fixes
 
@@ -23,6 +24,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added overloads for placement new in the `JPH_OVERRIDE_NEW_DELETE` macro, this means it is no longer needed to do `:: new (address) JPH::class_name(constructor_arguments)` but you can do `new (address) JPH::class_name(constructor_arguments)`.
 * Fixed a GCC warning `-Wshadow=global`.
 * BodyInterface::AddForce applied a force per soft body vertex rather than to the whole body, this resulted in a soft body accelerating much more compared to a rigid body of the same mass.
+* Removing a sub shape from a MutableCompoundShape would not update the bounding box if the last shape was removed, which can result in a small performance loss.
 
 ## v5.2.0
 
