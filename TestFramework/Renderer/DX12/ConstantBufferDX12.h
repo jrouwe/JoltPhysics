@@ -4,15 +4,15 @@
 
 #pragma once
 
-class Renderer;
+class RendererDX12;
 
 /// A binary blob that can be used to pass constants to a shader
-class ConstantBuffer
+class ConstantBufferDX12
 {
 public:
 	/// Constructor
-										ConstantBuffer(Renderer *inRenderer, uint64 inBufferSize);
-										~ConstantBuffer();
+										ConstantBufferDX12(RendererDX12 *inRenderer, uint64 inBufferSize);
+										~ConstantBufferDX12();
 
 	/// Map / unmap buffer (get pointer to data). This will discard all data in the buffer.
 	template <typename T> T *			Map()											{ return reinterpret_cast<T *>(MapInternal()); }
@@ -22,11 +22,11 @@ public:
 	void								Bind(int inSlot);
 
 private:
-	friend class Renderer;
+	friend class RendererDX12;
 
 	void *								MapInternal();
 
-	Renderer *							mRenderer;
+	RendererDX12 *						mRenderer;
 	ComPtr<ID3D12Resource>				mBuffer;
 	uint64								mBufferSize;
 };

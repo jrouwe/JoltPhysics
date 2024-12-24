@@ -24,27 +24,38 @@ set(TEST_FRAMEWORK_SRC_FILES
 	${TEST_FRAMEWORK_ROOT}/Input/Mouse.h
 	${TEST_FRAMEWORK_ROOT}/Math/Perlin.cpp
 	${TEST_FRAMEWORK_ROOT}/Math/Perlin.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/ConstantBuffer.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/ConstantBuffer.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/CommandQueue.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DescriptorHeap.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/FatalErrorIfFailed.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/FatalErrorIfFailed.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DebugRendererImp.cpp
+	${TEST_FRAMEWORK_ROOT}/Renderer/DebugRendererImp.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/ConstantBufferDX12.cpp
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/ConstantBufferDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/CommandQueueDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/DescriptorHeapDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/FatalErrorIfFailedDX12.cpp
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/FatalErrorIfFailedDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/PipelineStateDX12.cpp
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/PipelineStateDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/PixelShaderDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RendererDX12.cpp
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RendererDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderInstancesDX12.cpp
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderInstancesDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderPrimitiveDX12.cpp
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderPrimitiveDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.cpp
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/VertexShaderDX12.h
 	${TEST_FRAMEWORK_ROOT}/Renderer/Font.cpp
 	${TEST_FRAMEWORK_ROOT}/Renderer/Font.h
 	${TEST_FRAMEWORK_ROOT}/Renderer/Frustum.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/PipelineState.cpp
 	${TEST_FRAMEWORK_ROOT}/Renderer/PipelineState.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/PixelShader.h
 	${TEST_FRAMEWORK_ROOT}/Renderer/Renderer.cpp
 	${TEST_FRAMEWORK_ROOT}/Renderer/Renderer.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/RenderInstances.cpp
 	${TEST_FRAMEWORK_ROOT}/Renderer/RenderInstances.h
 	${TEST_FRAMEWORK_ROOT}/Renderer/RenderPrimitive.cpp
 	${TEST_FRAMEWORK_ROOT}/Renderer/RenderPrimitive.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/Texture.cpp
 	${TEST_FRAMEWORK_ROOT}/Renderer/Texture.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DebugRendererImp.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/DebugRendererImp.h
+	${TEST_FRAMEWORK_ROOT}/Renderer/VertexShader.h
 	${TEST_FRAMEWORK_ROOT}/TestFramework.cmake
 	${TEST_FRAMEWORK_ROOT}/TestFramework.h
 	${TEST_FRAMEWORK_ROOT}/UI/UIAnimation.cpp
@@ -83,27 +94,24 @@ set(TEST_FRAMEWORK_SRC_FILES
 	${TEST_FRAMEWORK_ROOT}/Utils/ReadData.h
 )
 
-# Group source files
-source_group(TREE ${TEST_FRAMEWORK_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES})
-
 # All shaders
 set(TEST_FRAMEWORK_SRC_FILES_SHADERS
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/VertexConstants.h
 )
 
-# Vertex shaders
-set(TEST_FRAMEWORK_VERTEX_SHADERS
+# HLSL vertex shaders
+set(TEST_FRAMEWORK_HLSL_VERTEX_SHADERS
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/FontVertexShader.hlsl
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/LineVertexShader.hlsl
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthVertexShader.hlsl
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleVertexShader.hlsl
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/UIVertexShader.hlsl
 )
-set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_VERTEX_SHADERS})
-set_source_files_properties(${TEST_FRAMEWORK_VERTEX_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T vs_5_0")
+set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_HLSL_VERTEX_SHADERS})
+set_source_files_properties(${TEST_FRAMEWORK_HLSL_VERTEX_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T vs_5_0")
 
-# Pixel shaders
-set(TEST_FRAMEWORK_PIXEL_SHADERS
+# HLSL pixel shaders
+set(TEST_FRAMEWORK_HLSL_PIXEL_SHADERS
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/FontPixelShader.hlsl
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/LinePixelShader.hlsl
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthPixelShader.hlsl
@@ -111,14 +119,78 @@ set(TEST_FRAMEWORK_PIXEL_SHADERS
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShader.hlsl
 	${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShaderUntextured.hlsl
 )
-set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_PIXEL_SHADERS})
-set_source_files_properties(${TEST_FRAMEWORK_PIXEL_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T ps_5_0")
+set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_HLSL_PIXEL_SHADERS})
+set_source_files_properties(${TEST_FRAMEWORK_HLSL_PIXEL_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T ps_5_0")
+
+# Include the Vulkan library
+find_package(Vulkan)
+if (Vulkan_FOUND)
+	# Vulkan source files
+	set(TEST_FRAMEWORK_SRC_FILES
+		${TEST_FRAMEWORK_SRC_FILES}
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/ConstantBufferVK.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/ConstantBufferVK.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/FatalErrorIfFailedVK.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/FatalErrorIfFailedVK.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/PipelineStateVK.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/PipelineStateVK.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/PixelShaderVK.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/RendererVK.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/RendererVK.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/RenderInstancesVK.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/RenderInstancesVK.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/RenderPrimitiveVK.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/RenderPrimitiveVK.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/TextureVK.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/TextureVK.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/VertexShaderVK.h
+	)
+
+	# GLSL headers
+	set(TEST_FRAMEWORK_SRC_FILES_SHADERS
+		${TEST_FRAMEWORK_SRC_FILES_SHADERS}
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/VertexConstantsVK.h
+	)
+
+	# GLSL shaders
+	set(TEST_FRAMEWORK_GLSL_SHADERS
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/FontVertexShader.vert
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/LineVertexShader.vert
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthVertexShader.vert
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleVertexShader.vert
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/UIVertexShader.vert
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/FontPixelShader.frag
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/LinePixelShader.frag
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthPixelShader.frag
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/TrianglePixelShader.frag
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShader.frag
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShaderUntextured.frag
+	)
+
+	# Compile GLSL shaders
+	foreach(SHADER ${TEST_FRAMEWORK_GLSL_SHADERS})
+		set(SPV_SHADER ${SHADER}.spv)
+		add_custom_command(OUTPUT ${SPV_SHADER}
+			COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SHADER} -o ${SPV_SHADER}
+			DEPENDS ${SHADER}
+			COMMENT "Compiling ${SHADER}")
+		list(APPEND TEST_FRAMEWORK_SPV_SHADERS ${SPV_SHADER})
+	endforeach()
+endif()
+
+# Group source files
+source_group(TREE ${TEST_FRAMEWORK_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES})
 
 # Group shader files
-source_group(TREE ${PHYSICS_REPO_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES_SHADERS})
+source_group(TREE ${PHYSICS_REPO_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_GLSL_SHADERS} ${TEST_FRAMEWORK_SPV_SHADERS})
 
 # Create TestFramework lib
-add_library(TestFramework STATIC ${TEST_FRAMEWORK_SRC_FILES} ${TEST_FRAMEWORK_SRC_FILES_SHADERS})
-target_include_directories(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT})
-target_link_libraries(TestFramework LINK_PUBLIC Jolt dxguid.lib dinput8.lib dxgi.lib d3d12.lib d3dcompiler.lib)
+add_library(TestFramework STATIC ${TEST_FRAMEWORK_SRC_FILES} ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_SPV_SHADERS})
+target_include_directories(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT} ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(TestFramework LINK_PUBLIC Jolt dxguid.lib dinput8.lib dxgi.lib d3d12.lib d3dcompiler.lib ${Vulkan_LIBRARIES})
 target_precompile_headers(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT}/TestFramework.h)
+
+# Enable Vulkan for the TestFramework
+if (Vulkan_FOUND AND JPH_ENABLE_VULKAN)
+	target_compile_definitions(TestFramework PRIVATE JPH_ENABLE_VULKAN)
+endif()

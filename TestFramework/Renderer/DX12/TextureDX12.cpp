@@ -1,28 +1,25 @@
 // Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
-// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-FileCopyrightText: 2024 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
 #include <TestFramework.h>
 
-#include <Renderer/Texture.h>
+#include <Renderer/DX12/TextureDX12.h>
+#include <Renderer/DX12/RendererDX12.h>
+#include <Renderer/DX12/FatalErrorIfFailedDX12.h>
 #include <Image/BlitSurface.h>
-#include <Renderer/Renderer.h>
-#include <Renderer/FatalErrorIfFailed.h>
 
-Texture::Texture(Renderer *inRenderer, const Surface *inSurface) :
+TextureDX12::TextureDX12(RendererDX12 *inRenderer, const Surface *inSurface) :
+	Texture(inSurface->GetWidth(), inSurface->GetHeight()),
 	mRenderer(inRenderer)
 {
-	// Store dimensions
-	mWidth = inSurface->GetWidth();
-	mHeight = inSurface->GetHeight();
-
 	// Create description
 	D3D12_RESOURCE_DESC desc = {};
 	desc.MipLevels = 1;
 	ESurfaceFormat format = inSurface->GetFormat();
 	switch (format)
 	{
-	case ESurfaceFormat::A4L4:			desc.Format = DXGI_FORMAT_R8G8_UNORM;		break;
+	case ESurfaceFormat::A4L4:			desc.Format = DXGI_FORMAT_R8G8_UNORM;		format = ESurfaceFormat::A8L8;		break;
 	case ESurfaceFormat::L8:			desc.Format = DXGI_FORMAT_R8_UNORM;			break;
 	case ESurfaceFormat::A8:			desc.Format = DXGI_FORMAT_A8_UNORM;			break;
 	case ESurfaceFormat::A8L8:			desc.Format = DXGI_FORMAT_R8G8_UNORM;		break;
@@ -128,13 +125,10 @@ Texture::Texture(Renderer *inRenderer, const Surface *inSurface) :
 	inRenderer->RecycleD3DResourceOnUploadHeap(upload_resource.Get(), required_size);
 }
 
-Texture::Texture(Renderer *inRenderer, int inWidth, int inHeight) :
+TextureDX12::TextureDX12(RendererDX12 *inRenderer, int inWidth, int inHeight) :
+	Texture(inWidth, inHeight),
 	mRenderer(inRenderer)
 {
-	// Store dimensions
-	mWidth = inWidth;
-	mHeight = inHeight;
-
 	// Allocate depth stencil buffer
 	D3D12_CLEAR_VALUE clear_value = {};
 	clear_value.Format = DXGI_FORMAT_D32_FLOAT;
@@ -182,7 +176,7 @@ Texture::Texture(Renderer *inRenderer, int inWidth, int inHeight) :
 	inRenderer->GetDevice()->CreateShaderResourceView(mTexture.Get(), &srv_desc, mSRV);
 }
 
-Texture::~Texture()
+TextureDX12::~TextureDX12()
 {
 	if (mSRV.ptr != 0)
 		mRenderer->GetSRVHeap().Free(mSRV);
@@ -194,17 +188,12 @@ Texture::~Texture()
 		mRenderer->RecycleD3DObject(mTexture.Get());
 }
 
-void Texture::Bind(int inSlot) const
+void TextureDX12::Bind(int inSlot) const
 {
 	mRenderer->GetCommandList()->SetGraphicsRootDescriptorTable(inSlot, mRenderer->GetSRVHeap().ConvertToGPUHandle(mSRV));
 }
 
-void Texture::ClearRenderTarget()
-{
-	mRenderer->GetCommandList()->ClearDepthStencilView(mDSV, D3D12_CLEAR_FLAG_DEPTH, 0, 0, 0, nullptr);
-}
-
-void Texture::SetAsRenderTarget(bool inSet) const
+void TextureDX12::SetAsRenderTarget(bool inSet) const
 {
 	if (inSet)
 	{
@@ -228,6 +217,9 @@ void Texture::SetAsRenderTarget(bool inSet) const
 		// Set scissor rect
 		D3D12_RECT scissor_rect = { 0, 0, static_cast<LONG>(mWidth), static_cast<LONG>(mHeight) };
 		mRenderer->GetCommandList()->RSSetScissorRects(1, &scissor_rect);
+
+		// Clear the render target
+		mRenderer->GetCommandList()->ClearDepthStencilView(mDSV, D3D12_CLEAR_FLAG_DEPTH, 0, 0, 0, nullptr);
 	}
 	else
 	{

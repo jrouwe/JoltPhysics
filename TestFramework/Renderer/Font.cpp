@@ -196,20 +196,20 @@ Font::Create(const char *inFontName, int inCharHeight)
 	DeleteDC(dc);
 
 	// Create input layout
-	const D3D12_INPUT_ELEMENT_DESC vertex_desc[] =
+	const PipelineState::EInputDescription vertex_desc[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		PipelineState::EInputDescription::Position,
+		PipelineState::EInputDescription::TexCoord,
+		PipelineState::EInputDescription::Color
 	};
 
 	// Load vertex shader
-	ComPtr<ID3DBlob> vtx = mRenderer->CreateVertexShader("Assets/Shaders/FontVertexShader.hlsl");
+	Ref<VertexShader> vtx = mRenderer->CreateVertexShader("Assets/Shaders/FontVertexShader");
 
 	// Load pixel shader
-	ComPtr<ID3DBlob> pix = mRenderer->CreatePixelShader("Assets/Shaders/FontPixelShader.hlsl");
+	Ref<PixelShader> pix = mRenderer->CreatePixelShader("Assets/Shaders/FontPixelShader");
 
-	mPipelineState = mRenderer->CreatePipelineState(vtx.Get(), vertex_desc, ARRAYSIZE(vertex_desc), pix.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaTest, PipelineState::ECullMode::Backface);
+	mPipelineState = mRenderer->CreatePipelineState(vtx, vertex_desc, std::size(vertex_desc), pix, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaTest, PipelineState::ECullMode::Backface);
 
 	// Create texture
 	mTexture = mRenderer->CreateTexture(surface);
@@ -396,13 +396,13 @@ void Font::DrawText3D(Mat44Arg inTransform, const string_view &inText, ColorArg 
 	if (inText.empty())
 		return;
 
-	RenderPrimitive primitive(mRenderer, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	if (CreateString(inTransform, inText, inColor, primitive))
+	Ref<RenderPrimitive> primitive = mRenderer->CreateRenderPrimitive(PipelineState::ETopology::Triangle);
+	if (CreateString(inTransform, inText, inColor, *primitive))
 	{
 		mTexture->Bind(2);
 
 		mPipelineState->Activate();
 
-		primitive.Draw();
+		primitive->Draw();
 	}
 }

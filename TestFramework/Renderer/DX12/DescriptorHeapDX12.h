@@ -5,7 +5,7 @@
 #pragma once
 
 /// DirectX descriptor heap, used to allocate handles for resources to bind them to shaders
-class DescriptorHeap
+class DescriptorHeapDX12
 {
 public:
 	/// Initialize the heap

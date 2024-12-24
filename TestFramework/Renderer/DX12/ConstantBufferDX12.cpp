@@ -4,24 +4,24 @@
 
 #include <TestFramework.h>
 
-#include <Renderer/ConstantBuffer.h>
-#include <Renderer/Renderer.h>
-#include <Renderer/FatalErrorIfFailed.h>
+#include <Renderer/DX12/ConstantBufferDX12.h>
+#include <Renderer/DX12/RendererDX12.h>
+#include <Renderer/DX12/FatalErrorIfFailedDX12.h>
 
-ConstantBuffer::ConstantBuffer(Renderer *inRenderer, uint64 inBufferSize) :
+ConstantBufferDX12::ConstantBufferDX12(RendererDX12 *inRenderer, uint64 inBufferSize) :
 	mRenderer(inRenderer)
 {
 	mBuffer = mRenderer->CreateD3DResourceOnUploadHeap(inBufferSize);
 	mBufferSize = inBufferSize;
 }
 
-ConstantBuffer::~ConstantBuffer()
+ConstantBufferDX12::~ConstantBufferDX12()
 {
 	if (mBuffer != nullptr)
 		mRenderer->RecycleD3DResourceOnUploadHeap(mBuffer.Get(), mBufferSize);
 }
 
-void *ConstantBuffer::MapInternal()
+void *ConstantBufferDX12::MapInternal()
 {
 	void *mapped_resource;
 	D3D12_RANGE range = { 0, 0 }; // We're not going to read
@@ -29,12 +29,12 @@ void *ConstantBuffer::MapInternal()
 	return mapped_resource;
 }
 
-void ConstantBuffer::Unmap()
+void ConstantBufferDX12::Unmap()
 {
 	mBuffer->Unmap(0, nullptr);
 }
 
-void ConstantBuffer::Bind(int inSlot)
+void ConstantBufferDX12::Bind(int inSlot)
 {
 	mRenderer->GetCommandList()->SetGraphicsRootConstantBufferView(inSlot, mBuffer->GetGPUVirtualAddress());
 }
