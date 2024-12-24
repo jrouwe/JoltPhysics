@@ -132,10 +132,6 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 		color_blend_attachment.blendEnable = VK_FALSE;
 		break;
 
-	case EBlendMode::AlphaTest:
-		multisampling.alphaToCoverageEnable = VK_TRUE;
-		[[fallthrough]];
-
 	case EBlendMode::AlphaBlend:
 		color_blend_attachment.blendEnable = VK_TRUE;
 		color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;

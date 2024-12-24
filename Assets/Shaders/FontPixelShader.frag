@@ -9,5 +9,9 @@ layout(location = 0) out vec4 oColor;
 
 void main()
 {
-	oColor = vec4(iColor.xyz, texture(texSampler, iTex).x);
+	float t = texture(texSampler, iTex).x;
+	if (t < 0.5)
+		discard;
+	
+	oColor = vec4(iColor.xyz, t);
 }

@@ -97,10 +97,6 @@ PipelineStateDX12::PipelineStateDX12(RendererDX12 *inRenderer, const VertexShade
 		blend_desc.BlendEnable = FALSE;
 		break;
 
-	case EBlendMode::AlphaTest:
-		pso_desc.BlendState.AlphaToCoverageEnable = TRUE;
-		[[fallthrough]];
-
 	case EBlendMode::AlphaBlend:
 		blend_desc.BlendEnable = TRUE;
 		blend_desc.SrcBlend = D3D12_BLEND_SRC_ALPHA;

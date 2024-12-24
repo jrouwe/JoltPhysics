@@ -53,7 +53,6 @@ public:
 	{
 		Write,
 		AlphaBlend,
-		AlphaTest,						///< Alpha blend with alpha test enabled
 	};
 
 	/// How to cull triangles

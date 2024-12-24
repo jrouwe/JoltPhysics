@@ -209,7 +209,7 @@ Font::Create(const char *inFontName, int inCharHeight)
 	// Load pixel shader
 	Ref<PixelShader> pix = mRenderer->CreatePixelShader("Assets/Shaders/FontPixelShader");
 
-	mPipelineState = mRenderer->CreatePipelineState(vtx, vertex_desc, std::size(vertex_desc), pix, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaTest, PipelineState::ECullMode::Backface);
+	mPipelineState = mRenderer->CreatePipelineState(vtx, vertex_desc, std::size(vertex_desc), pix, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 
 	// Create texture
 	mTexture = mRenderer->CreateTexture(surface);
