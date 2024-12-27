@@ -38,6 +38,7 @@ public:
 	VkDescriptorSetLayout			GetDescriptorSetLayoutTexture() const							{ return mDescriptorSetLayoutTexture; }
 	VkSampler						GetTextureSamplerRepeat() const									{ return mTextureSamplerRepeat; }
 	VkSampler						GetTextureSamplerShadow() const									{ return mTextureSamplerShadow; }
+	VkRenderPass					GetRenderPassShadow() const										{ return mRenderPassShadow; }
 	VkRenderPass					GetRenderPass() const											{ return mRenderPass; }
 	VkPipelineLayout				GetPipelineLayout() const										{ return mPipelineLayout; }
 	VkCommandBuffer					GetCommandBuffer()												{ JPH_ASSERT(mInFrame); return mCommandBuffers[mFrameIndex]; }
@@ -57,6 +58,7 @@ private:
 	VkSurfaceFormatKHR				SelectFormat(VkPhysicalDevice inDevice);
 	void							CreateSwapChain(VkPhysicalDevice inDevice);
 	void							DestroySwapChain();
+	void							UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight);
 
 	struct FreedBuffer
 	{
@@ -89,10 +91,12 @@ private:
 	VkDescriptorPool				mDescriptorPool = VK_NULL_HANDLE;
 	VkDescriptorSet					mDescriptorSets[cFrameCount];
 	VkDescriptorSet					mDescriptorSetsOrtho[cFrameCount];
-	VkSampler						mTextureSamplerRepeat = VK_NULL_HANDLE;	
 	VkSampler						mTextureSamplerShadow = VK_NULL_HANDLE;	
+	VkSampler						mTextureSamplerRepeat = VK_NULL_HANDLE;	
+	VkRenderPass					mRenderPassShadow = VK_NULL_HANDLE;
 	VkRenderPass					mRenderPass = VK_NULL_HANDLE;
 	VkPipelineLayout				mPipelineLayout = VK_NULL_HANDLE;
+	VkFramebuffer					mShadowFrameBuffer = VK_NULL_HANDLE;
 	Array<VkFramebuffer>			mSwapChainFramebuffers;
 	uint32							mImageIndex = 0;
 	VkCommandPool					mCommandPool = VK_NULL_HANDLE;

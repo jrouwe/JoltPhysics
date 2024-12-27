@@ -328,7 +328,7 @@ void RendererDX12::Initialize()
 	}
 
 	// Create depth only texture (no color buffer, as seen from light)
-	mShadowMap = new TextureDX12(this, 4096, 4096);
+	mShadowMap = new TextureDX12(this, cShadowMapSize, cShadowMapSize);
 }
 
 void RendererDX12::OnWindowResize()

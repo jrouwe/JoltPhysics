@@ -39,8 +39,8 @@ void main()
 
 	// Calculate texture coordinates in light depth texture
 	vec2 tex_coord;
-	tex_coord.x =  position_l.x / 2.0 + 0.5;
-	tex_coord.y = -position_l.y / 2.0 + 0.5;
+	tex_coord.x = position_l.x / 2.0 + 0.5;
+	tex_coord.y = position_l.y / 2.0 + 0.5;
 
 	// Check that the texture coordinate is inside the depth texture, if not we don't know if it is lit or not so we assume lit
 	float shadow_factor = 1.0;

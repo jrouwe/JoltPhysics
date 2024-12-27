@@ -172,8 +172,7 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 	pipeline_info.pColorBlendState = &color_blending;
 	pipeline_info.pDynamicState = &dynamic_state;
 	pipeline_info.layout = mRenderer->GetPipelineLayout();
-	pipeline_info.renderPass = mRenderer->GetRenderPass();
-	pipeline_info.subpass = inDrawPass == EDrawPass::Normal? 1 : 0;
+	pipeline_info.renderPass = inDrawPass == EDrawPass::Normal? mRenderer->GetRenderPass() : mRenderer->GetRenderPassShadow();
 	FatalErrorIfFailed(vkCreateGraphicsPipelines(mRenderer->GetDevice(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &mGraphicsPipeline));
 }
 
