@@ -7,9 +7,11 @@
 #include <Renderer/Renderer.h>
 #include <Utils/Log.h>
 
-#include <shellscalingapi.h>
-
 static Renderer *sRenderer = nullptr;
+
+#ifdef JPH_PLATFORM_WINDOWS
+
+#include <shellscalingapi.h>
 
 //--------------------------------------------------------------------------------------
 // Called every time the application receives a message
@@ -41,8 +43,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	return 0;
 }
 
+#endif // JPH_PLATFORM_WINDOWS
+
 void Renderer::Initialize()
 {
+#ifdef JPH_PLATFORM_WINDOWS
 	// Prevent this window from auto scaling
 	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 
@@ -73,6 +78,9 @@ void Renderer::Initialize()
 
 	// Show window
 	ShowWindow(mhWnd, SW_SHOW);
+#else
+	// TODO
+#endif
 
 	// Store global renderer now that we're done initializing
 	sRenderer = this;
@@ -82,11 +90,15 @@ void Renderer::OnWindowResize()
 {
 	JPH_ASSERT(!mInFrame);
 
+#ifdef JPH_PLATFORM_WINDOWS
 	// Get new window size
 	RECT rc;
 	GetClientRect(mhWnd, &rc);
 	mWindowWidth = max<LONG>(rc.right - rc.left, 8);
 	mWindowHeight = max<LONG>(rc.bottom - rc.top, 8);
+#else
+	// TODO
+#endif
 }
 
 static Mat44 sPerspectiveInfiniteReverseZ(float inFovY, float inAspect, float inNear, float inYSign)

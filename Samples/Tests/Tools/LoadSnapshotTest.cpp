@@ -12,7 +12,9 @@
 #include <Layers.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#ifdef JPH_PLATFORM_WINDOWS
 #include <commdlg.h>
+#endif
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
@@ -23,6 +25,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSnapshotTest)
 
 void LoadSnapshotTest::Initialize()
 {
+#ifdef JPH_PLATFORM_WINDOWS
 	// Let user browse for a file
 	char file_name[MAX_PATH] = "";
 	OPENFILENAMEA ofn;
@@ -35,6 +38,9 @@ void LoadSnapshotTest::Initialize()
 	ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
 	if (!GetOpenFileNameA(&ofn))
 		return;
+#else
+	char file_name[] = "TODO";
+#endif
 
 	ifstream stream(file_name, ifstream::in | ifstream::binary);
 	if (!stream.is_open())

@@ -9,9 +9,6 @@
 #include <Image/Surface.h>
 #include <Jolt/Core/Profiler.h>
 
-const int cSpacingH		= 2;								// Number of pixels to put horizontally between characters
-const int cSpacingV		= 2;								// Number of pixels to put vertically between characters
-
 Font::Font(Renderer *inRenderer) :
 	mRenderer(inRenderer)
 {
@@ -27,6 +24,10 @@ Font::Create(const char *inFontName, int inCharHeight)
 	mCharHeight = inCharHeight;
 	mHorizontalTexels = 64;
 	mVerticalTexels = 64;
+
+#ifdef JPH_PLATFORM_WINDOWS
+	const int cSpacingH		= 2;		// Number of pixels to put horizontally between characters
+	const int cSpacingV		= 2;		// Number of pixels to put vertically between characters
 
 	// Check font name length
 	if (mFontName.size() >= LF_FACESIZE)
@@ -194,6 +195,15 @@ Font::Create(const char *inFontName, int inCharHeight)
 	// Release GDI objects
 	DeleteObject(font);
 	DeleteDC(dc);
+#else
+	// TODO
+	Ref<SoftwareSurface> surface = new SoftwareSurface(mHorizontalTexels, mVerticalTexels, ESurfaceFormat::L8);
+	surface->Clear();
+	memset(mStartU, 0, sizeof(mStartU));
+	memset(mStartV, 0, sizeof(mStartV));
+	memset(mWidth, 0, sizeof(mWidth));
+	memset(mSpacing, 0, sizeof(mSpacing));
+#endif
 
 	// Create input layout
 	const PipelineState::EInputDescription vertex_desc[] =

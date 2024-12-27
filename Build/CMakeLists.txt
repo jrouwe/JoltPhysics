@@ -409,7 +409,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		   endif()
 	endif()
 
-	if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
+	if ((WIN32 OR LINUX) AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
 		# Windows only targets
 		if (TARGET_SAMPLES OR TARGET_VIEWER)
 			include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)

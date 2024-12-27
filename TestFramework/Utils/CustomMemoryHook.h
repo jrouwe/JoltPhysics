@@ -4,7 +4,7 @@
 
 #pragma once
 
-#if defined(_DEBUG) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR) && !defined(JPH_COMPILER_MINGW)
+#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR) && !defined(JPH_COMPILER_MINGW)
 
 /// Register hook that detects allocations that aren't made through the custom allocator
 void RegisterCustomMemoryHook();

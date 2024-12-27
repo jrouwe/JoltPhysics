@@ -506,7 +506,7 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateSlider(phys_settings, "Min Velocity For Restitution (m/s)", mPhysicsSettings.mMinVelocityForRestitution, 0.0f, 10.0f, 0.1f, [this](float inValue) { mPhysicsSettings.mMinVelocityForRestitution = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Time Before Sleep (s)", mPhysicsSettings.mTimeBeforeSleep, 0.1f, 1.0f, 0.1f, [this](float inValue) { mPhysicsSettings.mTimeBeforeSleep = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Point Velocity Sleep Threshold (m/s)", mPhysicsSettings.mPointVelocitySleepThreshold, 0.01f, 1.0f, 0.01f, [this](float inValue) { mPhysicsSettings.mPointVelocitySleepThreshold = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
-		#if defined(_DEBUG) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR) && !defined(JPH_COMPILER_MINGW)
+		#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR) && !defined(JPH_COMPILER_MINGW)
 			mDebugUI->CreateCheckBox(phys_settings, "Enable Checking Memory Hook", IsCustomMemoryHookEnabled(), [](UICheckBox::EState inState) { EnableCustomMemoryHook(inState == UICheckBox::STATE_CHECKED); });
 		#endif
 			mDebugUI->CreateCheckBox(phys_settings, "Deterministic Simulation", mPhysicsSettings.mDeterministicSimulation, [this](UICheckBox::EState inState) { mPhysicsSettings.mDeterministicSimulation = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
@@ -623,7 +623,11 @@ SamplesApp::SamplesApp()
 	}
 
 	// Get test name from commandline
+#ifdef JPH_PLATFORM_WINDOWS
 	String cmd_line = ToLower(GetCommandLineA());
+#else
+	String cmd_line = "TODO";
+#endif
 	Array<String> args;
 	StringToVector(cmd_line, args, " ");
 	if (args.size() == 2)
@@ -766,7 +770,13 @@ bool SamplesApp::NextTest()
 		if (mExitAfterRunningTests)
 			return false; // Exit the application now
 		else
+		{
+		#ifdef JPH_PLATFORM_WINDOWS
 			MessageBoxA(nullptr, "Test run complete!", "Complete", MB_OK);
+		#else
+			Trace("Test run complete!");
+		#endif
+		}
 	}
 	else
 	{
@@ -1856,7 +1866,7 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 	BodyInterface &bi = mPhysicsSystem->GetBodyInterface();
 
 	// Handle keyboard input for which simulation needs to be running
-	if (mKeyboard->IsKeyPressedAndTriggered(DIK_B, mWasShootKeyPressed))
+	if (mKeyboard->IsKeyPressedAndTriggered(EKey::B, mWasShootKeyPressed))
 		ShootObject();
 
 	// Allow the user to drag rigid/soft bodies around
@@ -1867,7 +1877,7 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 		if (CastProbe(cDragRayLength, mDragFraction, hit_position, mDragBody))
 		{
 			// If key is pressed create constraint to start dragging
-			if (mKeyboard->IsKeyPressed(DIK_SPACE))
+			if (mKeyboard->IsKeyPressed(EKey::Space))
 			{
 				// Target body must be dynamic
 				BodyLockWrite lock(mPhysicsSystem->GetBodyLockInterface(), mDragBody);
@@ -1920,7 +1930,7 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 	}
 	else
 	{
-		if (!mKeyboard->IsKeyPressed(DIK_SPACE))
+		if (!mKeyboard->IsKeyPressed(EKey::Space))
 		{
 			// If key released, destroy constraint
 			if (mDragConstraint != nullptr)
@@ -2007,24 +2017,24 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 		return false;
 
 	// Handle keyboard input
-	bool shift = mKeyboard->IsKeyPressed(DIK_LSHIFT) || mKeyboard->IsKeyPressed(DIK_RSHIFT);
+	bool shift = mKeyboard->IsKeyPressed(EKey::LShift) || mKeyboard->IsKeyPressed(EKey::RShift);
 #ifdef JPH_DEBUG_RENDERER
-	bool alt = mKeyboard->IsKeyPressed(DIK_LALT) || mKeyboard->IsKeyPressed(DIK_RALT);
+	bool alt = mKeyboard->IsKeyPressed(EKey::LAlt) || mKeyboard->IsKeyPressed(EKey::RAlt);
 #endif // JPH_DEBUG_RENDERER
-	for (int key = mKeyboard->GetFirstKey(); key != 0; key = mKeyboard->GetNextKey())
+	for (EKey key = mKeyboard->GetFirstKey(); key != EKey::Invalid; key = mKeyboard->GetNextKey())
 		switch (key)
 		{
-		case DIK_R:
+		case EKey::R:
 			StartTest(mTestClass);
 			return true;
 
-		case DIK_N:
+		case EKey::N:
 			if (!mTestsToRun.empty())
 				NextTest();
 			break;
 
 	#ifdef JPH_DEBUG_RENDERER
-		case DIK_H:
+		case EKey::H:
 			if (shift)
 				mBodyDrawSettings.mDrawGetSupportFunction = !mBodyDrawSettings.mDrawGetSupportFunction;
 			else if (alt)
@@ -2033,46 +2043,46 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 				mBodyDrawSettings.mDrawShape = !mBodyDrawSettings.mDrawShape;
 			break;
 
-		case DIK_F:
+		case EKey::F:
 			if (shift)
 				mBodyDrawSettings.mDrawGetSupportingFace = !mBodyDrawSettings.mDrawGetSupportingFace;
 			break;
 
-		case DIK_I:
+		case EKey::I:
 			mBodyDrawSettings.mDrawMassAndInertia = !mBodyDrawSettings.mDrawMassAndInertia;
 			break;
 
-		case DIK_1:
+		case EKey::Num1:
 			ContactConstraintManager::sDrawContactPoint = !ContactConstraintManager::sDrawContactPoint;
 			break;
 
-		case DIK_2:
+		case EKey::Num2:
 			ContactConstraintManager::sDrawSupportingFaces = !ContactConstraintManager::sDrawSupportingFaces;
 			break;
 
-		case DIK_3:
+		case EKey::Num3:
 			ContactConstraintManager::sDrawContactPointReduction = !ContactConstraintManager::sDrawContactPointReduction;
 			break;
 
-		case DIK_C:
+		case EKey::C:
 			mDrawConstraints = !mDrawConstraints;
 			break;
 
-		case DIK_L:
+		case EKey::L:
 			mDrawConstraintLimits = !mDrawConstraintLimits;
 			break;
 
-		case DIK_M:
+		case EKey::M:
 			ContactConstraintManager::sDrawContactManifolds = !ContactConstraintManager::sDrawContactManifolds;
 			break;
 
-		case DIK_W:
+		case EKey::W:
 			if (alt)
 				mBodyDrawSettings.mDrawShapeWireframe = !mBodyDrawSettings.mDrawShapeWireframe;
 			break;
 	#endif // JPH_DEBUG_RENDERER
 
-		case DIK_COMMA:
+		case EKey::Comma:
 			// Back stepping
 			if (mPlaybackFrames.size() > 1)
 			{
@@ -2085,13 +2095,17 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 			}
 			break;
 
-		case DIK_PERIOD:
+		case EKey::Period:
 			// Forward stepping
 			if (mPlaybackMode != EPlaybackMode::Play)
 			{
 				JPH_ASSERT(mCurrentPlaybackFrame >= 0);
 				mPlaybackMode = shift? EPlaybackMode::FastForward : EPlaybackMode::StepForward;
 			}
+			break;
+
+		default:
+			// Don't care
 			break;
 		}
 

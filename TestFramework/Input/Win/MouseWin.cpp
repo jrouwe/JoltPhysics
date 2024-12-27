@@ -4,22 +4,21 @@
 
 #include <TestFramework.h>
 
-#include <Input/Mouse.h>
+#include <Input/Win/MouseWin.h>
 #include <Renderer/Renderer.h>
 #include <Jolt/Core/Profiler.h>
 
-Mouse::Mouse()
+MouseWin::MouseWin()
 {
 	Reset();
 }
 
-Mouse::~Mouse()
+MouseWin::~MouseWin()
 {
 	Shutdown();
 }
 
-void
-Mouse::Reset()
+void MouseWin::Reset()
 {
 	mDI = nullptr;
 	mMouse = nullptr;
@@ -29,7 +28,7 @@ Mouse::Reset()
 	ResetMouse();
 }
 
-void Mouse::ResetMouse()
+void MouseWin::ResetMouse()
 {
 	memset(&mMouseState, 0, sizeof(mMouseState));
 	mMousePosInitialized = false;
@@ -40,7 +39,7 @@ void Mouse::ResetMouse()
 
 }
 
-void Mouse::DetectParsecRunning()
+void MouseWin::DetectParsecRunning()
 {
 	mIsParsecRunning = false;
 
@@ -59,7 +58,7 @@ void Mouse::DetectParsecRunning()
 	}
 }
 
-bool Mouse::Initialize(Renderer *inRenderer)
+bool MouseWin::Initialize(Renderer *inRenderer)
 #ifdef JPH_COMPILER_CLANG
 	// DIPROP_BUFFERSIZE is a pointer to 1 which causes UBSan: runtime error: reference binding to misaligned address 0x000000000001
 	__attribute__((no_sanitize("alignment")))
@@ -118,7 +117,7 @@ bool Mouse::Initialize(Renderer *inRenderer)
 	return true;
 }
 
-void Mouse::Shutdown()
+void MouseWin::Shutdown()
 {
 	if (mMouse)
 	{
@@ -131,7 +130,7 @@ void Mouse::Shutdown()
 	Reset();
 }
 
-void Mouse::Poll()
+void MouseWin::Poll()
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -218,17 +217,17 @@ void Mouse::Poll()
 	}
 }
 
-void Mouse::HideCursor()
+void MouseWin::HideCursor()
 {
 	::ShowCursor(false);
 }
 
-void Mouse::ShowCursor()
+void MouseWin::ShowCursor()
 {
 	::ShowCursor(true);
 }
 
-void Mouse::SetExclusive(bool inExclusive)
+void MouseWin::SetExclusive(bool inExclusive)
 {
 	// Set cooperative level for Mouse
 	if (FAILED(mMouse->SetCooperativeLevel(mRenderer->GetWindowHandle(), (inExclusive? DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE) | DISCL_FOREGROUND)))

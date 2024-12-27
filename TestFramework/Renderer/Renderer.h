@@ -41,8 +41,10 @@ public:
 	int								GetWindowWidth()					{ return mWindowWidth; }
 	int								GetWindowHeight()					{ return mWindowHeight; }
 
+#ifdef JPH_PLATFORM_WINDOWS
 	/// Access to the window handle
 	HWND							GetWindowHandle() const				{ return mhWnd; }
+#endif // JPH_PLATFORM_WINDOWS
 
 	/// Start / end drawing a frame
 	virtual void					BeginFrame(const CameraState &inCamera, float inWorldScale);
@@ -112,7 +114,9 @@ protected:
 		Vec4						mLightPos;
 	};
 
+#ifdef JPH_PLATFORM_WINDOWS
 	HWND							mhWnd;
+#endif // JPH_PLATFORM_WINDOWS
 	int								mWindowWidth = 1920;
 	int								mWindowHeight = 1080;
 	float							mPerspectiveYSign = 1.0f;			///< Sign for the Y coordinate in the projection matrix (1 for DX, -1 for Vulkan)

@@ -15,10 +15,16 @@ void TraceImpl(const char *inFMT, ...)
 	char buffer[1024];
 	vsnprintf(buffer, sizeof(buffer), inFMT, list);
 	va_end(list);
-	strcat_s(buffer, "\n");
 
+#ifdef JPH_PLATFORM_WINDOWS
 	// Log to the output window
+	strcat_s(buffer, "\n");
 	OutputDebugStringA(buffer);
+#else
+	// Log to the console
+	printf("%s\n", buffer);
+#endif
+
 }
 
 void FatalError [[noreturn]] (const char *inFMT, ...)
@@ -32,6 +38,8 @@ void FatalError [[noreturn]] (const char *inFMT, ...)
 
 	Trace("Fatal Error: %s", buffer);
 
+#ifdef JPH_PLATFORM_WINDOWS
 	MessageBoxA(nullptr, buffer, "Fatal Error", MB_OK);
+#endif // JPH_PLATFORM_WINDOWS
 	exit(1);
 }

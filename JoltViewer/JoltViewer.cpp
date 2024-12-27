@@ -10,6 +10,7 @@
 #include <Renderer/DebugRendererImp.h>
 #include <UI/UIManager.h>
 #include <Application/DebugUI.h>
+#include <Utils/Log.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
@@ -26,14 +27,18 @@ JPH_SUPPRESS_WARNINGS_STD_END
 JoltViewer::JoltViewer()
 {
 	// Get file name from commandline
+#ifdef JPH_PLATFORM_WINDOWS
 	String cmd_line = GetCommandLineA();
+#else
+	String cmd_line = "TODO";
+#endif
 	Array<String> args;
 	StringToVector(cmd_line, args, " ");
 
 	// Check arguments
 	if (args.size() != 2 || args[1].empty())
 	{
-		MessageBoxA(nullptr, "Usage: JoltViewer <recording filename>", "Error", MB_OK);
+		FatalError("Usage: JoltViewer <recording filename>");
 		return;
 	}
 
@@ -41,7 +46,7 @@ JoltViewer::JoltViewer()
 	ifstream stream(args[1].c_str(), ifstream::in | ifstream::binary);
 	if (!stream.is_open())
 	{
-		MessageBoxA(nullptr, "Could not open recording file", "Error", MB_OK);
+		FatalError("Could not open recording file");
 		return;
 	}
 
@@ -50,7 +55,7 @@ JoltViewer::JoltViewer()
 	mRendererPlayback.Parse(wrapper);
 	if (mRendererPlayback.GetNumFrames() == 0)
 	{
-		MessageBoxA(nullptr, "Recording file did not contain any frames", "Error", MB_OK);
+		FatalError("Recording file did not contain any frames");
 		return;
 	}
 
@@ -86,33 +91,37 @@ bool JoltViewer::UpdateFrame(float inDeltaTime)
 		return false;
 
 	// Handle keyboard input
-	bool shift = mKeyboard->IsKeyPressed(DIK_LSHIFT) || mKeyboard->IsKeyPressed(DIK_RSHIFT);
-	for (int key = mKeyboard->GetFirstKey(); key != 0; key = mKeyboard->GetNextKey())
+	bool shift = mKeyboard->IsKeyPressed(EKey::LShift) || mKeyboard->IsKeyPressed(EKey::RShift);
+	for (EKey key = mKeyboard->GetFirstKey(); key != EKey::Invalid; key = mKeyboard->GetNextKey())
 		switch (key)
 		{
-		case DIK_R:
+		case EKey::R:
 			// Restart
 			mCurrentFrame = 0;
 			mPlaybackMode = EPlaybackMode::Play;
 			Pause(true);
 			break;
 
-		case DIK_O:
+		case EKey::O:
 			// Step
 			mPlaybackMode = EPlaybackMode::Play;
 			SingleStep();
 			break;
 
-		case DIK_COMMA:
+		case EKey::Comma:
 			// Back
 			mPlaybackMode = shift? EPlaybackMode::Rewind : EPlaybackMode::StepBack;
 			Pause(false);
 			break;
 
-		case DIK_PERIOD:
+		case EKey::Period:
 			// Forward
 			mPlaybackMode = shift? EPlaybackMode::Play : EPlaybackMode::StepForward;
 			Pause(false);
+			break;
+
+		default:
+			// Don't care
 			break;
 		}
 

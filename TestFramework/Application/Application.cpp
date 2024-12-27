@@ -13,11 +13,18 @@
 #include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
 #include <Renderer/DebugRendererImp.h>
-#include <crtdbg.h>
 #ifdef JPH_ENABLE_VULKAN
 	#include <Renderer/VK/RendererVK.h>
-#else
+#elif defined(JPH_ENABLE_DIRECTX)
 	#include <Renderer/DX12/RendererDX12.h>
+#endif
+#ifdef JPH_PLATFORM_WINDOWS
+	#include <crtdbg.h>
+	#include <Input/Win/KeyboardWin.h>
+	#include <Input/Win/MouseWin.h>
+#elif defined(JPH_PLATFORM_LINUX)
+	#include <Input/Linux/KeyboardLinux.h>
+	#include <Input/Linux/MouseLinux.h>
 #endif
 
 // Constructor
@@ -29,7 +36,7 @@ Application::Application() :
 	mUI(nullptr),
 	mDebugUI(nullptr)
 {
-#if defined(_DEBUG)
+#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
 	// Enable leak detection
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
@@ -59,8 +66,10 @@ Application::Application() :
 		// Create renderer
 	#ifdef JPH_ENABLE_VULKAN
 		mRenderer = new RendererVK;
-	#else
+	#elif defined(JPH_ENABLE_DIRECTX)
 		mRenderer = new RendererDX12;
+	#else
+		#error No renderer defined
 	#endif
 		mRenderer->Initialize();
 
@@ -73,11 +82,23 @@ Application::Application() :
 		mDebugRenderer = new DebugRendererImp(mRenderer, mFont);
 
 		// Init keyboard
-		mKeyboard = new Keyboard;
+	#ifdef JPH_PLATFORM_WINDOWS
+		mKeyboard = new KeyboardWin;
+	#elif defined(JPH_PLATFORM_LINUX)
+		mKeyboard = new KeyboardLinux;
+	#else
+		#error No keyboard defined
+	#endif
 		mKeyboard->Initialize(mRenderer);
 
 		// Init mouse
-		mMouse = new Mouse;
+	#ifdef JPH_PLATFORM_WINDOWS
+		mMouse = new MouseWin;
+	#elif defined(JPH_PLATFORM_LINUX)
+		mMouse = new MouseLinux;
+	#else
+		#error No mouse defined
+	#endif
 		mMouse->Initialize(mRenderer);
 
 		// Init UI
@@ -132,10 +153,16 @@ void Application::Run()
 	ResetCamera();
 
 	// Main message loop
+#ifdef JPH_PLATFORM_WINDOWS
 	MSG msg;
 	memset(&msg, 0, sizeof(msg));
 	while (WM_QUIT != msg.message)
+#else
+	// TODO
+	for (;;)
+#endif
 	{
+	#ifdef JPH_PLATFORM_WINDOWS
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			JPH_PROFILE("DispatchMessage");
@@ -144,30 +171,35 @@ void Application::Run()
 			DispatchMessage(&msg);
 		}
 		else
+	#endif
 		{
 			// Get new input
 			mKeyboard->Poll();
 			mMouse->Poll();
 
 			// Handle keyboard input
-			for (int key = mKeyboard->GetFirstKey(); key != 0; key = mKeyboard->GetNextKey())
+			for (EKey key = mKeyboard->GetFirstKey(); key != EKey::Invalid; key = mKeyboard->GetNextKey())
 				switch (key)
 				{
-				case DIK_P:
+				case EKey::P:
 					mIsPaused = !mIsPaused;
 					break;
 
-				case DIK_O:
+				case EKey::O:
 					mSingleStep = true;
 					break;
 
-				case DIK_T:
+				case EKey::T:
 					// Dump timing info to file
 					JPH_PROFILE_DUMP();
 					break;
 
-				case DIK_ESCAPE:
+				case EKey::Escape:
 					mDebugUI->ToggleVisibility();
+					break;
+
+				default:
+					// Don't care
 					break;
 				}
 
@@ -317,19 +349,19 @@ void Application::UpdateCamera(float inDeltaTime)
 
 	// Determine speed
 	float speed = 20.0f * GetWorldScale() * inDeltaTime;
-	bool shift = mKeyboard->IsKeyPressed(DIK_LSHIFT) || mKeyboard->IsKeyPressed(DIK_RSHIFT);
-	bool control = mKeyboard->IsKeyPressed(DIK_LCONTROL) || mKeyboard->IsKeyPressed(DIK_RCONTROL);
-	bool alt = mKeyboard->IsKeyPressed(DIK_LALT) || mKeyboard->IsKeyPressed(DIK_RALT);
+	bool shift = mKeyboard->IsKeyPressed(EKey::LShift) || mKeyboard->IsKeyPressed(EKey::RShift);
+	bool control = mKeyboard->IsKeyPressed(EKey::LControl) || mKeyboard->IsKeyPressed(EKey::RControl);
+	bool alt = mKeyboard->IsKeyPressed(EKey::LAlt) || mKeyboard->IsKeyPressed(EKey::RAlt);
 	if (shift)				speed *= 10.0f;
 	else if (control)		speed /= 25.0f;
 	else if (alt)			speed = 0.0f;
 
 	// Position
 	Vec3 right = mLocalCamera.mForward.Cross(mLocalCamera.mUp);
-	if (mKeyboard->IsKeyPressed(DIK_A))		mLocalCamera.mPos -= speed * right;
-	if (mKeyboard->IsKeyPressed(DIK_D))		mLocalCamera.mPos += speed * right;
-	if (mKeyboard->IsKeyPressed(DIK_W))		mLocalCamera.mPos += speed * mLocalCamera.mForward;
-	if (mKeyboard->IsKeyPressed(DIK_S))		mLocalCamera.mPos -= speed * mLocalCamera.mForward;
+	if (mKeyboard->IsKeyPressed(EKey::A))	mLocalCamera.mPos -= speed * right;
+	if (mKeyboard->IsKeyPressed(EKey::D))	mLocalCamera.mPos += speed * right;
+	if (mKeyboard->IsKeyPressed(EKey::W))	mLocalCamera.mPos += speed * mLocalCamera.mForward;
+	if (mKeyboard->IsKeyPressed(EKey::S))	mLocalCamera.mPos -= speed * mLocalCamera.mForward;
 
 	// Forward
 	float heading, pitch;

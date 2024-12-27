@@ -18,32 +18,12 @@ set(TEST_FRAMEWORK_SRC_FILES
 	${TEST_FRAMEWORK_ROOT}/Image/Surface.h
 	${TEST_FRAMEWORK_ROOT}/Image/ZoomImage.cpp
 	${TEST_FRAMEWORK_ROOT}/Image/ZoomImage.h
-	${TEST_FRAMEWORK_ROOT}/Input/Keyboard.cpp
 	${TEST_FRAMEWORK_ROOT}/Input/Keyboard.h
-	${TEST_FRAMEWORK_ROOT}/Input/Mouse.cpp
 	${TEST_FRAMEWORK_ROOT}/Input/Mouse.h
 	${TEST_FRAMEWORK_ROOT}/Math/Perlin.cpp
 	${TEST_FRAMEWORK_ROOT}/Math/Perlin.h
 	${TEST_FRAMEWORK_ROOT}/Renderer/DebugRendererImp.cpp
 	${TEST_FRAMEWORK_ROOT}/Renderer/DebugRendererImp.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/ConstantBufferDX12.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/ConstantBufferDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/CommandQueueDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/DescriptorHeapDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/FatalErrorIfFailedDX12.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/FatalErrorIfFailedDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/PipelineStateDX12.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/PipelineStateDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/PixelShaderDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RendererDX12.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RendererDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderInstancesDX12.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderInstancesDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderPrimitiveDX12.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderPrimitiveDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.cpp
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.h
-	${TEST_FRAMEWORK_ROOT}/Renderer/DX12/VertexShaderDX12.h
 	${TEST_FRAMEWORK_ROOT}/Renderer/Font.cpp
 	${TEST_FRAMEWORK_ROOT}/Renderer/Font.h
 	${TEST_FRAMEWORK_ROOT}/Renderer/Frustum.h
@@ -94,33 +74,73 @@ set(TEST_FRAMEWORK_SRC_FILES
 	${TEST_FRAMEWORK_ROOT}/Utils/ReadData.h
 )
 
-# All shaders
-set(TEST_FRAMEWORK_SRC_FILES_SHADERS
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/VertexConstants.h
-)
+if (WIN32)
+	# Windows source files
+	set(TEST_FRAMEWORK_SRC_FILES
+		${TEST_FRAMEWORK_SRC_FILES}
+		${TEST_FRAMEWORK_ROOT}/Input/Win/KeyboardWin.cpp
+		${TEST_FRAMEWORK_ROOT}/Input/Win/KeyboardWin.h
+		${TEST_FRAMEWORK_ROOT}/Input/Win/MouseWin.cpp
+		${TEST_FRAMEWORK_ROOT}/Input/Win/MouseWin.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/ConstantBufferDX12.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/ConstantBufferDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/CommandQueueDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/DescriptorHeapDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/FatalErrorIfFailedDX12.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/FatalErrorIfFailedDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/PipelineStateDX12.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/PipelineStateDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/PixelShaderDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RendererDX12.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RendererDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderInstancesDX12.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderInstancesDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderPrimitiveDX12.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/RenderPrimitiveDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.cpp
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.h
+		${TEST_FRAMEWORK_ROOT}/Renderer/DX12/VertexShaderDX12.h
+	)
 
-# HLSL vertex shaders
-set(TEST_FRAMEWORK_HLSL_VERTEX_SHADERS
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/FontVertexShader.hlsl
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/LineVertexShader.hlsl
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthVertexShader.hlsl
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleVertexShader.hlsl
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/UIVertexShader.hlsl
-)
-set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_HLSL_VERTEX_SHADERS})
-set_source_files_properties(${TEST_FRAMEWORK_HLSL_VERTEX_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T vs_5_0")
+	# All shaders
+	set(TEST_FRAMEWORK_SRC_FILES_SHADERS
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/VertexConstants.h
+	)
 
-# HLSL pixel shaders
-set(TEST_FRAMEWORK_HLSL_PIXEL_SHADERS
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/FontPixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/LinePixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthPixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/TrianglePixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShaderUntextured.hlsl
-)
-set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_HLSL_PIXEL_SHADERS})
-set_source_files_properties(${TEST_FRAMEWORK_HLSL_PIXEL_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T ps_5_0")
+	# HLSL vertex shaders
+	set(TEST_FRAMEWORK_HLSL_VERTEX_SHADERS
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/FontVertexShader.hlsl
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/LineVertexShader.hlsl
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthVertexShader.hlsl
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleVertexShader.hlsl
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/UIVertexShader.hlsl
+	)
+	set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_HLSL_VERTEX_SHADERS})
+	set_source_files_properties(${TEST_FRAMEWORK_HLSL_VERTEX_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T vs_5_0")
+
+	# HLSL pixel shaders
+	set(TEST_FRAMEWORK_HLSL_PIXEL_SHADERS
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/FontPixelShader.hlsl
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/LinePixelShader.hlsl
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthPixelShader.hlsl
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/TrianglePixelShader.hlsl
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShader.hlsl
+		${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShaderUntextured.hlsl
+	)
+	set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_HLSL_PIXEL_SHADERS})
+	set_source_files_properties(${TEST_FRAMEWORK_HLSL_PIXEL_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T ps_5_0")
+endif()
+
+if (LINUX)
+	# Linux source files
+	set(TEST_FRAMEWORK_SRC_FILES
+		${TEST_FRAMEWORK_SRC_FILES}
+		${TEST_FRAMEWORK_ROOT}/Input/Linux/KeyboardLinux.cpp
+		${TEST_FRAMEWORK_ROOT}/Input/Linux/KeyboardLinux.h
+		${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.cpp
+		${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.h
+	)
+endif()
 
 # Include the Vulkan library
 find_package(Vulkan)
@@ -188,14 +208,18 @@ source_group(TREE ${PHYSICS_REPO_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES_SHADERS}
 # Create TestFramework lib
 add_library(TestFramework STATIC ${TEST_FRAMEWORK_SRC_FILES} ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_SPV_SHADERS})
 target_include_directories(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT})
-target_link_libraries(TestFramework LINK_PUBLIC Jolt dxguid.lib dinput8.lib dxgi.lib d3d12.lib d3dcompiler.lib)
 target_precompile_headers(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT}/TestFramework.h)
 
-# Enable Vulkan for the TestFramework
 if (Vulkan_FOUND)
+	# Vulkan configuration
 	target_include_directories(TestFramework PUBLIC ${Vulkan_INCLUDE_DIRS})
 	target_link_libraries(TestFramework LINK_PUBLIC Jolt ${Vulkan_LIBRARIES})
 	if (JPH_ENABLE_VULKAN)
 		target_compile_definitions(TestFramework PRIVATE JPH_ENABLE_VULKAN)
 	endif()
+endif()
+if (WIN32)
+	# Windows configuration
+	target_link_libraries(TestFramework LINK_PUBLIC Jolt dxguid.lib dinput8.lib dxgi.lib d3d12.lib d3dcompiler.lib shcore.lib)
+	target_compile_definitions(TestFramework PRIVATE JPH_ENABLE_DIRECTX)
 endif()

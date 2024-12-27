@@ -51,10 +51,10 @@ void CharacterPlanetTest::ProcessInput(const ProcessInputParams &inParams)
 {
 	// Determine controller input
 	Vec3 control_input = Vec3::sZero();
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		control_input.SetZ(-1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	control_input.SetZ(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		control_input.SetX(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		control_input.SetX(-1);
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Left))	control_input.SetZ(-1);
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Right))	control_input.SetZ(1);
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Up))		control_input.SetX(1);
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Down))	control_input.SetX(-1);
 	if (control_input != Vec3::sZero())
 		control_input = control_input.Normalized();
 
@@ -68,7 +68,7 @@ void CharacterPlanetTest::ProcessInput(const ProcessInputParams &inParams)
 	mDesiredVelocityWS = right * mDesiredVelocity.GetZ() + forward * mDesiredVelocity.GetX();
 
 	// Check actions
-	mJump = inParams.mKeyboard->IsKeyPressedAndTriggered(DIK_RCONTROL, mWasJump);
+	mJump = inParams.mKeyboard->IsKeyPressedAndTriggered(EKey::RControl, mWasJump);
 }
 
 void CharacterPlanetTest::PrePhysicsUpdate(const PreUpdateParams &inParams)

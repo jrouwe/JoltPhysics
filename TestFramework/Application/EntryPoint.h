@@ -49,5 +49,26 @@ int __cdecl main(int inArgC, char **inArgV)																	\
 }
 
 #else
-#error Undefined
+
+#define ENTRY_POINT(AppName, RegisterAllocator)																\
+																											\
+int main(int inArgC, char **inArgV)																			\
+{																											\
+	RegisterAllocator();																					\
+																											\
+	JPH_PROFILE_START("Main");																				\
+																											\
+	FPExceptionsEnable enable_exceptions;																	\
+	JPH_UNUSED(enable_exceptions);																			\
+																											\
+	{																										\
+		AppName app;																						\
+		app.Run();																							\
+	}																										\
+																											\
+	JPH_PROFILE_END();																						\
+																											\
+	return 0;																								\
+}
+
 #endif

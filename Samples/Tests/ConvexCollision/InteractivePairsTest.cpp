@@ -20,17 +20,17 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(InteractivePairsTest)
 void InteractivePairsTest::ProcessInput(const ProcessInputParams &inParams)
 {
 	// Keyboard controls
-	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Z))
 	{
 		mKeyboardMode = true;
 		mDistance -= inParams.mDeltaTime;
 	}
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_C))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::C))
 	{
 		mKeyboardMode = true;
 		mDistance += inParams.mDeltaTime;
 	}
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_X))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::X))
 	{
 		mKeyboardMode = false;
 	}

@@ -18,7 +18,9 @@
 #include <Jolt/Core/QuickSort.h>
 #include <Jolt/Core/RTTI.h>
 
-#include <vulkan/vulkan_win32.h>
+#ifdef JPH_PLATFORM_WINDOWS
+	#include <vulkan/vulkan_win32.h>
+#endif
 
 #ifdef JPH_DEBUG
 
@@ -104,7 +106,9 @@ void RendererVK::Initialize()
 	// Required instance extensions
 	Array<const char *> required_instance_extensions;
 	required_instance_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+#ifdef JPH_PLATFORM_WINDOWS
 	required_instance_extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#endif
 
 	// Required device extensions
 	Array<const char *> required_device_extensions;
@@ -164,12 +168,16 @@ void RendererVK::Initialize()
 		FatalErrorIfFailed(vkCreateDebugUtilsMessengerEXT(mInstance, &messenger_create_info, nullptr, &mDebugMessenger));
 #endif
 
+#ifdef JPH_PLATFORM_WINDOWS
 	// Create surface
 	VkWin32SurfaceCreateInfoKHR surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	surface_create_info.hwnd = mhWnd;
 	surface_create_info.hinstance = GetModuleHandle(nullptr);
 	FatalErrorIfFailed(vkCreateWin32SurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
+#else
+	// TODO
+#endif
 
 	// Select device
 	uint32 device_count = 0;
