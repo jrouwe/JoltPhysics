@@ -26,10 +26,10 @@ private:
 	class IteratorBase
 	{
 	public:
-        /// Properties
+		/// Properties
 		using difference_type = typename Table::difference_type;
-        using value_type = typename Table::value_type;
-        using iterator_category = std::forward_iterator_tag;
+		using value_type = typename Table::value_type;
+		using iterator_category = std::forward_iterator_tag;
 
 		/// Copy constructor
 							IteratorBase(const IteratorBase &inRHS) = default;
@@ -363,9 +363,9 @@ public:
 		using Base = IteratorBase<HashTable, iterator>;
 
 	public:
-        /// Properties
-        using reference = typename Base::value_type &;
-        using pointer = typename Base::value_type *;
+		/// Properties
+		using reference = typename Base::value_type &;
+		using pointer = typename Base::value_type *;
 
 		/// Constructors
 		explicit			iterator(HashTable *inTable) : Base(inTable) { }
@@ -400,9 +400,9 @@ public:
 		using Base = IteratorBase<const HashTable, const_iterator>;
 
 	public:
-        /// Properties
-        using reference = const typename Base::value_type &;
-        using pointer = const typename Base::value_type *;
+		/// Properties
+		using reference = const typename Base::value_type &;
+		using pointer = const typename Base::value_type *;
 
 		/// Constructors
 		explicit			const_iterator(const HashTable *inTable) : Base(inTable) { }
