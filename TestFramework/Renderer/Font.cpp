@@ -399,7 +399,7 @@ void Font::DrawText3D(Mat44Arg inTransform, const string_view &inText, ColorArg 
 	Ref<RenderPrimitive> primitive = mRenderer->CreateRenderPrimitive(PipelineState::ETopology::Triangle);
 	if (CreateString(inTransform, inText, inColor, *primitive))
 	{
-		mTexture->Bind(2);
+		mTexture->Bind();
 
 		mPipelineState->Activate();
 

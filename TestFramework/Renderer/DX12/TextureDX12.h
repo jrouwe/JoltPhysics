@@ -17,7 +17,7 @@ public:
 	virtual								~TextureDX12() override;
 
 	/// Bind texture to the pixel shader
-	virtual void						Bind(int inSlot) const override;
+	virtual void						Bind() const override;
 
 	/// Activate this texture as the current render target, used by RendererDX12::BeginFrame, EndShadowPass
 	void								SetAsRenderTarget(bool inSet) const;

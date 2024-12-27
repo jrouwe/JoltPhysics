@@ -188,9 +188,9 @@ TextureDX12::~TextureDX12()
 		mRenderer->RecycleD3DObject(mTexture.Get());
 }
 
-void TextureDX12::Bind(int inSlot) const
+void TextureDX12::Bind() const
 {
-	mRenderer->GetCommandList()->SetGraphicsRootDescriptorTable(inSlot, mRenderer->GetSRVHeap().ConvertToGPUHandle(mSRV));
+	mRenderer->GetCommandList()->SetGraphicsRootDescriptorTable(2 /* All shaders use slot 2 to bind their texture */, mRenderer->GetSRVHeap().ConvertToGPUHandle(mSRV));
 }
 
 void TextureDX12::SetAsRenderTarget(bool inSet) const

@@ -116,7 +116,7 @@ TextureVK::~TextureVK()
 	}
 }
 
-void TextureVK::Bind(int inSlot) const
+void TextureVK::Bind() const
 {
 	if (mDescriptorSet != VK_NULL_HANDLE)
 		vkCmdBindDescriptorSets(mRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderer->GetPipelineLayout(), 1, 1, &mDescriptorSet, 0, nullptr);

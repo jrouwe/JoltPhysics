@@ -19,7 +19,7 @@ public:
 	virtual								~TextureVK() override;
 
 	/// Bind texture to the pixel shader
-	virtual void						Bind(int inSlot) const override;
+	virtual void						Bind() const override;
 
 	VkImageView							GetImageView() const						{ return mImageView; }
 

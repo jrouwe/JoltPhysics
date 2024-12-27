@@ -313,7 +313,7 @@ void UIManager::DrawQuad(int inX, int inY, int inWidth, int inHeight, const UITe
 		}
 
 		primitive->UnlockVertexBuffer();
-		inQuad.mTexture->Bind(2);
+		inQuad.mTexture->Bind();
 		mTextured->Activate();
 		primitive->Draw();
 	}

@@ -396,7 +396,7 @@ void DebugRendererImp::DrawShadowPass()
 void DebugRendererImp::DrawTriangles()
 {
 	// Bind the shadow map texture
-	mRenderer->GetShadowMap()->Bind(2);
+	mRenderer->GetShadowMap()->Bind();
 
 	if (!mPrimitives.empty() || !mTempPrimitives.empty())
 	{

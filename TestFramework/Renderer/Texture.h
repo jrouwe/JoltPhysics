@@ -21,7 +21,7 @@ public:
 	inline int							GetHeight() const		{ return mHeight; }
 
 	/// Bind texture to the pixel shader
-	virtual void						Bind(int inSlot) const = 0;
+	virtual void						Bind() const = 0;
 
 protected:
 	int									mWidth;
