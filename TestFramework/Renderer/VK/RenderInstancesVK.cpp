@@ -6,6 +6,7 @@
 
 #include <Renderer/VK/RenderInstancesVK.h>
 #include <Renderer/VK/RenderPrimitiveVK.h>
+#include <Renderer/VK/FatalErrorIfFailedVK.h>
 
 void RenderInstancesVK::Clear()
 {
@@ -22,7 +23,7 @@ void RenderInstancesVK::CreateBuffer(int inNumInstances, int inInstanceSize)
 void *RenderInstancesVK::Lock()
 {
 	void *data;
-	vkMapMemory(mRenderer->GetDevice(), mInstancesBuffer.mMemory, 0, mInstancesBuffer.mSize, 0, &data);
+	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mInstancesBuffer.mMemory, 0, mInstancesBuffer.mSize, 0, &data));
 	return data;
 }
 

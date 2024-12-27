@@ -42,7 +42,7 @@ void *RenderPrimitiveVK::LockVertexBuffer()
 	JPH_ASSERT(!mVertexBufferDeviceLocal);
 
 	void *data;
-	vkMapMemory(mRenderer->GetDevice(), mVertexBuffer.mMemory, 0, VkDeviceSize(mNumVtx) * mVtxSize, 0, &data);
+	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mVertexBuffer.mMemory, 0, VkDeviceSize(mNumVtx) * mVtxSize, 0, &data));
 	return data;
 }
 
