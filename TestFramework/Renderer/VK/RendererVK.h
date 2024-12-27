@@ -7,6 +7,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/VK/ConstantBufferVK.h>
 #include <Renderer/VK/TextureVK.h>
+#include <Jolt/Core/UnorderedMap.h>
 
 #include <vulkan/vulkan.h>
 
@@ -44,10 +45,10 @@ public:
 	VkCommandBuffer					GetCommandBuffer()												{ JPH_ASSERT(mInFrame); return mCommandBuffers[mFrameIndex]; }
 	VkCommandBuffer					StartTempCommandBuffer();
 	void							EndTempCommandBuffer(VkCommandBuffer inCommandBuffer);
-	void							CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, VkBuffer &outBuffer, VkDeviceMemory &outBufferMemory);
+	void							CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer);
 	void							CopyBuffer(VkBuffer inSrc, VkBuffer inDst, VkDeviceSize inSize);
-	void							CreateDeviceLocalBuffer(const void *inData, VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkBuffer &outBuffer, VkDeviceMemory &outBufferMemory);
-	void							FreeBuffer(VkBuffer inBuffer, VkDeviceMemory inMemory);
+	void							CreateDeviceLocalBuffer(const void *inData, VkDeviceSize inSize, VkBufferUsageFlags inUsage, BufferVK &outBuffer);
+	void							FreeBuffer(BufferVK &ioBuffer);
 	unique_ptr<ConstantBufferVK>	CreateConstantBuffer(VkDeviceSize inBufferSize);
 	void							CreateImage(uint32 inWidth, uint32 inHeight, VkFormat inFormat, VkImageTiling inTiling, VkImageUsageFlags inUsage, VkMemoryPropertyFlags inProperties, VkImage &outImage, VkDeviceMemory &outMemory);
 	VkImageView						CreateImageView(VkImage inImage, VkFormat inFormat, VkImageAspectFlags inAspectFlags);
@@ -60,18 +61,10 @@ private:
 	void							DestroySwapChain();
 	void							UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight);
 
-	struct FreedBuffer
-	{
-									FreedBuffer() = default;
-									FreedBuffer(VkBuffer inBuffer, VkDeviceMemory inMemory) : mBuffer(inBuffer), mMemory(inMemory) { }
-
-		VkBuffer					mBuffer;
-		VkDeviceMemory				mMemory;
-	};
-
 	VkInstance						mInstance = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT		mDebugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice				mPhysicalDevice = VK_NULL_HANDLE;
+	VkPhysicalDeviceMemoryProperties mMemoryProperties;
 	VkDevice						mDevice = VK_NULL_HANDLE;
 	uint32							mGraphicsQueueIndex = 0;
 	uint32							mPresentQueueIndex = 0;
@@ -108,5 +101,23 @@ private:
 	unique_ptr<ConstantBufferVK>	mVertexShaderConstantBufferProjection[cFrameCount];
 	unique_ptr<ConstantBufferVK>	mVertexShaderConstantBufferOrtho[cFrameCount];
 	unique_ptr<ConstantBufferVK>	mPixelShaderConstantBuffer[cFrameCount];
-	Array<FreedBuffer>				mFreedBuffers[cFrameCount];
+		
+	struct Key
+	{
+		bool						operator == (const Key &inRHS) const
+		{
+			return mSize == inRHS.mSize && mUsage == inRHS.mUsage && mProperties == inRHS.mProperties;
+		}
+
+		VkDeviceSize				mSize;
+		VkBufferUsageFlags			mUsage;
+		VkMemoryPropertyFlags		mProperties;
+	};
+
+	JPH_MAKE_HASH_STRUCT(Key, KeyHasher, t.mSize, t.mUsage, t.mProperties);
+
+	using BufferCache = UnorderedMap<Key, Array<BufferVK>, KeyHasher>;
+
+	BufferCache						mFreedBuffers[cFrameCount];
+	BufferCache						mBufferCache;
 };

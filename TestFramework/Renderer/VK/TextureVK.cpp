@@ -50,17 +50,16 @@ TextureVK::TextureVK(RendererVK *inRenderer, const Surface *inSurface) :
 	VkDeviceSize image_size = VkDeviceSize(mWidth) * mHeight * bpp;
 	VkDevice device = mRenderer->GetDevice();
 
-	VkBuffer staging_buffer;
-	VkDeviceMemory m_staging_memory;
-	mRenderer->CreateBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, m_staging_memory);
+	BufferVK staging_buffer;
+	mRenderer->CreateBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer);
 
 	// Copy data to upload texture
 	surface->Lock(ESurfaceLockMode::Read);
 	void *data;
-	vkMapMemory(device, m_staging_memory, 0, image_size, 0, &data);
+	vkMapMemory(device, staging_buffer.mMemory, 0, image_size, 0, &data);
 	for (int y = 0; y < mHeight; ++y)
 		memcpy(reinterpret_cast<uint8 *>(data) + y * mWidth * bpp, surface->GetData() + y * surface->GetStride(), mWidth * bpp);
-	vkUnmapMemory(device, m_staging_memory);
+	vkUnmapMemory(device, staging_buffer.mMemory);
 	surface->UnLock();
 
 	// Create destination image
@@ -76,7 +75,7 @@ TextureVK::TextureVK(RendererVK *inRenderer, const Surface *inSurface) :
 	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	region.imageSubresource.layerCount = 1;
 	region.imageExtent = { uint32(mWidth), uint32(mHeight), 1 };
-	vkCmdCopyBufferToImage(command_buffer, staging_buffer, mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	vkCmdCopyBufferToImage(command_buffer, staging_buffer.mBuffer, mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
 	// Make the image suitable for sampling
 	TransitionImageLayout(command_buffer, mImage, vk_format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -84,8 +83,7 @@ TextureVK::TextureVK(RendererVK *inRenderer, const Surface *inSurface) :
 	mRenderer->EndTempCommandBuffer(command_buffer);
 
 	// Destroy temporary buffer
-	vkDestroyBuffer(device, staging_buffer, nullptr);
-	vkFreeMemory(device, m_staging_memory, nullptr);
+	mRenderer->FreeBuffer(staging_buffer);
 
 	CreateImageViewAndDescriptorSet(vk_format, VK_IMAGE_ASPECT_COLOR_BIT, mRenderer->GetTextureSamplerRepeat());
 }

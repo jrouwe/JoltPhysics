@@ -6,6 +6,7 @@
 
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/VK/RendererVK.h>
+#include <Renderer/VK/BufferVK.h>
 
 /// Vulkan implementation of a render primitive
 class RenderPrimitiveVK : public RenderPrimitive
@@ -35,11 +36,9 @@ private:
 
 	RendererVK *			mRenderer;
 
-	VkBuffer				mVertexBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory			mVertexBufferMemory = VK_NULL_HANDLE;
+	BufferVK				mVertexBuffer;
 	bool					mVertexBufferDeviceLocal = false;
 
-	VkBuffer				mIndexBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory			mIndexBufferMemory = VK_NULL_HANDLE;
+	BufferVK				mIndexBuffer;
 	bool					mIndexBufferDeviceLocal = false;
 };

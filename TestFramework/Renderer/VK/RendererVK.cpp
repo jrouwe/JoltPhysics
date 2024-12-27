@@ -47,15 +47,14 @@ RendererVK::~RendererVK()
 	for (unique_ptr<ConstantBufferVK> &cb : mPixelShaderConstantBuffer)
 		cb = nullptr;
 
-	// Free the delayed freed buffers
-	for (Array<FreedBuffer> &a : mFreedBuffers)
-		for (FreedBuffer &b : a)
-		{
-			if (b.mBuffer != nullptr)
-				vkDestroyBuffer(mDevice, b.mBuffer, nullptr);
-			if (b.mMemory != nullptr)
-				vkFreeMemory(mDevice, b.mMemory, nullptr);
-		}
+	// Free all buffers
+	for (BufferCache &bc : mFreedBuffers)
+		for (BufferCache::value_type &vt : bc)
+			for (BufferVK &bvk : vt.second)
+				bvk.Free(mDevice);
+	for (BufferCache::value_type &vt : mBufferCache)
+		for (BufferVK &bvk : vt.second)
+			bvk.Free(mDevice);
 
 	for (VkFence fence : mInFlightFences)
 		vkDestroyFence(mDevice, fence, nullptr);
@@ -270,6 +269,9 @@ void RendererVK::Initialize()
 	const Device &selected_device = available_devices[0];
 	Trace("Selected device: %s", selected_device.mName.c_str());
 	mPhysicalDevice = selected_device.mPhysicalDevice;
+
+	// Get memory properties
+	vkGetPhysicalDeviceMemoryProperties(mPhysicalDevice, &mMemoryProperties);
 
 	// Create device
 	float queue_priority = 1.0f;
@@ -736,16 +738,15 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	}
 	FatalErrorIfFailed(result);
 
-	// Destroy buffers that were released in this frame
-	for (FreedBuffer &b : mFreedBuffers[mFrameIndex])
-	{
-		if (b.mBuffer != nullptr)
-			vkDestroyBuffer(mDevice, b.mBuffer, nullptr);
-		if (b.mMemory != nullptr)
-			vkFreeMemory(mDevice, b.mMemory, nullptr);
-	}
-	mFreedBuffers[mFrameIndex].clear();
+	// Free buffers that weren't used this frame
+	for (BufferCache::value_type &vt : mBufferCache)
+		for (BufferVK &bvk : vt.second)
+			bvk.Free(mDevice);
+	mBufferCache.clear();
 
+	// Recycle the buffers that were freed
+	mBufferCache.swap(mFreedBuffers[mFrameIndex]);
+	
 	vkResetFences(mDevice, 1, &mInFlightFences[mFrameIndex]);
 
 	VkCommandBuffer command_buffer = GetCommandBuffer();
@@ -923,37 +924,48 @@ RenderInstances *RendererVK::CreateRenderInstances()
 
 uint32 RendererVK::FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties)
 {
-	VkPhysicalDeviceMemoryProperties mem_properties;
-	vkGetPhysicalDeviceMemoryProperties(mPhysicalDevice, &mem_properties);
-
-	for (uint32 i = 0; i < mem_properties.memoryTypeCount; i++)
+	for (uint32 i = 0; i < mMemoryProperties.memoryTypeCount; i++)
 		if ((inTypeFilter & (1 << i))
-			&& (mem_properties.memoryTypes[i].propertyFlags & inProperties) == inProperties)
+			&& (mMemoryProperties.memoryTypes[i].propertyFlags & inProperties) == inProperties)
 			return i;
 
 	FatalError("Failed to find memory type!");
 }
 
-void RendererVK::CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, VkBuffer &outBuffer, VkDeviceMemory &outBufferMemory)
+void RendererVK::CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer)
 {
+	// Check the cache
+	BufferCache::iterator i = mBufferCache.find({ inSize, inUsage, inProperties });
+	if (i != mBufferCache.end() && !i->second.empty())
+	{
+		outBuffer = i->second.back();
+		i->second.pop_back();
+		return;
+	}
+
+	// Create a new buffer
+	outBuffer.mSize = inSize;
+	outBuffer.mUsage = inUsage;
+	outBuffer.mProperties = inProperties;
+
 	VkBufferCreateInfo create_info = {};
 	create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	create_info.size = inSize;
 	create_info.usage = inUsage;
 	create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	FatalErrorIfFailed(vkCreateBuffer(mDevice, &create_info, nullptr, &outBuffer));
+	FatalErrorIfFailed(vkCreateBuffer(mDevice, &create_info, nullptr, &outBuffer.mBuffer));
 
 	VkMemoryRequirements mem_requirements;
-	vkGetBufferMemoryRequirements(mDevice, outBuffer, &mem_requirements);
+	vkGetBufferMemoryRequirements(mDevice, outBuffer.mBuffer, &mem_requirements);
 
 	VkMemoryAllocateInfo alloc_info = {};
 	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	alloc_info.allocationSize = mem_requirements.size;
 	alloc_info.memoryTypeIndex = FindMemoryType(mem_requirements.memoryTypeBits, inProperties);
 
-	FatalErrorIfFailed(vkAllocateMemory(mDevice, &alloc_info, nullptr, &outBufferMemory));
+	FatalErrorIfFailed(vkAllocateMemory(mDevice, &alloc_info, nullptr, &outBuffer.mMemory));
 
-	vkBindBufferMemory(mDevice, outBuffer, outBufferMemory, 0);
+	vkBindBufferMemory(mDevice, outBuffer.mBuffer, outBuffer.mMemory, 0);
 }
 
 VkCommandBuffer RendererVK::StartTempCommandBuffer()
@@ -1001,31 +1013,29 @@ void RendererVK::CopyBuffer(VkBuffer inSrc, VkBuffer inDst, VkDeviceSize inSize)
 	EndTempCommandBuffer(command_buffer);
 }
 
-void RendererVK::CreateDeviceLocalBuffer(const void *inData, VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkBuffer &outBuffer, VkDeviceMemory &outBufferMemory)
+void RendererVK::CreateDeviceLocalBuffer(const void *inData, VkDeviceSize inSize, VkBufferUsageFlags inUsage, BufferVK &outBuffer)
 {
-	VkBuffer staging_buffer;
-	VkDeviceMemory staging_buffer_memory;
-	CreateBuffer(inSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer, staging_buffer_memory);
+	BufferVK staging_buffer;
+	CreateBuffer(inSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer);
 
 	void *data;
-	vkMapMemory(mDevice, staging_buffer_memory, 0, inSize, 0, &data);
+	vkMapMemory(mDevice, staging_buffer.mMemory, 0, inSize, 0, &data);
 	memcpy(data, inData, (size_t)inSize);
-	vkUnmapMemory(mDevice, staging_buffer_memory);
+	vkUnmapMemory(mDevice, staging_buffer.mMemory);
 
-	CreateBuffer(inSize, inUsage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, outBuffer, outBufferMemory);
+	CreateBuffer(inSize, inUsage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, outBuffer);
 
-	CopyBuffer(staging_buffer, outBuffer, inSize);
+	CopyBuffer(staging_buffer.mBuffer, outBuffer.mBuffer, inSize);
 
-	vkDestroyBuffer(mDevice, staging_buffer, nullptr);
-	vkFreeMemory(mDevice, staging_buffer_memory, nullptr);
+	FreeBuffer(staging_buffer);
 }
 
-void RendererVK::FreeBuffer(VkBuffer inBuffer, VkDeviceMemory inMemory)
+void RendererVK::FreeBuffer(BufferVK &ioBuffer)
 {
-	if (inBuffer != nullptr || inMemory != nullptr)
+	if (ioBuffer.mBuffer != VK_NULL_HANDLE)
 	{
 		JPH_ASSERT(mFrameIndex < cFrameCount);
-		mFreedBuffers[mFrameIndex].emplace_back(inBuffer, inMemory);
+		mFreedBuffers[mFrameIndex][{ ioBuffer.mSize, ioBuffer.mUsage, ioBuffer.mProperties }].push_back(ioBuffer);
 	}
 }
 

@@ -9,25 +9,24 @@
 #include <Renderer/VK/FatalErrorIfFailedVK.h>
 
 ConstantBufferVK::ConstantBufferVK(RendererVK *inRenderer, VkDeviceSize inBufferSize) :
-	mRenderer(inRenderer),
-	mBufferSize(inBufferSize)
+	mRenderer(inRenderer)
 {
-	mRenderer->CreateBuffer(inBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, mBuffer, mBufferMemory);
+	mRenderer->CreateBuffer(inBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, mBuffer);
 }
 
 ConstantBufferVK::~ConstantBufferVK()
 {
-	mRenderer->FreeBuffer(mBuffer, mBufferMemory);
+	mRenderer->FreeBuffer(mBuffer);
 }
 
 void *ConstantBufferVK::MapInternal()
 {
 	void *data = nullptr;
-	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mBufferMemory, 0, mBufferSize, 0, &data));
+	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mBuffer.mMemory, 0, mBuffer.mSize, 0, &data));
 	return data;
 }
 
 void ConstantBufferVK::Unmap()
 {
-	vkUnmapMemory(mRenderer->GetDevice(), mBufferMemory);
+	vkUnmapMemory(mRenderer->GetDevice(), mBuffer.mMemory);
 }

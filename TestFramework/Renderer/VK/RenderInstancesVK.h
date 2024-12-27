@@ -31,7 +31,5 @@ public:
 private:
 	RendererVK *			mRenderer;
 
-	VkBuffer				mInstancesBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory			mInstancesBufferMemory = VK_NULL_HANDLE;
-	VkDeviceSize			mInstancesBufferSize = 0;
+	BufferVK				mInstancesBuffer;
 };

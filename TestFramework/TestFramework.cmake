@@ -128,6 +128,7 @@ if (Vulkan_FOUND)
 	# Vulkan source files
 	set(TEST_FRAMEWORK_SRC_FILES
 		${TEST_FRAMEWORK_SRC_FILES}
+		${TEST_FRAMEWORK_ROOT}/Renderer/VK/BufferVK.h
 		${TEST_FRAMEWORK_ROOT}/Renderer/VK/ConstantBufferVK.cpp
 		${TEST_FRAMEWORK_ROOT}/Renderer/VK/ConstantBufferVK.h
 		${TEST_FRAMEWORK_ROOT}/Renderer/VK/FatalErrorIfFailedVK.cpp

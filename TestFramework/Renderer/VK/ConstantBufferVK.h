@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include <Renderer/VK/BufferVK.h>
 
 class RendererVK;
 
@@ -20,13 +20,11 @@ public:
 	template <typename T> T *			Map()											{ return reinterpret_cast<T *>(MapInternal()); }
 	void								Unmap();
 
-	VkBuffer							GetBuffer() const								{ return mBuffer; }
+	VkBuffer							GetBuffer() const								{ return mBuffer.mBuffer; }
 
 private:
 	void *								MapInternal();
 
 	RendererVK *						mRenderer;
-	VkBuffer							mBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory						mBufferMemory = VK_NULL_HANDLE;
-	VkDeviceSize						mBufferSize;
+	BufferVK							mBuffer;
 };
