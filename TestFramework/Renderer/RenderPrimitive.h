@@ -21,7 +21,7 @@ public:
 
 	/// Vertex buffer management functions
 	virtual void			CreateVertexBuffer(int inNumVtx, int inVtxSize, const void *inData = nullptr) = 0;
-	virtual void			ReleaseVertexBuffer() = 0;
+	virtual void			ReleaseVertexBuffer();
 	virtual void *			LockVertexBuffer() = 0;
 	virtual void			UnlockVertexBuffer() = 0;
 	int						GetNumVtx() const																{ return mNumVtx; }
@@ -30,7 +30,7 @@ public:
 
 	/// Index buffer management functions
 	virtual void			CreateIndexBuffer(int inNumIdx, const uint32 *inData = nullptr) = 0;
-	virtual void			ReleaseIndexBuffer() = 0;
+	virtual void			ReleaseIndexBuffer();
 	virtual uint32 *		LockIndexBuffer() = 0;
 	virtual void			UnlockIndexBuffer() = 0;
 	int						GetNumIdx() const																{ return mNumIdx; }
