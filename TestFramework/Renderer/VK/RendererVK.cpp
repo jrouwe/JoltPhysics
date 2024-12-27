@@ -437,7 +437,7 @@ void RendererVK::Initialize()
 		vkUpdateDescriptorSets(mDevice, 1, &descriptor_write, 0, nullptr);
 	}
 
-	// Create texture samplers
+	// Create regular texture sampler
 	VkSamplerCreateInfo sampler_info = {};
 	sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	sampler_info.magFilter = VK_FILTER_LINEAR;
@@ -450,8 +450,8 @@ void RendererVK::Initialize()
 	sampler_info.compareEnable = VK_FALSE;
 	sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	FatalErrorIfFailed(vkCreateSampler(mDevice, &sampler_info, nullptr, &mTextureSamplerRepeat));
-	sampler_info.minFilter = VK_FILTER_NEAREST;
-	sampler_info.magFilter = VK_FILTER_NEAREST;
+
+	// Create sampler for shadow maps
 	sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
