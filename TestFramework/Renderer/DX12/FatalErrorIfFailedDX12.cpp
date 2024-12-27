@@ -6,7 +6,7 @@
 
 #include <system_error>
 
-#include <Renderer/FatalErrorIfFailed.h>
+#include <Renderer/DX12/FatalErrorIfFailedDX12.h>
 #include <Jolt/Core/StringTools.h>
 #include <Utils/Log.h>
 

@@ -14,6 +14,11 @@
 #include <Jolt/RegisterTypes.h>
 #include <Renderer/DebugRendererImp.h>
 #include <crtdbg.h>
+#ifdef JPH_ENABLE_VULKAN
+	#include <Renderer/VK/RendererVK.h>
+#else
+	#include <Renderer/DX12/RendererDX12.h>
+#endif
 
 // Constructor
 Application::Application() :
@@ -52,7 +57,11 @@ Application::Application() :
 		DisableCustomMemoryHook dcmh;
 
 		// Create renderer
-		mRenderer = new Renderer;
+	#ifdef JPH_ENABLE_VULKAN
+		mRenderer = new RendererVK;
+	#else
+		mRenderer = new RendererDX12;
+	#endif
 		mRenderer->Initialize();
 
 		// Create font
@@ -225,6 +234,12 @@ void Application::Run()
 
 			// Start rendering
 			mRenderer->BeginFrame(mWorldCamera, GetWorldScale());
+
+			// Draw from light
+			static_cast<DebugRendererImp *>(mDebugRenderer)->DrawShadowPass();
+
+			// Start drawing normally
+			mRenderer->EndShadowPass();
 
 			// Draw debug information
 			static_cast<DebugRendererImp *>(mDebugRenderer)->Draw();

@@ -10,6 +10,7 @@
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/Texture.h>
 #include <Renderer/PipelineState.h>
+#include <memory>
 
 class Renderer;
 class Texture;

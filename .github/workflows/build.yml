@@ -193,7 +193,7 @@ jobs:
         update: true
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_mingw.sh ${{matrix.build_type}} g++ -DBUILD_SHARED_LIBS=${{matrix.shared_lib}}
+      run: ./cmake_linux_mingw.sh ${{matrix.build_type}} -DBUILD_SHARED_LIBS=${{matrix.shared_lib}}
     - name: Build
       run: cmake --build Build/MinGW_${{matrix.build_type}} -j $(nproc)
     - name: Test

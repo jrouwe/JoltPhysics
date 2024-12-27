@@ -4,14 +4,14 @@
 
 #pragma once
 
-#include <Renderer/FatalErrorIfFailed.h>
+#include <Renderer/DX12/FatalErrorIfFailedDX12.h>
 
 /// Holds a number of DirectX operations with logic to wait for completion
-class CommandQueue
+class CommandQueueDX12
 {
 public:
 	/// Destructor
-										~CommandQueue()
+										~CommandQueueDX12()
 	{
 		WaitUntilFinished();
 

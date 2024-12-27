@@ -4,6 +4,6 @@
 
 #pragma once
 
-/// Convert DirectX error codes to exceptions
+/// Convert DirectX error to readable text and alert
 void FatalErrorIfFailed(HRESULT inHResult);
 

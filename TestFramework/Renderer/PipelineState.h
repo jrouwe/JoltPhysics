@@ -4,12 +4,43 @@
 
 #pragma once
 
-class Renderer;
-
 /// Defines how primitives should be rendered
 class PipelineState
 {
 public:
+	/// Describes the input layout of the vertex shader
+	enum class EInputDescription
+	{
+		Position,						///< 3 float position
+		Color,							///< 4 uint8 color
+		Normal,							///< 3 float normal
+		TexCoord,						///< 2 float texture coordinate
+		InstanceColor,					///< 4 uint8 per instance color
+		InstanceTransform,				///< 4x4 float per instance transform
+		InstanceInvTransform,			///< 4x4 float per instance inverse transform
+	};
+
+	/// In which draw pass to use this pipeline state
+	enum class EDrawPass
+	{
+		Shadow,
+		Normal
+	};
+
+	/// The type of topology to emit
+	enum class ETopology
+	{
+		Triangle,
+		Line
+	};
+
+	/// Fill mode of the triangles
+	enum class EFillMode
+	{
+		Solid,
+		Wireframe
+	};
+
 	/// If depth write / depth test is on
 	enum class EDepthTest
 	{
@@ -22,7 +53,6 @@ public:
 	{
 		Write,
 		AlphaBlend,
-		AlphaTest,						///< Alpha blend with alpha test enabled
 	};
 
 	/// How to cull triangles
@@ -32,16 +62,9 @@ public:
 		FrontFace,
 	};
 
-	/// Constructor
-										PipelineState(Renderer *inRenderer, ID3DBlob *inVertexShader, const D3D12_INPUT_ELEMENT_DESC *inInputDescription, uint inInputDescriptionCount, ID3DBlob *inPixelShader, D3D12_FILL_MODE inFillMode, D3D12_PRIMITIVE_TOPOLOGY_TYPE inTopology, EDepthTest inDepthTest, EBlendMode inBlendMode, ECullMode inCullMode);
-										~PipelineState();
+	/// Destructor
+	virtual								~PipelineState() = default;
 
 	/// Make this pipeline state active (any primitives rendered after this will use this state)
-	void								Activate();
-
-private:
-	friend class Renderer;
-
-	Renderer *							mRenderer;
-	ComPtr<ID3D12PipelineState>			mPSO;
+	virtual void						Activate() = 0;
 };

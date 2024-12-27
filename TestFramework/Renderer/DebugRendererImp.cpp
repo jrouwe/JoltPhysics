@@ -6,8 +6,6 @@
 
 #include <Renderer/DebugRendererImp.h>
 #include <Renderer/Renderer.h>
-#include <Renderer/RenderPrimitive.h>
-#include <Renderer/Texture.h>
 #include <Renderer/Font.h>
 
 #ifndef JPH_DEBUG_RENDERER
@@ -22,55 +20,46 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 	mFont(inFont)
 {
 	// Create input layout for lines
-	const D3D12_INPUT_ELEMENT_DESC line_vertex_desc[] =
+	const PipelineState::EInputDescription line_vertex_desc[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		PipelineState::EInputDescription::Position,
+		PipelineState::EInputDescription::Color
 	};
 
 	// Lines
-	ComPtr<ID3DBlob> vtx_line = mRenderer->CreateVertexShader("Assets/Shaders/LineVertexShader.hlsl");
-	ComPtr<ID3DBlob> pix_line = mRenderer->CreatePixelShader("Assets/Shaders/LinePixelShader.hlsl");
-	mLineState = mRenderer->CreatePipelineState(vtx_line.Get(), line_vertex_desc, ARRAYSIZE(line_vertex_desc), pix_line.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	Ref<VertexShader> vtx_line = mRenderer->CreateVertexShader("Assets/Shaders/LineVertexShader");
+	Ref<PixelShader> pix_line = mRenderer->CreatePixelShader("Assets/Shaders/LinePixelShader");
+	mLineState = mRenderer->CreatePipelineState(vtx_line, line_vertex_desc, std::size(line_vertex_desc), pix_line, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Line, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 
 	// Create input layout for triangles
-	const D3D12_INPUT_ELEMENT_DESC triangles_vertex_desc[] =
+	const PipelineState::EInputDescription triangles_vertex_desc[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "INSTANCE_TRANSFORM", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_TRANSFORM", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_TRANSFORM", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_TRANSFORM", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_INV_TRANSFORM", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 64, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_INV_TRANSFORM", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 80, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_INV_TRANSFORM", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 96, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_INV_TRANSFORM", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 112, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "INSTANCE_COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 1, 128, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+		PipelineState::EInputDescription::Position,
+		PipelineState::EInputDescription::Normal,
+		PipelineState::EInputDescription::TexCoord,
+		PipelineState::EInputDescription::Color,
+		PipelineState::EInputDescription::InstanceTransform,
+		PipelineState::EInputDescription::InstanceInvTransform,
+		PipelineState::EInputDescription::InstanceColor
 	};
 
 	// Triangles
-	ComPtr<ID3DBlob> vtx_triangle = mRenderer->CreateVertexShader("Assets/Shaders/TriangleVertexShader.hlsl");
-	ComPtr<ID3DBlob> pix_triangle  = mRenderer->CreatePixelShader("Assets/Shaders/TrianglePixelShader.hlsl");
-	mTriangleStateBF = mRenderer->CreatePipelineState(vtx_triangle.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_triangle.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
-	mTriangleStateFF = mRenderer->CreatePipelineState(vtx_triangle.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_triangle.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
-	mTriangleStateWire = mRenderer->CreatePipelineState(vtx_triangle.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_triangle.Get(), D3D12_FILL_MODE_WIREFRAME, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	Ref<VertexShader> vtx_triangle = mRenderer->CreateVertexShader("Assets/Shaders/TriangleVertexShader");
+	Ref<PixelShader> pix_triangle  = mRenderer->CreatePixelShader("Assets/Shaders/TrianglePixelShader");
+	mTriangleStateBF = mRenderer->CreatePipelineState(vtx_triangle, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_triangle, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	mTriangleStateFF = mRenderer->CreatePipelineState(vtx_triangle, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_triangle, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
+	mTriangleStateWire = mRenderer->CreatePipelineState(vtx_triangle, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_triangle, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Wireframe, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 
 	// Shadow pass
-	ComPtr<ID3DBlob> vtx_shadow = mRenderer->CreateVertexShader("Assets/Shaders/TriangleDepthVertexShader.hlsl");
-	ComPtr<ID3DBlob> pix_shadow = mRenderer->CreatePixelShader("Assets/Shaders/TriangleDepthPixelShader.hlsl");
-	mShadowStateBF = mRenderer->CreatePipelineState(vtx_shadow.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_shadow.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
-	mShadowStateFF = mRenderer->CreatePipelineState(vtx_shadow.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_shadow.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
-	mShadowStateWire = mRenderer->CreatePipelineState(vtx_shadow.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_shadow.Get(), D3D12_FILL_MODE_WIREFRAME, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
-
-	// Create depth only texture (no color buffer, as seen from light)
-	mDepthTexture = mRenderer->CreateRenderTarget(4096, 4096);
+	Ref<VertexShader> vtx_shadow = mRenderer->CreateVertexShader("Assets/Shaders/TriangleDepthVertexShader");
+	Ref<PixelShader> pix_shadow = mRenderer->CreatePixelShader("Assets/Shaders/TriangleDepthPixelShader");
+	mShadowStateBF = mRenderer->CreatePipelineState(vtx_shadow, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_shadow, PipelineState::EDrawPass::Shadow, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	mShadowStateFF = mRenderer->CreatePipelineState(vtx_shadow, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_shadow, PipelineState::EDrawPass::Shadow, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
+	mShadowStateWire = mRenderer->CreatePipelineState(vtx_shadow, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_shadow, PipelineState::EDrawPass::Shadow, PipelineState::EFillMode::Wireframe, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 
 	// Create instances buffer
 	for (uint n = 0; n < Renderer::cFrameCount; ++n)
-		mInstancesBuffer[n] = new RenderInstances(mRenderer);
+		mInstancesBuffer[n] = mRenderer->CreateRenderInstances();
 
 	// Create empty batch
 	Vertex empty_vertex { Float3(0, 0, 0), Float3(1, 0, 0), Float2(0, 0), Color::sWhite };
@@ -100,7 +89,7 @@ DebugRenderer::Batch DebugRendererImp::CreateTriangleBatch(const Triangle *inTri
 	if (inTriangles == nullptr || inTriangleCount == 0)
 		return mEmptyBatch;
 
-	BatchImpl *primitive = new BatchImpl(mRenderer, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	RenderPrimitive *primitive = mRenderer->CreateRenderPrimitive(PipelineState::ETopology::Triangle);
 	primitive->CreateVertexBuffer(3 * inTriangleCount, sizeof(Vertex), inTriangles);
 
 	return primitive;
@@ -111,7 +100,7 @@ DebugRenderer::Batch DebugRendererImp::CreateTriangleBatch(const Vertex *inVerti
 	if (inVertices == nullptr || inVertexCount == 0 || inIndices == nullptr || inIndexCount == 0)
 		return mEmptyBatch;
 
-	BatchImpl *primitive = new BatchImpl(mRenderer, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	RenderPrimitive *primitive = mRenderer->CreateRenderPrimitive(PipelineState::ETopology::Triangle);
 	primitive->CreateVertexBuffer(inVertexCount, sizeof(Vertex), inVertices);
 	primitive->CreateIndexBuffer(inIndexCount, inIndices);
 
@@ -158,16 +147,14 @@ void DebugRendererImp::FinalizePrimitive()
 
 	if (mLockedPrimitive != nullptr)
 	{
-		BatchImpl *primitive = static_cast<BatchImpl *>(mLockedPrimitive.GetPtr());
-
 		// Unlock the primitive
-		primitive->UnlockVertexBuffer();
+		mLockedPrimitive->UnlockVertexBuffer();
 
 		// Set number of indices to draw
-		primitive->SetNumVtxToDraw(int(mLockedVertices - mLockedVerticesStart));
+		mLockedPrimitive->SetNumVtxToDraw(int(mLockedVertices - mLockedVerticesStart));
 
 		// Add to draw list
-		mTempPrimitives[new Geometry(mLockedPrimitive, mLockedPrimitiveBounds)].mInstances.push_back({ Mat44::sIdentity(), Mat44::sIdentity(), Color::sWhite, mLockedPrimitiveBounds, 1.0f });
+		mTempPrimitives[new Geometry(mLockedPrimitive.GetPtr(), mLockedPrimitiveBounds)].mInstances.push_back({ Mat44::sIdentity(), Mat44::sIdentity(), Color::sWhite, mLockedPrimitiveBounds, 1.0f });
 		++mNumInstances;
 
 		// Clear pointers
@@ -189,12 +176,11 @@ void DebugRendererImp::EnsurePrimitiveSpace(int inVtxSize)
 		FinalizePrimitive();
 
 		// Create new
-		BatchImpl *primitive = new BatchImpl(mRenderer, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		primitive->CreateVertexBuffer(cVertexBufferSize, sizeof(Vertex));
-		mLockedPrimitive = primitive;
-
+		mLockedPrimitive = mRenderer->CreateRenderPrimitive(PipelineState::ETopology::Triangle);
+		mLockedPrimitive->CreateVertexBuffer(cVertexBufferSize, sizeof(Vertex));
+		
 		// Lock buffers
-		mLockedVerticesStart = mLockedVertices = (Vertex *)primitive->LockVertexBuffer();
+		mLockedVerticesStart = mLockedVertices = (Vertex *)mLockedPrimitive->LockVertexBuffer();
 		mLockedVerticesEnd = mLockedVertices + cVertexBufferSize;
 	}
 }
@@ -240,7 +226,7 @@ void DebugRendererImp::DrawInstances(const Geometry *inGeometry, const Array<int
 			int start_idx = next_start_idx;
 			next_start_idx = inStartIdx[lod + 1];
 			int num_instances = next_start_idx - start_idx;
-			instances_buffer->Draw(static_cast<BatchImpl *>(geometry_lods[lod].mTriangleBatch.GetPtr()), start_idx, num_instances);
+			instances_buffer->Draw(static_cast<RenderPrimitive *>(geometry_lods[lod].mTriangleBatch.GetPtr()), start_idx, num_instances);
 		}
 	}
 }
@@ -264,17 +250,17 @@ void DebugRendererImp::DrawLines()
 	// Draw the lines
 	if (!mLines.empty())
 	{
-		RenderPrimitive primitive(mRenderer, D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-		primitive.CreateVertexBuffer((int)mLines.size() * 2, sizeof(Line) / 2);
-		void *data = primitive.LockVertexBuffer();
+		Ref<RenderPrimitive> primitive = mRenderer->CreateRenderPrimitive(PipelineState::ETopology::Line);
+		primitive->CreateVertexBuffer((int)mLines.size() * 2, sizeof(Line) / 2);
+		void *data = primitive->LockVertexBuffer();
 		memcpy(data, &mLines[0], mLines.size() * sizeof(Line));
-		primitive.UnlockVertexBuffer();
+		primitive->UnlockVertexBuffer();
 		mLineState->Activate();
-		primitive.Draw();
+		primitive->Draw();
 	}
 }
 
-void DebugRendererImp::DrawTriangles()
+void DebugRendererImp::DrawShadowPass()
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -282,12 +268,6 @@ void DebugRendererImp::DrawTriangles()
 
 	// Finish the last primitive
 	FinalizePrimitive();
-
-	// Render to shadow map texture first
-	mRenderer->SetRenderTarget(mDepthTexture);
-
-	// Clear the shadow map texture to max depth
-	mDepthTexture->ClearRenderTarget();
 
 	// Get the camera and light frustum for culling
 	Vec3 camera_pos(mRenderer->GetCameraState().mPos - mRenderer->GetBaseOffset());
@@ -411,12 +391,12 @@ void DebugRendererImp::DrawTriangles()
 		for (InstanceMap::value_type &v : mWireframePrimitives)
 			DrawInstances(v.first, v.second.mLightStartIdx);
 	}
+}
 
-	// Switch to the main render target
-	mRenderer->SetRenderTarget(nullptr);
-
+void DebugRendererImp::DrawTriangles()
+{
 	// Bind the shadow map texture
-	mDepthTexture->Bind(2);
+	mRenderer->GetShadowMap()->Bind();
 
 	if (!mPrimitives.empty() || !mTempPrimitives.empty())
 	{

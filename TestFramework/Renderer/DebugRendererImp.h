@@ -16,8 +16,7 @@
 	#undef JPH_DEBUG_RENDERER_EXPORT
 #endif
 
-#include <Renderer/RenderPrimitive.h>
-#include <Renderer/RenderInstances.h>
+#include <Renderer/Renderer.h>
 #include <Jolt/Core/Mutex.h>
 #include <Jolt/Core/UnorderedMap.h>
 
@@ -41,6 +40,9 @@ public:
 	virtual void						DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode) override;
 	virtual void						DrawText3D(RVec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight) override;
 
+	/// Draw all primitives from the light source
+	void								DrawShadowPass();
+
 	/// Draw all primitives that were added
 	void								Draw();
 
@@ -57,18 +59,6 @@ private:
 	void								ClearLines();
 	void								ClearTriangles();
 	void								ClearTexts();
-
-	/// Implementation specific batch object
-	class BatchImpl : public RefTargetVirtual, public RenderPrimitive
-	{
-	public:
-		JPH_OVERRIDE_NEW_DELETE
-
-										BatchImpl(Renderer *inRenderer, D3D_PRIMITIVE_TOPOLOGY inType) : RenderPrimitive(inRenderer, inType) { }
-
-		virtual void					AddRef() override			{ RenderPrimitive::AddRef(); }
-		virtual void					Release() override			{ if (--mRefCount == 0) delete this; }
-	};
 
 	/// Finalize the current locked primitive and add it to the primitives to draw
 	void								FinalizePrimitive();
@@ -87,9 +77,6 @@ private:
 	unique_ptr<PipelineState>			mShadowStateBF;
 	unique_ptr<PipelineState>			mShadowStateFF;
 	unique_ptr<PipelineState>			mShadowStateWire;
-
-	/// The shadow buffer (depth buffer rendered from the light)
-	Ref<Texture>						mDepthTexture;
 
 	/// Lock that protects the triangle batches from being accessed from multiple threads
 	Mutex								mPrimitivesLock;
@@ -149,7 +136,7 @@ private:
 	Ref<RenderInstances>				mInstancesBuffer[Renderer::cFrameCount];
 
 	/// Primitive that is being built + its properties
-	Batch								mLockedPrimitive;
+	Ref<RenderPrimitive>				mLockedPrimitive;
 	Vertex *							mLockedVerticesStart = nullptr;
 	Vertex *							mLockedVertices = nullptr;
 	Vertex *							mLockedVerticesEnd = nullptr;
