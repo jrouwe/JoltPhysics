@@ -34,8 +34,6 @@ public:
 	virtual bool					IsRightPressed() const override		{ return (mMouseState.rgbButtons[1] & 0x80) != 0; }
 	virtual bool					IsMiddlePressed() const override	{ return (mMouseState.rgbButtons[2] & 0x80) != 0; }
 
-	virtual bool					IsLeftDoubleClicked() const override{ return mLeftButtonDoubleClicked; }
-
 	virtual void					HideCursor() override;
 	virtual void					ShowCursor() override;
 
@@ -49,7 +47,6 @@ private:
 	enum
 	{
 		BUFFERSIZE					= 64,								///< Number of keys cached
-		DCLICKTIME					= 300								///< Minimum time between key release and key down to make it a double click
 	};
 
 	Renderer *						mRenderer;
@@ -59,8 +56,4 @@ private:
 	DIMOUSESTATE					mMouseState;
 	bool							mMousePosInitialized = false;
 	POINT							mMousePos;
-	DIDEVICEOBJECTDATA				mDOD[BUFFERSIZE];
-	DWORD							mDODLength;
-	int								mTimeLeftButtonLastReleased;
-	bool							mLeftButtonDoubleClicked;
 };

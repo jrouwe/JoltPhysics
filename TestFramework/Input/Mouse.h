@@ -30,8 +30,6 @@ public:
 	virtual bool					IsRightPressed() const = 0;
 	virtual bool					IsMiddlePressed() const = 0;
 
-	virtual bool					IsLeftDoubleClicked() const = 0;
-
 	virtual void					HideCursor() = 0;
 	virtual void					ShowCursor() = 0;
 

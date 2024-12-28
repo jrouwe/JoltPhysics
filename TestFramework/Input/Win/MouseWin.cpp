@@ -32,11 +32,6 @@ void MouseWin::ResetMouse()
 {
 	memset(&mMouseState, 0, sizeof(mMouseState));
 	mMousePosInitialized = false;
-	memset(&mDOD, 0, sizeof(mDOD));
-	mDODLength = 0;
-	mTimeLeftButtonLastReleased = 0;
-	mLeftButtonDoubleClicked = false;
-
 }
 
 void MouseWin::DetectParsecRunning()
@@ -179,41 +174,6 @@ void MouseWin::Poll()
 		// but unfortunately a RDP session doesn't allow capturing the mouse so there doesn't seem to be a workaround for this.
 		mMouseState.lX = mMousePos.x - old_mouse_pos.x;
 		mMouseState.lY = mMousePos.y - old_mouse_pos.y;
-	}
-
-	// Get the state in a buffer for checking doubleclicks
-	if (FAILED(mMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), mDOD, &mDODLength, 0)))
-	{
-		// We lost mMouse input, reacquire
-		mMouse->Acquire();
-
-		if (FAILED(mMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), mDOD, &mDODLength, 0)))
-		{
-			// Unable to reacquire, reset button info
-			mTimeLeftButtonLastReleased = 0;
-			mLeftButtonDoubleClicked = false;
-			return;
-		}
-	}
-
-	// Check for double clicks
-	for (DWORD d = 0; d < mDODLength; d++)
-	{
-		// Check if this means left button is pressed
-		if (mDOD[d].dwOfs == DIMOFS_BUTTON0)
-		{
-			if (mDOD[d].dwData & 0x80)
-			{
-				if (mDOD[d].dwTimeStamp - mTimeLeftButtonLastReleased <= DCLICKTIME)
-				{
-					// This is a double click
-					mTimeLeftButtonLastReleased = 0;
-					mLeftButtonDoubleClicked = true;
-				}
-			}
-			else // Remember last time button was released
-				mTimeLeftButtonLastReleased = mDOD[d].dwTimeStamp;
-		}
 	}
 }
 

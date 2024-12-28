@@ -21,19 +21,31 @@ public:
 	/// Update the mouse state
 	virtual void					Poll() override;
 
-	virtual int						GetX() const override				{ return 0; }
-	virtual int						GetY() const override				{ return 0; }
-	virtual int						GetDX() const override				{ return 0; }
-	virtual int						GetDY() const override				{ return 0; }
+	virtual int						GetX() const override				{ return mX; }
+	virtual int						GetY() const override				{ return mY; }
+	virtual int						GetDX() const override				{ return mDX; }
+	virtual int						GetDY() const override				{ return mDY; }
 
-	virtual bool					IsLeftPressed() const override		{ return false; }
-	virtual bool					IsRightPressed() const override		{ return false; }
-	virtual bool					IsMiddlePressed() const override	{ return false; }
-
-	virtual bool					IsLeftDoubleClicked() const override{ return false; }
+	virtual bool					IsLeftPressed() const override		{ return mLeftPressed; }
+	virtual bool					IsRightPressed() const override		{ return mRightPressed; }
+	virtual bool					IsMiddlePressed() const override	{ return mMiddlePressed; }
 
 	virtual void					HideCursor() override;
 	virtual void					ShowCursor() override;
 
 	virtual void					SetExclusive(bool inExclusive = true) override;
+
+private:
+	void							Reset();
+
+	Display *						mDisplay;
+	Window							mWindow;
+
+	int								mX;
+	int								mY;
+	int								mDX;
+	int								mDY;
+	bool							mLeftPressed;
+	bool							mRightPressed;
+	bool							mMiddlePressed;
 };

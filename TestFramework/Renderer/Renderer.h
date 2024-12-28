@@ -44,6 +44,10 @@ public:
 #ifdef JPH_PLATFORM_WINDOWS
 	/// Access to the window handle
 	HWND							GetWindowHandle() const				{ return mhWnd; }
+#elif defined(JPH_PLATFORM_LINUX)
+	/// Access to the window handle
+	Display *						GetDisplay() const					{ return mDisplay; }
+	Window							GetWindow() const					{ return mWindow; }
 #endif // JPH_PLATFORM_WINDOWS
 
 	/// Update the system window, returns false if the application should quit
