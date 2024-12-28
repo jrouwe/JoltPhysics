@@ -273,6 +273,10 @@ void RendererVK::Initialize()
 	// Get memory properties
 	vkGetPhysicalDeviceMemoryProperties(mPhysicalDevice, &mMemoryProperties);
 
+	// Get features
+	VkPhysicalDeviceFeatures physical_device_features = {};
+	vkGetPhysicalDeviceFeatures(mPhysicalDevice, &physical_device_features);
+
 	// Create device
 	float queue_priority = 1.0f;
 	VkDeviceQueueCreateInfo queue_create_info[2] = {};
@@ -284,8 +288,13 @@ void RendererVK::Initialize()
 	}
 	queue_create_info[0].queueFamilyIndex = selected_device.mGraphicsQueueIndex;
 	queue_create_info[1].queueFamilyIndex = selected_device.mPresentQueueIndex;
+
 	VkPhysicalDeviceFeatures device_features = {};
+
+	if (!physical_device_features.fillModeNonSolid)
+		FatalError("fillModeNonSolid not supported!");
 	device_features.fillModeNonSolid = VK_TRUE;
+
 	VkDeviceCreateInfo device_create_info = {};
 	device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	device_create_info.queueCreateInfoCount = selected_device.mGraphicsQueueIndex != selected_device.mPresentQueueIndex? 2 : 1;
