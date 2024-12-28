@@ -12,6 +12,7 @@
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/RenderInstances.h>
 #include <memory>
+#include <functional>
 
 // Forward declares
 class Texture;
@@ -48,6 +49,8 @@ public:
 	/// Access to the window handle
 	Display *						GetDisplay() const					{ return mDisplay; }
 	Window							GetWindow() const					{ return mWindow; }
+	using EventListener = std::function<void(const XEvent &)>;
+	void							SetEventListener(const EventListener &inListener) { mEventListener = inListener; }
 #endif // JPH_PLATFORM_WINDOWS
 
 	/// Update the system window, returns false if the application should quit
@@ -127,6 +130,7 @@ protected:
 	Display *						mDisplay;
 	Window							mWindow;
 	Atom							mWmDeleteWindow;
+	EventListener					mEventListener;
 #endif
 	int								mWindowWidth = 1920;
 	int								mWindowHeight = 1080;

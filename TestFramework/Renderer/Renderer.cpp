@@ -89,7 +89,7 @@ void Renderer::Initialize()
 	mWindow = XCreateSimpleWindow(mDisplay, RootWindow(mDisplay, screen), 0, 0, mWindowWidth, mWindowHeight, 1, BlackPixel(mDisplay, screen), WhitePixel(mDisplay, screen));
 
 	// Select input events
-	XSelectInput(mDisplay, mWindow, ExposureMask | StructureNotifyMask);
+	XSelectInput(mDisplay, mWindow, ExposureMask | StructureNotifyMask | KeyPressMask);
 
 	// Set window title
 	XStoreName(mDisplay, mWindow, "TestFramework");
@@ -149,6 +149,8 @@ bool Renderer::WindowUpdate()
 				OnWindowResize();
 			}
 		}
+		else
+			mEventListener(event);
 	}
 #endif
 

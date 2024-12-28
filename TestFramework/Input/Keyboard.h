@@ -61,6 +61,7 @@ enum class EKey
 	Up,
 	Down,
 	Return,
+	NumKeys,
 };
 
 /// Keyboard interface class which keeps track on the status of all keys and keeps track of the list of keys pressed.

@@ -84,7 +84,8 @@ bool MouseWin::Initialize(Renderer *inRenderer)
 	}
 
 	// Set cooperative level for Mouse
-	SetExclusive(false);
+	if (FAILED(mMouse->SetCooperativeLevel(mRenderer->GetWindowHandle(), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
+		Trace("Failed to set cooperative level for mouse");
 
 	// Set data format
 	if (FAILED(mMouse->SetDataFormat(&c_dfDIMouse)))
@@ -185,11 +186,4 @@ void MouseWin::HideCursor()
 void MouseWin::ShowCursor()
 {
 	::ShowCursor(true);
-}
-
-void MouseWin::SetExclusive(bool inExclusive)
-{
-	// Set cooperative level for Mouse
-	if (FAILED(mMouse->SetCooperativeLevel(mRenderer->GetWindowHandle(), (inExclusive? DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE) | DISCL_FOREGROUND)))
-		Trace("Failed to set cooperative level for mouse");
 }

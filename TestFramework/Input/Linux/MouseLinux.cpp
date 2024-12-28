@@ -73,7 +73,3 @@ void MouseLinux::HideCursor()
 void MouseLinux::ShowCursor()
 {
 }
-
-void MouseLinux::SetExclusive(bool inExclusive)
-{
-}

@@ -32,6 +32,4 @@ public:
 
 	virtual void					HideCursor() = 0;
 	virtual void					ShowCursor() = 0;
-
-	virtual void					SetExclusive(bool inExclusive = true) = 0;
 };

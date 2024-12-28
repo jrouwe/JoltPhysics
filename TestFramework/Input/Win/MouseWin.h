@@ -37,8 +37,6 @@ public:
 	virtual void					HideCursor() override;
 	virtual void					ShowCursor() override;
 
-	virtual void					SetExclusive(bool inExclusive = true) override;
-
 private:
 	void							DetectParsecRunning();
 	void							Reset();
