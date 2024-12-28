@@ -378,10 +378,8 @@ void RendererVK::Initialize()
 
 	// Create descriptor pool
 	VkDescriptorPoolSize descriptor_pool_sizes[] = {
-		// ubo_layout_binding * (Projection + Ortho)
-		VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, cFrameCount * (2 * 2)},
-		// texture_layout_binding * (Main Render Targets + DebugUI)
-		VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, cFrameCount * (1 * 2)},
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 128 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 128 },
 	};
 	VkDescriptorPoolCreateInfo descriptor_info = {};
 	descriptor_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
