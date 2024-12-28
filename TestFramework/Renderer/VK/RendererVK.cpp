@@ -629,11 +629,11 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 		return;
 
 	// Create the swap chain
-	uint32 image_count = min(capabilities.minImageCount + 1, capabilities.maxImageCount);
+	uint32 desired_image_count = min(capabilities.minImageCount + 1, capabilities.maxImageCount);
 	VkSwapchainCreateInfoKHR swapchain_create_info = {};
 	swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchain_create_info.surface = mSurface;
-	swapchain_create_info.minImageCount = image_count;
+	swapchain_create_info.minImageCount = desired_image_count;
 	swapchain_create_info.imageFormat = format.format;
 	swapchain_create_info.imageColorSpace = format.colorSpace;
 	swapchain_create_info.imageExtent = mSwapChainExtent;
@@ -657,9 +657,13 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 	swapchain_create_info.clipped = VK_TRUE;
 	FatalErrorIfFailed(vkCreateSwapchainKHR(mDevice, &swapchain_create_info, nullptr, &mSwapChain));
 
+	// Get the actual swap chain image count
+	uint32 image_count;
+	FatalErrorIfFailed(vkGetSwapchainImagesKHR(mDevice, mSwapChain, &image_count, nullptr));
+
 	// Get the swap chain images
 	mSwapChainImages.resize(image_count);
-	vkGetSwapchainImagesKHR(mDevice, mSwapChain, &image_count, mSwapChainImages.data());
+	FatalErrorIfFailed(vkGetSwapchainImagesKHR(mDevice, mSwapChain, &image_count, mSwapChainImages.data()));
 
 	// Create image views
 	mSwapChainImageViews.resize(image_count);
