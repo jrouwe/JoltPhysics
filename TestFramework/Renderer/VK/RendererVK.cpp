@@ -377,13 +377,16 @@ void RendererVK::Initialize()
 	FatalErrorIfFailed(vkCreatePipelineLayout(mDevice, &pipeline_layout, nullptr, &mPipelineLayout));
 
 	// Create descriptor pool
-	VkDescriptorPoolSize descriptor_pool_size = {};
-	descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	descriptor_pool_size.descriptorCount = cFrameCount;
+	VkDescriptorPoolSize descriptor_pool_sizes[] = {
+		// ubo_layout_binding * (Projection + Ortho)
+		VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, cFrameCount * (2 * 2)},
+		// texture_layout_binding * (Main Render Targets + DebugUI)
+		VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, cFrameCount * (1 * 2)},
+	};
 	VkDescriptorPoolCreateInfo descriptor_info = {};
 	descriptor_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	descriptor_info.poolSizeCount = 1;
-	descriptor_info.pPoolSizes = &descriptor_pool_size;
+	descriptor_info.poolSizeCount = std::size(descriptor_pool_sizes);
+	descriptor_info.pPoolSizes = descriptor_pool_sizes;
 	descriptor_info.maxSets = 256;
 	FatalErrorIfFailed(vkCreateDescriptorPool(mDevice, &descriptor_info, nullptr, &mDescriptorPool));
 
