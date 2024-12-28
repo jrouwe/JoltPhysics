@@ -770,6 +770,7 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	VkCommandBufferBeginInfo command_buffer_begin_info = {};
 	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	FatalErrorIfFailed(vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info));
 
 	// Begin the shadow pass
