@@ -665,7 +665,16 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 	if (depth_transient_support == VK_SUCCESS)
 	{
 		depth_usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
-		depth_memory_properties = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
+
+		// Test and utilize lazily allocated memory for the depth buffer
+		for (size_t i = 0; i < mMemoryProperties.memoryTypeCount; i++)
+		{
+			if (mMemoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT)
+			{
+				depth_memory_properties = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
+				break;
+			}
+		}
 	}
 
 	CreateImage(mSwapChainExtent.width, mSwapChainExtent.height, depth_format, VK_IMAGE_TILING_OPTIMAL, depth_usage, depth_memory_properties, mDepthImage, mDepthImageMemory);
