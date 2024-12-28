@@ -440,7 +440,8 @@ static constexpr uint cNumBodyMutexes = 0; // Autodetect
 static constexpr uint cMaxBodyPairs = 65536;
 static constexpr uint cMaxContactConstraints = 20480;
 
-SamplesApp::SamplesApp()
+SamplesApp::SamplesApp(const String &inCommandLine) :
+	Application(inCommandLine)
 {
 	// Limit the render frequency to our simulation frequency so we don't play back the simulation too fast
 	// Note that if the simulation frequency > vsync frequency the simulation will slow down as we want
@@ -622,12 +623,8 @@ SamplesApp::SamplesApp()
 		mDebugUI->ShowMenu(main_menu);
 	}
 
-	// Get test name from commandline
-#ifdef JPH_PLATFORM_WINDOWS
-	String cmd_line = ToLower(GetCommandLineA());
-#else
-	String cmd_line = "TODO";
-#endif
+	// Get test name from command line
+	String cmd_line = ToLower(inCommandLine);
 	Array<String> args;
 	StringToVector(cmd_line, args, " ");
 	if (args.size() == 2)

@@ -28,7 +28,7 @@
 #endif
 
 // Constructor
-Application::Application() :
+Application::Application([[maybe_unused]] const String &inCommandLine) :
 	mDebugRenderer(nullptr),
 	mRenderer(nullptr),
 	mKeyboard(nullptr),
@@ -134,6 +134,18 @@ Application::~Application()
 
 	delete Factory::sInstance;
 	Factory::sInstance = nullptr;
+}
+
+String Application::sCreateCommandLine(int inArgC, char **inArgV)
+{
+	String command_line;
+	for (int i = 0; i < inArgC; ++i)
+	{
+		if (i > 0)
+			command_line += " ";
+		command_line += inArgV[i];
+	}
+	return command_line;
 }
 
 // Clear debug lines / triangles / texts that have been accumulated

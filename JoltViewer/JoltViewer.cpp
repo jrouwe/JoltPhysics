@@ -24,16 +24,12 @@ JPH_SUPPRESS_WARNINGS_STD_END
 	#undef JPH_DEBUG_RENDERER
 #endif
 
-JoltViewer::JoltViewer()
+JoltViewer::JoltViewer(const String &inCommandLine) :
+	Application(inCommandLine)
 {
-	// Get file name from commandline
-#ifdef JPH_PLATFORM_WINDOWS
-	String cmd_line = GetCommandLineA();
-#else
-	String cmd_line = "TODO";
-#endif
+	// Get file name from command line
 	Array<String> args;
-	StringToVector(cmd_line, args, " ");
+	StringToVector(inCommandLine, args, " ");
 
 	// Check arguments
 	if (args.size() != 2 || args[1].empty())
