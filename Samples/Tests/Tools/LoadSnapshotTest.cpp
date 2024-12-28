@@ -39,7 +39,8 @@ void LoadSnapshotTest::Initialize()
 	if (!GetOpenFileNameA(&ofn))
 		return;
 #else
-	char file_name[] = "TODO";
+	// Can't browse for a file, use the default name
+	char file_name[] = "snapshot.bin";
 #endif
 
 	ifstream stream(file_name, ifstream::in | ifstream::binary);

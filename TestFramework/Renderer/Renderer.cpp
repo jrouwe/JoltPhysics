@@ -168,8 +168,6 @@ void Renderer::OnWindowResize()
 	GetClientRect(mhWnd, &rc);
 	mWindowWidth = max<LONG>(rc.right - rc.left, 8);
 	mWindowHeight = max<LONG>(rc.bottom - rc.top, 8);
-#else
-	// TODO
 #endif
 }
 
