@@ -27,6 +27,22 @@ void TraceImpl(const char *inFMT, ...)
 
 }
 
+void Alert(const char *inFMT, ...)
+{
+	// Format the message
+	va_list list;
+	va_start(list, inFMT);
+	char buffer[1024];
+	vsnprintf(buffer, sizeof(buffer), inFMT, list);
+	va_end(list);
+
+	Trace("Alert: %s", buffer);
+
+#ifdef JPH_PLATFORM_WINDOWS
+	MessageBoxA(nullptr, buffer, "Alert", MB_OK);
+#endif // JPH_PLATFORM_WINDOWS
+}
+
 void FatalError [[noreturn]] (const char *inFMT, ...)
 {
 	// Format the message

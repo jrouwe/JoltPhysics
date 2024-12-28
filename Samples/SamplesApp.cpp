@@ -767,13 +767,7 @@ bool SamplesApp::NextTest()
 		if (mExitAfterRunningTests)
 			return false; // Exit the application now
 		else
-		{
-		#ifdef JPH_PLATFORM_WINDOWS
-			MessageBoxA(nullptr, "Test run complete!", "Complete", MB_OK);
-		#else
-			Trace("Test run complete!");
-		#endif
-		}
+			Alert("Test run complete!");
 	}
 	else
 	{
