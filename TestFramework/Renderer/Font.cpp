@@ -198,6 +198,32 @@ Font::Create(const char *inFontName, int inCharHeight)
 	DeleteObject(font);
 	DeleteDC(dc);
 #else
+	// Find the font
+	FcPattern *pattern = FcNameParse((const FcChar8 *)mFontName.c_str());
+	FcConfigSubstitute(nullptr, pattern, FcMatchPattern);
+	FcDefaultSubstitute(pattern);
+	JPH_SCOPE_EXIT([pattern]() { FcPatternDestroy(pattern); });
+	FcResult result;
+	FcPattern *match = FcFontMatch(nullptr, pattern, &result);
+	if (!match)
+		return false;
+	JPH_SCOPE_EXIT([match]() { FcPatternDestroy(match); });
+	FcChar8 *file = nullptr;
+	if (FcPatternGetString(match, FC_FILE, 0, &file) != FcResultMatch)
+		return false;
+
+	// Initialize FreeType
+	FT_Library ft_library;
+	if (FT_Init_FreeType(&ft_library) != 0)
+		return false;
+	JPH_SCOPE_EXIT([&ft_library]() { FT_Done_FreeType(ft_library); });
+
+	// Load the font face
+	FT_Face ft_face;
+	if (FT_New_Face(ft_library, (const char *)file, 0, &ft_face) != 0)
+		return false;
+	JPH_SCOPE_EXIT([&ft_face]() { FT_Done_Face(ft_face); });
+
 	// Initialize X11 display
 	Display *display = XOpenDisplay(nullptr);
 	if (!display)
@@ -282,14 +308,38 @@ try_again:;
 		mStartU[idx] = uint16(x);
 		mStartV[idx] = uint16(y - font->ascent);
 		mWidth[idx] = uint8(extents.width);
-
-		// TODO: Implement kerning
-		uint8 spacing = uint8(extents.width + cSpacingH);
 		for (int idx2 = 0; idx2 < cNumChars; ++idx2)
-			mSpacing[idx][idx2] = spacing;
+			mSpacing[idx][idx2] = uint8(extents.width);
 
 		x += extents.width + cSpacingH;
 	}
+
+	// Apply kerning
+	if (FT_HAS_KERNING(ft_face))
+		for (int i = cBeginChar; i < cEndChar; ++i)
+		{
+			int idx1 = i - cBeginChar;
+			FT_UInt glyph1 = FT_Get_Char_Index(ft_face, i);
+			if (glyph1)
+			{
+				for (int j = cBeginChar; j < cEndChar; ++j)
+				{
+					int idx2 = j - cBeginChar;
+					FT_UInt glyph2 = FT_Get_Char_Index(ft_face, j);
+					if (glyph2)
+					{
+						FT_Vector kerning;
+						if (FT_Get_Kerning(ft_face, glyph1, glyph2, FT_KERNING_DEFAULT, &kerning) == 0)
+						{
+							int kern_amount = (kerning.x + 32) >> 6; // Fixed-point to integer
+							int new_spacing = int(mSpacing[idx1][idx2]) + kern_amount;
+							JPH_ASSERT(new_spacing >= 0 && new_spacing <= 0xff);
+							mSpacing[idx1][idx2] = (uint8)new_spacing;
+						}
+					}
+				}
+			}
+		}
 
 	// Convert to XImage
 	XImage *image = XGetImage(display, pixmap, 0, 0, mHorizontalTexels, mVerticalTexels, AllPlanes, ZPixmap);

@@ -48,6 +48,7 @@ using Microsoft::WRL::ComPtr;
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
 #include <X11/Xft/Xft.h>
+#include <fontconfig/fontconfig.h>
 #undef Font
 #undef Success
 #undef None
