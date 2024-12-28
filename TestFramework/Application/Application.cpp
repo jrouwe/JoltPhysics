@@ -153,164 +153,145 @@ void Application::Run()
 	ResetCamera();
 
 	// Main message loop
-#ifdef JPH_PLATFORM_WINDOWS
-	MSG msg;
-	memset(&msg, 0, sizeof(msg));
-	while (WM_QUIT != msg.message)
-#else
-	// TODO
-	for (;;)
-#endif
+	while (mRenderer->WindowUpdate())
 	{
-	#ifdef JPH_PLATFORM_WINDOWS
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-		{
-			JPH_PROFILE("DispatchMessage");
+		// Get new input
+		mKeyboard->Poll();
+		mMouse->Poll();
 
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+		// Handle keyboard input
+		for (EKey key = mKeyboard->GetFirstKey(); key != EKey::Invalid; key = mKeyboard->GetNextKey())
+			switch (key)
+			{
+			case EKey::P:
+				mIsPaused = !mIsPaused;
+				break;
+
+			case EKey::O:
+				mSingleStep = true;
+				break;
+
+			case EKey::T:
+				// Dump timing info to file
+				JPH_PROFILE_DUMP();
+				break;
+
+			case EKey::Escape:
+				mDebugUI->ToggleVisibility();
+				break;
+
+			default:
+				// Don't care
+				break;
+			}
+
+		// Calculate delta time
+		chrono::high_resolution_clock::time_point time = chrono::high_resolution_clock::now();
+		chrono::microseconds delta = chrono::duration_cast<chrono::microseconds>(time - mLastUpdateTime);
+		mLastUpdateTime = time;
+		float clock_delta_time = 1.0e-6f * delta.count();
+		float world_delta_time = 0.0f;
+		if (mRequestedDeltaTime <= 0.0f)
+		{
+			// If no fixed frequency update is requested, update with variable time step
+			world_delta_time = !mIsPaused || mSingleStep? clock_delta_time : 0.0f;
+			mResidualDeltaTime = 0.0f;
 		}
 		else
-	#endif
 		{
-			// Get new input
-			mKeyboard->Poll();
-			mMouse->Poll();
-
-			// Handle keyboard input
-			for (EKey key = mKeyboard->GetFirstKey(); key != EKey::Invalid; key = mKeyboard->GetNextKey())
-				switch (key)
-				{
-				case EKey::P:
-					mIsPaused = !mIsPaused;
-					break;
-
-				case EKey::O:
-					mSingleStep = true;
-					break;
-
-				case EKey::T:
-					// Dump timing info to file
-					JPH_PROFILE_DUMP();
-					break;
-
-				case EKey::Escape:
-					mDebugUI->ToggleVisibility();
-					break;
-
-				default:
-					// Don't care
-					break;
-				}
-
-			// Calculate delta time
-			chrono::high_resolution_clock::time_point time = chrono::high_resolution_clock::now();
-			chrono::microseconds delta = chrono::duration_cast<chrono::microseconds>(time - mLastUpdateTime);
-			mLastUpdateTime = time;
-			float clock_delta_time = 1.0e-6f * delta.count();
-			float world_delta_time = 0.0f;
-			if (mRequestedDeltaTime <= 0.0f)
+			// Else use fixed time steps
+			if (mSingleStep)
 			{
-				// If no fixed frequency update is requested, update with variable time step
-				world_delta_time = !mIsPaused || mSingleStep? clock_delta_time : 0.0f;
-				mResidualDeltaTime = 0.0f;
+				// Single step
+				world_delta_time = mRequestedDeltaTime;
 			}
-			else
+			else if (!mIsPaused)
 			{
-				// Else use fixed time steps
-				if (mSingleStep)
+				// Calculate how much time has passed since the last render
+				world_delta_time = clock_delta_time + mResidualDeltaTime;
+				if (world_delta_time < mRequestedDeltaTime)
 				{
-					// Single step
+					// Too soon, set the residual time and don't update
+					mResidualDeltaTime = world_delta_time;
+					world_delta_time = 0.0f;
+				}
+				else
+				{
+					// Update and clamp the residual time to a full update to avoid spiral of death
+					mResidualDeltaTime = min(mRequestedDeltaTime, world_delta_time - mRequestedDeltaTime);
 					world_delta_time = mRequestedDeltaTime;
 				}
-				else if (!mIsPaused)
-				{
-					// Calculate how much time has passed since the last render
-					world_delta_time = clock_delta_time + mResidualDeltaTime;
-					if (world_delta_time < mRequestedDeltaTime)
-					{
-						// Too soon, set the residual time and don't update
-						mResidualDeltaTime = world_delta_time;
-						world_delta_time = 0.0f;
-					}
-					else
-					{
-						// Update and clamp the residual time to a full update to avoid spiral of death
-						mResidualDeltaTime = min(mRequestedDeltaTime, world_delta_time - mRequestedDeltaTime);
-						world_delta_time = mRequestedDeltaTime;
-					}
-				}
 			}
-			mSingleStep = false;
-
-			// Clear debug lines if we're going to step
-			if (world_delta_time > 0.0f)
-				ClearDebugRenderer();
-
-			{
-				JPH_PROFILE("UpdateFrame");
-				if (!UpdateFrame(world_delta_time))
-					break;
-			}
-
-			// Draw coordinate axis
-			if (mDebugRendererCleared)
-				mDebugRenderer->DrawCoordinateSystem(RMat44::sIdentity());
-
-			// For next frame: mark that we haven't cleared debug stuff
-			mDebugRendererCleared = false;
-
-			// Update the camera position
-			if (!mUI->IsVisible())
-				UpdateCamera(clock_delta_time);
-
-			// Start rendering
-			mRenderer->BeginFrame(mWorldCamera, GetWorldScale());
-
-			// Draw from light
-			static_cast<DebugRendererImp *>(mDebugRenderer)->DrawShadowPass();
-
-			// Start drawing normally
-			mRenderer->EndShadowPass();
-
-			// Draw debug information
-			static_cast<DebugRendererImp *>(mDebugRenderer)->Draw();
-
-			// Draw the frame rate counter
-			DrawFPS(clock_delta_time);
-
-			if (mUI->IsVisible())
-			{
-				// Send mouse input to UI
-				bool left_pressed = mMouse->IsLeftPressed();
-				if (left_pressed && !mLeftMousePressed)
-					mUI->MouseDown(mMouse->GetX(), mMouse->GetY());
-				else if (!left_pressed && mLeftMousePressed)
-					mUI->MouseUp(mMouse->GetX(), mMouse->GetY());
-				mLeftMousePressed = left_pressed;
-				mUI->MouseMove(mMouse->GetX(), mMouse->GetY());
-
-				{
-					// Disable allocation checking
-					DisableCustomMemoryHook dcmh;
-
-					// Update and draw the menu
-					mUI->Update(clock_delta_time);
-					mUI->Draw();
-				}
-			}
-			else
-			{
-				// Menu not visible, cancel any mouse operations
-				mUI->MouseCancel();
-			}
-
-			// Show the frame
-			mRenderer->EndFrame();
-
-			// Notify of next frame
-			JPH_PROFILE_NEXTFRAME();
 		}
+		mSingleStep = false;
+
+		// Clear debug lines if we're going to step
+		if (world_delta_time > 0.0f)
+			ClearDebugRenderer();
+
+		{
+			JPH_PROFILE("UpdateFrame");
+			if (!UpdateFrame(world_delta_time))
+				break;
+		}
+
+		// Draw coordinate axis
+		if (mDebugRendererCleared)
+			mDebugRenderer->DrawCoordinateSystem(RMat44::sIdentity());
+
+		// For next frame: mark that we haven't cleared debug stuff
+		mDebugRendererCleared = false;
+
+		// Update the camera position
+		if (!mUI->IsVisible())
+			UpdateCamera(clock_delta_time);
+
+		// Start rendering
+		mRenderer->BeginFrame(mWorldCamera, GetWorldScale());
+
+		// Draw from light
+		static_cast<DebugRendererImp *>(mDebugRenderer)->DrawShadowPass();
+
+		// Start drawing normally
+		mRenderer->EndShadowPass();
+
+		// Draw debug information
+		static_cast<DebugRendererImp *>(mDebugRenderer)->Draw();
+
+		// Draw the frame rate counter
+		DrawFPS(clock_delta_time);
+
+		if (mUI->IsVisible())
+		{
+			// Send mouse input to UI
+			bool left_pressed = mMouse->IsLeftPressed();
+			if (left_pressed && !mLeftMousePressed)
+				mUI->MouseDown(mMouse->GetX(), mMouse->GetY());
+			else if (!left_pressed && mLeftMousePressed)
+				mUI->MouseUp(mMouse->GetX(), mMouse->GetY());
+			mLeftMousePressed = left_pressed;
+			mUI->MouseMove(mMouse->GetX(), mMouse->GetY());
+
+			{
+				// Disable allocation checking
+				DisableCustomMemoryHook dcmh;
+
+				// Update and draw the menu
+				mUI->Update(clock_delta_time);
+				mUI->Draw();
+			}
+		}
+		else
+		{
+			// Menu not visible, cancel any mouse operations
+			mUI->MouseCancel();
+		}
+
+		// Show the frame
+		mRenderer->EndFrame();
+
+		// Notify of next frame
+		JPH_PROFILE_NEXTFRAME();
 	}
 }
 

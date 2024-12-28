@@ -16,6 +16,7 @@ JPH_MSVC_SUPPRESS_WARNING(4061) // enumerator 'X' in switch of enum 'X' is not e
 JPH_MSVC_SUPPRESS_WARNING(4062) // enumerator 'X' in switch of enum 'X' is not handled
 
 #ifdef JPH_PLATFORM_WINDOWS
+
 // Targeting Windows 10 and above
 #define WINVER 0x0A00
 #define _WIN32_WINNT 0x0A00
@@ -39,7 +40,18 @@ JPH_MSVC_SUPPRESS_WARNING(4986) // implements.h(2343): warning C4986: 'Microsoft
 JPH_SUPPRESS_WARNING_POP
 
 using Microsoft::WRL::ComPtr;
-#endif // JPH_PLATFORM_WINDOWS
+
+#elif defined(JPH_PLATFORM_LINUX)
+
+#define Font X11Font
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#undef Font
+#undef Success
+#undef None
+#undef Convex
+
+#endif
 
 using namespace JPH;
 using namespace JPH::literals;

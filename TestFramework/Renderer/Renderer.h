@@ -46,6 +46,9 @@ public:
 	HWND							GetWindowHandle() const				{ return mhWnd; }
 #endif // JPH_PLATFORM_WINDOWS
 
+	/// Update the system window, returns false if the application should quit
+	bool							WindowUpdate();
+
 	/// Start / end drawing a frame
 	virtual void					BeginFrame(const CameraState &inCamera, float inWorldScale);
 	virtual void					EndShadowPass() = 0;
@@ -116,7 +119,11 @@ protected:
 
 #ifdef JPH_PLATFORM_WINDOWS
 	HWND							mhWnd;
-#endif // JPH_PLATFORM_WINDOWS
+#elif defined(JPH_PLATFORM_LINUX)
+	Display *						mDisplay;
+	Window							mWindow;
+	Atom							mWmDeleteWindow;
+#endif
 	int								mWindowWidth = 1920;
 	int								mWindowHeight = 1080;
 	float							mPerspectiveYSign = 1.0f;			///< Sign for the Y coordinate in the projection matrix (1 for DX, -1 for Vulkan)

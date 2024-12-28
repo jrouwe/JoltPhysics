@@ -78,12 +78,82 @@ void Renderer::Initialize()
 
 	// Show window
 	ShowWindow(mhWnd, SW_SHOW);
+#elif defined(JPH_PLATFORM_LINUX)
+	// Open connection to X server
+	mDisplay = XOpenDisplay(nullptr);
+	if (!mDisplay)
+		FatalError("Failed to open X display");
+
+	// Create a simple window
+	int screen = DefaultScreen(mDisplay);
+	mWindow = XCreateSimpleWindow(mDisplay, RootWindow(mDisplay, screen), 0, 0, mWindowWidth, mWindowHeight, 1, BlackPixel(mDisplay, screen), WhitePixel(mDisplay, screen));
+
+	// Select input events
+	XSelectInput(mDisplay, mWindow, ExposureMask | StructureNotifyMask);
+
+	// Set window title
+	XStoreName(mDisplay, mWindow, "TestFramework");
+
+	// Register WM_DELETE_WINDOW to handle the close button
+	mWmDeleteWindow = XInternAtom(mDisplay, "WM_DELETE_WINDOW", false);
+	XSetWMProtocols(mDisplay, mWindow, &mWmDeleteWindow, 1);
+
+	// Map the window (make it visible)
+	XMapWindow(mDisplay, mWindow);
+
+	// Flush the display to ensure commands are executed
+	XFlush(mDisplay);
 #else
-	// TODO
+	#error Unsupported platform
 #endif
 
 	// Store global renderer now that we're done initializing
 	sRenderer = this;
+}
+
+bool Renderer::WindowUpdate()
+{
+#ifdef JPH_PLATFORM_WINDOWS
+	// Main message loop
+	MSG msg = {};
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+
+		if (msg.message == WM_QUIT)
+		{
+			// Handle quit events
+			return false;
+		}
+	}
+#elif defined(JPH_PLATFORM_LINUX)
+	while (XPending(mDisplay) > 0)
+	{
+		XEvent event;
+		XNextEvent(mDisplay, &event);
+
+		if (event.type == ClientMessage && static_cast<Atom>(event.xclient.data.l[0]) == mWmDeleteWindow)
+		{
+			// Handle quit events
+			return false;
+		}
+		else if (event.type == ConfigureNotify)
+		{
+			// Handle window resize events
+			XConfigureEvent xce = event.xconfigure;
+			if (xce.width != mWindowWidth || xce.height != mWindowHeight)
+			{
+				mWindowWidth = xce.width;
+				mWindowHeight = xce.height;
+				OnWindowResize();
+			}
+		}
+	}
+#endif
+
+	// Application should continue
+	return true;
 }
 
 void Renderer::OnWindowResize()

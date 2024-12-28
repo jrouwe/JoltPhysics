@@ -223,3 +223,7 @@ if (WIN32)
 	target_link_libraries(TestFramework LINK_PUBLIC Jolt dxguid.lib dinput8.lib dxgi.lib d3d12.lib d3dcompiler.lib shcore.lib)
 	target_compile_definitions(TestFramework PRIVATE JPH_ENABLE_DIRECTX)
 endif()
+if (LINUX)
+	# Linux configuration
+	target_link_libraries(TestFramework LINK_PUBLIC Jolt X11)
+endif()
