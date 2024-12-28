@@ -8,6 +8,7 @@
 #include <Renderer/Renderer.h>
 #include <Image/Surface.h>
 #include <Jolt/Core/Profiler.h>
+#include <Jolt/Core/ScopeExit.h>
 
 Font::Font(Renderer *inRenderer) :
 	mRenderer(inRenderer)
@@ -25,9 +26,10 @@ Font::Create(const char *inFontName, int inCharHeight)
 	mHorizontalTexels = 64;
 	mVerticalTexels = 64;
 
-#ifdef JPH_PLATFORM_WINDOWS
 	const int cSpacingH		= 2;		// Number of pixels to put horizontally between characters
 	const int cSpacingV		= 2;		// Number of pixels to put vertically between characters
+
+#ifdef JPH_PLATFORM_WINDOWS
 
 	// Check font name length
 	if (mFontName.size() >= LF_FACESIZE)
@@ -196,13 +198,119 @@ Font::Create(const char *inFontName, int inCharHeight)
 	DeleteObject(font);
 	DeleteDC(dc);
 #else
-	// TODO
+	// Initialize X11 display
+	Display *display = XOpenDisplay(nullptr);
+	if (!display)
+		return false;
+	JPH_SCOPE_EXIT([display]() { XCloseDisplay(display); });
+
+	// Get the color map
+	int screen = DefaultScreen(display);
+	Visual *visual = DefaultVisual(display, screen);
+	Colormap colormap = DefaultColormap(display, screen);
+	JPH_SCOPE_EXIT([display, &colormap]() { XFreeColormap(display, colormap); });
+
+	// Load the font
+	XftFont *font = XftFontOpenName(display, screen, mFontName.c_str());
+	if (!font)
+		return false;
+	JPH_SCOPE_EXIT([display, &font]{ XftFontClose(display, font); });
+
+	// Create a pixmap to render the font in
+	Pixmap pixmap = XCreatePixmap(display, RootWindow(display, screen), mHorizontalTexels, mVerticalTexels, DefaultDepth(display, screen));
+	if (!pixmap)
+		return false;
+	JPH_SCOPE_EXIT([display, &pixmap](){ XFreePixmap(display, pixmap); });
+
+	// Create a drawing context
+	XftDraw *draw = XftDrawCreate(display, pixmap, visual, colormap);
+	if (!draw)
+		return false;
+	JPH_SCOPE_EXIT([&draw](){ XftDrawDestroy(draw); });
+
+	// White color
+	XftColor color;
+	XRenderColor xrcolor = { 0xffff, 0xffff, 0xffff, 0xffff };
+	XftColorAllocValue(display, visual, colormap, &xrcolor, &color);
+	JPH_SCOPE_EXIT([display, &visual, &colormap, &color]() { XftColorFree(display, visual, colormap, &color); });
+
+try_again:;
+	int x = 0, y = font->ascent;
+	for (int c = cBeginChar; c < cEndChar; ++c)
+	{
+		char character = char(c);
+
+		// Measure character extents
+		XGlyphInfo extents;
+		XftTextExtents8(display, font, reinterpret_cast<const FcChar8 *>(&character), 1, &extents);
+
+		// Check if the character fits in the current row
+		if (x + extents.width > mHorizontalTexels)
+		{
+			// Next line
+			x = 0;
+			y += font->ascent + font->descent + cSpacingV;
+
+			// Check if character fits
+			if (y + font->ascent + font->descent > mVerticalTexels)
+			{
+				// Character doesn't fit, enlarge surface
+				if (mHorizontalTexels < 2 * mVerticalTexels)
+					mHorizontalTexels <<= 1;
+				else
+					mVerticalTexels <<= 1;
+
+				XFreePixmap(display, pixmap);
+				pixmap = XCreatePixmap(display, RootWindow(display, screen), mHorizontalTexels, mVerticalTexels, DefaultDepth(display, screen));
+				if (!pixmap)
+					return false;
+				XftDrawDestroy(draw);
+				draw = XftDrawCreate(display, pixmap, visual, colormap);
+				if (!draw)
+					return false;
+
+				// Try again with the larger texture
+				goto try_again;
+			}
+		}
+
+		// Render the character
+		XftDrawString8(draw, &color, font, x, y, reinterpret_cast<const FcChar8 *>(&character), 1);
+
+		// Store character information
+		int idx = c - cBeginChar;
+		mStartU[idx] = uint16(x);
+		mStartV[idx] = uint16(y - font->ascent);
+		mWidth[idx] = uint8(extents.width);
+
+		// TODO: Implement kerning
+		uint8 spacing = uint8(extents.width + cSpacingH);
+		for (int idx2 = 0; idx2 < cNumChars; ++idx2)
+			mSpacing[idx][idx2] = spacing;
+
+		x += extents.width + cSpacingH;
+	}
+
+	// Convert to XImage
+	XImage *image = XGetImage(display, pixmap, 0, 0, mHorizontalTexels, mVerticalTexels, AllPlanes, ZPixmap);
+	if (image == nullptr)
+		return false;
+	JPH_SCOPE_EXIT([&image]() { XDestroyImage(image); });
+
+	// Create new surface
 	Ref<SoftwareSurface> surface = new SoftwareSurface(mHorizontalTexels, mVerticalTexels, ESurfaceFormat::L8);
 	surface->Clear();
-	memset(mStartU, 0, sizeof(mStartU));
-	memset(mStartV, 0, sizeof(mStartV));
-	memset(mWidth, 0, sizeof(mWidth));
-	memset(mSpacing, 0, sizeof(mSpacing));
+	surface->Lock(ESurfaceLockMode::Write);
+	for (int y = 0; y < mVerticalTexels; ++y)
+	{
+		uint8 *dst = surface->GetScanLine(y);
+		for (int x = 0; x < mHorizontalTexels; ++x, ++dst)
+		{
+			unsigned long pixel = XGetPixel(image, x, y);
+			*dst = uint8(pixel);
+		}
+	}
+	surface->UnLock();
 #endif
 
 	// Create input layout
