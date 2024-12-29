@@ -7,16 +7,21 @@
 #include <Renderer/Font.h>
 #include <Renderer/Renderer.h>
 #include <Image/Surface.h>
+#include <Utils/ReadData.h>
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/ScopeExit.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#define STB_TRUETYPE_IMPLEMENTATION
+#include <External/stb_truetype.h>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 Font::Font(Renderer *inRenderer) :
 	mRenderer(inRenderer)
 {
 }
 
-bool
-Font::Create(const char *inFontName, int inCharHeight)
+bool Font::Create(const char *inFontName, int inCharHeight)
 {
 	JPH_PROFILE("Create");
 
@@ -26,114 +31,50 @@ Font::Create(const char *inFontName, int inCharHeight)
 	mHorizontalTexels = 64;
 	mVerticalTexels = 64;
 
-	const int cSpacingH		= 2;		// Number of pixels to put horizontally between characters
-	const int cSpacingV		= 2;		// Number of pixels to put vertically between characters
+	constexpr int cSpacingH = 2; // Number of pixels to put horizontally between characters
+	constexpr int cSpacingV = 2; // Number of pixels to put vertically between characters
 
-#ifdef JPH_PLATFORM_WINDOWS
-	// Check font name length
-	if (mFontName.size() >= LF_FACESIZE)
+	// Read font data
+	Array<uint8> font_data = ReadData((String("Assets/Fonts/") + inFontName + ".ttf").c_str());
+
+	// Construct a font info
+	stbtt_fontinfo font;
+	if (!stbtt_InitFont(&font, font_data.data(), stbtt_GetFontOffsetForIndex(font_data.data(), 0)))
 		return false;
 
-	// Create font
-	LOGFONTA font_desc;
-	memset(&font_desc, 0, sizeof(font_desc));
-	font_desc.lfHeight			= mCharHeight;
-	font_desc.lfWeight			= FW_NORMAL;
-	font_desc.lfCharSet			= DEFAULT_CHARSET;
-	font_desc.lfOutPrecision	= OUT_DEFAULT_PRECIS;
-	font_desc.lfClipPrecision	= CLIP_DEFAULT_PRECIS;
-	font_desc.lfQuality			= ANTIALIASED_QUALITY;
-	font_desc.lfPitchAndFamily	= VARIABLE_PITCH;
-	strcpy_s(font_desc.lfFaceName, mFontName.c_str());
-	HFONT font = CreateFontIndirectA(&font_desc);
-	if (font == nullptr)
-		return false;
-
-	// Create a DC for the font
-	HDC dc = CreateCompatibleDC(nullptr);
-	if (dc == nullptr)
-	{
-		DeleteObject(font);
-		return false;
-	}
-
-	// Select the font
-	SelectObject(dc, font);
-	SetMapMode(dc, MM_TEXT);
-
-	// Get text metrics
-	TEXTMETRICA textmetric;
-	if (!GetTextMetricsA(dc, &textmetric))
-	{
-		DeleteObject(font);
-		DeleteDC(dc);
-		return false;
-	}
-
-	// Compute spacing
-	ABC widths[256];
-	if (!GetCharABCWidthsA(dc, 0, 255, widths))
-	{
-		DeleteObject(font);
-		DeleteDC(dc);
-		return false;
-	}
-	for (int idx1 = 0; idx1 < cNumChars; ++idx1)
-		for (int idx2 = 0; idx2 < cNumChars; ++idx2)
-		{
-			int spacing = int(widths[idx1 + cBeginChar].abcB) + widths[idx1 + cBeginChar].abcC + widths[idx2 + cBeginChar].abcA;
-			JPH_ASSERT(spacing >= 0 && spacing <= 0xff);
-			mSpacing[idx1][idx2] = (uint8)spacing;
-		}
-
-	// Adjust spacing for kerning pairs
-	DWORD pair_count = GetKerningPairsA(dc, 0, nullptr);
-	if (pair_count > 0)
-	{
-		LPKERNINGPAIR pairs = new KERNINGPAIR [pair_count];
-		GetKerningPairsA(dc, pair_count, pairs);
-		for (DWORD i = 0; i < pair_count; ++i)
-			if (pairs[i].wFirst >= cBeginChar && pairs[i].wFirst < cEndChar && pairs[i].wSecond >= cBeginChar && pairs[i].wSecond < cEndChar)
-			{
-				int idx1 = pairs[i].wFirst - cBeginChar;
-				int idx2 = pairs[i].wSecond - cBeginChar;
-
-				int new_spacing = (int)mSpacing[idx1][idx2] + pairs[i].iKernAmount;
-				JPH_ASSERT(new_spacing >= 0 && new_spacing <= 0xff);
-				mSpacing[idx1][idx2] = (uint8)new_spacing;
-			}
-		delete [] pairs;
-	}
+	// Get the base line for the font
+	float scale = stbtt_ScaleForPixelHeight(&font, float(mCharHeight));
+	int ascent;
+	stbtt_GetFontVMetrics(&font, &ascent, 0, 0);
+	int baseline = int(ascent * scale);
 
 	// Create surface for characters
 	Ref<SoftwareSurface> surface = new SoftwareSurface(mHorizontalTexels, mVerticalTexels, ESurfaceFormat::L8);
 	surface->Clear();
 	surface->Lock(ESurfaceLockMode::Write);
 
-	// Identity transform
-	MAT2 identity;
-	memset(&identity, 0, sizeof(identity));
-	identity.eM11.value = 1;
-	identity.eM22.value = 1;
-
 	// Draw all printable characters
-	try_again:;
+try_again:;
 	int x = 0, y = 0;
-	static_assert(cBeginChar == ' ', "We skip space in the for loop below");
-	for (int c = cBeginChar + 1; c < cEndChar; ++c)
+	for (int c = cBeginChar; c < cEndChar; ++c)
 	{
 		// Get index in the arrays
 		int idx = c - cBeginChar;
 
+		int w, h, xoff, yoff;
+		unsigned char *bitmap = stbtt_GetCodepointBitmap(&font, 0, scale, c, &w, &h, &xoff, &yoff);
+		JPH_SCOPE_EXIT([bitmap]{ STBTT_free(bitmap, nullptr); });
+		yoff = baseline + yoff;
+
 		// Check if there is room on this line
-		if (int(x + widths[c].abcB + cSpacingH) > mHorizontalTexels)
+		if (int(x + xoff + w + cSpacingH) > mHorizontalTexels)
 		{
 			// Next line
 			x = 0;
-			y += textmetric.tmHeight + cSpacingV;
+			y += mCharHeight + cSpacingV;
 
 			// Check if character fits
-			if (y + textmetric.tmHeight + cSpacingV > mVerticalTexels)
+			if (y + mCharHeight + cSpacingV > mVerticalTexels)
 			{
 				// Character doesn't fit, enlarge surface
 				if (mHorizontalTexels < 2 * mVerticalTexels)
@@ -155,174 +96,38 @@ Font::Create(const char *inFontName, int inCharHeight)
 		// Get location of character in font surface
 		JPH_ASSERT(x >= 0 && x <= 0xffff);
 		JPH_ASSERT(y >= 0 && y <= 0xffff);
-		JPH_ASSERT(widths[c].abcB <= 0xff);
+		JPH_ASSERT(w <= 0xff);
 		mStartU[idx] = uint16(x);
 		mStartV[idx] = uint16(y);
-		mWidth[idx] = uint8(widths[c].abcB);
+		mWidth[idx] = uint8(w);
 
-		// Get character data size
-		GLYPHMETRICS metrics;
-		int char_size = GetGlyphOutlineA(dc, c, GGO_GRAY8_BITMAP, &metrics, 0, nullptr, &identity);
-		if (char_size != 0)
+		// Copy the character data
+		for (int y2 = 0; y2 < h; ++y2)
 		{
-			// Allocate room for character
-			uint8 *char_data = new uint8 [char_size];
-
-			// Get character
-			GetGlyphOutlineA(dc, c, GGO_GRAY8_BITMAP, &metrics, char_size, char_data, &identity);
-			uint src_pitch = (metrics.gmBlackBoxX + 3) & ~uint(3);
-
-			// Copy the character data
-			for (uint src_y = 0, dst_y = y; src_y < metrics.gmBlackBoxY; ++src_y, ++dst_y)
-			{
-				uint8 *src = char_data + src_y * src_pitch;
-				uint8 *dst = surface->GetScanLine(dst_y + int(textmetric.tmHeight - textmetric.tmDescent - metrics.gmptGlyphOrigin.y)) + x;
-
-				for (uint src_x = 0; src_x < metrics.gmBlackBoxX; ++src_x, ++src, ++dst)
-					*dst = uint8(min(int(*src) << 2, 255));
-			}
-
-			// Destroy temporary character data
-			delete [] char_data;
+			uint8 *src = bitmap + y2 * w;
+			uint8 *dst = surface->GetScanLine(y + yoff + y2) + x + xoff;
+			memcpy(dst, src, w);
 		}
 
 		// Go to the next character
-		x += widths[c].abcB + cSpacingH;
+		x += w + cSpacingH;
 	}
+
+	// Calculate spacing between characters
+	for (int idx1 = 0; idx1 < cNumChars; ++idx1)
+		for (int idx2 = 0; idx2 < cNumChars; ++idx2)
+		{
+			int c1 = cBeginChar + idx1;
+			int c2 = cBeginChar + idx2;
+
+			int advance;
+			stbtt_GetCodepointHMetrics(&font, c1, &advance, nullptr);
+			int spacing = Clamp(int(scale * (advance + stbtt_GetCodepointKernAdvance(&font, c1, c2))), 0, 0xff);
+			mSpacing[idx1][idx2] = (uint8)spacing;
+		}
 
 	// Unlock surface
 	surface->UnLock();
-
-	// Release GDI objects
-	DeleteObject(font);
-	DeleteDC(dc);
-#else
-	// Find the font
-	FcPattern *pattern = FcNameParse((const FcChar8 *)mFontName.c_str());
-	FcConfigSubstitute(nullptr, pattern, FcMatchPattern);
-	FcDefaultSubstitute(pattern);
-	JPH_SCOPE_EXIT([pattern]() { FcPatternDestroy(pattern); });
-	FcResult result;
-	FcPattern *match = FcFontMatch(nullptr, pattern, &result);
-	if (!match)
-		return false;
-	JPH_SCOPE_EXIT([match]() { FcPatternDestroy(match); });
-	FcChar8 *file = nullptr;
-	if (FcPatternGetString(match, FC_FILE, 0, &file) != FcResultMatch)
-		return false;
-
-	// Initialize FreeType
-	FT_Library ft_library;
-	if (FT_Init_FreeType(&ft_library) != 0)
-		return false;
-	JPH_SCOPE_EXIT([&ft_library]() { FT_Done_FreeType(ft_library); });
-
-	// Load the font face
-	FT_Face ft_face;
-	if (FT_New_Face(ft_library, (const char *)file, 0, &ft_face) != 0)
-		return false;
-	JPH_SCOPE_EXIT([&ft_face]() { FT_Done_Face(ft_face); });
-
-	// Set the character height
-	if (FT_Set_Pixel_Sizes(ft_face, 0, mCharHeight) != 0)
-		return false;
-
-	// Create new surface
-	Ref<SoftwareSurface> surface = new SoftwareSurface(mHorizontalTexels, mVerticalTexels, ESurfaceFormat::L8);
-	surface->Clear();
-	surface->Lock(ESurfaceLockMode::Write);
-
-try_again:;
-	int x = 0, y = 0;
-	for (int c = cBeginChar; c < cEndChar; ++c)
-	{
-		// Render character to bitmap
-		if (FT_Load_Char(ft_face, c, FT_LOAD_RENDER) != 0)
-		{
-			surface->UnLock();
-			return false;
-		}
-
-		// Get the glyph's bitmap
-		FT_GlyphSlot slot = ft_face->glyph;
-		FT_Bitmap &bitmap = slot->bitmap;
- 
-		// Check if the character fits in the current row
-		if (x + bitmap.width > mHorizontalTexels)
-		{
-			// Next line
-			x = 0;
-			y += mCharHeight + cSpacingV;
-
-			// Check if character fits
-			if (y + mCharHeight + cSpacingV > mVerticalTexels)
-			{
-				// Character doesn't fit, enlarge surface
-				if (mHorizontalTexels < 2 * mVerticalTexels)
-					mHorizontalTexels <<= 1;
-				else
-					mVerticalTexels <<= 1;
-
-				// Create a new surface
-				surface->UnLock();
-				surface = new SoftwareSurface(mHorizontalTexels, mVerticalTexels, ESurfaceFormat::L8);
-				surface->Clear();
-				surface->Lock(ESurfaceLockMode::Write);
-
-				// Try again with the larger texture
-				goto try_again;
-			}
-		}
-
-		// Copy the glyph bitmap into the surface
-		for (int row = 0; row < bitmap.rows; ++row)
-		{
-			uint8 *src = bitmap.buffer + row * bitmap.pitch;
-			uint8 *dst = surface->GetScanLine(y + row + mCharHeight - slot->bitmap_top) + x;
-			memcpy(dst, src, bitmap.width);
-		}
-
-		// Store character information
-		int idx = c - cBeginChar;
-		mStartU[idx] = uint16(x);
-		mStartV[idx] = uint16(y);
-		mWidth[idx] = uint8(bitmap.width);
-		uint8 advance((slot->metrics.horiAdvance + 32) >> 6);
-		for (int idx2 = 0; idx2 < cNumChars; ++idx2)
-			mSpacing[idx][idx2] = advance;
-
-		// Advance to the next position
-		x += bitmap.width + cSpacingH;
-	}
-
-	surface->UnLock();
-
-	// Apply kerning
-	if (FT_HAS_KERNING(ft_face))
-		for (int i = cBeginChar; i < cEndChar; ++i)
-		{
-			int idx1 = i - cBeginChar;
-			FT_UInt glyph1 = FT_Get_Char_Index(ft_face, i);
-			if (glyph1)
-			{
-				for (int j = cBeginChar; j < cEndChar; ++j)
-				{
-					int idx2 = j - cBeginChar;
-					FT_UInt glyph2 = FT_Get_Char_Index(ft_face, j);
-					if (glyph2)
-					{
-						FT_Vector kerning;
-						if (FT_Get_Kerning(ft_face, glyph1, glyph2, FT_KERNING_DEFAULT, &kerning) == 0)
-						{
-							int kern_amount = (kerning.x + 32) >> 6; // Fixed-point to integer
-							int new_spacing = Clamp(int(mSpacing[idx1][idx2]) + kern_amount, 0, 0xff);
-							mSpacing[idx1][idx2] = (uint8)new_spacing;
-						}
-					}
-				}
-			}
-		}
-#endif
 
 	// Create input layout
 	const PipelineState::EInputDescription vertex_desc[] =
