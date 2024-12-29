@@ -152,6 +152,8 @@ bool Renderer::WindowUpdate()
 		else
 			mEventListener(event);
 	}
+#else
+	#error Unsupported platform
 #endif
 
 	// Application should continue

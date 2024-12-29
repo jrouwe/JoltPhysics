@@ -56,7 +56,8 @@ bool Font::Create(const char *inFontName, int inCharHeight)
 	// Draw all printable characters
 try_again:;
 	int x = 0, y = 0;
-	for (int c = cBeginChar; c < cEndChar; ++c)
+	static_assert(cBeginChar == ' ', "We skip space in the for loop below");
+	for (int c = cBeginChar + 1; c < cEndChar; ++c)
 	{
 		// Get index in the arrays
 		int idx = c - cBeginChar;
