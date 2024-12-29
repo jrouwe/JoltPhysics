@@ -164,3 +164,5 @@ The project is distributed under the [MIT license](LICENSE).
 ## Contributions
 
 All contributions are welcome! If you intend to make larger changes, please discuss first in the GitHub Discussion section. For non-trivial changes, we require that you agree to a [Contributor Agreement](ContributorAgreement.md). When you create a PR, [CLA assistant](https://cla-assistant.io/) will prompt you to sign it.
+
+Note that all PRs will be squashed before merging, so there's no need to force-push to git to keep the history clean.
