@@ -31,7 +31,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Install Vulkan
-      run: ${{github.workspace}}/ubuntu_install_vulkan_sdk.sh
+      run: ${{github.workspace}}/Build/ubuntu_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}}
@@ -144,7 +144,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Install Vulkan
-      run: ${{github.workspace}}/ubuntu_install_vulkan_sdk.sh
+      run: ${{github.workspace}}/Build/ubuntu_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}}
