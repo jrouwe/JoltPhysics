@@ -89,7 +89,7 @@ RendererVK::~RendererVK()
 
 	vkDestroyDevice(mDevice, nullptr);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)(void *)vkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT");
 	if (vkDestroyDebugUtilsMessengerEXT != nullptr)
 		vkDestroyDebugUtilsMessengerEXT(mInstance, mDebugMessenger, nullptr);
