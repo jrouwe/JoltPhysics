@@ -27,6 +27,8 @@
 	#include <Input/Linux/MouseLinux.h>
 #endif
 
+JPH_GCC_SUPPRESS_WARNING("-Wswitch")
+
 // Constructor
 Application::Application([[maybe_unused]] const String &inCommandLine) :
 	mDebugRenderer(nullptr),

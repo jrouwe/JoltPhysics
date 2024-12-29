@@ -55,6 +55,8 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
+JPH_GCC_SUPPRESS_WARNING("-Wswitch")
+
 //-----------------------------------------------------------------------------
 // RTTI definitions
 //-----------------------------------------------------------------------------
