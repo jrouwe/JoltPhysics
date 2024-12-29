@@ -702,13 +702,11 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 
 		// Test and utilize lazily allocated memory for the depth buffer
 		for (size_t i = 0; i < mMemoryProperties.memoryTypeCount; i++)
-		{
 			if (mMemoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT)
 			{
 				depth_memory_properties = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
 				break;
 			}
-		}
 	}
 
 	CreateImage(mSwapChainExtent.width, mSwapChainExtent.height, depth_format, VK_IMAGE_TILING_OPTIMAL, depth_usage, depth_memory_properties, mDepthImage, mDepthImageMemory);
