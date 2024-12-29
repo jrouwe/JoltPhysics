@@ -17,6 +17,7 @@ JPH_CLANG_SUPPRESS_WARNING("-Wzero-as-null-pointer-constant")
 JPH_CLANG_SUPPRESS_WARNING("-Wcast-qual")
 JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-fallthrough")
 JPH_CLANG_SUPPRESS_WARNING("-Wcomma")
+JPH_CLANG_SUPPRESS_WARNING("-Wdouble-promotion")
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <External/stb_truetype.h>
 JPH_SUPPRESS_WARNINGS_STD_END
