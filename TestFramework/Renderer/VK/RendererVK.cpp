@@ -690,7 +690,26 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 
 	// Create depth buffer
 	VkFormat depth_format = FindDepthFormat();
-	CreateImage(mSwapChainExtent.width, mSwapChainExtent.height, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mDepthImage, mDepthImageMemory);
+	VkImageUsageFlags depth_usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	VkMemoryPropertyFlags depth_memory_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+	// Test and utilize support for transient memory for the depth buffer
+	VkImageFormatProperties depth_transient_properties = {};
+	VkResult depth_transient_support = vkGetPhysicalDeviceImageFormatProperties(mPhysicalDevice, depth_format, VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL, depth_usage | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, 0, &depth_transient_properties);
+	if (depth_transient_support == VK_SUCCESS)
+	{
+		depth_usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+
+		// Test and utilize lazily allocated memory for the depth buffer
+		for (size_t i = 0; i < mMemoryProperties.memoryTypeCount; i++)
+			if (mMemoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT)
+			{
+				depth_memory_properties = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
+				break;
+			}
+	}
+
+	CreateImage(mSwapChainExtent.width, mSwapChainExtent.height, depth_format, VK_IMAGE_TILING_OPTIMAL, depth_usage, depth_memory_properties, mDepthImage, mDepthImageMemory);
 	mDepthImageView = CreateImageView(mDepthImage, depth_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 
 	// Create frame buffers for the normal pass
