@@ -18,7 +18,11 @@
 #include <Jolt/Core/QuickSort.h>
 #include <Jolt/Core/RTTI.h>
 
-#include <vulkan/vulkan_win32.h>
+#ifdef JPH_PLATFORM_WINDOWS
+	#include <vulkan/vulkan_win32.h>
+#elif defined(JPH_PLATFORM_LINUX)
+	#include <vulkan/vulkan_xlib.h>
+#endif
 
 #ifdef JPH_DEBUG
 
@@ -85,7 +89,7 @@ RendererVK::~RendererVK()
 
 	vkDestroyDevice(mDevice, nullptr);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)(void *)vkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT");
 	if (vkDestroyDebugUtilsMessengerEXT != nullptr)
 		vkDestroyDebugUtilsMessengerEXT(mInstance, mDebugMessenger, nullptr);
@@ -104,7 +108,11 @@ void RendererVK::Initialize()
 	// Required instance extensions
 	Array<const char *> required_instance_extensions;
 	required_instance_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+#ifdef JPH_PLATFORM_WINDOWS
 	required_instance_extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#elif defined(JPH_PLATFORM_LINUX)
+	required_instance_extensions.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+#endif
 
 	// Required device extensions
 	Array<const char *> required_device_extensions;
@@ -165,11 +173,19 @@ void RendererVK::Initialize()
 #endif
 
 	// Create surface
+#ifdef JPH_PLATFORM_WINDOWS
 	VkWin32SurfaceCreateInfoKHR surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	surface_create_info.hwnd = mhWnd;
 	surface_create_info.hinstance = GetModuleHandle(nullptr);
 	FatalErrorIfFailed(vkCreateWin32SurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
+#elif defined(JPH_PLATFORM_LINUX)
+	VkXlibSurfaceCreateInfoKHR surface_create_info = {};
+	surface_create_info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+	surface_create_info.dpy = mDisplay;
+	surface_create_info.window = mWindow;
+	FatalErrorIfFailed(vkCreateXlibSurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
+#endif
 
 	// Select device
 	uint32 device_count = 0;
@@ -206,8 +222,10 @@ void RendererVK::Initialize()
 		case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
 			score = 10;
 			break;
-		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
 		case VK_PHYSICAL_DEVICE_TYPE_CPU:
+			score = 5;
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
 		case VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM:
 			continue;
 		}
@@ -618,7 +636,7 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 		return;
 
 	// Create the swap chain
-	uint32 image_count = min(capabilities.minImageCount + 1, capabilities.maxImageCount);
+	uint32 image_count = max(min(capabilities.minImageCount + 1, capabilities.maxImageCount), capabilities.minImageCount);
 	VkSwapchainCreateInfoKHR swapchain_create_info = {};
 	swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchain_create_info.surface = mSurface;

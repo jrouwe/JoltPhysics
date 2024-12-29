@@ -116,21 +116,21 @@ void VehicleStressTest::ProcessInput(const ProcessInputParams &inParams)
 {
 	// Determine acceleration and brake
 	mForward = 0.0f;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Up))
 		mForward = 1.0f;
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::Down))
 		mForward = -1.0f;
 
 	// Steering
 	mRight = 0.0f;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Left))
 		mRight = -1.0f;
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::Right))
 		mRight = 1.0f;
 
 	// Hand brake will cancel gas pedal
 	mHandBrake = 0.0f;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Z))
 	{
 		mForward = 0.0f;
 		mHandBrake = 1.0f;

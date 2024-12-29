@@ -49,8 +49,11 @@ protected:
 
 public:
 	/// Constructor
-								Application();
+								Application(const String &inCommandLine);
 	virtual						~Application();
+
+	/// Create a single string command line
+	static String				sCreateCommandLine(int inArgC, char **inArgV);
 
 	/// Enter the main loop
 	void						Run();

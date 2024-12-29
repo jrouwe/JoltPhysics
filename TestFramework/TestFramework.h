@@ -6,16 +6,22 @@
 
 #include <Jolt/Jolt.h>
 
-// Targeting Windows 10 and above
-#define WINVER 0x0A00
-#define _WIN32_WINNT 0x0A00
-
 // Disable common warnings
 JPH_SUPPRESS_WARNINGS
 JPH_CLANG_SUPPRESS_WARNING("-Wheader-hygiene")
 #ifdef JPH_DOUBLE_PRECISION
 JPH_CLANG_SUPPRESS_WARNING("-Wdouble-promotion")
 #endif // JPH_DOUBLE_PRECISION
+JPH_CLANG_SUPPRESS_WARNING("-Wswitch-enum")
+JPH_CLANG_SUPPRESS_WARNING("-Wswitch")
+JPH_MSVC_SUPPRESS_WARNING(4061) // enumerator 'X' in switch of enum 'X' is not explicitly handled by a case label
+JPH_MSVC_SUPPRESS_WARNING(4062) // enumerator 'X' in switch of enum 'X' is not handled
+
+#ifdef JPH_PLATFORM_WINDOWS
+
+// Targeting Windows 10 and above
+#define WINVER 0x0A00
+#define _WIN32_WINNT 0x0A00
 
 JPH_SUPPRESS_WARNING_PUSH
 JPH_MSVC_SUPPRESS_WARNING(5039) // winbase.h(13179): warning C5039: 'TpSetCallbackCleanupGroup': pointer or reference to potentially throwing function passed to 'extern "C"' function under -EHc. Undefined behavior may occur if this function throws an exception.
@@ -36,6 +42,20 @@ JPH_MSVC_SUPPRESS_WARNING(4986) // implements.h(2343): warning C4986: 'Microsoft
 JPH_SUPPRESS_WARNING_POP
 
 using Microsoft::WRL::ComPtr;
+
+#elif defined(JPH_PLATFORM_LINUX)
+
+#define Font X11Font
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/XKBlib.h>
+#undef Font
+#undef Success
+#undef None
+#undef Convex
+
+#endif
+
 using namespace JPH;
 using namespace JPH::literals;
 using namespace std;

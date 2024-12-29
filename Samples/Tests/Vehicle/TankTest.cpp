@@ -172,18 +172,18 @@ void TankTest::ProcessInput(const ProcessInputParams &inParams)
 	// Determine acceleration and brake
 	mForward = 0.0f;
 	mBrake = 0.0f;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_RSHIFT))
+	if (inParams.mKeyboard->IsKeyPressed(EKey::RShift))
 		mBrake = 1.0f;
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::Up))
 		mForward = 1.0f;
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::Down))
 		mForward = -1.0f;
 
 	// Steering
 	mLeftRatio = 1.0f;
 	mRightRatio = 1.0f;
 	float velocity = (mTankBody->GetRotation().Conjugated() * mTankBody->GetLinearVelocity()).GetZ();
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Left))
 	{
 		if (mBrake == 0.0f && mForward == 0.0f && abs(velocity) < min_velocity_pivot_turn)
 		{
@@ -194,7 +194,7 @@ void TankTest::ProcessInput(const ProcessInputParams &inParams)
 		else
 			mLeftRatio = 0.6f;
 	}
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::Right))
 	{
 		if (mBrake == 0.0f && mForward == 0.0f && abs(velocity) < min_velocity_pivot_turn)
 		{
@@ -247,7 +247,7 @@ void TankTest::ProcessInput(const ProcessInputParams &inParams)
 	mBarrelPitch = ATan2(hit_pos_in_barrel.GetZ(), hit_pos_in_barrel.GetY());
 
 	// If user wants to fire
-	mFire = inParams.mKeyboard->IsKeyPressed(DIK_RETURN);
+	mFire = inParams.mKeyboard->IsKeyPressed(EKey::Return);
 }
 
 void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)

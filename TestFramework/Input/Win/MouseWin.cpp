@@ -4,22 +4,21 @@
 
 #include <TestFramework.h>
 
-#include <Input/Mouse.h>
+#include <Input/Win/MouseWin.h>
 #include <Renderer/Renderer.h>
 #include <Jolt/Core/Profiler.h>
 
-Mouse::Mouse()
+MouseWin::MouseWin()
 {
 	Reset();
 }
 
-Mouse::~Mouse()
+MouseWin::~MouseWin()
 {
 	Shutdown();
 }
 
-void
-Mouse::Reset()
+void MouseWin::Reset()
 {
 	mDI = nullptr;
 	mMouse = nullptr;
@@ -29,18 +28,13 @@ Mouse::Reset()
 	ResetMouse();
 }
 
-void Mouse::ResetMouse()
+void MouseWin::ResetMouse()
 {
 	memset(&mMouseState, 0, sizeof(mMouseState));
 	mMousePosInitialized = false;
-	memset(&mDOD, 0, sizeof(mDOD));
-	mDODLength = 0;
-	mTimeLeftButtonLastReleased = 0;
-	mLeftButtonDoubleClicked = false;
-
 }
 
-void Mouse::DetectParsecRunning()
+void MouseWin::DetectParsecRunning()
 {
 	mIsParsecRunning = false;
 
@@ -59,7 +53,7 @@ void Mouse::DetectParsecRunning()
 	}
 }
 
-bool Mouse::Initialize(Renderer *inRenderer)
+bool MouseWin::Initialize(Renderer *inRenderer)
 #ifdef JPH_COMPILER_CLANG
 	// DIPROP_BUFFERSIZE is a pointer to 1 which causes UBSan: runtime error: reference binding to misaligned address 0x000000000001
 	__attribute__((no_sanitize("alignment")))
@@ -90,7 +84,8 @@ bool Mouse::Initialize(Renderer *inRenderer)
 	}
 
 	// Set cooperative level for Mouse
-	SetExclusive(false);
+	if (FAILED(mMouse->SetCooperativeLevel(mRenderer->GetWindowHandle(), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
+		Trace("Failed to set cooperative level for mouse");
 
 	// Set data format
 	if (FAILED(mMouse->SetDataFormat(&c_dfDIMouse)))
@@ -118,7 +113,7 @@ bool Mouse::Initialize(Renderer *inRenderer)
 	return true;
 }
 
-void Mouse::Shutdown()
+void MouseWin::Shutdown()
 {
 	if (mMouse)
 	{
@@ -131,7 +126,7 @@ void Mouse::Shutdown()
 	Reset();
 }
 
-void Mouse::Poll()
+void MouseWin::Poll()
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -181,56 +176,14 @@ void Mouse::Poll()
 		mMouseState.lX = mMousePos.x - old_mouse_pos.x;
 		mMouseState.lY = mMousePos.y - old_mouse_pos.y;
 	}
-
-	// Get the state in a buffer for checking doubleclicks
-	if (FAILED(mMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), mDOD, &mDODLength, 0)))
-	{
-		// We lost mMouse input, reacquire
-		mMouse->Acquire();
-
-		if (FAILED(mMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), mDOD, &mDODLength, 0)))
-		{
-			// Unable to reacquire, reset button info
-			mTimeLeftButtonLastReleased = 0;
-			mLeftButtonDoubleClicked = false;
-			return;
-		}
-	}
-
-	// Check for double clicks
-	for (DWORD d = 0; d < mDODLength; d++)
-	{
-		// Check if this means left button is pressed
-		if (mDOD[d].dwOfs == DIMOFS_BUTTON0)
-		{
-			if (mDOD[d].dwData & 0x80)
-			{
-				if (mDOD[d].dwTimeStamp - mTimeLeftButtonLastReleased <= DCLICKTIME)
-				{
-					// This is a double click
-					mTimeLeftButtonLastReleased = 0;
-					mLeftButtonDoubleClicked = true;
-				}
-			}
-			else // Remember last time button was released
-				mTimeLeftButtonLastReleased = mDOD[d].dwTimeStamp;
-		}
-	}
 }
 
-void Mouse::HideCursor()
+void MouseWin::HideCursor()
 {
 	::ShowCursor(false);
 }
 
-void Mouse::ShowCursor()
+void MouseWin::ShowCursor()
 {
 	::ShowCursor(true);
-}
-
-void Mouse::SetExclusive(bool inExclusive)
-{
-	// Set cooperative level for Mouse
-	if (FAILED(mMouse->SetCooperativeLevel(mRenderer->GetWindowHandle(), (inExclusive? DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE) | DISCL_FOREGROUND)))
-		Trace("Failed to set cooperative level for mouse");
 }

@@ -137,11 +137,11 @@ void MotorcycleTest::ProcessInput(const ProcessInputParams &inParams)
 	// Determine acceleration and brake
 	mForward = 0.0f;
 	mBrake = 0.0f;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Z))
 		mBrake = 1.0f;
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::Up))
 		mForward = 1.0f;
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::Down))
 		mForward = -1.0f;
 
 	// Check if we're reversing direction
@@ -164,9 +164,9 @@ void MotorcycleTest::ProcessInput(const ProcessInputParams &inParams)
 
 	// Steering
 	float right = 0.0f;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Left))
 		right = -1.0f;
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))
+	else if (inParams.mKeyboard->IsKeyPressed(EKey::Right))
 		right = 1.0f;
 	const float steer_speed = 4.0f;
 	if (right > mRight)

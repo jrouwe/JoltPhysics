@@ -6,7 +6,7 @@
 
 #include <Utils/CustomMemoryHook.h>
 
-#if defined(_DEBUG) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR) && !defined(JPH_COMPILER_MINGW)
+#ifdef JPH_CUSTOM_MEMORY_HOOK_ENABLED
 
 // Global to turn checking on/off
 static bool sEnableCustomMemoryHook = false;
