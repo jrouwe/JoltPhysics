@@ -225,6 +225,5 @@ if (WIN32)
 endif()
 if (LINUX)
 	# Linux configuration
-	target_link_libraries(TestFramework LINK_PUBLIC Jolt X11 freetype fontconfig)
-	target_include_directories(TestFramework PUBLIC /usr/include/freetype2)
+	target_link_libraries(TestFramework LINK_PUBLIC Jolt X11)
 endif()

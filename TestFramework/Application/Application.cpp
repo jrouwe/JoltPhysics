@@ -75,7 +75,7 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 
 		// Create font
 		Font *font = new Font(mRenderer);
-		font->Create("Arial", 24);
+		font->Create("Roboto-Regular", 24);
 		mFont = font;
 
 		// Init debug renderer

@@ -99,7 +99,7 @@ try_again:;
 		JPH_ASSERT(w <= 0xff);
 		mStartU[idx] = uint16(x);
 		mStartV[idx] = uint16(y);
-		mWidth[idx] = uint8(w);
+		mWidth[idx] = uint8(w + 1);
 
 		// Copy the character data
 		for (int y2 = 0; y2 < h; ++y2)
