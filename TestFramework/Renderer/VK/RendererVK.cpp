@@ -291,6 +291,10 @@ void RendererVK::Initialize()
 	// Get memory properties
 	vkGetPhysicalDeviceMemoryProperties(mPhysicalDevice, &mMemoryProperties);
 
+	// Get features
+	VkPhysicalDeviceFeatures physical_device_features = {};
+	vkGetPhysicalDeviceFeatures(mPhysicalDevice, &physical_device_features);
+
 	// Create device
 	float queue_priority = 1.0f;
 	VkDeviceQueueCreateInfo queue_create_info[2] = {};
@@ -302,8 +306,13 @@ void RendererVK::Initialize()
 	}
 	queue_create_info[0].queueFamilyIndex = selected_device.mGraphicsQueueIndex;
 	queue_create_info[1].queueFamilyIndex = selected_device.mPresentQueueIndex;
+
 	VkPhysicalDeviceFeatures device_features = {};
+
+	if (!physical_device_features.fillModeNonSolid)
+		FatalError("fillModeNonSolid not supported!");
 	device_features.fillModeNonSolid = VK_TRUE;
+
 	VkDeviceCreateInfo device_create_info = {};
 	device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	device_create_info.queueCreateInfoCount = selected_device.mGraphicsQueueIndex != selected_device.mPresentQueueIndex? 2 : 1;
@@ -469,6 +478,8 @@ void RendererVK::Initialize()
 	sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	sampler_info.unnormalizedCoordinates = VK_FALSE;
 	sampler_info.compareEnable = VK_FALSE;
+	sampler_info.minLod = 0.0f;
+	sampler_info.maxLod = VK_LOD_CLAMP_NONE;
 	sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	FatalErrorIfFailed(vkCreateSampler(mDevice, &sampler_info, nullptr, &mTextureSamplerRepeat));
 
@@ -636,11 +647,11 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 		return;
 
 	// Create the swap chain
-	uint32 image_count = max(min(capabilities.minImageCount + 1, capabilities.maxImageCount), capabilities.minImageCount);
+	uint32 desired_image_count = max(min(capabilities.minImageCount + 1, capabilities.maxImageCount), capabilities.minImageCount);
 	VkSwapchainCreateInfoKHR swapchain_create_info = {};
 	swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchain_create_info.surface = mSurface;
-	swapchain_create_info.minImageCount = image_count;
+	swapchain_create_info.minImageCount = desired_image_count;
 	swapchain_create_info.imageFormat = format.format;
 	swapchain_create_info.imageColorSpace = format.colorSpace;
 	swapchain_create_info.imageExtent = mSwapChainExtent;
@@ -664,9 +675,13 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 	swapchain_create_info.clipped = VK_TRUE;
 	FatalErrorIfFailed(vkCreateSwapchainKHR(mDevice, &swapchain_create_info, nullptr, &mSwapChain));
 
+	// Get the actual swap chain image count
+	uint32 image_count;
+	FatalErrorIfFailed(vkGetSwapchainImagesKHR(mDevice, mSwapChain, &image_count, nullptr));
+
 	// Get the swap chain images
 	mSwapChainImages.resize(image_count);
-	vkGetSwapchainImagesKHR(mDevice, mSwapChain, &image_count, mSwapChainImages.data());
+	FatalErrorIfFailed(vkGetSwapchainImagesKHR(mDevice, mSwapChain, &image_count, mSwapChainImages.data()));
 
 	// Create image views
 	mSwapChainImageViews.resize(image_count);
@@ -773,6 +788,7 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	VkCommandBufferBeginInfo command_buffer_begin_info = {};
 	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	FatalErrorIfFailed(vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info));
 
 	// Begin the shadow pass

@@ -34,6 +34,9 @@ void RenderInstancesVK::Unlock()
 
 void RenderInstancesVK::Draw(RenderPrimitive *inPrimitive, int inStartInstance, int inNumInstances) const
 {
+	if (inNumInstances <= 0)
+		return;
+
 	VkCommandBuffer command_buffer = mRenderer->GetCommandBuffer();
 	RenderPrimitiveVK *primitive = static_cast<RenderPrimitiveVK *>(inPrimitive);
 
