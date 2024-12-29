@@ -25,7 +25,7 @@ class SamplesApp : public Application
 {
 public:
 	// Constructor / destructor
-							SamplesApp();
+							SamplesApp(const String &inCommandLine);
 	virtual					~SamplesApp() override;
 
 	// Update the application

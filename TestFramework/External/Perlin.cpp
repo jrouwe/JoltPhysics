@@ -1,6 +1,6 @@
 #include <TestFramework.h>
 
-#include <Math/Perlin.h>
+#include <External/Perlin.h>
 
 // not same permutation table as Perlin's reference to avoid copyright issues;
 // Perlin's table can be found at http://mrl.nyu.edu/~perlin/noise/

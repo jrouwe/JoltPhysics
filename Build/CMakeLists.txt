@@ -403,22 +403,34 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/terrain2.bof@/Assets/terrain2.bof")
 			endif()
 			set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
-
-			# Copy the assets folder
-			add_custom_command(TARGET PerformanceTest PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${PHYSICS_REPO_ROOT}/Assets/ $<TARGET_FILE_DIR:PerformanceTest>/Assets/)
-		   endif()
+		endif()
 	endif()
 
-	if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
+	if ((WIN32 OR LINUX) AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
 		# Windows only targets
 		if (TARGET_SAMPLES OR TARGET_VIEWER)
 			include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
 		endif()
 		if (TARGET_SAMPLES)
-			include(${PHYSICS_REPO_ROOT}/Samples/Samples.cmake)
+			if (TEST_FRAMEWORK_AVAILABLE)
+				include(${PHYSICS_REPO_ROOT}/Samples/Samples.cmake)
+			else()
+				message("Cannot build Samples because Vulkan/DirectX SDK is not available!")
+			endif()
 		endif()
 		if (TARGET_VIEWER)
-			include(${PHYSICS_REPO_ROOT}/JoltViewer/JoltViewer.cmake)
+			if (TEST_FRAMEWORK_AVAILABLE)
+				include(${PHYSICS_REPO_ROOT}/JoltViewer/JoltViewer.cmake)
+			else()
+				message("Cannot build JoltViewer because Vulkan/DirectX SDK is not available!")
+			endif()
 		endif()
+	endif()
+
+	# Copy the assets folder
+	if (TARGET_PERFORMANCE_TEST)
+		add_custom_command(TARGET PerformanceTest PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${PHYSICS_REPO_ROOT}/Assets/ $<TARGET_FILE_DIR:PerformanceTest>/Assets/)
+	elseif (TEST_FRAMEWORK_AVAILABLE)
+		add_custom_command(TARGET TestFramework PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${PHYSICS_REPO_ROOT}/Assets/ $<TARGET_FILE_DIR:TestFramework>/Assets/)
 	endif()
 endif()

@@ -5,7 +5,7 @@
 #include <TestFramework.h>
 
 #include <Tests/ScaledShapes/ScaledHeightFieldShapeTest.h>
-#include <Math/Perlin.h>
+#include <External/Perlin.h>
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>

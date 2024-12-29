@@ -18,7 +18,11 @@
 #include <Jolt/Core/QuickSort.h>
 #include <Jolt/Core/RTTI.h>
 
-#include <vulkan/vulkan_win32.h>
+#ifdef JPH_PLATFORM_WINDOWS
+	#include <vulkan/vulkan_win32.h>
+#elif defined(JPH_PLATFORM_LINUX)
+	#include <vulkan/vulkan_xlib.h>
+#endif
 
 #ifdef JPH_DEBUG
 
@@ -85,7 +89,7 @@ RendererVK::~RendererVK()
 
 	vkDestroyDevice(mDevice, nullptr);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)(void *)vkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT");
 	if (vkDestroyDebugUtilsMessengerEXT != nullptr)
 		vkDestroyDebugUtilsMessengerEXT(mInstance, mDebugMessenger, nullptr);
@@ -104,7 +108,11 @@ void RendererVK::Initialize()
 	// Required instance extensions
 	Array<const char *> required_instance_extensions;
 	required_instance_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+#ifdef JPH_PLATFORM_WINDOWS
 	required_instance_extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#elif defined(JPH_PLATFORM_LINUX)
+	required_instance_extensions.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+#endif
 
 	// Required device extensions
 	Array<const char *> required_device_extensions;
@@ -165,11 +173,19 @@ void RendererVK::Initialize()
 #endif
 
 	// Create surface
+#ifdef JPH_PLATFORM_WINDOWS
 	VkWin32SurfaceCreateInfoKHR surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	surface_create_info.hwnd = mhWnd;
 	surface_create_info.hinstance = GetModuleHandle(nullptr);
 	FatalErrorIfFailed(vkCreateWin32SurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
+#elif defined(JPH_PLATFORM_LINUX)
+	VkXlibSurfaceCreateInfoKHR surface_create_info = {};
+	surface_create_info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+	surface_create_info.dpy = mDisplay;
+	surface_create_info.window = mWindow;
+	FatalErrorIfFailed(vkCreateXlibSurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
+#endif
 
 	// Select device
 	uint32 device_count = 0;
@@ -206,8 +222,10 @@ void RendererVK::Initialize()
 		case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
 			score = 10;
 			break;
-		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
 		case VK_PHYSICAL_DEVICE_TYPE_CPU:
+			score = 5;
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
 		case VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM:
 			continue;
 		}
@@ -273,6 +291,10 @@ void RendererVK::Initialize()
 	// Get memory properties
 	vkGetPhysicalDeviceMemoryProperties(mPhysicalDevice, &mMemoryProperties);
 
+	// Get features
+	VkPhysicalDeviceFeatures physical_device_features = {};
+	vkGetPhysicalDeviceFeatures(mPhysicalDevice, &physical_device_features);
+
 	// Create device
 	float queue_priority = 1.0f;
 	VkDeviceQueueCreateInfo queue_create_info[2] = {};
@@ -284,8 +306,13 @@ void RendererVK::Initialize()
 	}
 	queue_create_info[0].queueFamilyIndex = selected_device.mGraphicsQueueIndex;
 	queue_create_info[1].queueFamilyIndex = selected_device.mPresentQueueIndex;
+
 	VkPhysicalDeviceFeatures device_features = {};
+
+	if (!physical_device_features.fillModeNonSolid)
+		FatalError("fillModeNonSolid not supported!");
 	device_features.fillModeNonSolid = VK_TRUE;
+
 	VkDeviceCreateInfo device_create_info = {};
 	device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	device_create_info.queueCreateInfoCount = selected_device.mGraphicsQueueIndex != selected_device.mPresentQueueIndex? 2 : 1;
@@ -377,13 +404,14 @@ void RendererVK::Initialize()
 	FatalErrorIfFailed(vkCreatePipelineLayout(mDevice, &pipeline_layout, nullptr, &mPipelineLayout));
 
 	// Create descriptor pool
-	VkDescriptorPoolSize descriptor_pool_size = {};
-	descriptor_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	descriptor_pool_size.descriptorCount = cFrameCount;
+	VkDescriptorPoolSize descriptor_pool_sizes[] = {
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 128 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 128 },
+	};
 	VkDescriptorPoolCreateInfo descriptor_info = {};
 	descriptor_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	descriptor_info.poolSizeCount = 1;
-	descriptor_info.pPoolSizes = &descriptor_pool_size;
+	descriptor_info.poolSizeCount = std::size(descriptor_pool_sizes);
+	descriptor_info.pPoolSizes = descriptor_pool_sizes;
 	descriptor_info.maxSets = 256;
 	FatalErrorIfFailed(vkCreateDescriptorPool(mDevice, &descriptor_info, nullptr, &mDescriptorPool));
 
@@ -450,6 +478,8 @@ void RendererVK::Initialize()
 	sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	sampler_info.unnormalizedCoordinates = VK_FALSE;
 	sampler_info.compareEnable = VK_FALSE;
+	sampler_info.minLod = 0.0f;
+	sampler_info.maxLod = VK_LOD_CLAMP_NONE;
 	sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	FatalErrorIfFailed(vkCreateSampler(mDevice, &sampler_info, nullptr, &mTextureSamplerRepeat));
 
@@ -617,11 +647,11 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 		return;
 
 	// Create the swap chain
-	uint32 image_count = min(capabilities.minImageCount + 1, capabilities.maxImageCount);
+	uint32 desired_image_count = max(min(capabilities.minImageCount + 1, capabilities.maxImageCount), capabilities.minImageCount);
 	VkSwapchainCreateInfoKHR swapchain_create_info = {};
 	swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchain_create_info.surface = mSurface;
-	swapchain_create_info.minImageCount = image_count;
+	swapchain_create_info.minImageCount = desired_image_count;
 	swapchain_create_info.imageFormat = format.format;
 	swapchain_create_info.imageColorSpace = format.colorSpace;
 	swapchain_create_info.imageExtent = mSwapChainExtent;
@@ -645,9 +675,13 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 	swapchain_create_info.clipped = VK_TRUE;
 	FatalErrorIfFailed(vkCreateSwapchainKHR(mDevice, &swapchain_create_info, nullptr, &mSwapChain));
 
+	// Get the actual swap chain image count
+	uint32 image_count;
+	FatalErrorIfFailed(vkGetSwapchainImagesKHR(mDevice, mSwapChain, &image_count, nullptr));
+
 	// Get the swap chain images
 	mSwapChainImages.resize(image_count);
-	vkGetSwapchainImagesKHR(mDevice, mSwapChain, &image_count, mSwapChainImages.data());
+	FatalErrorIfFailed(vkGetSwapchainImagesKHR(mDevice, mSwapChain, &image_count, mSwapChainImages.data()));
 
 	// Create image views
 	mSwapChainImageViews.resize(image_count);
@@ -775,6 +809,7 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	VkCommandBufferBeginInfo command_buffer_begin_info = {};
 	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	FatalErrorIfFailed(vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info));
 
 	// Begin the shadow pass

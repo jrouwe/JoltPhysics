@@ -314,7 +314,7 @@ source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 # Create Samples executable
 add_executable(Samples ${SAMPLES_SRC_FILES})
 target_include_directories(Samples PUBLIC ${SAMPLES_ROOT})
-target_link_libraries(Samples LINK_PUBLIC TestFramework d3d12.lib shcore.lib)
+target_link_libraries(Samples LINK_PUBLIC TestFramework)
 
 # Set the correct working directory
 set_property(TARGET Samples PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")

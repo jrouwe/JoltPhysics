@@ -5,7 +5,7 @@
 #include <TestFramework.h>
 
 #include <Tests/Shapes/HeightFieldShapeTest.h>
-#include <Math/Perlin.h>
+#include <External/Perlin.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>

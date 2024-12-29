@@ -48,10 +48,10 @@ void CharacterSpaceShipTest::ProcessInput(const ProcessInputParams &inParams)
 {
 	// Determine controller input
 	Vec3 control_input = Vec3::sZero();
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		control_input.SetZ(-1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	control_input.SetZ(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		control_input.SetX(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		control_input.SetX(-1);
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Left))	control_input.SetZ(-1);
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Right))	control_input.SetZ(1);
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Up))		control_input.SetX(1);
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Down))	control_input.SetX(-1);
 	if (control_input != Vec3::sZero())
 		control_input = control_input.Normalized();
 
@@ -67,7 +67,7 @@ void CharacterSpaceShipTest::ProcessInput(const ProcessInputParams &inParams)
 	mDesiredVelocity = 0.25f * control_input * cCharacterSpeed + 0.75f * mDesiredVelocity;
 
 	// Check actions
-	mJump = inParams.mKeyboard->IsKeyPressedAndTriggered(DIK_RCONTROL, mWasJump);
+	mJump = inParams.mKeyboard->IsKeyPressedAndTriggered(EKey::RControl, mWasJump);
 }
 
 void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)

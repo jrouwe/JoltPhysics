@@ -71,7 +71,7 @@ static void sComputeTranslationTable(const FormatDescription & inSrcDesc, const 
 		else
 			written_mask |= dst_mask;
 
-		float scale = float(dst_shifted_mask) / src_shifted_mask;
+		float scale = src_shifted_mask > 0? float(dst_shifted_mask) / src_shifted_mask : 0.0f;
 
 		uint32 entry = 0;
 

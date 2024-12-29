@@ -20,7 +20,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lp
 	JPH_UNUSED(enable_exceptions);																			\
 																											\
 	{																										\
-		AppName app;																						\
+		AppName app(GetCommandLineA());																		\
 		app.Run();																							\
 	}																										\
 																											\
@@ -39,7 +39,7 @@ int __cdecl main(int inArgC, char **inArgV)																	\
 	JPH_UNUSED(enable_exceptions);																			\
 																											\
 	{																										\
-		AppName app;																						\
+		AppName app(Application::sCreateCommandLine(inArgC, inArgV));											\
 		app.Run();																							\
 	}																										\
 																											\
@@ -49,5 +49,26 @@ int __cdecl main(int inArgC, char **inArgV)																	\
 }
 
 #else
-#error Undefined
+
+#define ENTRY_POINT(AppName, RegisterAllocator)																\
+																											\
+int main(int inArgC, char **inArgV)																			\
+{																											\
+	RegisterAllocator();																					\
+																											\
+	JPH_PROFILE_START("Main");																				\
+																											\
+	FPExceptionsEnable enable_exceptions;																	\
+	JPH_UNUSED(enable_exceptions);																			\
+																											\
+	{																										\
+		AppName app(Application::sCreateCommandLine(inArgC, inArgV));											\
+		app.Run();																							\
+	}																										\
+																											\
+	JPH_PROFILE_END();																						\
+																											\
+	return 0;																								\
+}
+
 #endif

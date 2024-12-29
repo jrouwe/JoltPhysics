@@ -62,7 +62,9 @@ private:
 	void							UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight);
 
 	VkInstance						mInstance = VK_NULL_HANDLE;
+#ifdef JPH_DEBUG
 	VkDebugUtilsMessengerEXT		mDebugMessenger = VK_NULL_HANDLE;
+#endif
 	VkPhysicalDevice				mPhysicalDevice = VK_NULL_HANDLE;
 	VkPhysicalDeviceMemoryProperties mMemoryProperties;
 	VkDevice						mDevice = VK_NULL_HANDLE;
@@ -114,7 +116,7 @@ private:
 		VkMemoryPropertyFlags		mProperties;
 	};
 
-	JPH_MAKE_HASH_STRUCT(Key, KeyHasher, t.mSize, t.mUsage, t.mProperties);
+	JPH_MAKE_HASH_STRUCT(Key, KeyHasher, t.mSize, t.mUsage, t.mProperties)
 
 	using BufferCache = UnorderedMap<Key, Array<BufferVK>, KeyHasher>;
 
