@@ -1,6 +1,6 @@
 # Find Vulkan
 find_package(Vulkan)
-if (Vulkan_FOUND OR WIN32)
+if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 	# We have Vulkan/DirectX so we can compile TestFramework
 	set(TEST_FRAMEWORK_AVAILABLE TRUE)
 
