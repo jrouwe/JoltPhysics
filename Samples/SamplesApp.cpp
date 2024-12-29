@@ -2094,10 +2094,6 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 				mPlaybackMode = shift? EPlaybackMode::FastForward : EPlaybackMode::StepForward;
 			}
 			break;
-
-		default:
-			// Don't care
-			break;
 		}
 
 	// Stop recording if record state is turned off

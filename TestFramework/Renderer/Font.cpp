@@ -12,6 +12,11 @@
 #include <Jolt/Core/ScopeExit.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
+JPH_CLANG_SUPPRESS_WARNING("-Wreserved-identifier")
+JPH_CLANG_SUPPRESS_WARNING("-Wzero-as-null-pointer-constant")
+JPH_CLANG_SUPPRESS_WARNING("-Wcast-qual")
+JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-fallthrough")
+JPH_CLANG_SUPPRESS_WARNING("-Wcomma")
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <External/stb_truetype.h>
 JPH_SUPPRESS_WARNINGS_STD_END
@@ -45,7 +50,7 @@ bool Font::Create(const char *inFontName, int inCharHeight)
 	// Get the base line for the font
 	float scale = stbtt_ScaleForPixelHeight(&font, float(mCharHeight));
 	int ascent;
-	stbtt_GetFontVMetrics(&font, &ascent, 0, 0);
+	stbtt_GetFontVMetrics(&font, &ascent, nullptr, nullptr);
 	int baseline = int(ascent * scale);
 
 	// Create surface for characters

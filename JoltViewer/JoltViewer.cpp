@@ -33,27 +33,18 @@ JoltViewer::JoltViewer(const String &inCommandLine) :
 
 	// Check arguments
 	if (args.size() != 2 || args[1].empty())
-	{
 		FatalError("Usage: JoltViewer <recording filename>");
-		return;
-	}
 
 	// Open file
 	ifstream stream(args[1].c_str(), ifstream::in | ifstream::binary);
 	if (!stream.is_open())
-	{
 		FatalError("Could not open recording file");
-		return;
-	}
 
 	// Parse the stream
 	StreamInWrapper wrapper(stream);
 	mRendererPlayback.Parse(wrapper);
 	if (mRendererPlayback.GetNumFrames() == 0)
-	{
 		FatalError("Recording file did not contain any frames");
-		return;
-	}
 
 	// Draw the first frame
 	mRendererPlayback.DrawFrame(0);
@@ -114,10 +105,6 @@ bool JoltViewer::UpdateFrame(float inDeltaTime)
 			// Forward
 			mPlaybackMode = shift? EPlaybackMode::Play : EPlaybackMode::StepForward;
 			Pause(false);
-			break;
-
-		default:
-			// Don't care
 			break;
 		}
 

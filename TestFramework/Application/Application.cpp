@@ -191,10 +191,6 @@ void Application::Run()
 			case EKey::Escape:
 				mDebugUI->ToggleVisibility();
 				break;
-
-			default:
-				// Don't care
-				break;
 			}
 
 		// Calculate delta time
