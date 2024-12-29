@@ -8,6 +8,9 @@ set(TEST_FRAMEWORK_SRC_FILES
 	${TEST_FRAMEWORK_ROOT}/Application/DebugUI.cpp
 	${TEST_FRAMEWORK_ROOT}/Application/DebugUI.h
 	${TEST_FRAMEWORK_ROOT}/Application/EntryPoint.h
+	${TEST_FRAMEWORK_ROOT}/External/Perlin.cpp
+	${TEST_FRAMEWORK_ROOT}/External/Perlin.h
+	${TEST_FRAMEWORK_ROOT}/External/stb_truetype.h
 	${TEST_FRAMEWORK_ROOT}/Image/BlitSurface.cpp
 	${TEST_FRAMEWORK_ROOT}/Image/BlitSurface.h
 	${TEST_FRAMEWORK_ROOT}/Image/LoadBMP.cpp
@@ -20,8 +23,6 @@ set(TEST_FRAMEWORK_SRC_FILES
 	${TEST_FRAMEWORK_ROOT}/Image/ZoomImage.h
 	${TEST_FRAMEWORK_ROOT}/Input/Keyboard.h
 	${TEST_FRAMEWORK_ROOT}/Input/Mouse.h
-	${TEST_FRAMEWORK_ROOT}/Math/Perlin.cpp
-	${TEST_FRAMEWORK_ROOT}/Math/Perlin.h
 	${TEST_FRAMEWORK_ROOT}/Renderer/DebugRendererImp.cpp
 	${TEST_FRAMEWORK_ROOT}/Renderer/DebugRendererImp.h
 	${TEST_FRAMEWORK_ROOT}/Renderer/Font.cpp
