@@ -126,34 +126,15 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 
 <details>
 	<summary>Linux</summary>
-	<ul style="list-style: none"><li>
-		<details>
-			<summary>Debian flavor, x64 or ARM64</summary>
-			<ul>
-				<li>Install clang (apt-get install clang)</li>
-				<li>Install cmake (apt-get install cmake)</li>
-				<li>Run: ./cmake_linux_clang_gcc.sh</li>
-				<li>Go to the Linux_Debug folder</li>
-				<li>Run: make -j$(nproc) && ./UnitTests</li>
-			</ul>
-		</details>
-		<details>
-			<summary>Debian flavor, MinGW Cross Compile</summary>
-			<ul>
-				<li>This setup can be used to run samples on Linux using wine and vkd3d. Tested on Ubuntu 22.04</li>
-				<li>Graphics card must support Vulkan and related drivers must be installed</li>
-				<li>Install mingw-w64 (apt-get install mingw-w64)</li>
-				<li>Run: update-alternatives --config x86_64-w64-mingw32-g++ (Select /usr/bin/x86_64-w64-mingw32-g++-posix)</li>
-				<li>Install cmake (apt-get install cmake)</li>
-				<li>Install wine64 (apt-get install wine64)</li>
-				<li>Run: export WINEPATH="/usr/x86_64-w64-mingw32/lib;/usr/lib/gcc/x86_64-w64-mingw32/10-posix" (change it based on your environment)</li>
-				<li>Run: ./cmake_linux_mingw.sh Release (Debug doesn't work)</li>
-				<li>Go to the MinGW_Release folder</li>
-				<li>Run: make -j$(nproc) && wine UnitTests.exe</li>
-				<li>Run: wine Samples.exe</li>
-			</ul>
-		</details>
-	</li></ul>
+	<ul>
+		<li>Install clang (apt-get install clang)</li>
+		<li>Install cmake (apt-get install cmake)</li>
+		<li>If you want to build the Samples or JoltViewer, install the <a href="https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html">Vulkan SDK</a></li>
+		<li>Run: ./cmake_linux_clang_gcc.sh</li>
+		<li>Go to the Linux_Debug folder</li>
+		<li>Run: make -j$(nproc) && ./UnitTests</li>
+		<li>If you built the samples you can run: ./Samples</li>
+	</ul>
 </details>
 
 <details>
