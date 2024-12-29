@@ -30,7 +30,6 @@ Font::Create(const char *inFontName, int inCharHeight)
 	const int cSpacingV		= 2;		// Number of pixels to put vertically between characters
 
 #ifdef JPH_PLATFORM_WINDOWS
-
 	// Check font name length
 	if (mFontName.size() >= LF_FACESIZE)
 		return false;
@@ -224,61 +223,39 @@ Font::Create(const char *inFontName, int inCharHeight)
 		return false;
 	JPH_SCOPE_EXIT([&ft_face]() { FT_Done_Face(ft_face); });
 
-	// Initialize X11 display
-	Display *display = XOpenDisplay(nullptr);
-	if (!display)
+	// Set the character height
+	if (FT_Set_Pixel_Sizes(ft_face, 0, mCharHeight) != 0)
 		return false;
-	JPH_SCOPE_EXIT([display]() { XCloseDisplay(display); });
 
-	// Get the color map
-	int screen = DefaultScreen(display);
-	Visual *visual = DefaultVisual(display, screen);
-	Colormap colormap = DefaultColormap(display, screen);
-	JPH_SCOPE_EXIT([display, &colormap]() { XFreeColormap(display, colormap); });
-
-	// Load the font
-	XftFont *font = XftFontOpenName(display, screen, mFontName.c_str());
-	if (!font)
-		return false;
-	JPH_SCOPE_EXIT([display, &font]{ XftFontClose(display, font); });
-
-	// Create a pixmap to render the font in
-	Pixmap pixmap = XCreatePixmap(display, RootWindow(display, screen), mHorizontalTexels, mVerticalTexels, DefaultDepth(display, screen));
-	if (!pixmap)
-		return false;
-	JPH_SCOPE_EXIT([display, &pixmap](){ XFreePixmap(display, pixmap); });
-
-	// Create a drawing context
-	XftDraw *draw = XftDrawCreate(display, pixmap, visual, colormap);
-	if (!draw)
-		return false;
-	JPH_SCOPE_EXIT([&draw](){ XftDrawDestroy(draw); });
-
-	// White color
-	XftColor color;
-	XRenderColor xrcolor = { 0xffff, 0xffff, 0xffff, 0xffff };
-	XftColorAllocValue(display, visual, colormap, &xrcolor, &color);
-	JPH_SCOPE_EXIT([display, &visual, &colormap, &color]() { XftColorFree(display, visual, colormap, &color); });
+	// Create new surface
+	Ref<SoftwareSurface> surface = new SoftwareSurface(mHorizontalTexels, mVerticalTexels, ESurfaceFormat::L8);
+	surface->Clear();
+	surface->Lock(ESurfaceLockMode::Write);
 
 try_again:;
-	int x = 0, y = font->ascent;
+	int x = 0, y = 0;
 	for (int c = cBeginChar; c < cEndChar; ++c)
 	{
-		char character = char(c);
+		// Render character to bitmap
+		if (FT_Load_Char(ft_face, c, FT_LOAD_RENDER) != 0)
+		{
+			surface->UnLock();
+			return false;
+		}
 
-		// Measure character extents
-		XGlyphInfo extents;
-		XftTextExtents8(display, font, reinterpret_cast<const FcChar8 *>(&character), 1, &extents);
-
+		// Get the glyph's bitmap
+		FT_GlyphSlot slot = ft_face->glyph;
+		FT_Bitmap &bitmap = slot->bitmap;
+ 
 		// Check if the character fits in the current row
-		if (x + extents.width > mHorizontalTexels)
+		if (x + bitmap.width > mHorizontalTexels)
 		{
 			// Next line
 			x = 0;
-			y += font->ascent + font->descent + cSpacingV;
+			y += mCharHeight + cSpacingV;
 
 			// Check if character fits
-			if (y + font->ascent + font->descent > mVerticalTexels)
+			if (y + mCharHeight + cSpacingV > mVerticalTexels)
 			{
 				// Character doesn't fit, enlarge surface
 				if (mHorizontalTexels < 2 * mVerticalTexels)
@@ -286,33 +263,39 @@ try_again:;
 				else
 					mVerticalTexels <<= 1;
 
-				XFreePixmap(display, pixmap);
-				pixmap = XCreatePixmap(display, RootWindow(display, screen), mHorizontalTexels, mVerticalTexels, DefaultDepth(display, screen));
-				if (!pixmap)
-					return false;
-				XftDrawDestroy(draw);
-				draw = XftDrawCreate(display, pixmap, visual, colormap);
-				if (!draw)
-					return false;
+				// Create a new surface
+				surface->UnLock();
+				surface = new SoftwareSurface(mHorizontalTexels, mVerticalTexels, ESurfaceFormat::L8);
+				surface->Clear();
+				surface->Lock(ESurfaceLockMode::Write);
 
 				// Try again with the larger texture
 				goto try_again;
 			}
 		}
 
-		// Render the character
-		XftDrawString8(draw, &color, font, x, y, reinterpret_cast<const FcChar8 *>(&character), 1);
+		// Copy the glyph bitmap into the surface
+		for (int row = 0; row < bitmap.rows; ++row)
+		{
+			uint8 *src = bitmap.buffer + row * bitmap.pitch;
+			uint8 *dst = surface->GetScanLine(y + row + mCharHeight - slot->bitmap_top) + x;
+			memcpy(dst, src, bitmap.width);
+		}
 
 		// Store character information
 		int idx = c - cBeginChar;
 		mStartU[idx] = uint16(x);
-		mStartV[idx] = uint16(y - font->ascent);
-		mWidth[idx] = uint8(extents.width);
+		mStartV[idx] = uint16(y);
+		mWidth[idx] = uint8(bitmap.width);
+		uint8 advance((slot->metrics.horiAdvance + 32) >> 6);
 		for (int idx2 = 0; idx2 < cNumChars; ++idx2)
-			mSpacing[idx][idx2] = uint8(extents.width);
+			mSpacing[idx][idx2] = advance;
 
-		x += extents.width + cSpacingH;
+		// Advance to the next position
+		x += bitmap.width + cSpacingH;
 	}
+
+	surface->UnLock();
 
 	// Apply kerning
 	if (FT_HAS_KERNING(ft_face))
@@ -332,35 +315,13 @@ try_again:;
 						if (FT_Get_Kerning(ft_face, glyph1, glyph2, FT_KERNING_DEFAULT, &kerning) == 0)
 						{
 							int kern_amount = (kerning.x + 32) >> 6; // Fixed-point to integer
-							int new_spacing = int(mSpacing[idx1][idx2]) + kern_amount;
-							JPH_ASSERT(new_spacing >= 0 && new_spacing <= 0xff);
+							int new_spacing = Clamp(int(mSpacing[idx1][idx2]) + kern_amount, 0, 0xff);
 							mSpacing[idx1][idx2] = (uint8)new_spacing;
 						}
 					}
 				}
 			}
 		}
-
-	// Convert to XImage
-	XImage *image = XGetImage(display, pixmap, 0, 0, mHorizontalTexels, mVerticalTexels, AllPlanes, ZPixmap);
-	if (image == nullptr)
-		return false;
-	JPH_SCOPE_EXIT([&image]() { XDestroyImage(image); });
-
-	// Create new surface
-	Ref<SoftwareSurface> surface = new SoftwareSurface(mHorizontalTexels, mVerticalTexels, ESurfaceFormat::L8);
-	surface->Clear();
-	surface->Lock(ESurfaceLockMode::Write);
-	for (int y = 0; y < mVerticalTexels; ++y)
-	{
-		uint8 *dst = surface->GetScanLine(y);
-		for (int x = 0; x < mHorizontalTexels; ++x, ++dst)
-		{
-			unsigned long pixel = XGetPixel(image, x, y);
-			*dst = uint8(pixel);
-		}
-	}
-	surface->UnLock();
 #endif
 
 	// Create input layout
