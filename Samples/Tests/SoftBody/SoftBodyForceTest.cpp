@@ -9,7 +9,7 @@
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Utils/SoftBodyCreator.h>
 #include <Renderer/DebugRendererImp.h>
-#include <Math/Perlin.h>
+#include <External/Perlin.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyForceTest)

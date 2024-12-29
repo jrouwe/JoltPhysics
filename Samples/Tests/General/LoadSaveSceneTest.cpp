@@ -5,7 +5,7 @@
 #include <TestFramework.h>
 
 #include <Tests/General/LoadSaveSceneTest.h>
-#include <Math/Perlin.h>
+#include <External/Perlin.h>
 #include <Jolt/ObjectStream/ObjectStreamOut.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>

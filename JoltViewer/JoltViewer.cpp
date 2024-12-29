@@ -10,10 +10,13 @@
 #include <Renderer/DebugRendererImp.h>
 #include <UI/UIManager.h>
 #include <Application/DebugUI.h>
+#include <Utils/Log.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_GCC_SUPPRESS_WARNING("-Wswitch")
 
 #ifndef JPH_DEBUG_RENDERER
 	// Hack to still compile DebugRenderer inside the test framework when Jolt is compiled without
@@ -23,36 +26,27 @@ JPH_SUPPRESS_WARNINGS_STD_END
 	#undef JPH_DEBUG_RENDERER
 #endif
 
-JoltViewer::JoltViewer()
+JoltViewer::JoltViewer(const String &inCommandLine) :
+	Application(inCommandLine)
 {
-	// Get file name from commandline
-	String cmd_line = GetCommandLineA();
+	// Get file name from command line
 	Array<String> args;
-	StringToVector(cmd_line, args, " ");
+	StringToVector(inCommandLine, args, " ");
 
 	// Check arguments
 	if (args.size() != 2 || args[1].empty())
-	{
-		MessageBoxA(nullptr, "Usage: JoltViewer <recording filename>", "Error", MB_OK);
-		return;
-	}
+		FatalError("Usage: JoltViewer <recording filename>");
 
 	// Open file
 	ifstream stream(args[1].c_str(), ifstream::in | ifstream::binary);
 	if (!stream.is_open())
-	{
-		MessageBoxA(nullptr, "Could not open recording file", "Error", MB_OK);
-		return;
-	}
+		FatalError("Could not open recording file");
 
 	// Parse the stream
 	StreamInWrapper wrapper(stream);
 	mRendererPlayback.Parse(wrapper);
 	if (mRendererPlayback.GetNumFrames() == 0)
-	{
-		MessageBoxA(nullptr, "Recording file did not contain any frames", "Error", MB_OK);
-		return;
-	}
+		FatalError("Recording file did not contain any frames");
 
 	// Draw the first frame
 	mRendererPlayback.DrawFrame(0);
@@ -86,30 +80,30 @@ bool JoltViewer::UpdateFrame(float inDeltaTime)
 		return false;
 
 	// Handle keyboard input
-	bool shift = mKeyboard->IsKeyPressed(DIK_LSHIFT) || mKeyboard->IsKeyPressed(DIK_RSHIFT);
-	for (int key = mKeyboard->GetFirstKey(); key != 0; key = mKeyboard->GetNextKey())
+	bool shift = mKeyboard->IsKeyPressed(EKey::LShift) || mKeyboard->IsKeyPressed(EKey::RShift);
+	for (EKey key = mKeyboard->GetFirstKey(); key != EKey::Invalid; key = mKeyboard->GetNextKey())
 		switch (key)
 		{
-		case DIK_R:
+		case EKey::R:
 			// Restart
 			mCurrentFrame = 0;
 			mPlaybackMode = EPlaybackMode::Play;
 			Pause(true);
 			break;
 
-		case DIK_O:
+		case EKey::O:
 			// Step
 			mPlaybackMode = EPlaybackMode::Play;
 			SingleStep();
 			break;
 
-		case DIK_COMMA:
+		case EKey::Comma:
 			// Back
 			mPlaybackMode = shift? EPlaybackMode::Rewind : EPlaybackMode::StepBack;
 			Pause(false);
 			break;
 
-		case DIK_PERIOD:
+		case EKey::Period:
 			// Forward
 			mPlaybackMode = shift? EPlaybackMode::Play : EPlaybackMode::StepForward;
 			Pause(false);

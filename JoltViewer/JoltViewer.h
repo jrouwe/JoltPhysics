@@ -24,7 +24,7 @@ class JoltViewer : public Application
 {
 public:
 	// Constructor / destructor
-							JoltViewer();
+							JoltViewer(const String &inCommandLine);
 
 	// Update the application
 	virtual bool			UpdateFrame(float inDeltaTime) override;

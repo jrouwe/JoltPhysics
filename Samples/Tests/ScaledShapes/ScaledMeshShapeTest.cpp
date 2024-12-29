@@ -5,7 +5,7 @@
 #include <TestFramework.h>
 
 #include <Tests/ScaledShapes/ScaledMeshShapeTest.h>
-#include <Math/Perlin.h>
+#include <External/Perlin.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>

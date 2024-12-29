@@ -127,10 +127,10 @@ void VehicleSixDOFTest::ProcessInput(const ProcessInputParams &inParams)
 	// Determine steering and speed
 	mSteeringAngle = 0.0f;
 	mSpeed = 0.0f;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		mSteeringAngle = cMaxSteeringAngle;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	mSteeringAngle = -cMaxSteeringAngle;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		mSpeed = max_rotation_speed;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		mSpeed = -max_rotation_speed;
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Left))	mSteeringAngle = cMaxSteeringAngle;
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Right))	mSteeringAngle = -cMaxSteeringAngle;
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Up))		mSpeed = max_rotation_speed;
+	if (inParams.mKeyboard->IsKeyPressed(EKey::Down))	mSpeed = -max_rotation_speed;
 }
 
 void VehicleSixDOFTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
