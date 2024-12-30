@@ -22,7 +22,7 @@ ConstantBufferVK::~ConstantBufferVK()
 void *ConstantBufferVK::MapInternal()
 {
 	void *data = nullptr;
-	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mBuffer.mMemory, 0, mBuffer.mSize, 0, &data));
+	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mBuffer.mMemory, mBuffer.mOffset, mBuffer.mSize, 0, &data));
 	return data;
 }
 

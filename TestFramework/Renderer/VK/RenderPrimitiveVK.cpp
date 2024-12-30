@@ -42,7 +42,7 @@ void *RenderPrimitiveVK::LockVertexBuffer()
 	JPH_ASSERT(!mVertexBufferDeviceLocal);
 
 	void *data;
-	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mVertexBuffer.mMemory, 0, VkDeviceSize(mNumVtx) * mVtxSize, 0, &data));
+	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mVertexBuffer.mMemory, mVertexBuffer.mOffset, VkDeviceSize(mNumVtx) * mVtxSize, 0, &data));
 	return data;
 }
 
@@ -70,7 +70,7 @@ uint32 *RenderPrimitiveVK::LockIndexBuffer()
 	JPH_ASSERT(!mIndexBufferDeviceLocal);
 
 	void *data;
-	vkMapMemory(mRenderer->GetDevice(), mIndexBuffer.mMemory, 0, VkDeviceSize(mNumIdx) * sizeof(uint32), 0, &data);
+	vkMapMemory(mRenderer->GetDevice(), mIndexBuffer.mMemory, mIndexBuffer.mOffset, VkDeviceSize(mNumIdx) * sizeof(uint32), 0, &data);
 	return reinterpret_cast<uint32 *>(data);
 }
 

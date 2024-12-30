@@ -45,17 +45,21 @@ public:
 	VkCommandBuffer					GetCommandBuffer()												{ JPH_ASSERT(mInFrame); return mCommandBuffers[mFrameIndex]; }
 	VkCommandBuffer					StartTempCommandBuffer();
 	void							EndTempCommandBuffer(VkCommandBuffer inCommandBuffer);
+	void							AllocateMemory(VkDeviceSize inSize, uint32 inMemoryTypeBits, VkMemoryPropertyFlags inProperties, VkDeviceMemory &outMemory);
+	void							FreeMemory(VkDeviceMemory inMemory, VkDeviceSize inSize);
 	void							CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer);
 	void							CopyBuffer(VkBuffer inSrc, VkBuffer inDst, VkDeviceSize inSize);
 	void							CreateDeviceLocalBuffer(const void *inData, VkDeviceSize inSize, VkBufferUsageFlags inUsage, BufferVK &outBuffer);
 	void							FreeBuffer(BufferVK &ioBuffer);
 	unique_ptr<ConstantBufferVK>	CreateConstantBuffer(VkDeviceSize inBufferSize);
 	void							CreateImage(uint32 inWidth, uint32 inHeight, VkFormat inFormat, VkImageTiling inTiling, VkImageUsageFlags inUsage, VkMemoryPropertyFlags inProperties, VkImage &outImage, VkDeviceMemory &outMemory);
+	void							DestroyImage(VkImage inImage, VkDeviceMemory inMemory);
 	VkImageView						CreateImageView(VkImage inImage, VkFormat inFormat, VkImageAspectFlags inAspectFlags);
 	VkFormat						FindDepthFormat();
 
 private:
 	uint32							FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties);
+	void							FreeBufferInternal(BufferVK &ioBuffer);
 	VkSurfaceFormatKHR				SelectFormat(VkPhysicalDevice inDevice);
 	void							CreateSwapChain(VkPhysicalDevice inDevice);
 	void							DestroySwapChain();
@@ -103,7 +107,7 @@ private:
 	unique_ptr<ConstantBufferVK>	mVertexShaderConstantBufferProjection[cFrameCount];
 	unique_ptr<ConstantBufferVK>	mVertexShaderConstantBufferOrtho[cFrameCount];
 	unique_ptr<ConstantBufferVK>	mPixelShaderConstantBuffer[cFrameCount];
-		
+
 	struct Key
 	{
 		bool						operator == (const Key &inRHS) const
@@ -118,8 +122,31 @@ private:
 
 	JPH_MAKE_HASH_STRUCT(Key, KeyHasher, t.mSize, t.mUsage, t.mProperties)
 
+	// We try to recycle buffers from frame to frame
 	using BufferCache = UnorderedMap<Key, Array<BufferVK>, KeyHasher>;
 
 	BufferCache						mFreedBuffers[cFrameCount];
 	BufferCache						mBufferCache;
+
+	// Smaller allocations (from cMinAllocSize to cMaxAllocSize) will be done in blocks of cBlockSize bytes.
+	// We do this because there is a limit to the number of allocations that we can make in Vulkan.
+	static constexpr VkDeviceSize	cMinAllocSize = 512;
+	static constexpr VkDeviceSize	cMaxAllocSize = 65536;
+	static constexpr VkDeviceSize	cBlockSize = 524288;
+
+	JPH_MAKE_HASH_STRUCT(Key, MemKeyHasher, t.mUsage, t.mProperties, t.mSize)
+
+	struct Memory
+	{
+		VkDeviceMemory				mMemory;
+		VkDeviceSize				mOffset;
+	};
+
+	using MemoryCache = UnorderedMap<Key, Array<Memory>, KeyHasher>;
+
+	MemoryCache						mMemoryCache;
+	uint32							mNumAllocations = 0;
+	uint32							mMaxNumAllocations = 0;
+	VkDeviceSize					mTotalAllocated = 0;
+	VkDeviceSize					mMaxTotalAllocated = 0;
 };
