@@ -56,6 +56,7 @@ public:
 
 private:
 	uint32							FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties);
+	void							FreeBufferInternal(BufferVK &ioBuffer);
 	VkSurfaceFormatKHR				SelectFormat(VkPhysicalDevice inDevice);
 	void							CreateSwapChain(VkPhysicalDevice inDevice);
 	void							DestroySwapChain();
@@ -104,9 +105,9 @@ private:
 	unique_ptr<ConstantBufferVK>	mVertexShaderConstantBufferOrtho[cFrameCount];
 	unique_ptr<ConstantBufferVK>	mPixelShaderConstantBuffer[cFrameCount];
 		
-	struct Key
+	struct BufferKey
 	{
-		bool						operator == (const Key &inRHS) const
+		bool						operator == (const BufferKey &inRHS) const
 		{
 			return mSize == inRHS.mSize && mUsage == inRHS.mUsage && mProperties == inRHS.mProperties;
 		}
@@ -116,10 +117,36 @@ private:
 		VkMemoryPropertyFlags		mProperties;
 	};
 
-	JPH_MAKE_HASH_STRUCT(Key, KeyHasher, t.mSize, t.mUsage, t.mProperties)
+	JPH_MAKE_HASH_STRUCT(BufferKey, KeyHasher, t.mSize, t.mUsage, t.mProperties)
 
-	using BufferCache = UnorderedMap<Key, Array<BufferVK>, KeyHasher>;
+	using BufferCache = UnorderedMap<BufferKey, Array<BufferVK>, KeyHasher>;
 
 	BufferCache						mFreedBuffers[cFrameCount];
 	BufferCache						mBufferCache;
+
+	struct MemKey
+	{
+		bool						operator == (const MemKey &inRHS) const
+		{
+			return mUsage == inRHS.mUsage && mProperties == inRHS.mProperties && mSize == inRHS.mSize;
+		}
+
+		VkBufferUsageFlags			mUsage;
+		VkMemoryPropertyFlags		mProperties;
+		VkDeviceSize				mSize;
+	};
+
+	JPH_MAKE_HASH_STRUCT(MemKey, MemKeyHasher, t.mUsage, t.mProperties, t.mSize)
+
+	struct Memory
+	{
+		VkDeviceMemory				mMemory;
+		VkDeviceSize				mOffset;
+	};
+
+	using MemoryCache = UnorderedMap<MemKey, Array<Memory>, MemKeyHasher>;
+
+	MemoryCache						mMemoryCache;
+	uint32							mNumAllocations = 0;
+	VkDeviceSize					mTotalAllocated = 0;
 };

@@ -56,7 +56,7 @@ TextureVK::TextureVK(RendererVK *inRenderer, const Surface *inSurface) :
 	// Copy data to upload texture
 	surface->Lock(ESurfaceLockMode::Read);
 	void *data;
-	vkMapMemory(device, staging_buffer.mMemory, 0, image_size, 0, &data);
+	vkMapMemory(device, staging_buffer.mMemory, staging_buffer.mOffset, image_size, 0, &data);
 	for (int y = 0; y < mHeight; ++y)
 		memcpy(reinterpret_cast<uint8 *>(data) + y * mWidth * bpp, surface->GetData() + y * surface->GetStride(), mWidth * bpp);
 	vkUnmapMemory(device, staging_buffer.mMemory);

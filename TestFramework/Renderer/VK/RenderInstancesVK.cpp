@@ -23,7 +23,7 @@ void RenderInstancesVK::CreateBuffer(int inNumInstances, int inInstanceSize)
 void *RenderInstancesVK::Lock()
 {
 	void *data;
-	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mInstancesBuffer.mMemory, 0, mInstancesBuffer.mSize, 0, &data));
+	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mInstancesBuffer.mMemory, mInstancesBuffer.mOffset, mInstancesBuffer.mSize, 0, &data));
 	return data;
 }
 
