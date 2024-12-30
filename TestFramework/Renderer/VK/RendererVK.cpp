@@ -1060,7 +1060,7 @@ void RendererVK::CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, V
 		outBuffer.mAllocatedSize = max(VkDeviceSize(GetNextPowerOf2(uint32(mem_requirements.size))), cMinAllocSize);
 
 		// Ensure that we have memory available from the right pool
-		Array<Memory> &mem_array = mMemoryCache[{ outBuffer.mUsage, outBuffer.mProperties, outBuffer.mAllocatedSize }];
+		Array<Memory> &mem_array = mMemoryCache[{ outBuffer.mAllocatedSize, outBuffer.mUsage, outBuffer.mProperties }];
 		if (mem_array.empty())
 		{
 			// Allocate a bigger block
@@ -1163,7 +1163,7 @@ void RendererVK::FreeBufferInternal(BufferVK &ioBuffer)
 	if (ioBuffer.mAllocatedSize > cMaxAllocSize)
 		FreeMemory(ioBuffer.mMemory, ioBuffer.mAllocatedSize);
 	else
-		mMemoryCache[{ ioBuffer.mUsage, ioBuffer.mProperties, ioBuffer.mAllocatedSize }].push_back({ ioBuffer.mMemory, ioBuffer.mOffset });
+		mMemoryCache[{ ioBuffer.mAllocatedSize, ioBuffer.mUsage, ioBuffer.mProperties }].push_back({ ioBuffer.mMemory, ioBuffer.mOffset });
 	ioBuffer.mMemory = VK_NULL_HANDLE;
 }
 

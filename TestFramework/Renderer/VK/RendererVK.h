@@ -108,10 +108,9 @@ private:
 	unique_ptr<ConstantBufferVK>	mVertexShaderConstantBufferOrtho[cFrameCount];
 	unique_ptr<ConstantBufferVK>	mPixelShaderConstantBuffer[cFrameCount];
 
-	// We try to recycle buffers from frame to frame
-	struct BufferKey
+	struct Key
 	{
-		bool						operator == (const BufferKey &inRHS) const
+		bool						operator == (const Key &inRHS) const
 		{
 			return mSize == inRHS.mSize && mUsage == inRHS.mUsage && mProperties == inRHS.mProperties;
 		}
@@ -121,9 +120,10 @@ private:
 		VkMemoryPropertyFlags		mProperties;
 	};
 
-	JPH_MAKE_HASH_STRUCT(BufferKey, KeyHasher, t.mSize, t.mUsage, t.mProperties)
+	JPH_MAKE_HASH_STRUCT(Key, KeyHasher, t.mSize, t.mUsage, t.mProperties)
 
-	using BufferCache = UnorderedMap<BufferKey, Array<BufferVK>, KeyHasher>;
+	// We try to recycle buffers from frame to frame
+	using BufferCache = UnorderedMap<Key, Array<BufferVK>, KeyHasher>;
 
 	BufferCache						mFreedBuffers[cFrameCount];
 	BufferCache						mBufferCache;
@@ -134,19 +134,7 @@ private:
 	static constexpr VkDeviceSize	cMaxAllocSize = 65536;
 	static constexpr VkDeviceSize	cBlockSize = 524288;
 
-	struct MemKey
-	{
-		bool						operator == (const MemKey &inRHS) const
-		{
-			return mUsage == inRHS.mUsage && mProperties == inRHS.mProperties && mSize == inRHS.mSize;
-		}
-
-		VkBufferUsageFlags			mUsage;
-		VkMemoryPropertyFlags		mProperties;
-		VkDeviceSize				mSize;
-	};
-
-	JPH_MAKE_HASH_STRUCT(MemKey, MemKeyHasher, t.mUsage, t.mProperties, t.mSize)
+	JPH_MAKE_HASH_STRUCT(Key, MemKeyHasher, t.mUsage, t.mProperties, t.mSize)
 
 	struct Memory
 	{
@@ -154,7 +142,7 @@ private:
 		VkDeviceSize				mOffset;
 	};
 
-	using MemoryCache = UnorderedMap<MemKey, Array<Memory>, MemKeyHasher>;
+	using MemoryCache = UnorderedMap<Key, Array<Memory>, KeyHasher>;
 
 	MemoryCache						mMemoryCache;
 	uint32							mNumAllocations = 0;
