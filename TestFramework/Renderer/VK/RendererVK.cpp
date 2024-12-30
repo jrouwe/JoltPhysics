@@ -39,6 +39,9 @@ RendererVK::~RendererVK()
 {
 	vkDeviceWaitIdle(mDevice);
 
+	// Trace allocation stats
+	Trace("VK: Max allocations: %u, max size: %u MB", mMaxNumAllocations, uint32(mMaxTotalAllocated >> 20));
+
 	// Destroy the shadow map
 	mShadowMap = nullptr;
 	vkDestroyFramebuffer(mDevice, mShadowFrameBuffer, nullptr);
@@ -60,11 +63,11 @@ RendererVK::~RendererVK()
 		for (BufferVK &bvk : vt.second)
 			FreeBufferInternal(bvk);
 
-	// Free associated memory
+	// Free all blocks in the memory cache
 	for (MemoryCache::value_type &mc : mMemoryCache)
 		for (Memory &m : mc.second)
 			if (m.mOffset == 0)
-				vkFreeMemory(mDevice, m.mMemory, nullptr);
+				vkFreeMemory(mDevice, m.mMemory, nullptr); // Don't care about memory tracking anymore
 	
 	for (VkFence fence : mInFlightFences)
 		vkDestroyFence(mDevice, fence, nullptr);
@@ -741,8 +744,8 @@ void RendererVK::DestroySwapChain()
 	if (mDepthImageView != VK_NULL_HANDLE)
 	{
 		vkDestroyImageView(mDevice, mDepthImageView, nullptr);
-		vkDestroyImage(mDevice, mDepthImage, nullptr);
-		vkFreeMemory(mDevice, mDepthImageMemory, nullptr);
+
+		DestroyImage(mDepthImage, mDepthImageMemory);
 	}
 
 	for (VkFramebuffer frame_buffer : mSwapChainFramebuffers)
@@ -992,6 +995,32 @@ uint32 RendererVK::FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inP
 	FatalError("Failed to find memory type!");
 }
 
+void RendererVK::AllocateMemory(VkDeviceSize inSize, uint32 inMemoryTypeBits, VkMemoryPropertyFlags inProperties, VkDeviceMemory &outMemory)
+{
+	VkMemoryAllocateInfo alloc_info = {};
+	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	alloc_info.allocationSize = inSize;
+	alloc_info.memoryTypeIndex = FindMemoryType(inMemoryTypeBits, inProperties);
+	FatalErrorIfFailed(vkAllocateMemory(mDevice, &alloc_info, nullptr, &outMemory));
+
+	// Track allocation
+	++mNumAllocations;
+	mTotalAllocated += inSize;
+
+	// Track max usage
+	mMaxTotalAllocated = max(mMaxTotalAllocated, mTotalAllocated);
+	mMaxNumAllocations = max(mMaxNumAllocations, mNumAllocations);
+}
+
+void RendererVK::FreeMemory(VkDeviceMemory inMemory, VkDeviceSize inSize)
+{
+	vkFreeMemory(mDevice, inMemory, nullptr);
+
+	// Track free
+	--mNumAllocations;
+	mTotalAllocated -= inSize;
+}
+
 void RendererVK::CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer)
 {
 	// Check the cache
@@ -1018,38 +1047,37 @@ void RendererVK::CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, V
 	VkMemoryRequirements mem_requirements;
 	vkGetBufferMemoryRequirements(mDevice, outBuffer.mBuffer, &mem_requirements);
 
-	// Ensure that we have memory available from the right pool
-	constexpr VkDeviceSize min_size = 1 << 10; // 1KB
-	constexpr VkDeviceSize max_size = 1 << 20; // 1MB
-	outBuffer.mAllocatedSize = max(VkDeviceSize(GetNextPowerOf2(uint32(mem_requirements.size))), min_size);
-	Array<Memory> &mem_array = mMemoryCache[{ outBuffer.mUsage, outBuffer.mProperties, outBuffer.mAllocatedSize }];
-	if (mem_array.empty())
+	if (mem_requirements.size > cMaxAllocSize)
 	{
-		// Allocate a bigger block
-		VkMemoryAllocateInfo alloc_info = {};
-		alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		alloc_info.allocationSize = max(outBuffer.mAllocatedSize, max_size);
-		alloc_info.memoryTypeIndex = FindMemoryType(mem_requirements.memoryTypeBits, inProperties);
-		VkDeviceMemory device_memory;
-		FatalErrorIfFailed(vkAllocateMemory(mDevice, &alloc_info, nullptr, &device_memory));
-		++mNumAllocations;
-		mTotalAllocated += alloc_info.allocationSize;
-
-		// Divide into sub blocks
-		for (VkDeviceSize offset = 0; offset < alloc_info.allocationSize ; offset += outBuffer.mAllocatedSize)
-			mem_array.push_back({ device_memory, offset });
+		// Allocate block directly
+		AllocateMemory(mem_requirements.size, mem_requirements.memoryTypeBits, inProperties, outBuffer.mMemory);
+		outBuffer.mAllocatedSize = mem_requirements.size;
+		outBuffer.mOffset = 0;
 	}
+	else
+	{
+		// Round allocation to the next power of 2 so that we can use a simple block based allocator
+		outBuffer.mAllocatedSize = max(VkDeviceSize(GetNextPowerOf2(uint32(mem_requirements.size))), cMinAllocSize);
 
-	// Claim memory from the pool
-	Memory &memory = mem_array.back();
-	outBuffer.mMemory = memory.mMemory;
-	outBuffer.mOffset = memory.mOffset;
-	mem_array.pop_back();
+		// Ensure that we have memory available from the right pool
+		Array<Memory> &mem_array = mMemoryCache[{ outBuffer.mUsage, outBuffer.mProperties, outBuffer.mAllocatedSize }];
+		if (mem_array.empty())
+		{
+			// Allocate a bigger block
+			VkDeviceMemory device_memory;
+			AllocateMemory(cBlockSize, mem_requirements.memoryTypeBits, inProperties, device_memory);
 
-	uint64 waste = 0;
-	for (auto &a : mMemoryCache)
-		waste += a.second.size() * a.first.mSize;
-	Trace("%d, %d, %d, %lld, %lld", inSize, outBuffer.mAllocatedSize, mNumAllocations, mTotalAllocated, waste);
+			// Divide into sub blocks
+			for (VkDeviceSize offset = 0; offset < cBlockSize; offset += outBuffer.mAllocatedSize)
+				mem_array.push_back({ device_memory, offset });
+		}
+
+		// Claim memory from the pool
+		Memory &memory = mem_array.back();
+		outBuffer.mMemory = memory.mMemory;
+		outBuffer.mOffset = memory.mOffset;
+		mem_array.pop_back();
+	}
 
 	// Bind the memory to the buffer
 	vkBindBufferMemory(mDevice, outBuffer.mBuffer, outBuffer.mMemory, outBuffer.mOffset);
@@ -1132,8 +1160,10 @@ void RendererVK::FreeBufferInternal(BufferVK &ioBuffer)
 	vkDestroyBuffer(mDevice, ioBuffer.mBuffer, nullptr);
 	ioBuffer.mBuffer = VK_NULL_HANDLE;
 
-	// Recycle the memory
-	mMemoryCache[{ ioBuffer.mUsage, ioBuffer.mProperties, ioBuffer.mAllocatedSize }].push_back({ ioBuffer.mMemory, ioBuffer.mOffset });
+	if (ioBuffer.mAllocatedSize > cMaxAllocSize)
+		FreeMemory(ioBuffer.mMemory, ioBuffer.mAllocatedSize);
+	else
+		mMemoryCache[{ ioBuffer.mUsage, ioBuffer.mProperties, ioBuffer.mAllocatedSize }].push_back({ ioBuffer.mMemory, ioBuffer.mOffset });
 	ioBuffer.mMemory = VK_NULL_HANDLE;
 }
 
@@ -1180,13 +1210,19 @@ void RendererVK::CreateImage(uint32 inWidth, uint32 inHeight, VkFormat inFormat,
 	VkMemoryRequirements mem_requirements;
 	vkGetImageMemoryRequirements(mDevice, outImage, &mem_requirements);
 
-	VkMemoryAllocateInfo alloc_info = {};
-	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	alloc_info.allocationSize = mem_requirements.size;
-	alloc_info.memoryTypeIndex = FindMemoryType(mem_requirements.memoryTypeBits, inProperties);
-	FatalErrorIfFailed(vkAllocateMemory(mDevice, &alloc_info, nullptr, &outMemory));
+	AllocateMemory(mem_requirements.size, mem_requirements.memoryTypeBits, inProperties, outMemory);
 
 	vkBindImageMemory(mDevice, outImage, outMemory, 0);
+}
+
+void RendererVK::DestroyImage(VkImage inImage, VkDeviceMemory inMemory)
+{
+	VkMemoryRequirements mem_requirements;
+	vkGetImageMemoryRequirements(mDevice, inImage, &mem_requirements);
+
+	vkDestroyImage(mDevice, inImage, nullptr);
+
+	FreeMemory(inMemory, mem_requirements.size);
 }
 
 void RendererVK::UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight)

@@ -109,8 +109,8 @@ TextureVK::~TextureVK()
 		vkDeviceWaitIdle(device);
 
 		vkDestroyImageView(device, mImageView, nullptr);
-		vkDestroyImage(device, mImage, nullptr);
-		vkFreeMemory(device, mImageMemory, nullptr);
+
+		mRenderer->DestroyImage(mImage, mImageMemory);
 	}
 }
 
