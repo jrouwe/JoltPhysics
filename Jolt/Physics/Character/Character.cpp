@@ -34,7 +34,7 @@ Character::Character(const CharacterSettings *inSettings, RVec3Arg inPosition, Q
 {
 	// Construct rigid body
 	BodyCreationSettings settings(mShape, inPosition, inRotation, EMotionType::Dynamic, mLayer);
-	settings.mAllowedDOFs = EAllowedDOFs::TranslationX | EAllowedDOFs::TranslationY | EAllowedDOFs::TranslationZ;
+	settings.mAllowedDOFs = inSettings->mAllowedDOFs;
 	settings.mEnhancedInternalEdgeRemoval = inSettings->mEnhancedInternalEdgeRemoval;
 	settings.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
 	settings.mMassPropertiesOverride.mMass = inSettings->mMass;
