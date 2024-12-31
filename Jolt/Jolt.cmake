@@ -475,6 +475,7 @@ source_group(TREE ${JOLT_PHYSICS_ROOT} FILES ${JOLT_PHYSICS_SRC_FILES})
 
 # Create Jolt lib
 add_library(Jolt ${JOLT_PHYSICS_SRC_FILES})
+add_library(Jolt::Jolt ALIAS Jolt)
 
 if (BUILD_SHARED_LIBS)
 	# Set default visibility to hidden
