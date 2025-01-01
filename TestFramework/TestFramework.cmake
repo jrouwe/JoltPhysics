@@ -162,8 +162,6 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.h
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.cpp
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.h
-			${TEST_FRAMEWORK_ROOT}/Utils/MacOSImpl.mm
-			${TEST_FRAMEWORK_ROOT}/Utils/MacOSImpl.h
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.h
 		)

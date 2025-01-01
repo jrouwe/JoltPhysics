@@ -11,7 +11,7 @@ KeyboardMacOS::~KeyboardMacOS()
 	Shutdown();
 }
 
-bool KeyboardMacOS::Initialize(Renderer *inRenderer)
+bool KeyboardMacOS::Initialize(ApplicationWindow *inWindow)
 {
 	return true;
 }

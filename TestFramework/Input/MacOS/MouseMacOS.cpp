@@ -15,7 +15,7 @@ MouseMacOS::~MouseMacOS()
 	Shutdown();
 }
 
-bool MouseMacOS::Initialize(Renderer *inRenderer)
+bool MouseMacOS::Initialize(ApplicationWindow *inWindow)
 {
 	return true;
 }
