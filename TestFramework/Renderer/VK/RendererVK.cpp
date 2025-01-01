@@ -20,11 +20,13 @@
 
 #ifdef JPH_PLATFORM_WINDOWS
 	#include <vulkan/vulkan_win32.h>
+	#include <Window/ApplicationWindowWin.h>
 #elif defined(JPH_PLATFORM_LINUX)
 	#include <vulkan/vulkan_xlib.h>
+	#include <Window/ApplicationWindowLinux.h>
 #elif defined(JPH_PLATFORM_MACOS)
 	#include <vulkan/vulkan_metal.h>
-	#include <Utils/MacOSImpl.h>
+	#include <Window/ApplicationWindowMacOS.h>
 #endif
 
 #ifdef JPH_DEBUG
@@ -198,20 +200,20 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 #ifdef JPH_PLATFORM_WINDOWS
 	VkWin32SurfaceCreateInfoKHR surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surface_create_info.hwnd = mWindow->GetWindowHandle();
+	surface_create_info.hwnd = static_cast<ApplicationWindowWin *>(mWindow)->GetWindowHandle();
 	surface_create_info.hinstance = GetModuleHandle(nullptr);
 	FatalErrorIfFailed(vkCreateWin32SurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
 #elif defined(JPH_PLATFORM_LINUX)
 	VkXlibSurfaceCreateInfoKHR surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-	surface_create_info.dpy = mWindow->GetDisplay();
-	surface_create_info.window = mWindow->GetWindow();
+	surface_create_info.dpy = static_cast<ApplicationWindowLinux *>(mWindow)->GetDisplay();
+	surface_create_info.window = static_cast<ApplicationWindowLinux *>(mWindow)->GetWindow();
 	FatalErrorIfFailed(vkCreateXlibSurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
 #elif defined(JPH_PLATFORM_MACOS)
 	VkMetalSurfaceCreateInfoEXT surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
 	surface_create_info.pNext = nullptr;
-	surface_create_info.pLayer = MacOSGetMetalLayer();
+	surface_create_info.pLayer = static_cast<ApplicationWindowMacOS *>(mWindow)->GetMetalLayer();
 	FatalErrorIfFailed(vkCreateMetalSurfaceEXT(mInstance, &surface_create_info, nullptr, &mSurface));
 #endif
 

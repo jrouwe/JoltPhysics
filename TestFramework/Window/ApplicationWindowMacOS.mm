@@ -2,33 +2,34 @@
 // SPDX-FileCopyrightText: 2024 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
+#include <TestFramework.h>
+
+#include <Window/ApplicationWindowMacOS.h>
+
 #import <Cocoa/Cocoa.h>
 #include <QuartzCore/CAMetalLayer.h>
 
-static id sWindow = nullptr;
-static id sMetalLayer = nullptr;
-
-void MacOSInit(int inWindowWidth, int inWindowHeight)
+void ApplicationWindowMacOS::Initialize()
 {
 	@autoreleasepool
 	{
 		[NSApplication sharedApplication];
 		[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-		sWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, inWindowWidth, inWindowHeight) styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
+		sWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, mWindowWidth, mWindowHeight) styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
 		[sWindow cascadeTopLeftFromPoint:NSMakePoint(20, 20)];
 		[sWindow setTitle: @"TestFramework"];
 		[sWindow makeKeyAndOrderFront:nil];
 		[NSApp activateIgnoringOtherApps:YES];
 		
 		NSView *content_view = [sWindow contentView];
-		sMetalLayer = [CAMetalLayer layer];
+		mMetalLayer = [CAMetalLayer layer];
 		[content_view setLayer:sMetalLayer];
 		[content_view setWantsLayer:YES];
 		//		[NSApp run];
 	}
 }
 
-bool MacOSUpdate()
+void ApplicationWindow::MainLoop(RenderCallback inRenderCallback)
 {
 	@autoreleasepool
 	{
@@ -36,16 +37,18 @@ bool MacOSUpdate()
 		{
 //			if (![NSApp isRunning])
 //				return false;
-			NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES];
-			if (event == nullptr)
-				return true;
-			[NSApp sendEvent:event];
-//			[NSApp updateWindows];
+			for (;;)
+			{
+				NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES];
+				if (event == nullptr)
+					break;
+				[NSApp sendEvent:event];
+//				[NSApp updateWindows];
+			}
+
+			// Call the render callback
+			if (!inRenderCallback())
+				return;
 		}
 	}
-}	
-
-void *MacOSGetMetalLayer()
-{
-	return sMetalLayer;
 }

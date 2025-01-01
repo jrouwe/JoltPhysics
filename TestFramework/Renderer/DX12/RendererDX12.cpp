@@ -12,6 +12,7 @@
 #include <Renderer/DX12/TextureDX12.h>
 #include <Renderer/DX12/RenderInstancesDX12.h>
 #include <Renderer/DX12/FatalErrorIfFailedDX12.h>
+#include <Window/ApplicationWindowWin.h>
 #include <Jolt/Core/Profiler.h>
 #include <Utils/ReadData.h>
 #include <Utils/Log.h>
@@ -197,7 +198,7 @@ void RendererDX12::Initialize(ApplicationWindow *inWindow)
 #endif // JPH_DEBUG
 
 	// Disable full screen transitions
-	FatalErrorIfFailed(mDXGIFactory->MakeWindowAssociation(mWindow->GetWindowHandle(), DXGI_MWA_NO_ALT_ENTER));
+	FatalErrorIfFailed(mDXGIFactory->MakeWindowAssociation(static_cast<ApplicationWindowWin *>(mWindow)->GetWindowHandle(), DXGI_MWA_NO_ALT_ENTER));
 
 	// Create heaps
 	mRTVHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 2);
@@ -222,7 +223,7 @@ void RendererDX12::Initialize(ApplicationWindow *inWindow)
 	swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swap_chain_desc.OutputWindow = mWindow->GetWindowHandle();
+	swap_chain_desc.OutputWindow = static_cast<ApplicationWindowWin *>(mWindow)->GetWindowHandle();
 	swap_chain_desc.SampleDesc.Count = 1;
 	swap_chain_desc.Windowed = TRUE;
 

@@ -5,7 +5,7 @@
 #include <TestFramework.h>
 
 #include <Input/Win/MouseWin.h>
-#include <Window/ApplicationWindow.h>
+#include <Window/ApplicationWindowWin.h>
 #include <Jolt/Core/Profiler.h>
 
 MouseWin::MouseWin()
@@ -60,7 +60,7 @@ bool MouseWin::Initialize(ApplicationWindow *inWindow)
 #endif
 {
 	// Store window
-	mWindow = inWindow;
+	mWindow = static_cast<ApplicationWindowWin *>(inWindow);
 
 	// Create direct input interface
 	if (FAILED(CoCreateInstance(CLSID_DirectInput8, nullptr, CLSCTX_INPROC_SERVER, IID_IDirectInput8W, (void **)&mDI)))

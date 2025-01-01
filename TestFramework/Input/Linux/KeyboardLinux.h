@@ -7,6 +7,8 @@
 #include <Input/Keyboard.h>
 #include <Jolt/Core/StaticArray.h>
 
+class ApplicationWindowLinux;
+
 /// Keyboard interface class which keeps track on the status of all keys and keeps track of the list of keys pressed.
 class KeyboardLinux : public Keyboard
 {
@@ -33,7 +35,7 @@ private:
 	EKey							ToKey(int inKey) const;
 	int								FromKey(EKey inKey) const;
 
-	ApplicationWindow *				mWindow = nullptr;
+	ApplicationWindowLinux *		mWindow = nullptr;
 	bool							mKeysPressed[(int)EKey::NumKeys] = { };
 	StaticArray<EKey, 128>			mPendingKeyBuffer;
 	StaticArray<EKey, 128>			mKeyBuffer;

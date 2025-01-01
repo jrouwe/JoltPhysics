@@ -6,6 +6,7 @@
 
 #include <Input/Win/KeyboardWin.h>
 #include <Renderer/Renderer.h>
+#include <Window/ApplicationWindowWin.h>
 #include <Jolt/Core/Profiler.h>
 
 KeyboardWin::KeyboardWin()
@@ -62,7 +63,7 @@ bool KeyboardWin::Initialize(ApplicationWindow *inWindow)
 	}
 
 	// Set cooperative level for keyboard
-	if (FAILED(mKeyboard->SetCooperativeLevel(inWindow->GetWindowHandle(), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
+	if (FAILED(mKeyboard->SetCooperativeLevel(static_cast<ApplicationWindowWin *>(inWindow)->GetWindowHandle(), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
 	{
 		Trace("Unable to set cooperative level for keyboard");
 		return false;

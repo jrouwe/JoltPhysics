@@ -79,7 +79,6 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 		${TEST_FRAMEWORK_ROOT}/Utils/Log.h
 		${TEST_FRAMEWORK_ROOT}/Utils/ReadData.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/ReadData.h
-		${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindow.cpp
 		${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindow.h
 	)
 
@@ -109,6 +108,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.cpp
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.h
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/VertexShaderDX12.h
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowWin.cpp
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowWin.h
 		)
 
 		# All shaders
@@ -148,6 +149,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/KeyboardLinux.h
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.cpp
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.h
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowLinux.cpp
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowLinux.h
 		)
 	endif()
 		
@@ -161,6 +164,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.h
 			${TEST_FRAMEWORK_ROOT}/Utils/MacOSImpl.mm
 			${TEST_FRAMEWORK_ROOT}/Utils/MacOSImpl.h
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.mm
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.h
 		)
 	endif()
 

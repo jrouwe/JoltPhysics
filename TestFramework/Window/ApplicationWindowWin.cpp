@@ -4,18 +4,11 @@
 
 #include <TestFramework.h>
 
-#include <Window/ApplicationWindow.h>
+#include <Window/ApplicationWindowWin.h>
 #include <Utils/Log.h>
-
-#ifdef JPH_PLATFORM_MACOS
-#include <Utils/MacOSImpl.h>
-#endif
-
-#ifdef JPH_PLATFORM_WINDOWS
-
-ApplicationWindow *sWindow = nullptr;
-
 #include <shellscalingapi.h>
+
+ApplicationWindowWin *sWindow = nullptr;
 
 // Called every time the application receives a message
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -45,11 +38,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	return 0;
 }
 
-#endif // JPH_PLATFORM_WINDOWS
-
-void ApplicationWindow::Initialize()
+void ApplicationWindowWin::Initialize()
 {
-#ifdef JPH_PLATFORM_WINDOWS
 	// Prevent this window from auto scaling
 	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 
@@ -83,41 +73,10 @@ void ApplicationWindow::Initialize()
 
 	// Store the window pointer for the message loop
 	sWindow = this;
-#elif defined(JPH_PLATFORM_LINUX)
-	// Open connection to X server
-	mDisplay = XOpenDisplay(nullptr);
-	if (!mDisplay)
-		FatalError("Failed to open X display");
-
-	// Create a simple window
-	int screen = DefaultScreen(mDisplay);
-	mWindow = XCreateSimpleWindow(mDisplay, RootWindow(mDisplay, screen), 0, 0, mWindowWidth, mWindowHeight, 1, BlackPixel(mDisplay, screen), WhitePixel(mDisplay, screen));
-
-	// Select input events
-	XSelectInput(mDisplay, mWindow, ExposureMask | StructureNotifyMask | KeyPressMask);
-
-	// Set window title
-	XStoreName(mDisplay, mWindow, "TestFramework");
-
-	// Register WM_DELETE_WINDOW to handle the close button
-	mWmDeleteWindow = XInternAtom(mDisplay, "WM_DELETE_WINDOW", false);
-	XSetWMProtocols(mDisplay, mWindow, &mWmDeleteWindow, 1);
-
-	// Map the window (make it visible)
-	XMapWindow(mDisplay, mWindow);
-
-	// Flush the display to ensure commands are executed
-	XFlush(mDisplay);
-#elif defined(JPH_PLATFORM_MACOS)
-	MacOSInit(mWindowWidth, mWindowHeight);
-#else
-	#error Unsupported platform
-#endif
 }
 
-void ApplicationWindow::MainLoop(RenderCallback inRenderCallback)
+void ApplicationWindowWin::MainLoop(RenderCallback inRenderCallback)
 {
-#ifdef JPH_PLATFORM_WINDOWS
 	for (;;)
 	{
 		// Main message loop
@@ -138,55 +97,15 @@ void ApplicationWindow::MainLoop(RenderCallback inRenderCallback)
 		if (!inRenderCallback())
 			return;
 	}
-#elif defined(JPH_PLATFORM_LINUX)
-	for (;;)
-	{
-		while (XPending(mDisplay) > 0)
-		{
-			XEvent event;
-			XNextEvent(mDisplay, &event);
-
-			if (event.type == ClientMessage && static_cast<Atom>(event.xclient.data.l[0]) == mWmDeleteWindow)
-			{
-				// Handle quit events
-				return;
-			}
-			else if (event.type == ConfigureNotify)
-			{
-				// Handle window resize events
-				XConfigureEvent xce = event.xconfigure;
-				if (xce.width != mWindowWidth || xce.height != mWindowHeight)
-				{
-					mWindowWidth = xce.width;
-					mWindowHeight = xce.height;
-					OnWindowResize();
-				}
-			}
-			else
-				mEventListener(event);
-		}
-
-		// Call the render callback
-		if (!inRenderCallback())
-			return;
-	}
-#elif defined(JPH_PLATFORM_MACOS)
-	while (MacOSUpdate() && inRenderCallback())
-		continue;
-#else
-	#error Unsupported platform
-#endif
 }
 
-void ApplicationWindow::OnWindowResize()
+void ApplicationWindowWin::OnWindowResize()
 {
-#ifdef JPH_PLATFORM_WINDOWS
 	// Get new window size
 	RECT rc;
 	GetClientRect(mhWnd, &rc);
 	mWindowWidth = max<LONG>(rc.right - rc.left, 8);
 	mWindowHeight = max<LONG>(rc.bottom - rc.top, 8);
-#endif
 
 	// Call callback
 	mWindowResizeListener();

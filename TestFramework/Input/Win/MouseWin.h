@@ -10,6 +10,8 @@
 #define DIRECTINPUT_VERSION	0x0800
 #include <dinput.h>
 
+class ApplicationWindowWin;
+
 /// Mouse interface class, keeps track of the mouse button state and of the absolute and relative movements of the mouse.
 class MouseWin : public Mouse
 {
@@ -47,7 +49,7 @@ private:
 		BUFFERSIZE					= 64,								///< Number of keys cached
 	};
 
-	ApplicationWindow *				mWindow;
+	ApplicationWindowWin *			mWindow;
 	ComPtr<IDirectInput8>			mDI;
 	ComPtr<IDirectInputDevice8>		mMouse;
 	bool							mIsParsecRunning;					///< If the Parsec remote desktop solution is running, if so we can't trust the mouse movement information from DX and it will make the mouse too sensitive

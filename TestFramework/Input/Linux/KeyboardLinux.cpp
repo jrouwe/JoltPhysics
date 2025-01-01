@@ -5,7 +5,7 @@
 #include <TestFramework.h>
 
 #include <Input/Linux/KeyboardLinux.h>
-#include <Window/ApplicationWindow.h>
+#include <Window/ApplicationWindowLinux.h>
 
 KeyboardLinux::~KeyboardLinux()
 {
@@ -14,8 +14,8 @@ KeyboardLinux::~KeyboardLinux()
 
 bool KeyboardLinux::Initialize(ApplicationWindow *inWindow)
 {
-	mWindow = inWindow;
-	inWindow->SetEventListener([this](const XEvent &inEvent) { HandleEvent(inEvent); });
+	mWindow = static_cast<ApplicationWindowLinux *>(inWindow);
+	mWindow->SetEventListener([this](const XEvent &inEvent) { HandleEvent(inEvent); });
 
 	return true;
 }

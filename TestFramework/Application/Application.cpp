@@ -22,12 +22,15 @@
 	#include <crtdbg.h>
 	#include <Input/Win/KeyboardWin.h>
 	#include <Input/Win/MouseWin.h>
+	#include <Window/ApplicationWindowWin.h>
 #elif defined(JPH_PLATFORM_LINUX)
 	#include <Input/Linux/KeyboardLinux.h>
 	#include <Input/Linux/MouseLinux.h>
+	#include <Window/ApplicationWindowLinux.h>
 #elif defined(JPH_PLATFORM_MACOS)
 	#include <Input/MacOS/KeyboardMacOS.h>
 	#include <Input/MacOS/MouseMacOS.h>
+	#include <Window/ApplicationWindowMacOS.h>
 #endif
 
 JPH_GCC_SUPPRESS_WARNING("-Wswitch")
@@ -69,7 +72,15 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 		DisableCustomMemoryHook dcmh;
 
 		// Create window
-		mWindow = new ApplicationWindow;
+	#ifdef JPH_PLATFORM_WINDOWS
+		mWindow = new ApplicationWindowWin;
+	#elif defined(JPH_PLATFORM_LINUX)
+		mWindow = new ApplicationWindowLinux;
+	#elif defined(JPH_PLATFORM_MACOS)
+		mWindow = new ApplicationWindowMacOS;
+	#else
+		#error No window defined
+	#endif
 		mWindow->Initialize();
 
 		// Create renderer
