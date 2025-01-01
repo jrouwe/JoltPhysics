@@ -505,7 +505,6 @@ void RendererVK::Initialize()
 	sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	sampler_info.unnormalizedCoordinates = VK_FALSE;
-	sampler_info.compareEnable = VK_FALSE;
 	sampler_info.minLod = 0.0f;
 	sampler_info.maxLod = VK_LOD_CLAMP_NONE;
 	sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
@@ -515,9 +514,6 @@ void RendererVK::Initialize()
 	sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	// TODO this doesn't work with MoltenVK
-	//sampler_info.compareEnable = VK_TRUE;
-	//sampler_info.compareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
 	FatalErrorIfFailed(vkCreateSampler(mDevice, &sampler_info, nullptr, &mTextureSamplerShadow));
 
 	{
