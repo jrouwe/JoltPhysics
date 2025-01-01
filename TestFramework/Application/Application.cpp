@@ -25,6 +25,9 @@
 #elif defined(JPH_PLATFORM_LINUX)
 	#include <Input/Linux/KeyboardLinux.h>
 	#include <Input/Linux/MouseLinux.h>
+#elif defined(JPH_PLATFORM_MACOS)
+	#include <Input/MacOS/KeyboardMacOS.h>
+	#include <Input/MacOS/MouseMacOS.h>
 #endif
 
 JPH_GCC_SUPPRESS_WARNING("-Wswitch")
@@ -88,6 +91,8 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 		mKeyboard = new KeyboardWin;
 	#elif defined(JPH_PLATFORM_LINUX)
 		mKeyboard = new KeyboardLinux;
+	#elif defined(JPH_PLATFORM_MACOS)
+		mKeyboard = new KeyboardMacOS;
 	#else
 		#error No keyboard defined
 	#endif
@@ -98,6 +103,8 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 		mMouse = new MouseWin;
 	#elif defined(JPH_PLATFORM_LINUX)
 		mMouse = new MouseLinux;
+	#elif defined(JPH_PLATFORM_MACOS)
+		mMouse = new MouseMacOS;
 	#else
 		#error No mouse defined
 	#endif

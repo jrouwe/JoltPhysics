@@ -7,6 +7,10 @@
 #include <Renderer/Renderer.h>
 #include <Utils/Log.h>
 
+#ifdef JPH_PLATFORM_MACOS
+#include <Utils/MacOSImpl.h>
+#endif
+
 static Renderer *sRenderer = nullptr;
 
 #ifdef JPH_PLATFORM_WINDOWS
@@ -103,6 +107,8 @@ void Renderer::Initialize()
 
 	// Flush the display to ensure commands are executed
 	XFlush(mDisplay);
+#elif defined(JPH_PLATFORM_MACOS)
+	MacOSInit(mWindowWidth, mWindowHeight);
 #else
 	#error Unsupported platform
 #endif
@@ -152,6 +158,9 @@ bool Renderer::WindowUpdate()
 		else
 			mEventListener(event);
 	}
+#elif defined(JPH_PLATFORM_MACOS)
+	if (!MacOSUpdate())
+		return false;
 #else
 	#error Unsupported platform
 #endif

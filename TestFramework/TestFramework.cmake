@@ -148,6 +148,19 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.h
 		)
 	endif()
+		
+	if (APPLE)
+		# macOS source files
+		set(TEST_FRAMEWORK_SRC_FILES
+			${TEST_FRAMEWORK_SRC_FILES}
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.cpp
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.h
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.cpp
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.h
+			${TEST_FRAMEWORK_ROOT}/Utils/MacOSImpl.mm
+			${TEST_FRAMEWORK_ROOT}/Utils/MacOSImpl.h
+		)
+	endif()
 
 	# Include the Vulkan library
 	if (Vulkan_FOUND)
@@ -232,6 +245,10 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 	if (LINUX)
 		# Linux configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt X11)
+	endif()
+	if (APPLE)
+		# macOS configuration
+		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework QuartzCore")
 	endif()
 else()
 	# No graphics framework found

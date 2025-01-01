@@ -22,6 +22,9 @@
 	#include <vulkan/vulkan_win32.h>
 #elif defined(JPH_PLATFORM_LINUX)
 	#include <vulkan/vulkan_xlib.h>
+#elif defined(JPH_PLATFORM_MACOS)
+	#include <vulkan/vulkan_metal.h>
+	#include <Utils/MacOSImpl.h>
 #endif
 
 #ifdef JPH_DEBUG
@@ -121,11 +124,18 @@ void RendererVK::Initialize()
 	required_instance_extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #elif defined(JPH_PLATFORM_LINUX)
 	required_instance_extensions.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+#elif defined(JPH_PLATFORM_MACOS)
+	required_instance_extensions.push_back(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+	required_instance_extensions.push_back("VK_KHR_portability_enumeration");
+	required_instance_extensions.push_back("VK_KHR_get_physical_device_properties2");
 #endif
 
 	// Required device extensions
 	Array<const char *> required_device_extensions;
 	required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+#ifdef JPH_PLATFORM_MACOS
+	required_device_extensions.push_back("VK_KHR_portability_subset"); // VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
+#endif
 
 	// Query supported instance extensions
 	uint32 instance_extension_count = 0;
@@ -143,6 +153,9 @@ void RendererVK::Initialize()
 	// Create Vulkan instance
 	VkInstanceCreateInfo instance_create_info = {};
 	instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+#ifdef JPH_PLATFORM_MACOS
+	instance_create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 
 #ifdef JPH_DEBUG
 	// Enable validation layer if supported
@@ -194,6 +207,12 @@ void RendererVK::Initialize()
 	surface_create_info.dpy = mDisplay;
 	surface_create_info.window = mWindow;
 	FatalErrorIfFailed(vkCreateXlibSurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
+#elif defined(JPH_PLATFORM_MACOS)
+	VkMetalSurfaceCreateInfoEXT surface_create_info = {};
+	surface_create_info.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+	surface_create_info.pNext = nullptr;
+	surface_create_info.pLayer = MacOSGetMetalLayer();
+	FatalErrorIfFailed(vkCreateMetalSurfaceEXT(mInstance, &surface_create_info, nullptr, &mSurface));
 #endif
 
 	// Select device
@@ -496,8 +515,9 @@ void RendererVK::Initialize()
 	sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	sampler_info.compareEnable = VK_TRUE;
-	sampler_info.compareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
+	// TODO this doesn't work with MoltenVK
+	//sampler_info.compareEnable = VK_TRUE;
+	//sampler_info.compareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
 	FatalErrorIfFailed(vkCreateSampler(mDevice, &sampler_info, nullptr, &mTextureSamplerShadow));
 
 	{
