@@ -35,8 +35,9 @@ public:
 	void							SetEventListener(const EventListener &inListener) { mEventListener = inListener; }
 #endif // JPH_PLATFORM_WINDOWS
 
-	/// Update the system window, returns false if the application should quit
-	bool							WindowUpdate();
+	/// Enter the main loop and keep rendering frames until the window is closed
+	using RenderCallback = std::function<bool()>;
+	void							MainLoop(RenderCallback inRenderCallback);
 
 	/// Callback when the window resizes
 	void							OnWindowResize();

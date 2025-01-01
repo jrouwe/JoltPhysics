@@ -115,56 +115,67 @@ void ApplicationWindow::Initialize()
 #endif
 }
 
-bool ApplicationWindow::WindowUpdate()
+void ApplicationWindow::MainLoop(RenderCallback inRenderCallback)
 {
 #ifdef JPH_PLATFORM_WINDOWS
-	// Main message loop
-	MSG msg = {};
-	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	for (;;)
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		// Main message loop
+		MSG msg = {};
+		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
 
-		if (msg.message == WM_QUIT)
-		{
-			// Handle quit events
-			return false;
-		}
-	}
-#elif defined(JPH_PLATFORM_LINUX)
-	while (XPending(mDisplay) > 0)
-	{
-		XEvent event;
-		XNextEvent(mDisplay, &event);
-
-		if (event.type == ClientMessage && static_cast<Atom>(event.xclient.data.l[0]) == mWmDeleteWindow)
-		{
-			// Handle quit events
-			return false;
-		}
-		else if (event.type == ConfigureNotify)
-		{
-			// Handle window resize events
-			XConfigureEvent xce = event.xconfigure;
-			if (xce.width != mWindowWidth || xce.height != mWindowHeight)
+			if (msg.message == WM_QUIT)
 			{
-				mWindowWidth = xce.width;
-				mWindowHeight = xce.height;
-				OnWindowResize();
+				// Handle quit events
+				return;
 			}
 		}
-		else
-			mEventListener(event);
+
+		// Call the render callback
+		if (!inRenderCallback())
+			return;
+	}
+#elif defined(JPH_PLATFORM_LINUX)
+	for (;;)
+	{
+		while (XPending(mDisplay) > 0)
+		{
+			XEvent event;
+			XNextEvent(mDisplay, &event);
+
+			if (event.type == ClientMessage && static_cast<Atom>(event.xclient.data.l[0]) == mWmDeleteWindow)
+			{
+				// Handle quit events
+				return;
+			}
+			else if (event.type == ConfigureNotify)
+			{
+				// Handle window resize events
+				XConfigureEvent xce = event.xconfigure;
+				if (xce.width != mWindowWidth || xce.height != mWindowHeight)
+				{
+					mWindowWidth = xce.width;
+					mWindowHeight = xce.height;
+					OnWindowResize();
+				}
+			}
+			else
+				mEventListener(event);
+		}
+
+		// Call the render callback
+		if (!inRenderCallback())
+			return;
 	}
 #elif defined(JPH_PLATFORM_MACOS)
-	if (!MacOSUpdate())
-		return false;
+	while (MacOSUpdate() && inRenderCallback())
+		continue;
 #else
 	#error Unsupported platform
 #endif
-
-	// Application should continue
-	return true;
 }
 
 void ApplicationWindow::OnWindowResize()
