@@ -19,7 +19,7 @@ public:
 	virtual							~MouseWin() override;
 
 	/// Initialization / shutdown
-	virtual bool					Initialize(Renderer *inWindow) override;
+	virtual bool					Initialize(ApplicationWindow *inWindow) override;
 	virtual void					Shutdown() override;
 
 	/// Update the mouse state
@@ -47,7 +47,7 @@ private:
 		BUFFERSIZE					= 64,								///< Number of keys cached
 	};
 
-	Renderer *						mRenderer;
+	ApplicationWindow *				mWindow;
 	ComPtr<IDirectInput8>			mDI;
 	ComPtr<IDirectInputDevice8>		mMouse;
 	bool							mIsParsecRunning;					///< If the Parsec remote desktop solution is running, if so we can't trust the mouse movement information from DX and it will make the mouse too sensitive

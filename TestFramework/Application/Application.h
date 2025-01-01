@@ -30,6 +30,9 @@ protected:
 	/// Debug renderer module
 	DebugRenderer *				mDebugRenderer;
 
+	/// Main window
+	ApplicationWindow *			mWindow;
+
 	/// Render module
 	Renderer *					mRenderer;
 

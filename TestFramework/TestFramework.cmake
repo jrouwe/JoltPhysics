@@ -79,6 +79,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 		${TEST_FRAMEWORK_ROOT}/Utils/Log.h
 		${TEST_FRAMEWORK_ROOT}/Utils/ReadData.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/ReadData.h
+		${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindow.cpp
+		${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindow.h
 	)
 
 	if (WIN32)

@@ -68,6 +68,10 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 		// Disable allocation checking
 		DisableCustomMemoryHook dcmh;
 
+		// Create window
+		mWindow = new ApplicationWindow;
+		mWindow->Initialize();
+
 		// Create renderer
 	#ifdef JPH_ENABLE_VULKAN
 		mRenderer = new RendererVK;
@@ -76,7 +80,7 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 	#else
 		#error No renderer defined
 	#endif
-		mRenderer->Initialize();
+		mRenderer->Initialize(mWindow);
 
 		// Create font
 		Font *font = new Font(mRenderer);
@@ -96,7 +100,7 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 	#else
 		#error No keyboard defined
 	#endif
-		mKeyboard->Initialize(mRenderer);
+		mKeyboard->Initialize(mWindow);
 
 		// Init mouse
 	#ifdef JPH_PLATFORM_WINDOWS
@@ -108,7 +112,7 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 	#else
 		#error No mouse defined
 	#endif
-		mMouse->Initialize(mRenderer);
+		mMouse->Initialize(mWindow);
 
 		// Init UI
 		mUI = new UIManager(mRenderer);
@@ -136,6 +140,7 @@ Application::~Application()
 		delete mDebugRenderer;
 		mFont = nullptr;
 		delete mRenderer;
+		delete mWindow;
 	}
 
 	// Unregisters all types with the factory and cleans up the default material
@@ -174,7 +179,7 @@ void Application::Run()
 	ResetCamera();
 
 	// Main message loop
-	while (mRenderer->WindowUpdate())
+	while (mWindow->WindowUpdate())
 	{
 		// Get new input
 		mKeyboard->Poll();
@@ -402,7 +407,7 @@ void Application::DrawFPS(float inDeltaTime)
 	int text_h = int(text_size.y * mFont->GetCharHeight());
 
 	// Draw FPS counter
-	int x = (mRenderer->GetWindowWidth() - text_w) / 2 - 20;
+	int x = (mWindow->GetWindowWidth() - text_w) / 2 - 20;
 	int y = 10;
 	mUI->DrawQuad(x - 5, y - 3, text_w + 10, text_h + 6, UITexturedQuad(), Color(0, 0, 0, 128));
 	mUI->DrawText(x, y, fps, mFont);
@@ -416,7 +421,7 @@ void Application::DrawFPS(float inDeltaTime)
 	{
 		string_view paused_str = "P: Unpause, ESC: Menu";
 		Float2 pause_size = mFont->MeasureText(paused_str);
-		mUI->DrawText(mRenderer->GetWindowWidth() - 5 - int(pause_size.x * mFont->GetCharHeight()), 5, paused_str, mFont);
+		mUI->DrawText(mWindow->GetWindowWidth() - 5 - int(pause_size.x * mFont->GetCharHeight()), 5, paused_str, mFont);
 	}
 
 	// Restore state

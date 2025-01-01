@@ -92,8 +92,8 @@ void RendererDX12::CreateDepthBuffer()
 	D3D12_RESOURCE_DESC depth_stencil_desc = {};
 	depth_stencil_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depth_stencil_desc.Alignment = 0;
-	depth_stencil_desc.Width = mWindowWidth;
-	depth_stencil_desc.Height = mWindowHeight;
+	depth_stencil_desc.Width = mWindow->GetWindowWidth();
+	depth_stencil_desc.Height = mWindow->GetWindowHeight();
 	depth_stencil_desc.DepthOrArraySize = 1;
 	depth_stencil_desc.MipLevels = 1;
 	depth_stencil_desc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -114,9 +114,9 @@ void RendererDX12::CreateDepthBuffer()
 	mDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &depth_stencil_view_desc, mDepthStencilView);
 }
 
-void RendererDX12::Initialize()
+void RendererDX12::Initialize(ApplicationWindow *inWindow)
 {
-	Renderer::Initialize();
+	Renderer::Initialize(inWindow);
 
 #if defined(JPH_DEBUG)
 	// Enable the D3D12 debug layer
@@ -197,7 +197,7 @@ void RendererDX12::Initialize()
 #endif // JPH_DEBUG
 
 	// Disable full screen transitions
-	FatalErrorIfFailed(mDXGIFactory->MakeWindowAssociation(mhWnd, DXGI_MWA_NO_ALT_ENTER));
+	FatalErrorIfFailed(mDXGIFactory->MakeWindowAssociation(mWindow->GetWindowHandle(), DXGI_MWA_NO_ALT_ENTER));
 
 	// Create heaps
 	mRTVHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 2);
@@ -217,12 +217,12 @@ void RendererDX12::Initialize()
 	// Describe and create the swap chain
 	DXGI_SWAP_CHAIN_DESC swap_chain_desc = {};
 	swap_chain_desc.BufferCount = cFrameCount;
-	swap_chain_desc.BufferDesc.Width = mWindowWidth;
-	swap_chain_desc.BufferDesc.Height = mWindowHeight;
+	swap_chain_desc.BufferDesc.Width = mWindow->GetWindowWidth();
+	swap_chain_desc.BufferDesc.Height = mWindow->GetWindowHeight();
 	swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swap_chain_desc.OutputWindow = mhWnd;
+	swap_chain_desc.OutputWindow = mWindow->GetWindowHandle();
 	swap_chain_desc.SampleDesc.Count = 1;
 	swap_chain_desc.Windowed = TRUE;
 
@@ -333,8 +333,6 @@ void RendererDX12::Initialize()
 
 void RendererDX12::OnWindowResize()
 {
-	Renderer::OnWindowResize();
-
 	// Wait for the previous frame to be rendered
 	WaitForGpu();
 
@@ -346,7 +344,7 @@ void RendererDX12::OnWindowResize()
 	}
 
 	// Resize the swap chain buffers
-	FatalErrorIfFailed(mSwapChain->ResizeBuffers(cFrameCount, mWindowWidth, mWindowHeight, DXGI_FORMAT_R8G8B8A8_UNORM, 0));
+	FatalErrorIfFailed(mSwapChain->ResizeBuffers(cFrameCount, mWindow->GetWindowWidth(), mWindow->GetWindowHeight(), DXGI_FORMAT_R8G8B8A8_UNORM, 0));
 
 	// Back buffer index may have changed after the resize (it always seems to go to 0 again)
 	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
@@ -433,11 +431,11 @@ void RendererDX12::EndShadowPass()
 	mCommandList->OMSetRenderTargets(1, &mRenderTargetViews[mFrameIndex], FALSE, &mDepthStencilView);
 
 	// Set viewport
-	D3D12_VIEWPORT viewport = { 0.0f, 0.0f, static_cast<float>(mWindowWidth), static_cast<float>(mWindowHeight), 0.0f, 1.0f };
+	D3D12_VIEWPORT viewport = { 0.0f, 0.0f, static_cast<float>(mWindow->GetWindowWidth()), static_cast<float>(mWindow->GetWindowHeight()), 0.0f, 1.0f };
 	mCommandList->RSSetViewports(1, &viewport);
 
 	// Set scissor rect
-	D3D12_RECT scissor_rect = { 0, 0, static_cast<LONG>(mWindowWidth), static_cast<LONG>(mWindowHeight) };
+	D3D12_RECT scissor_rect = { 0, 0, static_cast<LONG>(mWindow->GetWindowWidth()), static_cast<LONG>(mWindow->GetWindowHeight()) };
 	mCommandList->RSSetScissorRects(1, &scissor_rect);
 }
 

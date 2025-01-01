@@ -110,9 +110,9 @@ RendererVK::~RendererVK()
 	 vkDestroyInstance(mInstance, nullptr);
 }
 
-void RendererVK::Initialize()
+void RendererVK::Initialize(ApplicationWindow *inWindow)
 {
-	Renderer::Initialize();
+	Renderer::Initialize(inWindow);
 
 	// Flip the sign of the projection matrix
 	mPerspectiveYSign = -1.0f;
@@ -198,14 +198,14 @@ void RendererVK::Initialize()
 #ifdef JPH_PLATFORM_WINDOWS
 	VkWin32SurfaceCreateInfoKHR surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surface_create_info.hwnd = mhWnd;
+	surface_create_info.hwnd = mWindow->GetWindowHandle();
 	surface_create_info.hinstance = GetModuleHandle(nullptr);
 	FatalErrorIfFailed(vkCreateWin32SurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
 #elif defined(JPH_PLATFORM_LINUX)
 	VkXlibSurfaceCreateInfoKHR surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-	surface_create_info.dpy = mDisplay;
-	surface_create_info.window = mWindow;
+	surface_create_info.dpy = mWindow->GetDisplay();
+	surface_create_info.window = mWindow->GetWindow();
 	FatalErrorIfFailed(vkCreateXlibSurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
 #elif defined(JPH_PLATFORM_MACOS)
 	VkMetalSurfaceCreateInfoEXT surface_create_info = {};
@@ -663,7 +663,7 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(inDevice, mSurface, &capabilities);
 	mSwapChainExtent = capabilities.currentExtent;
 	if (mSwapChainExtent.width == UINT32_MAX || mSwapChainExtent.height == UINT32_MAX)
-		mSwapChainExtent = { uint32(mWindowWidth), uint32(mWindowHeight) };
+		mSwapChainExtent = { uint32(mWindow->GetWindowWidth()), uint32(mWindow->GetWindowHeight()) };
 	mSwapChainExtent.width = Clamp(mSwapChainExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
 	mSwapChainExtent.height = Clamp(mSwapChainExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
@@ -781,8 +781,6 @@ void RendererVK::DestroySwapChain()
 
 void RendererVK::OnWindowResize()
 {
-	Renderer::OnWindowResize();
-
 	vkDeviceWaitIdle(mDevice);
 	DestroySwapChain();
 	CreateSwapChain(mPhysicalDevice);

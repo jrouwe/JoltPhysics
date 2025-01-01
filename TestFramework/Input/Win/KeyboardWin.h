@@ -19,7 +19,7 @@ public:
 	virtual							~KeyboardWin() override;
 
 	/// Initialization / shutdown
-	virtual bool					Initialize(Renderer *inRenderer) override;
+	virtual bool					Initialize(ApplicationWindow *inWindow) override;
 	virtual void					Shutdown() override;
 
 	/// Update the keyboard state

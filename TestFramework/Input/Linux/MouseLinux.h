@@ -15,7 +15,7 @@ public:
 	virtual							~MouseLinux() override;
 
 	/// Initialization / shutdown
-	virtual bool					Initialize(Renderer *inWindow) override;
+	virtual bool					Initialize(ApplicationWindow *inWindow) override;
 	virtual void					Shutdown() override;
 
 	/// Update the mouse state

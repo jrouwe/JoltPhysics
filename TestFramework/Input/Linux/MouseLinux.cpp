@@ -5,7 +5,7 @@
 #include <TestFramework.h>
 
 #include <Input/Linux/MouseLinux.h>
-#include <Renderer/Renderer.h>
+#include <Window/ApplicationWindow.h>
 
 MouseLinux::MouseLinux()
 {
@@ -17,10 +17,10 @@ MouseLinux::~MouseLinux()
 	Shutdown();
 }
 
-bool MouseLinux::Initialize(Renderer *inRenderer)
+bool MouseLinux::Initialize(ApplicationWindow *inWindow)
 {
-	mDisplay = inRenderer->GetDisplay();
-	mWindow = inRenderer->GetWindow();
+	mDisplay = inWindow->GetDisplay();
+	mWindow = inWindow->GetWindow();
 
 	// Poll once and reset the deltas
 	Poll();

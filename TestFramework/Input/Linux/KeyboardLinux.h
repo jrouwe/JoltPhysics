@@ -15,7 +15,7 @@ public:
 	virtual							~KeyboardLinux() override;
 
 	/// Initialization / shutdown
-	virtual bool					Initialize(Renderer *inRenderer) override;
+	virtual bool					Initialize(ApplicationWindow *inWindow) override;
 	virtual void					Shutdown() override;
 
 	/// Update the keyboard state
@@ -33,7 +33,7 @@ private:
 	EKey							ToKey(int inKey) const;
 	int								FromKey(EKey inKey) const;
 
-	Renderer *						mRenderer = nullptr;
+	ApplicationWindow *				mWindow = nullptr;
 	bool							mKeysPressed[(int)EKey::NumKeys] = { };
 	StaticArray<EKey, 128>			mPendingKeyBuffer;
 	StaticArray<EKey, 128>			mKeyBuffer;
