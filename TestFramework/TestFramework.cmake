@@ -154,7 +154,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 		)
 	endif()
 		
-	if (APPLE)
+	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 		# macOS source files
 		set(TEST_FRAMEWORK_SRC_FILES
 			${TEST_FRAMEWORK_SRC_FILES}
@@ -251,7 +251,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 		# Linux configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt X11)
 	endif()
-	if (APPLE)
+	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 		# macOS configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework Metal -framework MetalKit -framework GameController")
 	endif()

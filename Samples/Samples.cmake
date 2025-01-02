@@ -322,7 +322,6 @@ endif()
 target_include_directories(Samples PUBLIC ${SAMPLES_ROOT})
 target_link_libraries(Samples LINK_PUBLIC TestFramework)
 
-
 # Set the correct working directory
 set_property(TARGET Samples PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 
