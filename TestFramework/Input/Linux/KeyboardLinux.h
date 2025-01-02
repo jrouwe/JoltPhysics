@@ -31,7 +31,6 @@ public:
 private:
 	void							HandleEvent(const XEvent &inEvent);
 	EKey							ToKey(int inKey) const;
-	int								FromKey(EKey inKey) const;
 
 	Renderer *						mRenderer = nullptr;
 	bool							mKeysPressed[(int)EKey::NumKeys] = { };
