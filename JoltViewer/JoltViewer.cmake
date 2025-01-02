@@ -12,7 +12,13 @@ set(JOLT_VIEWER_SRC_FILES
 source_group(TREE ${JOLT_VIEWER_ROOT} FILES ${JOLT_VIEWER_SRC_FILES})
 
 # Create JoltViewer executable
-add_executable(JoltViewer ${JOLT_VIEWER_SRC_FILES})
+if (APPLE)
+	add_executable(JoltViewer MACOSX_BUNDLE ${JOLT_VIEWER_SRC_FILES})
+	set_property(TARGET JoltViewer PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/JoltViewerInfo.plist")
+	set_property(TARGET JoltViewer PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.joltviewer")
+else()
+	add_executable(JoltViewer ${JOLT_VIEWER_SRC_FILES})
+endif()
 target_include_directories(JoltViewer PUBLIC ${JOLT_VIEWER_ROOT})
 target_link_libraries(JoltViewer LINK_PUBLIC TestFramework)
 

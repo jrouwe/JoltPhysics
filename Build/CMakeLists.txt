@@ -428,9 +428,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	endif()
 
 	# Copy the assets folder
-	if (TARGET_PERFORMANCE_TEST)
-		add_custom_command(TARGET PerformanceTest PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${PHYSICS_REPO_ROOT}/Assets/ $<TARGET_FILE_DIR:PerformanceTest>/Assets/)
-	elseif (TEST_FRAMEWORK_AVAILABLE)
-		add_custom_command(TARGET TestFramework PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${PHYSICS_REPO_ROOT}/Assets/ $<TARGET_FILE_DIR:TestFramework>/Assets/)
+	if (TARGET_PERFORMANCE_TEST OR TEST_FRAMEWORK_AVAILABLE)
+		add_custom_command(TARGET Jolt PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${PHYSICS_REPO_ROOT}/Assets/ $<TARGET_FILE_DIR:Jolt>/Assets/)
 	endif()
 endif()
