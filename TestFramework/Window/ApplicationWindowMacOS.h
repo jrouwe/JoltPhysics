@@ -8,10 +8,8 @@
 
 #ifdef __OBJC__
 @class CAMetalLayer;
-@class NSWindow;
 #else
 typedef void CAMetalLayer;
-typedef void NSWindow;
 #endif
 
 // Responsible for opening the main window
@@ -26,9 +24,12 @@ public:
 
 	/// Enter the main loop and keep rendering frames until the window is closed
 	virtual void					MainLoop(RenderCallback inRenderCallback) override;
+	
+	/// Call the render callback
+	bool							RenderCallback()						{ return mRenderCallback(); }
 
 protected:
-	NSWindow *						mWindow = nullptr;
 	CAMetalLayer *					mMetalLayer = nullptr;
+	ApplicationWindow::RenderCallback mRenderCallback;
 };
 	

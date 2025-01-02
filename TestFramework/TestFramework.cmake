@@ -253,7 +253,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 	endif()
 	if (APPLE)
 		# macOS configuration
-		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework QuartzCore")
+		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework Metal -framework MetalKit")
 	endif()
 else()
 	# No graphics framework found
