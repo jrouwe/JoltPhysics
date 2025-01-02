@@ -61,6 +61,14 @@
 
 @implementation AppDelegate
 
+-(void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+	// Add the Quit button to the first menu item on the toolbar
+	NSMenu *app_menu = [[NSApp mainMenu] itemAtIndex: 0].submenu;
+	NSMenuItem *quit_item = [[NSMenuItem alloc] initWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
+	[app_menu addItem:quit_item];
+}
+
 -(bool)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
 {
 	// Close the app when the window is closed
