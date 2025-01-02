@@ -158,7 +158,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 		# macOS source files
 		set(TEST_FRAMEWORK_SRC_FILES
 			${TEST_FRAMEWORK_SRC_FILES}
-			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.cpp
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.h
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.h
