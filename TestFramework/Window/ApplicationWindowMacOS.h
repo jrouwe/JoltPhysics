@@ -27,9 +27,15 @@ public:
 	
 	/// Call the render callback
 	bool							RenderCallback()						{ return mRenderCallback(); }
+	
+	/// Subscribe to mouse move callbacks that supply window coordinates
+	using MouseMovedCallback = function<void(int, int)>;
+	void							SetMouseMovedCallback(MouseMovedCallback inCallback) { mMouseMovedCallback = inCallback; }
+	void							OnMouseMoved(int inX, int inY)			{ mMouseMovedCallback(inX, inY); }
 
 protected:
 	CAMetalLayer *					mMetalLayer = nullptr;
 	ApplicationWindow::RenderCallback mRenderCallback;
+	MouseMovedCallback				mMouseMovedCallback;
 };
 	

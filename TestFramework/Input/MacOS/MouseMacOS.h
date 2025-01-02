@@ -28,8 +28,9 @@ public:
 
 	virtual void					HideCursor() override				{ }
 	virtual void					ShowCursor() override				{ }
-	
-	void							OnMouseMoved(int inDX, int inDY)	{ mDeltaXAcc += inDX; mDeltaYAcc += inDY; }
+
+	void							OnMouseMoved(int inX, int inY)		{ mX = inX; mY = inY; }
+	void							OnMouseDelta(int inDX, int inDY)	{ mDeltaXAcc += inDX; mDeltaYAcc += inDY; }
 	void							SetLeftPressed(bool inPressed)		{ mLeftPressed = inPressed; }
 	void							SetRightPressed(bool inPressed)		{ mRightPressed = inPressed; }
 	void							SetMiddlePressed(bool inPressed)	{ mMiddlePressed = inPressed; }

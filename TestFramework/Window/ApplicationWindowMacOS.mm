@@ -8,19 +8,35 @@
 
 #import <MetalKit/MetalKit.h>
 
-// This class receives updates from MTKView and is used to trigger rendering a frame
-@interface MetalDelegate : NSObject <MTKViewDelegate>
+// This class implements a metal view
+@interface MetalView : MTKView <MTKViewDelegate>
 @end
 
-@implementation MetalDelegate
+@implementation MetalView
 {
 	ApplicationWindowMacOS *mWindow;
 }
 
-- (MetalDelegate *)init:(ApplicationWindowMacOS *)window
+- (MetalView *)init:(ApplicationWindowMacOS *)window
 {
+	[super initWithFrame: NSMakeRect(0, 0, window->GetWindowWidth(), window->GetWindowHeight()) device: MTLCreateSystemDefaultDevice()];
+	
 	mWindow = window;
+	
+	self.delegate = self;
+	
 	return self;
+}
+
+- (bool)acceptsFirstResponder
+{
+	return YES;
+}
+
+- (void) mouseMoved:(NSEvent *)event
+{
+	NSPoint location = [event locationInWindow];
+	mWindow->OnMouseMoved(location.x, mWindow->GetWindowHeight() - location.y);	
 }
 
 - (void)drawInMTKView:(MTKView *)view
@@ -51,17 +67,16 @@
 void ApplicationWindowMacOS::Initialize()
 {
 	// Create metal view
-	CGRect rect = NSMakeRect(0, 0, mWindowWidth, mWindowHeight);
-	MTKView *view = [[MTKView alloc] initWithFrame: rect device: MTLCreateSystemDefaultDevice()];
-	view.delegate = [[MetalDelegate new] init: this];
+	MetalView *view = [[MetalView alloc] init: this];
 	mMetalLayer = (CAMetalLayer *)view.layer;
 
 	// Create window
-	NSWindow *window = [[NSWindow alloc] initWithContentRect: rect
+	NSWindow *window = [[NSWindow alloc] initWithContentRect: NSMakeRect(0, 0, mWindowWidth, mWindowHeight)
 												   styleMask: NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable
 													 backing: NSBackingStoreBuffered
-														defer: NO];
+													   defer: NO];
 	window.contentView = view;
+	[window setAcceptsMouseMovedEvents: YES];
 	[window setTitle: @"TestFramework"];
 	[window makeKeyAndOrderFront: nil];
 }

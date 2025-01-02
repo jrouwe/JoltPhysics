@@ -5,6 +5,7 @@
 #include <TestFramework.h>
 
 #include <Input/MacOS/MouseMacOS.h>
+#include <Window/ApplicationWindowMacOS.h>
 
 #import <Cocoa/Cocoa.h>
 #import <GameController/GameController.h>
@@ -40,7 +41,7 @@
 		if (strongSelf == nil)
 			return;
 
-		strongSelf->mMouse->OnMouseMoved(deltaX, -deltaY);
+		strongSelf->mMouse->OnMouseDelta(deltaX, -deltaY);
 	};
 
 	mouseInput.leftButton.pressedChangedHandler = ^(GCControllerButtonInput *button, float value, BOOL pressed) {
@@ -72,6 +73,10 @@
 
 bool MouseMacOS::Initialize(ApplicationWindow *inWindow)
 {
+	// Install listener for mouse move callbacks
+	static_cast<ApplicationWindowMacOS *>(inWindow)->SetMouseMovedCallback([this](int inX, int inY) { OnMouseMoved(inX, inY); });
+	
+	// Install listener for mouse delta callbacks (will work also when mouse is outside the window or at the edge of the screen)
 	MouseDelegate *delegate = [[MouseDelegate alloc] init: this];
 	[NSNotificationCenter.defaultCenter addObserver: delegate selector: @selector(mouseDidConnect:) name: GCMouseDidConnectNotification object:nil];
 	return true;
@@ -79,8 +84,6 @@ bool MouseMacOS::Initialize(ApplicationWindow *inWindow)
 
 void MouseMacOS::Poll()
 {
-	mX += mDeltaXAcc;
-	mY += mDeltaYAcc;
 	mDeltaX = mDeltaXAcc;
 	mDeltaY = mDeltaYAcc;
 	
