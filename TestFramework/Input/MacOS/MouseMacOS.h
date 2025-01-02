@@ -6,13 +6,15 @@
 
 #include <Input/Mouse.h>
 
+class ApplicationWindowMacOS;
+
 /// Mouse interface class, keeps track of the mouse button state and of the absolute and relative movements of the mouse.
 class MouseMacOS : public Mouse
 {
 public:
 	/// Initialization / shutdown
 	virtual bool					Initialize(ApplicationWindow *inWindow) override;
-	virtual void					Shutdown() override					{ }
+	virtual void					Shutdown() override;
 
 	/// Update the mouse state
 	virtual void					Poll() override;
@@ -29,6 +31,7 @@ public:
 	virtual void					HideCursor() override				{ }
 	virtual void					ShowCursor() override				{ }
 
+	/// Internal callbacks
 	void							OnMouseMoved(int inX, int inY)		{ mX = inX; mY = inY; }
 	void							OnMouseDelta(int inDX, int inDY)	{ mDeltaXAcc += inDX; mDeltaYAcc += inDY; }
 	void							SetLeftPressed(bool inPressed)		{ mLeftPressed = inPressed; }
@@ -36,6 +39,8 @@ public:
 	void							SetMiddlePressed(bool inPressed)	{ mMiddlePressed = inPressed; }
 
 private:
+	ApplicationWindowMacOS *		mWindow = nullptr;
+	
 	int								mX = 0;
 	int								mY = 0;
 	int								mDeltaX = 0;

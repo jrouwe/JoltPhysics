@@ -38,7 +38,7 @@
 	return YES;
 }
 
-- (void) mouseMoved:(NSEvent *)event
+- (void)mouseMoved:(NSEvent *)event
 {
 	NSPoint location = [event locationInWindow];
 	mWindow->OnMouseMoved(location.x, mWindow->GetWindowHeight() - location.y);	
