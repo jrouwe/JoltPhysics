@@ -33,6 +33,11 @@
 	return YES;
 }
 
+- (bool)canBecomeKeyView
+{
+	return YES;
+}
+
 - (void) mouseMoved:(NSEvent *)event
 {
 	NSPoint location = [event locationInWindow];
