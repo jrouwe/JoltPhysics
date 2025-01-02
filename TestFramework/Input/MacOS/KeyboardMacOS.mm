@@ -90,7 +90,9 @@ static EKey sToKey(GCKeyCode inValue)
 		if (strongSelf == nil)
 			return;
 
-		strongSelf->mKeyboard->OnKeyPressed(sToKey(keyCode));
+		EKey ekey = sToKey(keyCode);
+		if (ekey != EKey::Invalid)
+			strongSelf->mKeyboard->OnKeyPressed(ekey, pressed);
 	};
 }
 	
@@ -123,8 +125,10 @@ EKey KeyboardMacOS::GetNextKey()
 	return EKey::Invalid;
 }
 
-void KeyboardMacOS::OnKeyPressed(EKey inKey)
+void KeyboardMacOS::OnKeyPressed(EKey inKey, bool inPressed)
 {
-	if (mPendingKeyBuffer.size() < mPendingKeyBuffer.capacity())
+	if (inPressed && mPendingKeyBuffer.size() < mPendingKeyBuffer.capacity())
 		mPendingKeyBuffer.push_back(inKey);
+	
+	mKeyPressed[(int)inKey] = inPressed;
 }
