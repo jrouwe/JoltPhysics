@@ -10,26 +10,39 @@
 class MouseMacOS : public Mouse
 {
 public:
-	/// Constructor
-									MouseMacOS();
-	virtual							~MouseMacOS() override;
-
 	/// Initialization / shutdown
 	virtual bool					Initialize(ApplicationWindow *inWindow) override;
-	virtual void					Shutdown() override;
+	virtual void					Shutdown() override					{ }
 
 	/// Update the mouse state
 	virtual void					Poll() override;
 
-	virtual int						GetX() const override				{ return 0; }
-	virtual int						GetY() const override				{ return 0; }
-	virtual int						GetDX() const override				{ return 0; }
-	virtual int						GetDY() const override				{ return 0; }
+	virtual int						GetX() const override				{ return mX; }
+	virtual int						GetY() const override				{ return mY; }
+	virtual int						GetDX() const override				{ return mDeltaX; }
+	virtual int						GetDY() const override				{ return mDeltaY; }
 
-	virtual bool					IsLeftPressed() const override		{ return false; }
-	virtual bool					IsRightPressed() const override		{ return false; }
-	virtual bool					IsMiddlePressed() const override	{ return false; }
+	virtual bool					IsLeftPressed() const override		{ return mLeftPressed; }
+	virtual bool					IsRightPressed() const override		{ return mRightPressed; }
+	virtual bool					IsMiddlePressed() const override	{ return mMiddlePressed; }
 
-	virtual void					HideCursor() override;
-	virtual void					ShowCursor() override;
+	virtual void					HideCursor() override				{ }
+	virtual void					ShowCursor() override				{ }
+	
+	void							OnMouseMoved(int inDX, int inDY)	{ mDeltaXAcc += inDX; mDeltaYAcc += inDY; }
+	void							SetLeftPressed(bool inPressed)		{ mLeftPressed = inPressed; }
+	void							SetRightPressed(bool inPressed)		{ mRightPressed = inPressed; }
+	void							SetMiddlePressed(bool inPressed)	{ mMiddlePressed = inPressed; }
+
+private:
+	int								mX = 0;
+	int								mY = 0;
+	int								mDeltaX = 0;
+	int								mDeltaY = 0;
+	int								mDeltaXAcc = 0;
+	int								mDeltaYAcc = 0;
+	
+	bool							mLeftPressed = false;
+	bool							mRightPressed = false;
+	bool							mMiddlePressed = false;
 };

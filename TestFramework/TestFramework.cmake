@@ -160,7 +160,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 			${TEST_FRAMEWORK_SRC_FILES}
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.cpp
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.h
-			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.cpp
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.h
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.h
@@ -253,7 +253,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 	endif()
 	if (APPLE)
 		# macOS configuration
-		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework Metal -framework MetalKit")
+		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework Metal -framework MetalKit -framework GameController")
 	endif()
 else()
 	# No graphics framework found
