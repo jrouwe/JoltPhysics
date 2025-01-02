@@ -18,15 +18,17 @@ public:
 	virtual void					Poll() override;
 
 	/// Checks if a key is pressed or not
-	virtual bool					IsKeyPressed(EKey inKey) const override		{ return false; }
+	virtual bool					IsKeyPressed(EKey inKey) const override		{ return mKeyPressed[(int)inKey]; }
 
 	/// Buffered keyboard input, returns EKey::Invalid for none
 	virtual EKey					GetFirstKey() override;
 	virtual EKey					GetNextKey() override;
 	
-	void							OnKeyPressed(EKey inKey);
+	/// Handle a key press event
+	void							OnKeyPressed(EKey inKey, bool inPressed);
 
 private:
+	bool							mKeyPressed[(int)EKey::NumKeys] = { };
 	StaticArray<EKey, 128>			mPendingKeyBuffer;
 	StaticArray<EKey, 128>			mKeyBuffer;	
 	uint							mCurrentKey = 0;
