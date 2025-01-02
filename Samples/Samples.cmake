@@ -312,7 +312,7 @@ endif()
 source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 
 # Create Samples executable
-if (APPLE)
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 	add_executable(Samples MACOSX_BUNDLE ${SAMPLES_SRC_FILES})
 	set_property(TARGET Samples PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/SamplesInfo.plist")
 	set_property(TARGET Samples PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.samples")
