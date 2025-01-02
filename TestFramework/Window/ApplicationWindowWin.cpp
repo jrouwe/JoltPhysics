@@ -8,7 +8,7 @@
 #include <Utils/Log.h>
 #include <shellscalingapi.h>
 
-ApplicationWindowWin *sWindow = nullptr;
+static ApplicationWindowWin *sWindow = nullptr;
 
 // Called every time the application receives a message
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
