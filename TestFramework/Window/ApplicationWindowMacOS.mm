@@ -51,6 +51,7 @@
 
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
 {
+	mWindow->OnWindowResized(size.width, size.height);
 }
 
 @end

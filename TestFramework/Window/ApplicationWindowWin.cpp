@@ -24,7 +24,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
 	case WM_SIZE:
 		if (sWindow != nullptr)
-			sWindow->OnWindowResize();
+		{
+			// Get new window size
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+			int width = max<int>(rc.right - rc.left, 8);
+			int height = max<int>(rc.bottom - rc.top, 8);
+			sWindow->OnWindowResized(width, height);
+		}
 		break;
 
 	case WM_DESTROY:
@@ -97,16 +104,4 @@ void ApplicationWindowWin::MainLoop(RenderCallback inRenderCallback)
 		if (!inRenderCallback())
 			return;
 	}
-}
-
-void ApplicationWindowWin::OnWindowResize()
-{
-	// Get new window size
-	RECT rc;
-	GetClientRect(mhWnd, &rc);
-	mWindowWidth = max<LONG>(rc.right - rc.left, 8);
-	mWindowHeight = max<LONG>(rc.bottom - rc.top, 8);
-
-	// Call callback
-	mWindowResizeListener();
 }

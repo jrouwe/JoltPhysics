@@ -54,11 +54,7 @@ void ApplicationWindowLinux::MainLoop(RenderCallback inRenderCallback)
 				// Handle window resize events
 				XConfigureEvent xce = event.xconfigure;
 				if (xce.width != mWindowWidth || xce.height != mWindowHeight)
-				{
-					mWindowWidth = xce.width;
-					mWindowHeight = xce.height;
-					mWindowResizeListener();
-				}
+					OnWindowResized(xce.width, xce.height);
 			}
 			else
 				mEventListener(event);

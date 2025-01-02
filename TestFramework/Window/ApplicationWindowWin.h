@@ -19,9 +19,6 @@ public:
 	/// Enter the main loop and keep rendering frames until the window is closed
 	virtual void					MainLoop(RenderCallback inRenderCallback) override;
 
-	/// Callback when the window resizes
-	void							OnWindowResize();
-
 protected:
 	HWND							mhWnd;
 };
