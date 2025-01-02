@@ -70,7 +70,6 @@ void KeyboardLinux::Poll()
 EKey KeyboardLinux::GetFirstKey()
 {
 	mCurrentKey = 0;
-
 	return GetNextKey();
 }
 
@@ -150,67 +149,5 @@ EKey KeyboardLinux::ToKey(int inValue) const
 	case XK_Down: return EKey::Down;
 	case XK_Return: return EKey::Return;
 	default: return EKey::Unknown;
-	}
-}
-
-int KeyboardLinux::FromKey(EKey inKey) const
-{
-	switch (inKey)
-	{
-	case EKey::A: return XK_a;
-	case EKey::B: return XK_b;
-	case EKey::C: return XK_c;
-	case EKey::D: return XK_d;
-	case EKey::E: return XK_e;
-	case EKey::F: return XK_f;
-	case EKey::G: return XK_g;
-	case EKey::H: return XK_h;
-	case EKey::I: return XK_i;
-	case EKey::J: return XK_j;
-	case EKey::K: return XK_k;
-	case EKey::L: return XK_l;
-	case EKey::M: return XK_m;
-	case EKey::N: return XK_n;
-	case EKey::O: return XK_o;
-	case EKey::P: return XK_p;
-	case EKey::Q: return XK_q;
-	case EKey::R: return XK_r;
-	case EKey::S: return XK_s;
-	case EKey::T: return XK_t;
-	case EKey::U: return XK_u;
-	case EKey::V: return XK_v;
-	case EKey::W: return XK_w;
-	case EKey::X: return XK_x;
-	case EKey::Y: return XK_y;
-	case EKey::Z: return XK_z;
-	case EKey::Num0: return XK_0;
-	case EKey::Num1: return XK_1;
-	case EKey::Num2: return XK_2;
-	case EKey::Num3: return XK_3;
-	case EKey::Num4: return XK_4;
-	case EKey::Num5: return XK_5;
-	case EKey::Num6: return XK_6;
-	case EKey::Num7: return XK_7;
-	case EKey::Num8: return XK_8;
-	case EKey::Num9: return XK_9;
-	case EKey::Space: return XK_space;
-	case EKey::Comma: return XK_comma;
-	case EKey::Period: return XK_period;
-	case EKey::Escape: return XK_Escape;
-	case EKey::LShift: return XK_Shift_L;
-	case EKey::RShift: return XK_Shift_R;
-	case EKey::LControl: return XK_Control_L;
-	case EKey::RControl: return XK_Control_R;
-	case EKey::LAlt: return XK_Alt_L;
-	case EKey::RAlt: return XK_Alt_R;
-	case EKey::Left: return XK_Left;
-	case EKey::Right: return XK_Right;
-	case EKey::Up: return XK_Up;
-	case EKey::Down: return XK_Down;
-	case EKey::Return: return XK_Return;
-	case EKey::Invalid:
-	case EKey::Unknown:
-	default:
-		return 0;
 	}
 }
