@@ -352,6 +352,8 @@ jobs:
   macos:
     runs-on: macos-latest
     name: macOS
+    env:
+		VULKAN_SDK: ${{github.workspace}}/vulkan_sdk
     strategy:
         fail-fast: false
         matrix:
@@ -360,6 +362,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+    - name: Install Vulkan
+      run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK}
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=clang++ Build
     - name: Build

@@ -152,6 +152,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 	<ul>
 		<li>Install XCode</li>
 		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
+		<li>If you want to build the Samples or JoltViewer, install the <a href="https://vulkan.lunarg.com/sdk/home#mac">Vulkan SDK</a></li>
 		<li>Run: ./cmake_xcode_macos.sh</li>
 		<li>This will open XCode with a newly generated project</li>
 		<li>Build and run the project</li>
