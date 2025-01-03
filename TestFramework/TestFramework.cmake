@@ -254,6 +254,13 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 		# macOS configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework Metal -framework MetalKit -framework GameController")
+		
+		# Ignore PCH files for .mm files
+		foreach(SRC_FILE ${TEST_FRAMEWORK_SRC_FILES})
+			if (SRC_FILE MATCHES "\.mm")
+				set_source_files_properties(${SRC_FILE} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+			endif()
+		endforeach()
 	endif()
 else()
 	# No graphics framework found
