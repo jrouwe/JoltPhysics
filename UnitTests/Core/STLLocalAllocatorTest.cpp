@@ -8,34 +8,91 @@
 
 TEST_SUITE("STLLocalAllocatorTest")
 {
-	TEST_CASE("TestAllocation")
+	template <class ArrayType, bool NonTrivial>
+	static void sTestArray()
 	{
-		using Allocator = STLLocalAllocator<int, 20>;
-		using ArrayType = Array<int, Allocator>;
-		static_assert(!Allocator::needs_aligned_allocate);
-		static_assert(AllocatorHasReallocate<Allocator>::sValue);
-
 		// Allocate so that we will run out of local memory and reallocate from heap at least once
 		ArrayType arr;
 		for (int i = 0; i < 64; ++i)
 			arr.push_back(i);
 		CHECK(arr.size() == 64);
 		for (int i = 0; i < 64; ++i)
+		{
 			CHECK(arr[i] == i);
+		#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
+			// We only have to move elements once we run out of the local buffer, this happens as we resize
+			// from 16 to 32 elements, we'll reallocate again at 32 and 64
+			if constexpr (NonTrivial)
+				CHECK(arr[i].GetNonTriv() == (i < 16? 3 : (i < 32? 2 : 1)));
+		#endif
+		}
+	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 		CHECK(!arr.get_allocator().is_local(arr.data()));
+	#endif
+
+		// Check that we can copy the array to another array
+		ArrayType arr2;
+		arr2 = arr;
+		for (int i = 0; i < 64; ++i)
+		{
+			CHECK(arr2[i] == i);
+			if constexpr (NonTrivial)
+				CHECK(arr2[i].GetNonTriv() == -999);
+		}
+	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+		CHECK(!arr2.get_allocator().is_local(arr2.data()));
+	#endif
+
+		// Clear the array
 		arr.clear();
 		arr.shrink_to_fit();
 		CHECK(arr.size() == 0);
+	#ifndef JPH_USE_STD_VECTOR
+		CHECK(arr.capacity() == 0);
 		CHECK(arr.data() == nullptr);
+	#endif
 
 		// Allocate so we stay within the local buffer
-		CHECK(arr.capacity() == 0);
 		for (int i = 0; i < 10; ++i)
 			arr.push_back(i);
 		CHECK(arr.size() == 10);
 		for (int i = 0; i < 10; ++i)
+		{
 			CHECK(arr[i] == i);
+		#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
+			// We never need to move elements as they stay within the local buffer
+			if constexpr (NonTrivial)
+				CHECK(arr[i].GetNonTriv() == 1);
+		#endif
+		}
+	#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
 		CHECK(arr.get_allocator().is_local(arr.data()));
+	#endif
+
+		// Check that we can copy the array to the local buffer
+		ArrayType arr3;
+		arr3 = arr;
+		for (int i = 0; i < 10; ++i)
+		{
+			CHECK(arr3[i] == i);
+			if constexpr (NonTrivial)
+				CHECK(arr3[i].GetNonTriv() == -999);
+		}
+	#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
+		CHECK(arr3.get_allocator().is_local(arr3.data()));
+	#endif
+	}
+
+	TEST_CASE("TestAllocation")
+	{
+		using Allocator = STLLocalAllocator<int, 20>;
+		using ArrayType = Array<int, Allocator>;
+	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+		static_assert(!Allocator::needs_aligned_allocate);
+		static_assert(AllocatorHasReallocate<Allocator>::sValue);
+	#endif
+
+		sTestArray<ArrayType, false>();
 	}
 
 	TEST_CASE("TestAllocationAligned")
@@ -53,30 +110,12 @@ TEST_SUITE("STLLocalAllocatorTest")
 
 		using Allocator = STLLocalAllocator<Aligned, 20>;
 		using ArrayType = Array<Aligned, Allocator>;
+	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 		static_assert(Allocator::needs_aligned_allocate);
 		static_assert(AllocatorHasReallocate<Allocator>::sValue);
+	#endif
 
-		// Allocate so that we will run out of local memory and reallocate from heap at least once
-		ArrayType arr;
-		for (int i = 0; i < 64; ++i)
-			arr.push_back(i);
-		CHECK(arr.size() == 64);
-		for (int i = 0; i < 64; ++i)
-			CHECK(arr[i] == i);
-		CHECK(!arr.get_allocator().is_local(arr.data()));
-		arr.clear();
-		arr.shrink_to_fit();
-		CHECK(arr.size() == 0);
-		CHECK(arr.data() == nullptr);
-
-		// Allocate so we stay within the local buffer
-		CHECK(arr.capacity() == 0);
-		for (int i = 0; i < 10; ++i)
-			arr.push_back(i);
-		CHECK(arr.size() == 10);
-		for (int i = 0; i < 10; ++i)
-			CHECK(arr[i] == i);
-		CHECK(arr.get_allocator().is_local(arr.data()));
+		sTestArray<ArrayType, false>();
 	}
 
 	TEST_CASE("TestAllocationNonTrivial")
@@ -87,7 +126,7 @@ TEST_SUITE("STLLocalAllocatorTest")
 						NonTriv(int inValue)				: mValue(inValue) { }
 						NonTriv(const NonTriv &inRHS)		: mValue(inRHS.mValue), mMakeNonTriv(-999) { }
 						NonTriv(NonTriv &&inRHS)			: mValue(inRHS.mValue), mMakeNonTriv(inRHS.mMakeNonTriv + 1) { }
-			NonTriv &	operator = (const NonTriv &inRHS)	= delete;
+			NonTriv &	operator = (const NonTriv &inRHS)	{ mValue = inRHS.mValue; mMakeNonTriv = -9999; return *this; }
 			operator	int() const							{ return mValue; }
 			int			GetNonTriv() const					{ return mMakeNonTriv; }
 
@@ -99,60 +138,12 @@ TEST_SUITE("STLLocalAllocatorTest")
 
 		using Allocator = STLLocalAllocator<NonTriv, 20>;
 		using ArrayType = Array<NonTriv, Allocator>;
+	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 		static_assert(!Allocator::needs_aligned_allocate);
 		static_assert(AllocatorHasReallocate<Allocator>::sValue);
+	#endif
 
-		// Allocate so that we will run out of local memory and reallocate from heap at least once
-		ArrayType arr;
-		for (int i = 0; i < 64; ++i)
-			arr.push_back(i);
-		CHECK(arr.size() == 64);
-		for (int i = 0; i < 64; ++i)
-		{
-			CHECK(arr[i] == i);
-			// We only have to move elements once we run out of the local buffer, this happens as we resize
-			// from 16 to 32 elements, we'll reallocate again at 32 and 64
-			CHECK(arr[i].GetNonTriv() == (i < 16? 3 : (i < 32? 2 : 1)));
-		}
-		CHECK(!arr.get_allocator().is_local(arr.data()));
-
-		// Check that we can copy the array to another array
-		ArrayType arr2;
-		arr2 = arr;
-		for (int i = 0; i < 64; ++i)
-		{
-			CHECK(arr2[i] == i);
-			CHECK(arr2[i].GetNonTriv() == -999);
-		}
-		CHECK(!arr2.get_allocator().is_local(arr2.data()));
-
-		// Clear the array
-		arr.clear();
-		arr.shrink_to_fit();
-		CHECK(arr.size() == 0);
-		CHECK(arr.data() == nullptr);
-
-		// Allocate so we stay within the local buffer
-		CHECK(arr.capacity() == 0);
-		for (int i = 0; i < 10; ++i)
-			arr.push_back(i);
-		CHECK(arr.size() == 10);
-		for (int i = 0; i < 10; ++i)
-		{
-			CHECK(arr[i] == i);
-			// We never need to move elements as they stay within the local buffer
-			CHECK(arr[i].GetNonTriv() == 1);
-		}
-		CHECK(arr.get_allocator().is_local(arr.data()));
-
-		// Check that we can copy the array to the local buffer
-		ArrayType arr3;
-		arr3 = arr;
-		for (int i = 0; i < 10; ++i)
-		{
-			CHECK(arr3[i] == i);
-			CHECK(arr3[i].GetNonTriv() == -999);
-		}
+		sTestArray<ArrayType, true>();
 	}
 
 	TEST_CASE("TestAllocationAlignedNonTrivial")
@@ -163,7 +154,7 @@ TEST_SUITE("STLLocalAllocatorTest")
 						AlNonTriv(int inValue)				: mValue(inValue) { }
 						AlNonTriv(const AlNonTriv &inRHS)	: mValue(inRHS.mValue), mMakeNonTriv(-999) { }
 						AlNonTriv(AlNonTriv &&inRHS)		: mValue(inRHS.mValue), mMakeNonTriv(inRHS.mMakeNonTriv + 1) { }
-			AlNonTriv &	operator = (const AlNonTriv &inRHS) = delete; // We're not using the assignment operator here
+			AlNonTriv &	operator = (const AlNonTriv &inRHS) { mValue = inRHS.mValue; mMakeNonTriv = -9999; return *this; }
 			operator	int() const							{ return mValue; }
 			int			GetNonTriv() const					{ return mMakeNonTriv; }
 
@@ -175,59 +166,11 @@ TEST_SUITE("STLLocalAllocatorTest")
 
 		using Allocator = STLLocalAllocator<AlNonTriv, 20>;
 		using ArrayType = Array<AlNonTriv, Allocator>;
+	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 		static_assert(Allocator::needs_aligned_allocate);
 		static_assert(AllocatorHasReallocate<Allocator>::sValue);
+	#endif
 
-		// Allocate so that we will run out of local memory and reallocate from heap at least once
-		ArrayType arr;
-		for (int i = 0; i < 64; ++i)
-			arr.push_back(i);
-		CHECK(arr.size() == 64);
-		for (int i = 0; i < 64; ++i)
-		{
-			CHECK(arr[i] == i);
-			// We only have to move elements once we run out of the local buffer, this happens as we resize
-			// from 16 to 32 elements, we'll reallocate again at 32 and 64
-			CHECK(arr[i].GetNonTriv() == (i < 16? 3 : (i < 32? 2 : 1)));
-		}
-		CHECK(!arr.get_allocator().is_local(arr.data()));
-
-		// Check that we can copy the array to another array
-		ArrayType arr2;
-		arr2 = arr;
-		for (int i = 0; i < 64; ++i)
-		{
-			CHECK(arr2[i] == i);
-			CHECK(arr2[i].GetNonTriv() == -999);
-		}
-		CHECK(!arr2.get_allocator().is_local(arr2.data()));
-
-		// Clear the array
-		arr.clear();
-		arr.shrink_to_fit();
-		CHECK(arr.size() == 0);
-		CHECK(arr.data() == nullptr);
-
-		// Allocate so we stay within the local buffer
-		CHECK(arr.capacity() == 0);
-		for (int i = 0; i < 10; ++i)
-			arr.push_back(i);
-		CHECK(arr.size() == 10);
-		for (int i = 0; i < 10; ++i)
-		{
-			CHECK(arr[i] == i);
-			// We never need to move elements as they stay within the local buffer
-			CHECK(arr[i].GetNonTriv() == 1);
-		}
-		CHECK(arr.get_allocator().is_local(arr.data()));
-
-		// Check that we can copy the array to the local buffer
-		ArrayType arr3;
-		arr3 = arr;
-		for (int i = 0; i < 10; ++i)
-		{
-			CHECK(arr3[i] == i);
-			CHECK(arr3[i].GetNonTriv() == -999);
-		}
+		sTestArray<ArrayType, true>();
 	}
 }

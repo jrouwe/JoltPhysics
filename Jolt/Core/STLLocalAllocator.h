@@ -8,6 +8,8 @@
 
 JPH_NAMESPACE_BEGIN
 
+#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+
 /// STL allocator that keeps N elements in a local buffer before falling back to regular allocations
 template <typename T, size_t N>
 class STLLocalAllocator : public STLAllocator<T>
@@ -18,6 +20,11 @@ public:
 	using pointer = typename Base::pointer;
 	using const_pointer = typename Base::const_pointer;
 	using size_type = typename Base::size_type;
+
+	/// We cannot copy, move or swap allocators
+	using propagate_on_container_copy_assignment = std::false_type;
+	using propagate_on_container_move_assignment = std::false_type;
+	using propagate_on_container_swap = std::false_type;
 
 	/// The allocator is not stateless (has local buffer)
 	using is_always_equal = std::false_type;
@@ -57,7 +64,7 @@ public:
 		// If the pointer is outside our local buffer, fall back to the heap
 		if (inOldPointer != nullptr && !is_local(inOldPointer))
 		{
-			if constexpr (!Base::has_reallocate)
+			if constexpr (!AllocatorHasReallocate<Base>::sValue)
 				return ReallocateImpl(inOldPointer, inOldSize, inNewSize);
 			else
 				return Base::reallocate(inOldPointer, inOldSize, inNewSize);
@@ -99,6 +106,21 @@ public:
 		return this != &inRHS;
 	}
 
+	/// When converting to another type than T, fall back to the basic allocator as std::vector creates
+	/// an allocator, allocates an element and then destroys the allocator to keep track of its iterators
+	template <typename T2>
+	struct rebind
+	{
+		using other = STLAllocator<T2>;
+	};
+
+	/// Rebinding to the same type should work
+	template <>
+	struct rebind<T>
+	{
+		using other = STLLocalAllocator<T, N>;
+	};
+
 private:
 	/// Implements reallocate when the base class doesn't or when we go from local buffer to heap
 	inline pointer			ReallocateImpl(pointer inOldPointer, size_type inOldSize, size_type inNewSize)
@@ -129,5 +151,12 @@ private:
 
 /// The STLLocalAllocator always implements a reallocate function as it can often reallocate in place
 template <class T, size_t N> struct AllocatorHasReallocate<STLLocalAllocator<T, N>> { static constexpr bool sValue = STLLocalAllocator<T, N>::has_reallocate; };
+
+
+#else
+
+template <typename T, size_t N> using STLLocalAllocator = std::allocator<T>;
+
+#endif // !JPH_DISABLE_CUSTOM_ALLOCATOR
 
 JPH_NAMESPACE_END
