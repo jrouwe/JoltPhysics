@@ -30,6 +30,9 @@ protected:
 	/// Debug renderer module
 	DebugRenderer *				mDebugRenderer;
 
+	/// Main window
+	ApplicationWindow *			mWindow;
+
 	/// Render module
 	Renderer *					mRenderer;
 
@@ -90,6 +93,9 @@ protected:
 	void						ClearDebugRenderer();
 
 private:
+	/// Render a frame
+	bool						RenderFrame();
+
 	/// Extract heading and pitch from the local space (relative to the camera pivot) camera forward
 	void						GetCameraLocalHeadingAndPitch(float &outHeading, float &outPitch);
 

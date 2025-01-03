@@ -5,27 +5,27 @@
 #include <TestFramework.h>
 
 #include <Input/Linux/KeyboardLinux.h>
-#include <Renderer/Renderer.h>
+#include <Window/ApplicationWindowLinux.h>
 
 KeyboardLinux::~KeyboardLinux()
 {
 	Shutdown();
 }
 
-bool KeyboardLinux::Initialize(Renderer *inRenderer)
+bool KeyboardLinux::Initialize(ApplicationWindow *inWindow)
 {
-	mRenderer = inRenderer;
-	inRenderer->SetEventListener([this](const XEvent &inEvent) { HandleEvent(inEvent); });
+	mWindow = static_cast<ApplicationWindowLinux *>(inWindow);
+	mWindow->SetEventListener([this](const XEvent &inEvent) { HandleEvent(inEvent); });
 
 	return true;
 }
 
 void KeyboardLinux::Shutdown()
 {
-	if (mRenderer != nullptr)
+	if (mWindow != nullptr)
 	{
-		mRenderer->SetEventListener({});
-		mRenderer = nullptr;
+		mWindow->SetEventListener({});
+		mWindow = nullptr;
 	}
 }
 
@@ -34,7 +34,7 @@ void KeyboardLinux::Poll()
 	// Reset the keys pressed
 	memset(mKeysPressed, 0, sizeof(mKeysPressed));
 
-	Display *display = mRenderer->GetDisplay();
+	Display *display = mWindow->GetDisplay();
 
 	// Get pressed keys
 	char keymap[32];
@@ -86,7 +86,7 @@ void KeyboardLinux::HandleEvent(const XEvent &inEvent)
 	if (inEvent.type == KeyPress && mPendingKeyBuffer.size() < mPendingKeyBuffer.capacity())
 	{
 		// Convert to key
-		KeySym keysym = XkbKeycodeToKeysym(mRenderer->GetDisplay(), inEvent.xkey.keycode, 0, 0);
+		KeySym keysym = XkbKeycodeToKeysym(mWindow->GetDisplay(), inEvent.xkey.keycode, 0, 0);
 		EKey key = ToKey(keysym);
 		if (key != EKey::Unknown)
 			mPendingKeyBuffer.push_back(key);

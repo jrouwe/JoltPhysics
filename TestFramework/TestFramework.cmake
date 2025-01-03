@@ -79,6 +79,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 		${TEST_FRAMEWORK_ROOT}/Utils/Log.h
 		${TEST_FRAMEWORK_ROOT}/Utils/ReadData.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/ReadData.h
+		${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindow.h
 	)
 
 	if (WIN32)
@@ -107,6 +108,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.cpp
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.h
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/VertexShaderDX12.h
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowWin.cpp
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowWin.h
 		)
 
 		# All shaders
@@ -146,6 +149,21 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/KeyboardLinux.h
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.cpp
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.h
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowLinux.cpp
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowLinux.h
+		)
+	endif()
+		
+	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
+		# macOS source files
+		set(TEST_FRAMEWORK_SRC_FILES
+			${TEST_FRAMEWORK_SRC_FILES}
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.mm
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.h
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.mm
+			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.h
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.mm
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.h
 		)
 	endif()
 
@@ -232,6 +250,17 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 	if (LINUX)
 		# Linux configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt X11)
+	endif()
+	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
+		# macOS configuration
+		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework Metal -framework MetalKit -framework GameController")
+		
+		# Ignore PCH files for .mm files
+		foreach(SRC_FILE ${TEST_FRAMEWORK_SRC_FILES})
+			if (SRC_FILE MATCHES "\.mm")
+				set_source_files_properties(${SRC_FILE} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+			endif()
+		endforeach()
 	endif()
 else()
 	# No graphics framework found

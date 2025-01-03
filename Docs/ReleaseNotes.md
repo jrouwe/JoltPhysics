@@ -16,7 +16,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added binary serialization to `SkeletalAnimation`.
 * Added support for RISC-V, LoongArch and PowerPC (Little Endian) CPUs.
 * Added the ability to add a sub shape at a specified index in a MutableCompoundShape rather than at the end.
-* The Samples and JoltViewer can run on Linux using Vulkan now. Make sure to install the Vulkan SDK before compiling (see: Build/ubuntu24_install_vulkan_sdk.sh).
+* The Samples and JoltViewer can run on Linux/macOS using Vulkan now. Make sure to install the Vulkan SDK before compiling (see: Build/ubuntu24_install_vulkan_sdk.sh or [download](https://vulkan.lunarg.com/sdk/home) the SDK).
 
 ### Bug fixes
 

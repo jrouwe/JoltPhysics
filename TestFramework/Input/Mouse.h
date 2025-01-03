@@ -4,7 +4,7 @@
 
 #pragma once
 
-class Renderer;
+class ApplicationWindow;
 
 /// Mouse interface class, keeps track of the mouse button state and of the absolute and relative movements of the mouse.
 class Mouse
@@ -15,7 +15,7 @@ public:
 	virtual							~Mouse() = default;
 
 	/// Initialization / shutdown
-	virtual bool					Initialize(Renderer *inWindow) = 0;
+	virtual bool					Initialize(ApplicationWindow *inWindow) = 0;
 	virtual void					Shutdown() = 0;
 
 	/// Update the mouse state

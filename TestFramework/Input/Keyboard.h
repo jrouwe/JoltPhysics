@@ -4,7 +4,7 @@
 
 #pragma once
 
-class Renderer;
+class ApplicationWindow;
 
 enum class EKey
 {
@@ -73,7 +73,7 @@ public:
 	virtual							~Keyboard() = default;
 
 	/// Initialization / shutdown
-	virtual bool					Initialize(Renderer *inRenderer) = 0;
+	virtual bool					Initialize(ApplicationWindow *inWindow) = 0;
 	virtual void					Shutdown() = 0;
 
 	/// Update the keyboard state

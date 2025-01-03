@@ -5,7 +5,7 @@
 #include <TestFramework.h>
 
 #include <Input/Win/MouseWin.h>
-#include <Renderer/Renderer.h>
+#include <Window/ApplicationWindowWin.h>
 #include <Jolt/Core/Profiler.h>
 
 MouseWin::MouseWin()
@@ -53,14 +53,14 @@ void MouseWin::DetectParsecRunning()
 	}
 }
 
-bool MouseWin::Initialize(Renderer *inRenderer)
+bool MouseWin::Initialize(ApplicationWindow *inWindow)
 #ifdef JPH_COMPILER_CLANG
 	// DIPROP_BUFFERSIZE is a pointer to 1 which causes UBSan: runtime error: reference binding to misaligned address 0x000000000001
 	__attribute__((no_sanitize("alignment")))
 #endif
 {
-	// Store renderer
-	mRenderer = inRenderer;
+	// Store window
+	mWindow = static_cast<ApplicationWindowWin *>(inWindow);
 
 	// Create direct input interface
 	if (FAILED(CoCreateInstance(CLSID_DirectInput8, nullptr, CLSCTX_INPROC_SERVER, IID_IDirectInput8W, (void **)&mDI)))
@@ -84,7 +84,7 @@ bool MouseWin::Initialize(Renderer *inRenderer)
 	}
 
 	// Set cooperative level for Mouse
-	if (FAILED(mMouse->SetCooperativeLevel(mRenderer->GetWindowHandle(), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
+	if (FAILED(mMouse->SetCooperativeLevel(mWindow->GetWindowHandle(), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
 		Trace("Failed to set cooperative level for mouse");
 
 	// Set data format
@@ -148,7 +148,7 @@ void MouseWin::Poll()
 	}
 
 	// Convert to window space
-	if (!ScreenToClient(mRenderer->GetWindowHandle(), &mMousePos))
+	if (!ScreenToClient(mWindow->GetWindowHandle(), &mMousePos))
 	{
 		ResetMouse();
 		return;

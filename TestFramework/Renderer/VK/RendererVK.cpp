@@ -20,8 +20,13 @@
 
 #ifdef JPH_PLATFORM_WINDOWS
 	#include <vulkan/vulkan_win32.h>
+	#include <Window/ApplicationWindowWin.h>
 #elif defined(JPH_PLATFORM_LINUX)
 	#include <vulkan/vulkan_xlib.h>
+	#include <Window/ApplicationWindowLinux.h>
+#elif defined(JPH_PLATFORM_MACOS)
+	#include <vulkan/vulkan_metal.h>
+	#include <Window/ApplicationWindowMacOS.h>
 #endif
 
 #ifdef JPH_DEBUG
@@ -107,9 +112,9 @@ RendererVK::~RendererVK()
 	 vkDestroyInstance(mInstance, nullptr);
 }
 
-void RendererVK::Initialize()
+void RendererVK::Initialize(ApplicationWindow *inWindow)
 {
-	Renderer::Initialize();
+	Renderer::Initialize(inWindow);
 
 	// Flip the sign of the projection matrix
 	mPerspectiveYSign = -1.0f;
@@ -121,11 +126,18 @@ void RendererVK::Initialize()
 	required_instance_extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #elif defined(JPH_PLATFORM_LINUX)
 	required_instance_extensions.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+#elif defined(JPH_PLATFORM_MACOS)
+	required_instance_extensions.push_back(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+	required_instance_extensions.push_back("VK_KHR_portability_enumeration");
+	required_instance_extensions.push_back("VK_KHR_get_physical_device_properties2");
 #endif
 
 	// Required device extensions
 	Array<const char *> required_device_extensions;
 	required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+#ifdef JPH_PLATFORM_MACOS
+	required_device_extensions.push_back("VK_KHR_portability_subset"); // VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
+#endif
 
 	// Query supported instance extensions
 	uint32 instance_extension_count = 0;
@@ -143,6 +155,9 @@ void RendererVK::Initialize()
 	// Create Vulkan instance
 	VkInstanceCreateInfo instance_create_info = {};
 	instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+#ifdef JPH_PLATFORM_MACOS
+	instance_create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 
 #ifdef JPH_DEBUG
 	// Enable validation layer if supported
@@ -185,15 +200,21 @@ void RendererVK::Initialize()
 #ifdef JPH_PLATFORM_WINDOWS
 	VkWin32SurfaceCreateInfoKHR surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surface_create_info.hwnd = mhWnd;
+	surface_create_info.hwnd = static_cast<ApplicationWindowWin *>(mWindow)->GetWindowHandle();
 	surface_create_info.hinstance = GetModuleHandle(nullptr);
 	FatalErrorIfFailed(vkCreateWin32SurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
 #elif defined(JPH_PLATFORM_LINUX)
 	VkXlibSurfaceCreateInfoKHR surface_create_info = {};
 	surface_create_info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-	surface_create_info.dpy = mDisplay;
-	surface_create_info.window = mWindow;
+	surface_create_info.dpy = static_cast<ApplicationWindowLinux *>(mWindow)->GetDisplay();
+	surface_create_info.window = static_cast<ApplicationWindowLinux *>(mWindow)->GetWindow();
 	FatalErrorIfFailed(vkCreateXlibSurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
+#elif defined(JPH_PLATFORM_MACOS)
+	VkMetalSurfaceCreateInfoEXT surface_create_info = {};
+	surface_create_info.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+	surface_create_info.pNext = nullptr;
+	surface_create_info.pLayer = static_cast<ApplicationWindowMacOS *>(mWindow)->GetMetalLayer();
+	FatalErrorIfFailed(vkCreateMetalSurfaceEXT(mInstance, &surface_create_info, nullptr, &mSurface));
 #endif
 
 	// Select device
@@ -486,7 +507,6 @@ void RendererVK::Initialize()
 	sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	sampler_info.unnormalizedCoordinates = VK_FALSE;
-	sampler_info.compareEnable = VK_FALSE;
 	sampler_info.minLod = 0.0f;
 	sampler_info.maxLod = VK_LOD_CLAMP_NONE;
 	sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
@@ -496,8 +516,6 @@ void RendererVK::Initialize()
 	sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	sampler_info.compareEnable = VK_TRUE;
-	sampler_info.compareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
 	FatalErrorIfFailed(vkCreateSampler(mDevice, &sampler_info, nullptr, &mTextureSamplerShadow));
 
 	{
@@ -647,7 +665,7 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(inDevice, mSurface, &capabilities);
 	mSwapChainExtent = capabilities.currentExtent;
 	if (mSwapChainExtent.width == UINT32_MAX || mSwapChainExtent.height == UINT32_MAX)
-		mSwapChainExtent = { uint32(mWindowWidth), uint32(mWindowHeight) };
+		mSwapChainExtent = { uint32(mWindow->GetWindowWidth()), uint32(mWindow->GetWindowHeight()) };
 	mSwapChainExtent.width = Clamp(mSwapChainExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
 	mSwapChainExtent.height = Clamp(mSwapChainExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
@@ -765,8 +783,6 @@ void RendererVK::DestroySwapChain()
 
 void RendererVK::OnWindowResize()
 {
-	Renderer::OnWindowResize();
-
 	vkDeviceWaitIdle(mDevice);
 	DestroySwapChain();
 	CreateSwapChain(mPhysicalDevice);

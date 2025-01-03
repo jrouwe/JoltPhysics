@@ -19,7 +19,7 @@ public:
 	virtual							~RendererVK() override;
 
 	// See: Renderer
-	virtual void					Initialize() override;
+	virtual void					Initialize(ApplicationWindow *inWindow) override;
 	virtual void					BeginFrame(const CameraState &inCamera, float inWorldScale) override;
 	virtual void					EndShadowPass() override;
 	virtual void					EndFrame() override;

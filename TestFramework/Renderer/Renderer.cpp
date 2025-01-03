@@ -5,172 +5,18 @@
 #include <TestFramework.h>
 
 #include <Renderer/Renderer.h>
-#include <Utils/Log.h>
 
-static Renderer *sRenderer = nullptr;
-
-#ifdef JPH_PLATFORM_WINDOWS
-
-#include <shellscalingapi.h>
-
-//--------------------------------------------------------------------------------------
-// Called every time the application receives a message
-//--------------------------------------------------------------------------------------
-static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+Renderer::~Renderer()
 {
-	PAINTSTRUCT ps;
-
-	switch (message)
-	{
-	case WM_PAINT:
-		BeginPaint(hWnd, &ps);
-		EndPaint(hWnd, &ps);
-		break;
-
-	case WM_SIZE:
-		if (sRenderer != nullptr)
-			sRenderer->OnWindowResize();
-		break;
-
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
-
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-	}
-
-	return 0;
+	if (mWindow != nullptr)
+		mWindow->SetWindowResizeListener({});
 }
 
-#endif // JPH_PLATFORM_WINDOWS
-
-void Renderer::Initialize()
+void Renderer::Initialize(ApplicationWindow *inWindow)
 {
-#ifdef JPH_PLATFORM_WINDOWS
-	// Prevent this window from auto scaling
-	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-
-	// Register class
-	WNDCLASSEX wcex;
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = WndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
-	wcex.hInstance = GetModuleHandle(nullptr);
-	wcex.hIcon = nullptr;
-	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wcex.hbrBackground = nullptr;
-	wcex.lpszMenuName = nullptr;
-	wcex.lpszClassName = TEXT("TestFrameworkClass");
-	wcex.hIconSm = nullptr;
-	if (!RegisterClassEx(&wcex))
-		FatalError("Failed to register window class");
-
-	// Create window
-	RECT rc = { 0, 0, mWindowWidth, mWindowHeight };
-	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-	mhWnd = CreateWindow(TEXT("TestFrameworkClass"), TEXT("TestFramework"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-		rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, wcex.hInstance, nullptr);
-	if (!mhWnd)
-		FatalError("Failed to create window");
-
-	// Show window
-	ShowWindow(mhWnd, SW_SHOW);
-#elif defined(JPH_PLATFORM_LINUX)
-	// Open connection to X server
-	mDisplay = XOpenDisplay(nullptr);
-	if (!mDisplay)
-		FatalError("Failed to open X display");
-
-	// Create a simple window
-	int screen = DefaultScreen(mDisplay);
-	mWindow = XCreateSimpleWindow(mDisplay, RootWindow(mDisplay, screen), 0, 0, mWindowWidth, mWindowHeight, 1, BlackPixel(mDisplay, screen), WhitePixel(mDisplay, screen));
-
-	// Select input events
-	XSelectInput(mDisplay, mWindow, ExposureMask | StructureNotifyMask | KeyPressMask);
-
-	// Set window title
-	XStoreName(mDisplay, mWindow, "TestFramework");
-
-	// Register WM_DELETE_WINDOW to handle the close button
-	mWmDeleteWindow = XInternAtom(mDisplay, "WM_DELETE_WINDOW", false);
-	XSetWMProtocols(mDisplay, mWindow, &mWmDeleteWindow, 1);
-
-	// Map the window (make it visible)
-	XMapWindow(mDisplay, mWindow);
-
-	// Flush the display to ensure commands are executed
-	XFlush(mDisplay);
-#else
-	#error Unsupported platform
-#endif
-
-	// Store global renderer now that we're done initializing
-	sRenderer = this;
-}
-
-bool Renderer::WindowUpdate()
-{
-#ifdef JPH_PLATFORM_WINDOWS
-	// Main message loop
-	MSG msg = {};
-	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-
-		if (msg.message == WM_QUIT)
-		{
-			// Handle quit events
-			return false;
-		}
-	}
-#elif defined(JPH_PLATFORM_LINUX)
-	while (XPending(mDisplay) > 0)
-	{
-		XEvent event;
-		XNextEvent(mDisplay, &event);
-
-		if (event.type == ClientMessage && static_cast<Atom>(event.xclient.data.l[0]) == mWmDeleteWindow)
-		{
-			// Handle quit events
-			return false;
-		}
-		else if (event.type == ConfigureNotify)
-		{
-			// Handle window resize events
-			XConfigureEvent xce = event.xconfigure;
-			if (xce.width != mWindowWidth || xce.height != mWindowHeight)
-			{
-				mWindowWidth = xce.width;
-				mWindowHeight = xce.height;
-				OnWindowResize();
-			}
-		}
-		else
-			mEventListener(event);
-	}
-#else
-	#error Unsupported platform
-#endif
-
-	// Application should continue
-	return true;
-}
-
-void Renderer::OnWindowResize()
-{
-	JPH_ASSERT(!mInFrame);
-
-#ifdef JPH_PLATFORM_WINDOWS
-	// Get new window size
-	RECT rc;
-	GetClientRect(mhWnd, &rc);
-	mWindowWidth = max<LONG>(rc.right - rc.left, 8);
-	mWindowHeight = max<LONG>(rc.bottom - rc.top, 8);
-#endif
+	// Store window
+	mWindow = inWindow;
+	mWindow->SetWindowResizeListener([this]() { OnWindowResize(); });
 }
 
 static Mat44 sPerspectiveInfiniteReverseZ(float inFovY, float inAspect, float inNear, float inYSign)
@@ -201,7 +47,7 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	// Camera properties
 	Vec3 cam_pos = Vec3(inCamera.mPos - mBaseOffset);
 	float camera_fovy = inCamera.mFOVY;
-	float camera_aspect = static_cast<float>(GetWindowWidth()) / GetWindowHeight();
+	float camera_aspect = static_cast<float>(mWindow->GetWindowWidth()) / mWindow->GetWindowHeight();
 	float camera_fovx = 2.0f * ATan(camera_aspect * Tan(0.5f * camera_fovy));
 	float camera_near = 0.01f * inWorldScale;
 
@@ -221,7 +67,7 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	mVSBuffer.mLightView = Mat44::sLookAt(light_pos, light_tgt, light_up);
 
 	// Camera ortho projection and view
-	mVSBufferOrtho.mProjection = Mat44(Vec4(2.0f / mWindowWidth, 0.0f, 0.0f, 0.0f), Vec4(0.0f, -mPerspectiveYSign * 2.0f / mWindowHeight, 0.0f, 0.0f), Vec4(0.0f, 0.0f, -1.0f, 0.0f), Vec4(-1.0f, mPerspectiveYSign * 1.0f, 0.0f, 1.0f));
+	mVSBufferOrtho.mProjection = Mat44(Vec4(2.0f / mWindow->GetWindowWidth(), 0.0f, 0.0f, 0.0f), Vec4(0.0f, -mPerspectiveYSign * 2.0f / mWindow->GetWindowHeight(), 0.0f, 0.0f), Vec4(0.0f, 0.0f, -1.0f, 0.0f), Vec4(-1.0f, mPerspectiveYSign * 1.0f, 0.0f, 1.0f));
 	mVSBufferOrtho.mView = Mat44::sIdentity();
 
 	// Light projection and view are unused in ortho mode

@@ -14,7 +14,7 @@ layout(location = 4) in vec4 iColor;
 
 layout(location = 0) out vec4 oColor;
 
-layout(set = 1, binding = 0) uniform sampler2DShadow LightDepthSampler;
+layout(set = 1, binding = 0) uniform sampler2D LightDepthSampler;
 
 void main()
 {
@@ -85,10 +85,7 @@ void main()
 		// Sample shadow factor
 		shadow_factor = 0.0;
 		for (uint i = 0; i < num_samples; ++i)
-		{
-			vec3 location_and_reference = vec3(tex_coord + offsets[i], light_depth);
-			shadow_factor += texture(LightDepthSampler, location_and_reference);
-		}
+			shadow_factor += texture(LightDepthSampler, tex_coord + offsets[i]).x <= light_depth? 1.0 : 0.0;
 		shadow_factor /= num_samples;
 	}
 

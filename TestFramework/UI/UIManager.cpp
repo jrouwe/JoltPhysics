@@ -25,8 +25,9 @@ UIManager::UIManager(Renderer *inRenderer) :
 	mManager = this;
 
 	// Set dimensions of the screen
-	SetWidth(mRenderer->GetWindowWidth());
-	SetHeight(mRenderer->GetWindowHeight());
+	ApplicationWindow *window = mRenderer->GetWindow();
+	SetWidth(window->GetWindowWidth());
+	SetHeight(window->GetWindowHeight());
 
 	// Create input layout
 	const PipelineState::EInputDescription vertex_desc[] =
@@ -153,14 +154,15 @@ void UIManager::GetMaxElementDistanceToScreenEdge(int &outMaxH, int &outMaxV)
 	outMaxH = 0;
 	outMaxV = 0;
 
+	ApplicationWindow *window = mRenderer->GetWindow();
 	for (const UIElement *e : mChildren)
 		if (e->HasDeactivateAnimation())
 		{
 			int dl = e->GetX() + e->GetWidth();
-			int dr = mRenderer->GetWindowWidth() - e->GetX();
+			int dr = window->GetWindowWidth() - e->GetX();
 			outMaxH = max(outMaxH, min(dl, dr));
 			int dt = e->GetY() + e->GetHeight();
-			int db = mRenderer->GetWindowHeight() - e->GetY();
+			int db = window->GetWindowHeight() - e->GetY();
 			outMaxV = max(outMaxV, min(dt, db));
 		}
 }

@@ -5,6 +5,7 @@
 #include <TestFramework.h>
 
 #include <Renderer/Renderer.h>
+#include <Window/ApplicationWindow.h>
 #include <UI/UIAnimationSlide.h>
 #include <UI/UIElement.h>
 #include <UI/UIManager.h>
@@ -28,11 +29,11 @@ void UIAnimationSlide::Init(UIElement *inElement)
 	mTargetRelativeX = inElement->GetRelativeX();
 	mTargetRelativeY = inElement->GetRelativeY();
 
-	Renderer *renderer = inElement->GetManager()->GetRenderer();
+	ApplicationWindow *window = inElement->GetManager()->GetRenderer()->GetWindow();
 	int dl = inElement->GetX();
-	int dr = renderer->GetWindowWidth() - (inElement->GetX() + inElement->GetWidth());
+	int dr = window->GetWindowWidth() - (inElement->GetX() + inElement->GetWidth());
 	int dt = inElement->GetY();
-	int db = renderer->GetWindowHeight() - (inElement->GetY() + inElement->GetHeight());
+	int db = window->GetWindowHeight() - (inElement->GetY() + inElement->GetHeight());
 
 	if (min(dl, dr) < min(dt, db))
 	{

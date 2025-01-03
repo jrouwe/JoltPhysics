@@ -6,6 +6,7 @@
 
 #include <Input/Win/KeyboardWin.h>
 #include <Renderer/Renderer.h>
+#include <Window/ApplicationWindowWin.h>
 #include <Jolt/Core/Profiler.h>
 
 KeyboardWin::KeyboardWin()
@@ -34,7 +35,7 @@ void KeyboardWin::ResetKeyboard()
 	mCurrentPosition = 0;
 }
 
-bool KeyboardWin::Initialize(Renderer *inRenderer)
+bool KeyboardWin::Initialize(ApplicationWindow *inWindow)
 #ifdef JPH_COMPILER_CLANG
 	// DIPROP_BUFFERSIZE is a pointer to 1 which causes UBSan: runtime error: reference binding to misaligned address 0x000000000001
 	__attribute__((no_sanitize("alignment")))
@@ -62,7 +63,7 @@ bool KeyboardWin::Initialize(Renderer *inRenderer)
 	}
 
 	// Set cooperative level for keyboard
-	if (FAILED(mKeyboard->SetCooperativeLevel(inRenderer->GetWindowHandle(), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
+	if (FAILED(mKeyboard->SetCooperativeLevel(static_cast<ApplicationWindowWin *>(inWindow)->GetWindowHandle(), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
 	{
 		Trace("Unable to set cooperative level for keyboard");
 		return false;

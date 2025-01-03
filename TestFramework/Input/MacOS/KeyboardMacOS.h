@@ -5,38 +5,31 @@
 #pragma once
 
 #include <Input/Keyboard.h>
-#include <Jolt/Core/StaticArray.h>
-
-class ApplicationWindowLinux;
 
 /// Keyboard interface class which keeps track on the status of all keys and keeps track of the list of keys pressed.
-class KeyboardLinux : public Keyboard
+class KeyboardMacOS : public Keyboard
 {
 public:
-	/// Destructor
-	virtual							~KeyboardLinux() override;
-
 	/// Initialization / shutdown
 	virtual bool					Initialize(ApplicationWindow *inWindow) override;
-	virtual void					Shutdown() override;
+	virtual void					Shutdown() override							{ }
 
 	/// Update the keyboard state
 	virtual void					Poll() override;
 
 	/// Checks if a key is pressed or not
-	virtual bool					IsKeyPressed(EKey inKey) const override		{ return mKeysPressed[(int)inKey]; }
+	virtual bool					IsKeyPressed(EKey inKey) const override		{ return mKeyPressed[(int)inKey]; }
 
 	/// Buffered keyboard input, returns EKey::Invalid for none
 	virtual EKey					GetFirstKey() override;
 	virtual EKey					GetNextKey() override;
+	
+	/// Handle a key press event
+	void							OnKeyPressed(EKey inKey, bool inPressed);
 
 private:
-	void							HandleEvent(const XEvent &inEvent);
-	EKey							ToKey(int inKey) const;
-
-	ApplicationWindowLinux *		mWindow = nullptr;
-	bool							mKeysPressed[(int)EKey::NumKeys] = { };
+	bool							mKeyPressed[(int)EKey::NumKeys] = { };
 	StaticArray<EKey, 128>			mPendingKeyBuffer;
-	StaticArray<EKey, 128>			mKeyBuffer;
+	StaticArray<EKey, 128>			mKeyBuffer;	
 	uint							mCurrentKey = 0;
 };
