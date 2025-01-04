@@ -289,13 +289,13 @@ public:
 	/// @return A new velocity vector that won't make the character move up steep slopes
 	Vec3								CancelVelocityTowardsSteepSlopes(Vec3Arg inDesiredVelocity) const;
 
-	/// This function will copy the active contacts to a separate buffer and uses it to call OnContactAdded/OnContactPersisted on the listener (without this all contacts will be seen as 'added')
-	/// If you want to do multiple operations on the character, you can group those actions in StartTrackingContactChanges/StartTrackingContactChanges pair to get information about changes
-	/// within the context of those calls. Functions like Update, WalkStairs, StickToFloor and ExtendedUpdate will call this internally too.
+	/// This function is internally called by Update, WalkStairs, StickToFloor and ExtendedUpdate and is responsible for tracking if contacts are added, persisted or removed.
+	/// If you want to do multiple operations on a character (e.g. first Update then WalkStairs), you can surround the code with a StartTrackingContactChanges and FinishTrackingContactChanges pair
+	/// to only receive a single callback per contact on the CharacterContactListener. If you don't do this then you could for example receive a contact added callback during the Update and a
+	/// contact persisted callback during WalkStairs.
 	void								StartTrackingContactChanges();
 
-	/// When FinishTrackingContactChanges has been called an equal number of times as StartTrackingContactChanges,
-	/// this function will determine which of the stored contacts did not persist and uses it to call OnContactRemoved on the listener.
+	/// This call triggers contact removal callbacks and is used in conjunction with StartTrackingContactChanges.
 	void								FinishTrackingContactChanges();
 
 	/// This is the main update function. It moves the character according to its current velocity (the character is similar to a kinematic body in the sense
