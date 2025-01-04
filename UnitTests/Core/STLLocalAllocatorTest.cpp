@@ -11,6 +11,23 @@ TEST_SUITE("STLLocalAllocatorTest")
 	/// The number of elements in the local buffer
 	static constexpr size_t N = 20;
 
+#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+	template <class ArrayType>
+	static bool sIsLocal(ArrayType &inArray)
+	{
+	#ifdef JPH_USE_STD_VECTOR
+		// Check that the data pointer is within the array.
+		// Note that when using std::vector we cannot use get_allocator as that makes a copy of the allocator internally
+		// and we've disabled the copy constructor since our allocator cannot be copied.
+		const uint8 *data = reinterpret_cast<const uint8 *>(inArray.data());
+		const uint8 *array = reinterpret_cast<const uint8 *>(&inArray);
+		return data >= array && data < array + sizeof(inArray);
+	#else
+		return inArray.get_allocator().is_local(inArray.data());
+	#endif
+	}
+#endif
+
 	template <class ArrayType, bool NonTrivial>
 	static void sTestArray()
 	{
@@ -29,8 +46,9 @@ TEST_SUITE("STLLocalAllocatorTest")
 				CHECK(arr[i].GetNonTriv() == (i < 16? 3 : (i < 32? 2 : 1)));
 		#endif
 		}
+		CHECK(IsAligned(arr.data(), alignof(typename ArrayType::value_type)));
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
-		CHECK(!arr.get_allocator().is_local(arr.data()));
+		CHECK(!sIsLocal(arr));
 	#endif
 
 		// Check that we can copy the array to another array
@@ -42,15 +60,16 @@ TEST_SUITE("STLLocalAllocatorTest")
 			if constexpr (NonTrivial)
 				CHECK(arr2[i].GetNonTriv() == -999);
 		}
+		CHECK(IsAligned(arr2.data(), alignof(typename ArrayType::value_type)));
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
-		CHECK(!arr2.get_allocator().is_local(arr2.data()));
+		CHECK(!sIsLocal(arr2));
 	#endif
 
 		// Clear the array
 		arr.clear();
 		arr.shrink_to_fit();
 		CHECK(arr.size() == 0);
-	#ifndef JPH_USE_STD_VECTOR
+	#ifndef JPH_USE_STD_VECTOR // Some implementations of std::vector ignore shrink_to_fit
 		CHECK(arr.capacity() == 0);
 		CHECK(arr.data() == nullptr);
 	#endif
@@ -68,21 +87,24 @@ TEST_SUITE("STLLocalAllocatorTest")
 				CHECK(arr[i].GetNonTriv() == 1);
 		#endif
 		}
-	#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
-		CHECK(arr.get_allocator().is_local(arr.data()));
+		CHECK(IsAligned(arr.data(), alignof(typename ArrayType::value_type)));
+	#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR) // Doesn't work with std::vector since it doesn't use the reallocate function and runs out of space
+		CHECK(sIsLocal(arr));
 	#endif
 
 		// Check that we can copy the array to the local buffer
 		ArrayType arr3;
 		arr3 = arr;
+		CHECK(arr3.size() == 10);
 		for (int i = 0; i < 10; ++i)
 		{
 			CHECK(arr3[i] == i);
 			if constexpr (NonTrivial)
 				CHECK(arr3[i].GetNonTriv() == -999);
 		}
-	#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
-		CHECK(arr3.get_allocator().is_local(arr3.data()));
+		CHECK(IsAligned(arr3.data(), alignof(typename ArrayType::value_type)));
+	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+		CHECK(sIsLocal(arr3));
 	#endif
 
 		// Check that if we reserve the memory, that we can fully fill the array in local memory
@@ -91,14 +113,16 @@ TEST_SUITE("STLLocalAllocatorTest")
 		for (int i = 0; i < int(N); ++i)
 			arr4.push_back(i);
 		CHECK(arr4.size() == N);
+		CHECK(arr4.capacity() == N);
 		for (int i = 0; i < int(N); ++i)
 		{
 			CHECK(arr4[i] == i);
 			if constexpr (NonTrivial)
 				CHECK(arr4[i].GetNonTriv() == 1);
 		}
+		CHECK(IsAligned(arr4.data(), alignof(typename ArrayType::value_type)));
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
-		CHECK(arr4.get_allocator().is_local(arr4.data()));
+		CHECK(sIsLocal(arr4));
 	#endif
 	}
 
@@ -107,7 +131,6 @@ TEST_SUITE("STLLocalAllocatorTest")
 		using Allocator = STLLocalAllocator<int, N>;
 		using ArrayType = Array<int, Allocator>;
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
-		static_assert(!Allocator::needs_aligned_allocate);
 		static_assert(AllocatorHasReallocate<Allocator>::sValue);
 	#endif
 
@@ -130,7 +153,6 @@ TEST_SUITE("STLLocalAllocatorTest")
 		using Allocator = STLLocalAllocator<Aligned, N>;
 		using ArrayType = Array<Aligned, Allocator>;
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
-		static_assert(Allocator::needs_aligned_allocate);
 		static_assert(AllocatorHasReallocate<Allocator>::sValue);
 	#endif
 
@@ -158,7 +180,6 @@ TEST_SUITE("STLLocalAllocatorTest")
 		using Allocator = STLLocalAllocator<NonTriv, N>;
 		using ArrayType = Array<NonTriv, Allocator>;
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
-		static_assert(!Allocator::needs_aligned_allocate);
 		static_assert(AllocatorHasReallocate<Allocator>::sValue);
 	#endif
 
@@ -186,7 +207,6 @@ TEST_SUITE("STLLocalAllocatorTest")
 		using Allocator = STLLocalAllocator<AlNonTriv, N>;
 		using ArrayType = Array<AlNonTriv, Allocator>;
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
-		static_assert(Allocator::needs_aligned_allocate);
 		static_assert(AllocatorHasReallocate<Allocator>::sValue);
 	#endif
 

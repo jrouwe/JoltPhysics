@@ -36,8 +36,9 @@ public:
 
 	/// Constructor
 							STLLocalAllocator() = default;
-							STLLocalAllocator(const STLLocalAllocator &) { }
-							STLLocalAllocator(STLLocalAllocator &&) = delete; // Delete the move operator, there can be a pointer to the local buffer that would become invalid
+							STLLocalAllocator(const STLLocalAllocator &) = delete; // Can't copy an allocator as the buffer is local to the original
+							STLLocalAllocator(STLLocalAllocator &&) = delete; // Can't move an allocator as the buffer is local to the original
+	STLLocalAllocator &		operator = (const STLLocalAllocator &) = delete; // Can't copy an allocator as the buffer is local to the original
 
 	/// Constructor used when rebinding to another type. This expects the allocator to use the original memory pool from the first allocator,
 	/// but in our case we cannot use the local buffer of the original allocator as it has different size and alignment rules.
@@ -49,9 +50,6 @@ public:
 	{
 		return inPointer >= reinterpret_cast<const_pointer>(mElements) && inPointer < reinterpret_cast<const_pointer>(mElements) + N * sizeof(T);
 	}
-
-	/// If this allocator needs to fall back to aligned allocations because the type requires it
-	static constexpr bool	needs_aligned_allocate = Base::needs_aligned_allocate;
 
 	/// Allocate memory
 	inline pointer			allocate(size_type inN)
