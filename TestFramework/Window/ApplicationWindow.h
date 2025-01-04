@@ -29,7 +29,7 @@ public:
 	virtual void					MainLoop(RenderCallback inRenderCallback) = 0;
 	
 	/// Function that will trigger the callback
-	void							OnWindowResized(int inWidth, int inHeight) { mWindowWidth = inWidth; mWindowHeight = inHeight; mWindowResizeListener(); }
+	void							OnWindowResized(int inWidth, int inHeight) { mWindowWidth = inWidth; mWindowHeight = inHeight; if (mWindowResizeListener) { mWindowResizeListener(); } }
 
 protected:
 	int								mWindowWidth = 1920;
