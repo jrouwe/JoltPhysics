@@ -65,6 +65,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/StaticArray.h
 	${JOLT_PHYSICS_ROOT}/Core/STLAlignedAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/STLAllocator.h
+	${JOLT_PHYSICS_ROOT}/Core/STLLocalAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/STLTempAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamIn.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamOut.h
