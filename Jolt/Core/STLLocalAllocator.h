@@ -48,7 +48,8 @@ public:
 	/// Check if inPointer is in the local buffer
 	inline bool				is_local(const_pointer inPointer) const
 	{
-		return inPointer >= reinterpret_cast<const_pointer>(mElements) && inPointer < reinterpret_cast<const_pointer>(mElements) + N * sizeof(T);
+		ptrdiff_t diff = inPointer - reinterpret_cast<const_pointer>(mElements);
+		return diff >= 0 && diff < ptrdiff_t(N);
 	}
 
 	/// Allocate memory
