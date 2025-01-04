@@ -38,10 +38,15 @@
 	return YES;
 }
 
+- (BOOL)isFlipped {
+    return YES;
+}
+
 - (void)mouseMoved:(NSEvent *)event
 {
-	NSPoint location = [event locationInWindow];
-	mWindow->OnMouseMoved(location.x, mWindow->GetWindowHeight() - location.y);	
+    NSPoint locationInView = [self convertPoint:event.locationInWindow fromView:nil];
+    NSPoint locationInBacking = [self convertPointToBacking:locationInView];
+	mWindow->OnMouseMoved(locationInBacking.x, -locationInBacking.y);
 }
 
 - (void)drawInMTKView:(MTKView *)view
