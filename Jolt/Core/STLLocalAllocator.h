@@ -12,33 +12,46 @@ JPH_NAMESPACE_BEGIN
 
 /// STL allocator that keeps N elements in a local buffer before falling back to regular allocations
 template <typename T, size_t N>
-class STLLocalAllocator : public STLAllocator<T>
+class STLLocalAllocator : private STLAllocator<T>
 {
 	using Base = STLAllocator<T>;
 
 public:
-	using pointer = typename Base::pointer;
-	using const_pointer = typename Base::const_pointer;
-	using size_type = typename Base::size_type;
+	/// General properties
+	using value_type = T;
+	using pointer = T *;
+	using const_pointer = const T *;
+	using reference = T &;
+	using const_reference = const T &;
+	using size_type = size_t;
+	using difference_type = ptrdiff_t;
+
+	/// The allocator is not stateless (has local buffer)
+	using is_always_equal = std::false_type;
 
 	/// We cannot copy, move or swap allocators
 	using propagate_on_container_copy_assignment = std::false_type;
 	using propagate_on_container_move_assignment = std::false_type;
 	using propagate_on_container_swap = std::false_type;
 
-	/// The allocator is not stateless (has local buffer)
-	using is_always_equal = std::false_type;
-
 	/// Constructor
 							STLLocalAllocator() = default;
 							STLLocalAllocator(const STLLocalAllocator &) { }
 							STLLocalAllocator(STLLocalAllocator &&) = delete; // Delete the move operator, there can be a pointer to the local buffer that would become invalid
+
+	/// Constructor used when rebinding to another type. This expects the allocator to use the original memory pool from the first allocator,
+	/// but in our case we cannot use the local buffer of the original allocator as it has different size and alignment rules.
+	/// To solve this we make this allocator fall back to the heap immediately.
+	template <class T2>		STLLocalAllocator(const STLLocalAllocator<T2, N> &) : mNumElementsUsed(N) { }
 
 	/// Check if inPointer is in the local buffer
 	inline bool				is_local(const_pointer inPointer) const
 	{
 		return inPointer >= reinterpret_cast<const_pointer>(mElements) && inPointer < reinterpret_cast<const_pointer>(mElements) + N * sizeof(T);
 	}
+
+	/// If this allocator needs to fall back to aligned allocations because the type requires it
+	static constexpr bool	needs_aligned_allocate = Base::needs_aligned_allocate;
 
 	/// Allocate memory
 	inline pointer			allocate(size_type inN)
@@ -110,19 +123,11 @@ public:
 		return this != &inRHS;
 	}
 
-	/// When converting to another type than T, fall back to the basic allocator as std::vector creates
-	/// an allocator, allocates an element and then destroys the allocator to keep track of its iterators
+	/// Converting to allocator for other type
 	template <typename T2>
 	struct rebind
 	{
-		using other = STLAllocator<T2>;
-	};
-
-	/// Rebinding to the same type should work
-	template <>
-	struct rebind<T>
-	{
-		using other = STLLocalAllocator<T, N>;
+		using other = STLLocalAllocator<T2, N>;
 	};
 
 private:

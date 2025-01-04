@@ -8,6 +8,9 @@
 
 TEST_SUITE("STLLocalAllocatorTest")
 {
+	/// The number of elements in the local buffer
+	static constexpr size_t N = 20;
+
 	template <class ArrayType, bool NonTrivial>
 	static void sTestArray()
 	{
@@ -81,11 +84,27 @@ TEST_SUITE("STLLocalAllocatorTest")
 	#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
 		CHECK(arr3.get_allocator().is_local(arr3.data()));
 	#endif
+
+		// Check that if we reserve the memory, that we can fully fill the array in local memory
+		ArrayType arr4;
+		arr4.reserve(N);
+		for (int i = 0; i < int(N); ++i)
+			arr4.push_back(i);
+		CHECK(arr4.size() == N);
+		for (int i = 0; i < int(N); ++i)
+		{
+			CHECK(arr4[i] == i);
+			if constexpr (NonTrivial)
+				CHECK(arr4[i].GetNonTriv() == 1);
+		}
+	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+		CHECK(arr4.get_allocator().is_local(arr4.data()));
+	#endif
 	}
 
 	TEST_CASE("TestAllocation")
 	{
-		using Allocator = STLLocalAllocator<int, 20>;
+		using Allocator = STLLocalAllocator<int, N>;
 		using ArrayType = Array<int, Allocator>;
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 		static_assert(!Allocator::needs_aligned_allocate);
@@ -108,7 +127,7 @@ TEST_SUITE("STLLocalAllocatorTest")
 		};
 		static_assert(std::is_trivially_copyable<Aligned>());
 
-		using Allocator = STLLocalAllocator<Aligned, 20>;
+		using Allocator = STLLocalAllocator<Aligned, N>;
 		using ArrayType = Array<Aligned, Allocator>;
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 		static_assert(Allocator::needs_aligned_allocate);
@@ -136,7 +155,7 @@ TEST_SUITE("STLLocalAllocatorTest")
 		};
 		static_assert(!std::is_trivially_copyable<NonTriv>());
 
-		using Allocator = STLLocalAllocator<NonTriv, 20>;
+		using Allocator = STLLocalAllocator<NonTriv, N>;
 		using ArrayType = Array<NonTriv, Allocator>;
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 		static_assert(!Allocator::needs_aligned_allocate);
@@ -164,7 +183,7 @@ TEST_SUITE("STLLocalAllocatorTest")
 		};
 		static_assert(!std::is_trivially_copyable<AlNonTriv>());
 
-		using Allocator = STLLocalAllocator<AlNonTriv, 20>;
+		using Allocator = STLLocalAllocator<AlNonTriv, N>;
 		using ArrayType = Array<AlNonTriv, Allocator>;
 	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 		static_assert(Allocator::needs_aligned_allocate);
