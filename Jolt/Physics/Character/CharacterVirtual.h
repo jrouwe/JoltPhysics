@@ -290,13 +290,13 @@ public:
 	Vec3								CancelVelocityTowardsSteepSlopes(Vec3Arg inDesiredVelocity) const;
 
 	/// This function will copy the active contacts to a separate buffer and uses it to call OnContactAdded/OnContactPersisted on the listener (without this all contacts will be seen as 'added')
-	/// Note that this function is called automatically by ExtendedUpdate, SetShape and RefreshContacts.
-	/// If you're moving the character using Update, WalkStairs or StickToFloor you must call this function manually.
-	void								StartTrackingContactChanges(TempAllocator &ioTempAllocator);
+	/// If you want to do multiple operations on the character, you can group those actions in StartTrackingContactChanges/StartTrackingContactChanges pair to get information about changes
+	/// within the context of those calls. Functions like Update, WalkStairs, StickToFloor and ExtendedUpdate will call this internally too.
+	void								StartTrackingContactChanges();
 
-	/// This function will which of the stored contacts did not persist and uses it to call OnContactRemoved on the listener.
-	/// Take care that this function is called when all allocations since calling StartTrackingContactChanges have been freed.
-	void								FinishTrackingContactChanges(TempAllocator &ioTempAllocator);
+	/// When FinishTrackingContactChanges has been called an equal number of times as StartTrackingContactChanges,
+	/// this function will determine which of the stored contacts did not persist and uses it to call OnContactRemoved on the listener.
+	void								FinishTrackingContactChanges();
 
 	/// This is the main update function. It moves the character according to its current velocity (the character is similar to a kinematic body in the sense
 	/// that you set the velocity and the character will follow unless collision is blocking the way). Note it's your own responsibility to apply gravity to the character velocity!
@@ -556,13 +556,13 @@ private:
 	#ifdef JPH_DEBUG_RENDERER
 		, bool inDrawConstraints = false
 	#endif // JPH_DEBUG_RENDERER
-		) const;
+		);
 
 	// Ask the callback if inContact is a valid contact point
 	bool								ValidateContact(const Contact &inContact) const;
 
 	// Trigger the contact callback for inContact and get the contact settings
-	void								ContactAdded(const Contact &inContact, CharacterContactSettings &ioSettings) const;
+	void								ContactAdded(const Contact &inContact, CharacterContactSettings &ioSettings);
 
 	// Tests the shape for collision around inPosition
 	void								GetContactsAtPosition(RVec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const;
@@ -578,7 +578,7 @@ private:
 	#ifdef JPH_DEBUG_RENDERER
 		, bool inDrawConstraints = false
 	#endif // JPH_DEBUG_RENDERER
-		) const;
+		);
 
 	// Get the velocity of a body adjusted by the contact listener
 	void								GetAdjustedBodyVelocity(const Body& inBody, Vec3 &outLinearVelocity, Vec3 &outAngularVelocity) const;
@@ -589,7 +589,7 @@ private:
 	Vec3								CalculateCharacterGroundVelocity(RVec3Arg inCenterOfMass, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity, float inDeltaTime) const;
 
 	// Handle contact with physics object that we're colliding against
-	bool								HandleContact(Vec3Arg inVelocity, Constraint &ioConstraint, float inDeltaTime) const;
+	bool								HandleContact(Vec3Arg inVelocity, Constraint &ioConstraint, float inDeltaTime);
 
 	// Does a swept test of the shape from inPosition with displacement inDisplacement, returns true if there was a collision
 	bool								GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDisplacement, Contact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const;
@@ -658,16 +658,23 @@ private:
 	// List of contacts that were active in the last frame
 	ContactList							mActiveContacts;
 
-	// Used during the update to store contacts that were active in the last frame
-	struct PreviousContact
+	// Remembers how often we called StartTrackingContactChanges
+	int									mTrackingContactChanges = 0;
+
+	// View from a contact listener perspective on which contacts have been added/removed
+	struct ListenerContact
 	{
+										ListenerContact() = default;
+										ListenerContact(const BodyID inBodyB, CharacterVirtual *inCharacterB, const SubShapeID &inSubShapeIDB, const CharacterContactSettings &inSettings) : mBodyB(inBodyB), mCharacterB(inCharacterB), mSubShapeIDB(inSubShapeIDB), mSettings(inSettings) { }
+
 		BodyID							mBodyB;
-		CharacterVirtual *				mCharacterB = nullptr;
+		CharacterVirtual *				mCharacterB;
 		SubShapeID						mSubShapeIDB;
-		bool							mPersisted = false;
+		CharacterContactSettings		mSettings;
+		int								mCount = 1;
 	};
-	PreviousContact *					mPreviousContacts = nullptr;
-	uint								mNumPreviousContacts = 0;
+	using ListenerContactList = Array<ListenerContact>;
+	ListenerContactList					mListenerContacts;
 
 	// Remembers the delta time of the last update
 	float								mLastDeltaTime = 1.0f / 60.0f;

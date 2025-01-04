@@ -265,7 +265,10 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 	OnContactCommon(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
 
 	if (inCharacter == mCharacter)
+	{
 		Trace("Contact added with body %d, sub shape %08x", inBodyID2.GetIndex(), inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.insert({ inBodyID2, nullptr, inSubShapeID2 }).second);
+	}
 }
 
 void CharacterVirtualTest::OnContactPersisted(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
@@ -273,13 +276,19 @@ void CharacterVirtualTest::OnContactPersisted(const CharacterVirtual *inCharacte
 	OnContactCommon(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
 
 	if (inCharacter == mCharacter)
+	{
 		Trace("Contact persisted with body %d, sub shape %08x", inBodyID2.GetIndex(), inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.find({ inBodyID2, nullptr, inSubShapeID2 }) != mActiveContacts.end());
+	}
 }
 
 void CharacterVirtualTest::OnContactRemoved(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2)
 {
 	if (inCharacter == mCharacter)
+	{
 		Trace("Contact removed with body %d, sub shape %08x", inBodyID2.GetIndex(), inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.erase({ inBodyID2, nullptr, inSubShapeID2 }) == 1);
+	}
 }
 
 void CharacterVirtualTest::OnCharacterContactCommon(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
@@ -302,7 +311,10 @@ void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCha
 	OnCharacterContactCommon(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
 
 	if (inCharacter == mCharacter)
+	{
 		Trace("Contact added with character %p, sub shape %08x", inOtherCharacter, inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.insert({ BodyID(), inOtherCharacter, inSubShapeID2 }).second);
+	}
 }
 
 void CharacterVirtualTest::OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
@@ -310,13 +322,19 @@ void CharacterVirtualTest::OnCharacterContactPersisted(const CharacterVirtual *i
 	OnCharacterContactCommon(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
 
 	if (inCharacter == mCharacter)
+	{
 		Trace("Contact persisted with character %p, sub shape %08x", inOtherCharacter, inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.find({ BodyID(), inOtherCharacter, inSubShapeID2 }) != mActiveContacts.end());
+	}
 }
 
 void CharacterVirtualTest::OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2)
 {
 	if (inCharacter == mCharacter)
+	{
 		Trace("Contact removed with character %p, sub shape %08x", inOtherCharacter, inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.erase({ BodyID(), inOtherCharacter, inSubShapeID2 }) == 1);
+	}
 }
 
 void CharacterVirtualTest::OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity)
