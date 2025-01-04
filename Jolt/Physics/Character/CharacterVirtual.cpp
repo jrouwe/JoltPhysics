@@ -450,9 +450,39 @@ void CharacterVirtual::ContactAdded(const Contact &inContact, CharacterContactSe
 	if (mListener != nullptr)
 	{
 		if (inContact.mCharacterB != nullptr)
-			mListener->OnCharacterContactAdded(this, inContact.mCharacterB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+		{
+			// Check if this is a persisted contact
+			bool persisted = false;
+			for (PreviousContact *pc = mPreviousContacts, *pc_end = mPreviousContacts + mNumPreviousContacts; pc < pc_end; ++pc)
+				if (pc->mCharacterB == inContact.mCharacterB && pc->mSubShapeIDB == inContact.mSubShapeIDB)
+				{
+					pc->mPersisted = true;
+					persisted = true;
+					break;
+				}
+
+			if (persisted)
+				mListener->OnCharacterContactPersisted(this, inContact.mCharacterB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+			else
+				mListener->OnCharacterContactAdded(this, inContact.mCharacterB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+		}
 		else
-			mListener->OnContactAdded(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+		{
+			// Check if this is a persisted contact
+			bool persisted = false;
+			for (PreviousContact *pc = mPreviousContacts, *pc_end = mPreviousContacts + mNumPreviousContacts; pc < pc_end; ++pc)
+				if (pc->mBodyB == inContact.mBodyB && pc->mSubShapeIDB == inContact.mSubShapeIDB)
+				{
+					pc->mPersisted = true;
+					persisted = true;
+					break;
+				}
+
+			if (persisted)
+				mListener->OnContactPersisted(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+			else
+				mListener->OnContactAdded(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+		}
 	}
 }
 
@@ -959,8 +989,13 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 			&& c.mDistance < mCollisionTolerance
 			&& (inSkipContactVelocityCheck || c.mSurfaceNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 1.0e-4f))
 		{
-			if (ValidateContact(c) && !c.mIsSensorB)
-				c.mHadCollision = true;
+			if (ValidateContact(c))
+			{
+				CharacterContactSettings dummy;
+				ContactAdded(c, dummy);
+
+				c.mHadCollision = !c.mIsSensorB;
+			}
 			else
 				c.mWasDiscarded = true;
 		}
@@ -1253,6 +1288,53 @@ Vec3 CharacterVirtual::CancelVelocityTowardsSteepSlopes(Vec3Arg inDesiredVelocit
 	return desired_velocity;
 }
 
+void CharacterVirtual::StartTrackingContactChanges(TempAllocator &ioTempAllocator)
+{
+	JPH_ASSERT(mPreviousContacts == nullptr);
+
+	// Count the number of contacts that actually had a collision
+	mNumPreviousContacts = 0;
+	for (const Contact &ac : mActiveContacts)
+		if (ac.mHadCollision)
+			++mNumPreviousContacts;
+
+	// Copy those contacts into a separate buffer
+	mPreviousContacts = (PreviousContact *)ioTempAllocator.Allocate(mNumPreviousContacts * sizeof(PreviousContact));
+	mNumPreviousContacts = 0;
+	for (const Contact &ac : mActiveContacts)
+		if (ac.mHadCollision)
+		{
+			PreviousContact &pc = mPreviousContacts[mNumPreviousContacts];
+			new (&pc) PreviousContact;
+			pc.mBodyB = ac.mBodyB;
+			pc.mCharacterB = ac.mCharacterB;
+			pc.mSubShapeIDB = ac.mSubShapeIDB;
+			++mNumPreviousContacts;
+		}
+}
+
+void CharacterVirtual::FinishTrackingContactChanges(TempAllocator &ioTempAllocator)
+{
+	if (mPreviousContacts != nullptr)
+	{
+		// Call contact removal callbacks
+		if (mListener != nullptr)
+			for (PreviousContact *pc = mPreviousContacts, *pc_end = mPreviousContacts + mNumPreviousContacts; pc < pc_end; ++pc)
+				if (!pc->mPersisted)
+				{
+					if (pc->mCharacterB != nullptr)
+						mListener->OnCharacterContactRemoved(this, pc->mCharacterB, pc->mSubShapeIDB);
+					else
+						mListener->OnContactRemoved(this, pc->mBodyB, pc->mSubShapeIDB);
+				}
+
+		// Free buffer
+		ioTempAllocator.Free(mPreviousContacts, mNumPreviousContacts * sizeof(PreviousContact));
+		mPreviousContacts = nullptr;
+		mNumPreviousContacts = 0;
+	}
+}
+
 void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator)
 {
 	// If there's no delta time, we don't need to do anything
@@ -1295,7 +1377,9 @@ void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhase
 	contacts.reserve(mMaxNumHits);
 	GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
 
+	StartTrackingContactChanges(inAllocator);
 	StoreActiveContacts(contacts, inAllocator);
+	FinishTrackingContactChanges(inAllocator);
 }
 
 void CharacterVirtual::UpdateGroundVelocity()
@@ -1376,7 +1460,9 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 					&& !c.mIsSensorB)
 					return false;
 
+			StartTrackingContactChanges(inAllocator);
 			StoreActiveContacts(contacts, inAllocator);
+			FinishTrackingContactChanges(inAllocator);
 		}
 
 		// Set new shape
@@ -1586,6 +1672,9 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 	// Track if on ground before the update
 	bool ground_to_air = IsSupported();
 
+	// Start tracking added/persisted contacts
+	StartTrackingContactChanges(inAllocator);
+
 	// Update the character position (instant, do not have to wait for physics update)
 	Update(inDeltaTime, inGravity, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter, inAllocator);
 
@@ -1650,6 +1739,9 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 			}
 		}
 	}
+
+	// Call contact removal callbacks
+	FinishTrackingContactChanges(inAllocator);
 }
 
 void CharacterVirtual::Contact::SaveState(StateRecorder &inStream) const

@@ -16,7 +16,11 @@ public:
 		ValidateBody,
 		ValidateCharacter,
 		AddBody,
+		PersistBody,
+		RemoveBody,
 		AddCharacter,
+		PersistCharacter,
+		RemoveCharacter
 	};
 
 	// Entry written when a contact callback happens
@@ -46,9 +50,29 @@ public:
 		mLog.push_back({ EType::AddBody, inCharacter, inBodyID2, nullptr, inSubShapeID2 });
 	}
 
+	virtual void					OnContactPersisted(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	{
+		mLog.push_back({ EType::PersistBody, inCharacter, inBodyID2, nullptr, inSubShapeID2 });
+	}
+
+	virtual void					OnContactRemoved(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) override
+	{
+		mLog.push_back({ EType::RemoveBody, inCharacter, inBodyID2, nullptr, inSubShapeID2 });
+	}
+
 	virtual void					OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
 	{
 		mLog.push_back({ EType::AddCharacter, inCharacter, BodyID(), inOtherCharacter, inSubShapeID2 });
+	}
+
+	virtual void					OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	{
+		mLog.push_back({ EType::PersistCharacter, inCharacter, BodyID(), inOtherCharacter, inSubShapeID2 });
+	}
+
+	virtual void					OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2) override
+	{
+		mLog.push_back({ EType::RemoveCharacter, inCharacter, BodyID(), inOtherCharacter, inSubShapeID2 });
 	}
 
 	void							Clear()

@@ -235,7 +235,7 @@ void CharacterVirtualTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharac
 		ioLinearVelocity += Vec3(0, 0, 2);
 }
 
-void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnContactCommon(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
 	// Draw a box around the character when it enters the sensor
 	if (inBodyID2 == mSensorBody)
@@ -260,7 +260,29 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 		mAllowSliding = true;
 }
 
-void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+{
+	OnContactCommon(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+
+	if (inCharacter == mCharacter)
+		Trace("Contact added with body %d, sub shape %08x", inBodyID2.GetIndex(), inSubShapeID2.GetValue());
+}
+
+void CharacterVirtualTest::OnContactPersisted(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+{
+	OnContactCommon(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+
+	if (inCharacter == mCharacter)
+		Trace("Contact persisted with body %d, sub shape %08x", inBodyID2.GetIndex(), inSubShapeID2.GetValue());
+}
+
+void CharacterVirtualTest::OnContactRemoved(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2)
+{
+	if (inCharacter == mCharacter)
+		Trace("Contact removed with body %d, sub shape %08x", inBodyID2.GetIndex(), inSubShapeID2.GetValue());
+}
+
+void CharacterVirtualTest::OnCharacterContactCommon(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
 	// Characters can only be pushed in their own update
 	if (sPlayerCanPushOtherCharacters)
@@ -273,6 +295,28 @@ void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCha
 	// If the player can be pushed by the other virtual character, we allow sliding
 	if (inCharacter == mCharacter && ioSettings.mCanPushCharacter)
 		mAllowSliding = true;
+}
+
+void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+{
+	OnCharacterContactCommon(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+
+	if (inCharacter == mCharacter)
+		Trace("Contact added with character %p, sub shape %08x", inOtherCharacter, inSubShapeID2.GetValue());
+}
+
+void CharacterVirtualTest::OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+{
+	OnCharacterContactCommon(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+
+	if (inCharacter == mCharacter)
+		Trace("Contact persisted with character %p, sub shape %08x", inOtherCharacter, inSubShapeID2.GetValue());
+}
+
+void CharacterVirtualTest::OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2)
+{
+	if (inCharacter == mCharacter)
+		Trace("Contact removed with character %p, sub shape %08x", inOtherCharacter, inSubShapeID2.GetValue());
 }
 
 void CharacterVirtualTest::OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity)

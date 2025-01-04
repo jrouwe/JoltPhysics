@@ -84,7 +84,7 @@ public:
 	/// Same as OnContactValidate but when colliding with a CharacterVirtual
 	virtual bool						OnCharacterContactValidate(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2) { return true; }
 
-	/// Called whenever the character collides with a body.
+	/// Called whenever the character collides with a body for the first time.
 	/// @param inCharacter Character that is being solved
 	/// @param inBodyID2 Body ID of body that is being hit
 	/// @param inSubShapeID2 Sub shape ID of shape that is being hit
@@ -93,8 +93,31 @@ public:
 	/// @param ioSettings Settings returned by the contact callback to indicate how the character should behave
 	virtual void						OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
 
+	/// Called whenever the character persists colliding with a body.
+	/// @param inCharacter Character that is being solved
+	/// @param inBodyID2 Body ID of body that is being hit
+	/// @param inSubShapeID2 Sub shape ID of shape that is being hit
+	/// @param inContactPosition World space contact position
+	/// @param inContactNormal World space contact normal
+	/// @param ioSettings Settings returned by the contact callback to indicate how the character should behave
+	virtual void						OnContactPersisted(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
+
+	/// Called whenever the character loses contact with a body.
+	/// Note that there is no guarantee that the body or its sub shape still exists at this point. The body may have been deleted since the last update.
+	/// @param inCharacter Character that is being solved
+	/// @param inBodyID2 Body ID of body that is being hit
+	/// @param inSubShapeID2 Sub shape ID of shape that is being hit
+	virtual void						OnContactRemoved(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) { /* Default do nothing */ }
+
 	/// Same as OnContactAdded but when colliding with a CharacterVirtual
 	virtual void						OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
+
+	/// Same as OnContactPersisted but when colliding with a CharacterVirtual
+	virtual void						OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
+
+	/// Same as OnContactRemoved but when colliding with a CharacterVirtual
+	/// Note that CharacterVirtual has no way of knowing if inOtherCharacter is a pointer to a valid character (it can be a dangling pointer if the character was deleted since the last update)
+	virtual void						OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2) { /* Default do nothing */ }
 
 	/// Called whenever a contact is being used by the solver. Allows the listener to override the resulting character velocity (e.g. by preventing sliding along certain surfaces).
 	/// @param inCharacter Character that is being solved
@@ -265,6 +288,15 @@ public:
 	/// @param inDesiredVelocity Velocity to clamp against steep walls
 	/// @return A new velocity vector that won't make the character move up steep slopes
 	Vec3								CancelVelocityTowardsSteepSlopes(Vec3Arg inDesiredVelocity) const;
+
+	/// This function will copy the active contacts to a separate buffer and uses it to call OnContactAdded/OnContactPersisted on the listener (without this all contacts will be seen as 'added')
+	/// Note that this function is called automatically by ExtendedUpdate, SetShape and RefreshContacts.
+	/// If you're moving the character using Update, WalkStairs or StickToFloor you must call this function manually.
+	void								StartTrackingContactChanges(TempAllocator &ioTempAllocator);
+
+	/// This function will which of the stored contacts did not persist and uses it to call OnContactRemoved on the listener.
+	/// Take care that this function is called when all allocations since calling StartTrackingContactChanges have been freed.
+	void								FinishTrackingContactChanges(TempAllocator &ioTempAllocator);
 
 	/// This is the main update function. It moves the character according to its current velocity (the character is similar to a kinematic body in the sense
 	/// that you set the velocity and the character will follow unless collision is blocking the way). Note it's your own responsibility to apply gravity to the character velocity!
@@ -625,6 +657,17 @@ private:
 
 	// List of contacts that were active in the last frame
 	ContactList							mActiveContacts;
+
+	// Used during the update to store contacts that were active in the last frame
+	struct PreviousContact
+	{
+		BodyID							mBodyB;
+		CharacterVirtual *				mCharacterB = nullptr;
+		SubShapeID						mSubShapeIDB;
+		bool							mPersisted = false;
+	};
+	PreviousContact *					mPreviousContacts = nullptr;
+	uint								mNumPreviousContacts = 0;
 
 	// Remembers the delta time of the last update
 	float								mLastDeltaTime = 1.0f / 60.0f;
