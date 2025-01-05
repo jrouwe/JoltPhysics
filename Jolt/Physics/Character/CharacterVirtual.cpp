@@ -1781,10 +1781,11 @@ void CharacterVirtual::Contact::SaveState(StateRecorder &inStream) const
 	inStream.Write(mBodyB);
 	inStream.Write(mSubShapeIDB);
 	inStream.Write(mMotionTypeB);
+	inStream.Write(mIsSensorB);
 	inStream.Write(mHadCollision);
 	inStream.Write(mWasDiscarded);
 	inStream.Write(mCanPushCharacter);
-	// Cannot store user data (may be a pointer) and material
+	// Cannot store pointers to character B, user data and material
 }
 
 void CharacterVirtual::Contact::RestoreState(StateRecorder &inStream)
@@ -1798,9 +1799,11 @@ void CharacterVirtual::Contact::RestoreState(StateRecorder &inStream)
 	inStream.Read(mBodyB);
 	inStream.Read(mSubShapeIDB);
 	inStream.Read(mMotionTypeB);
+	inStream.Read(mIsSensorB);
 	inStream.Read(mHadCollision);
 	inStream.Read(mWasDiscarded);
 	inStream.Read(mCanPushCharacter);
+	mCharacterB = nullptr; // Cannot restore character B
 	mUserData = 0; // Cannot restore user data
 	mMaterial = PhysicsMaterial::sDefault; // Cannot restore material
 }

@@ -94,26 +94,7 @@ private:
 
 #ifdef JPH_ENABLE_ASSERTS
 	// Track active contacts for debugging purposes
-	struct Contact
-	{
-		bool				operator == (const Contact &inRHS) const
-		{
-			return mBodyB == inRHS.mBodyB && mCharacterB == inRHS.mCharacterB && mSubShapeIDB == inRHS.mSubShapeIDB;
-		}
-
-		bool				operator != (const Contact &inRHS) const
-		{
-			return !(*this == inRHS);
-		}
-
-		BodyID				mBodyB;
-		const CharacterVirtual * mCharacterB;
-		SubShapeID			mSubShapeIDB;
-	};
-
-	JPH_MAKE_HASH_STRUCT(Contact, ContactHash, t.mBodyB.GetIndexAndSequenceNumber(), t.mCharacterB, t.mSubShapeIDB.GetValue())
-
-	using ContactSet = UnorderedSet<Contact, ContactHash>;
+	using ContactSet = UnorderedSet<CharacterVirtual::ContactKey, CharacterVirtual::ContactKeyHash>;
 	ContactSet				mActiveContacts;
 #endif // JPH_ENABLE_ASSERTS
 };

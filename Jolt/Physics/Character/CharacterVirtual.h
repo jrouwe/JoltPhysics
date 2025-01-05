@@ -415,15 +415,42 @@ public:
 	static inline bool					sDrawStickToFloor = false;								///< Draw the state of the stick to floor algorithm
 #endif
 
-	// Encapsulates a collision contact
-	struct Contact
+	/// Uniquely identifies a contact between a character and another body or character
+	struct ContactKey
+	{
+		/// Constructor
+										ContactKey() = default;
+										ContactKey(const ContactKey &inContact) = default;
+		ContactKey &					operator = (const ContactKey &inContact) = default;
+
+		/// Checks if two contacts refer to the same body (or virtual character)
+		inline bool						IsSameBody(const ContactKey &inOther) const				{ return mBodyB == inOther.mBodyB && mCharacterB == inOther.mCharacterB; }
+
+		/// Equality operator
+		bool							operator == (const ContactKey &inRHS) const
+		{
+			return mCharacterB == inRHS.mCharacterB && mBodyB == inRHS.mBodyB && mSubShapeIDB == inRHS.mSubShapeIDB;
+		}
+
+		bool							operator != (const ContactKey &inRHS) const
+		{
+			return !(*this == inRHS);
+		}
+
+		const CharacterVirtual *		mCharacterB = nullptr;									///< Character we're colliding with (if not null)
+		BodyID							mBodyB;													///< ID of body we're colliding with (if not invalid)
+		SubShapeID						mSubShapeIDB;											///< Sub shape ID of body or character we're colliding with
+	};
+
+	/// So that we can use ContactKey as a key in a hash map
+	JPH_MAKE_HASH_STRUCT(ContactKey, ContactKeyHash, t.mBodyB.GetIndexAndSequenceNumber(), t.mCharacterB, t.mSubShapeIDB.GetValue())
+
+	/// Encapsulates a collision contact
+	struct Contact : public ContactKey
 	{
 		// Saving / restoring state for replay
 		void							SaveState(StateRecorder &inStream) const;
 		void							RestoreState(StateRecorder &inStream);
-
-		// Checks if two contacts refer to the same body (or virtual character)
-		inline bool						IsSameBody(const Contact &inOther) const				{ return mBodyB == inOther.mBodyB && mCharacterB == inOther.mCharacterB; }
 
 		RVec3							mPosition;												///< Position where the character makes contact
 		Vec3							mLinearVelocity;										///< Velocity of the contact point
@@ -431,15 +458,12 @@ public:
 		Vec3							mSurfaceNormal;											///< Surface normal of the contact
 		float							mDistance;												///< Distance to the contact <= 0 means that it is an actual contact, > 0 means predictive
 		float							mFraction;												///< Fraction along the path where this contact takes place
-		BodyID							mBodyB;													///< ID of body we're colliding with (if not invalid)
-		CharacterVirtual *				mCharacterB = nullptr;									///< Character we're colliding with (if not null)
-		SubShapeID						mSubShapeIDB;											///< Sub shape ID of body we're colliding with
 		EMotionType						mMotionTypeB;											///< Motion type of B, used to determine the priority of the contact
 		bool							mIsSensorB;												///< If B is a sensor
 		uint64							mUserData;												///< User data of B
 		const PhysicsMaterial *			mMaterial;												///< Material of B
 		bool							mHadCollision = false;									///< If the character actually collided with the contact (can be false if a predictive contact never becomes a real one)
-		bool							mWasDiscarded = false;									///< If the contact validate callback chose to discard this contact
+		bool							mWasDiscarded = false;									///< If the contact validate callback chose to discard this contact or when the body is a sensor
 		bool							mCanPushCharacter = true;								///< When true, the velocity of the contact point can push the character
 	};
 
@@ -663,28 +687,6 @@ private:
 	int									mTrackingContactChanges = 0;
 
 	// View from a contact listener perspective on which contacts have been added/removed
-	struct ContactKey
-	{
-										ContactKey() = default;
-										ContactKey(const Contact &inContact) : mBodyB(inContact.mBodyB), mCharacterB(inContact.mCharacterB), mSubShapeIDB(inContact.mSubShapeIDB) { }
-
-		bool				operator == (const ContactKey &inRHS) const
-		{
-			return mBodyB == inRHS.mBodyB && mCharacterB == inRHS.mCharacterB && mSubShapeIDB == inRHS.mSubShapeIDB;
-		}
-
-		bool				operator != (const ContactKey &inRHS) const
-		{
-			return !(*this == inRHS);
-		}
-
-		BodyID							mBodyB;
-		CharacterVirtual *				mCharacterB;
-		SubShapeID						mSubShapeIDB;
-	};
-
-	JPH_MAKE_HASH_STRUCT(ContactKey, ContactKeyHash, t.mBodyB.GetIndexAndSequenceNumber(), t.mCharacterB, t.mSubShapeIDB.GetValue())
-
 	struct ListenerContactValue
 	{
 										ListenerContactValue() = default;
