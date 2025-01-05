@@ -86,6 +86,13 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		{ },
 		*mTempAllocator);
 
+#ifdef JPH_ENABLE_ASSERTS
+	// Validate that our contact list is in sync with that of the character
+	for (const CharacterVirtual::Contact &c : mCharacter->GetActiveContacts())
+		if (c.mHadCollision)
+			JPH_ASSERT(mActiveContacts.find({ c.mBodyB, c.mCharacterB, c.mSubShapeIDB }) != mActiveContacts.end());
+#endif
+
 	// Calculate effective velocity
 	RVec3 new_position = mCharacter->GetPosition();
 	Vec3 velocity = Vec3(new_position - old_position) / inParams.mDeltaTime;

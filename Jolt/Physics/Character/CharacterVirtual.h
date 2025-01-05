@@ -296,7 +296,7 @@ public:
 	void								StartTrackingContactChanges();
 
 	/// This call triggers contact removal callbacks and is used in conjunction with StartTrackingContactChanges.
-	void								FinishTrackingContactChanges();
+	void								FinishTrackingContactChanges(TempAllocator &ioTempAllocator);
 
 	/// This is the main update function. It moves the character according to its current velocity (the character is similar to a kinematic body in the sense
 	/// that you set the velocity and the character will follow unless collision is blocking the way). Note it's your own responsibility to apply gravity to the character velocity!
@@ -447,9 +447,10 @@ public:
 	using ContactList = Array<Contact>;
 
 	/// Access to the internal list of contacts that the character has found.
+	/// Note that only contacts that have their mHadCollision flag set are actual contacts.
 	const ContactList &					GetActiveContacts() const								{ return mActiveContacts; }
 
-	/// Check if the character is currently in contact with or has collided with another body in the last time step
+	/// Check if the character is currently in contact with or has collided with another body in the last operation (e.g. Update or WalkStairs)
 	bool								HasCollidedWith(const BodyID &inBody) const
 	{
 		for (const CharacterVirtual::Contact &c : mActiveContacts)
@@ -458,7 +459,7 @@ public:
 		return false;
 	}
 
-	/// Check if the character is currently in contact with or has collided with another character in the last time step
+	/// Check if the character is currently in contact with or has collided with another character in the last time step (e.g. Update or WalkStairs)
 	bool								HasCollidedWith(const CharacterVirtual *inCharacter) const
 	{
 		for (const CharacterVirtual::Contact &c : mActiveContacts)
@@ -662,19 +663,39 @@ private:
 	int									mTrackingContactChanges = 0;
 
 	// View from a contact listener perspective on which contacts have been added/removed
-	struct ListenerContact
+	struct ContactKey
 	{
-										ListenerContact() = default;
-										ListenerContact(const BodyID inBodyB, CharacterVirtual *inCharacterB, const SubShapeID &inSubShapeIDB, const CharacterContactSettings &inSettings) : mBodyB(inBodyB), mCharacterB(inCharacterB), mSubShapeIDB(inSubShapeIDB), mSettings(inSettings) { }
+										ContactKey() = default;
+										ContactKey(const Contact &inContact) : mBodyB(inContact.mBodyB), mCharacterB(inContact.mCharacterB), mSubShapeIDB(inContact.mSubShapeIDB) { }
+
+		bool				operator == (const ContactKey &inRHS) const
+		{
+			return mBodyB == inRHS.mBodyB && mCharacterB == inRHS.mCharacterB && mSubShapeIDB == inRHS.mSubShapeIDB;
+		}
+
+		bool				operator != (const ContactKey &inRHS) const
+		{
+			return !(*this == inRHS);
+		}
 
 		BodyID							mBodyB;
 		CharacterVirtual *				mCharacterB;
 		SubShapeID						mSubShapeIDB;
+	};
+
+	JPH_MAKE_HASH_STRUCT(ContactKey, ContactKeyHash, t.mBodyB.GetIndexAndSequenceNumber(), t.mCharacterB, t.mSubShapeIDB.GetValue())
+
+	struct ListenerContactValue
+	{
+										ListenerContactValue() = default;
+										ListenerContactValue(const CharacterContactSettings &inSettings) : mSettings(inSettings) { }
+
 		CharacterContactSettings		mSettings;
 		int								mCount = 1;
 	};
-	using ListenerContactList = Array<ListenerContact>;
-	ListenerContactList					mListenerContacts;
+
+	using ListenerContacts = UnorderedMap<ContactKey, ListenerContactValue, ContactKeyHash>;
+	ListenerContacts					mListenerContacts;
 
 	// Remembers the delta time of the last update
 	float								mLastDeltaTime = 1.0f / 60.0f;
