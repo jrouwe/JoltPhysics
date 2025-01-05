@@ -39,7 +39,7 @@ void Body::SetMotionType(EMotionType inMotionType)
 	if (mMotionType == inMotionType)
 		return;
 
-	JPH_ASSERT(inMotionType == EMotionType::Static || mMotionProperties != nullptr, "Body needs to be created with mAllowDynamicOrKinematic set tot true");
+	JPH_ASSERT(inMotionType == EMotionType::Static || mMotionProperties != nullptr, "Body needs to be created with mAllowDynamicOrKinematic set to true");
 	JPH_ASSERT(inMotionType != EMotionType::Static || !IsActive(), "Deactivate body first");
 	JPH_ASSERT(inMotionType == EMotionType::Dynamic || !IsSoftBody(), "Soft bodies can only be dynamic, you can make individual vertices kinematic by setting their inverse mass to 0");
 
