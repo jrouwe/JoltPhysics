@@ -113,7 +113,7 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 		settings.mAllowSleeping = false; // Disable sleeping so that we will receive sensor callbacks
 		settings.mUserData = inUserData;
 
-		Body *inner_body;
+		const Body *inner_body;
 		BodyInterface &bi = inSystem->GetBodyInterface();
 		if (inSettings->mInnerBodyIDOverride.IsInvalid())
 			inner_body = bi.CreateBody(settings);
