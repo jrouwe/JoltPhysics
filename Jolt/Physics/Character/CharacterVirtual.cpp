@@ -112,7 +112,18 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 		BodyCreationSettings settings(inSettings->mInnerBodyShape, GetInnerBodyPosition(), mRotation, EMotionType::Kinematic, inSettings->mInnerBodyLayer);
 		settings.mAllowSleeping = false; // Disable sleeping so that we will receive sensor callbacks
 		settings.mUserData = inUserData;
-		mInnerBodyID = inSystem->GetBodyInterface().CreateAndAddBody(settings, EActivation::Activate);
+
+		Body *inner_body;
+		BodyInterface &bi = inSystem->GetBodyInterface();
+		if (inSettings->mInnerBodyIDOverride.IsInvalid())
+			inner_body = bi.CreateBody(settings);
+		else
+			inner_body = bi.CreateBodyWithID(inSettings->mInnerBodyIDOverride, settings);
+		if (inner_body != nullptr)
+		{
+			mInnerBodyID = inner_body->GetID();
+			bi.AddBody(mInnerBodyID, EActivation::Activate);
+		}
 	}
 }
 
