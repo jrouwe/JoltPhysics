@@ -10,7 +10,11 @@
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include "Layers.h"
+#include <iostream>
 
 TEST_SUITE("CharacterVirtualTests")
 {
@@ -848,5 +852,62 @@ TEST_SUITE("CharacterVirtualTests")
 		CHECK(character1.GetNumContacts() == 2);
 		CHECK(character1.HasCollidedWith(floor_id));
 		CHECK(character1.HasCollidedWith(box_id));
+	}
+	
+	JPH::Ref<JPH::CharacterVirtual> add_character(PhysicsTestContext &c) {
+		
+        JPH::RefConst<JPH::Shape> player_collision_shape =
+            JPH::RotatedTranslatedShapeSettings(JPH::Vec3(0, 0, 0), JPH::Quat::sIdentity(), new JPH::SphereShape(0.35f)).Create().Get();
+
+		JPH::CharacterVirtualSettings character_settings;
+		character_settings.mSupportingVolume = JPH::Plane(JPH::Vec3::sAxisY(), -0.3f);
+		character_settings.mShape = player_collision_shape;
+		character_settings.mMaxSlopeAngle = JPH::DegreesToRadians(40.0f);
+
+		character_settings.mInnerBodyShape = player_collision_shape;
+		character_settings.mInnerBodyLayer = Layers::MOVING;
+
+		return new JPH::CharacterVirtual(&character_settings, JPH::RVec3(0.0f, 10.0f, 0.0f), JPH::Quat::sIdentity(), c.GetSystem());
+	}
+
+	TEST_CASE("Filip2")
+	{
+		PhysicsTestContext c;
+
+		auto character_a = add_character(c);
+		auto character_b = add_character(c);
+		
+        JPH::CharacterVirtual::ExtendedUpdateSettings update_settings;
+		TempAllocatorMalloc allocator;
+
+		for (int i = 0; i < 100; i++)
+		{
+			character_a->ExtendedUpdate(0.0016f, c.GetSystem()->GetGravity(), update_settings, 
+				c.GetSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
+				c.GetSystem()->GetDefaultLayerFilter(Layers::MOVING),
+				{}, {},
+				allocator);
+
+			character_b->ExtendedUpdate(0.0016f, c.GetSystem()->GetGravity(), update_settings, 
+				c.GetSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
+				c.GetSystem()->GetDefaultLayerFilter(Layers::MOVING),
+				{}, {},
+				allocator);
+		}
+	
+		std::cout << "Character A BodyID: " << (int)character_a->GetInnerBodyID().GetSequenceNumber() << "/" << (int)character_a->GetInnerBodyID().GetIndex() << std::endl;	
+		std::cout << "Character A Position: " << 
+			character_a->GetPosition().GetX() << ", " 
+			<< character_a->GetPosition().GetY() << ", " 
+			<< character_a->GetPosition().GetZ() << std::endl;
+
+		std::cout << "Character B BodyID: " << (int)character_b->GetInnerBodyID().GetSequenceNumber() << "/" << (int)character_b->GetInnerBodyID().GetIndex() << std::endl;	
+		std::cout << "Character B Position: " << 
+			character_b->GetPosition().GetX() << ", " 
+			<< character_b->GetPosition().GetY() << ", " 
+			<< character_b->GetPosition().GetZ() << std::endl;
+
+		// CHECK(character_a->GetPosition() == Vec3(0.434373f, 10.0063f, 0.556005f));
+		// CHECK(character_b->GetPosition() == Vec3(-0.00886928f, 9.99987f, -0.0113528f));
 	}
 }
