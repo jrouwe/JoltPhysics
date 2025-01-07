@@ -94,7 +94,7 @@ private:
 
 #ifdef JPH_ENABLE_ASSERTS
 	// Track active contacts for debugging purposes
-	using ContactSet = UnorderedSet<CharacterVirtual::ContactKey, CharacterVirtual::ContactKeyHash>;
+	using ContactSet = Array<CharacterVirtual::ContactKey>;
 	ContactSet				mActiveContacts;
 #endif // JPH_ENABLE_ASSERTS
 };

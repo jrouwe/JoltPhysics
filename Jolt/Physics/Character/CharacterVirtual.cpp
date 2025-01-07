@@ -1879,6 +1879,19 @@ void CharacterVirtual::RestoreState(StateRecorder &inStream)
 	mActiveContacts.resize(num_contacts);
 	for (Contact &c : mActiveContacts)
 		c.RestoreState(inStream);
+
+	// Assign all active contacts to the list of contacts for the listener. The idea is that
+	// these contacts should receive a 'contact persisted' or 'contact removed' call during the
+	// next update since they should have had an 'contact added' call prior to saving the state.
+	// The state of these contacts doesn't really matter as it will be updated in StartTrackingContactChanges.
+	if (mListener != nullptr)
+	{
+		mListenerContacts.clear();
+		mListenerContacts.reserve(ListenerContacts::size_type(mActiveContacts.size()));
+		for (const Contact &c : mActiveContacts)
+			if (c.mHadCollision)
+				mListenerContacts.insert(ListenerContacts::value_type(c, ListenerContactValue()));
+	}
 }
 
 JPH_NAMESPACE_END

@@ -90,7 +90,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Validate that our contact list is in sync with that of the character
 	for (const CharacterVirtual::Contact &c : mCharacter->GetActiveContacts())
 		if (c.mHadCollision)
-			JPH_ASSERT(mActiveContacts.find(c) != mActiveContacts.end());
+			JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), c) != mActiveContacts.end());
 #endif
 
 	// Calculate effective velocity
@@ -216,6 +216,7 @@ void CharacterVirtualTest::SaveState(StateRecorder &inStream) const
 
 	inStream.Write(mAllowSliding);
 	inStream.Write(mDesiredVelocity);
+	inStream.Write(mActiveContacts);
 }
 
 void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
@@ -233,6 +234,7 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 
 	inStream.Read(mAllowSliding);
 	inStream.Read(mDesiredVelocity);
+	inStream.Read(mActiveContacts);
 }
 
 void CharacterVirtualTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
@@ -274,7 +276,9 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 	if (inCharacter == mCharacter)
 	{
 		Trace("Contact added with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.insert({ inBodyID2, CharacterID(), inSubShapeID2 }).second);
+		CharacterVirtual::ContactKey c { inBodyID2, CharacterID(), inSubShapeID2 };
+		JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), c) == mActiveContacts.end());
+		mActiveContacts.push_back(c);
 	}
 }
 
@@ -285,7 +289,7 @@ void CharacterVirtualTest::OnContactPersisted(const CharacterVirtual *inCharacte
 	if (inCharacter == mCharacter)
 	{
 		Trace("Contact persisted with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.find({ inBodyID2, CharacterID(), inSubShapeID2 }) != mActiveContacts.end());
+		JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey { inBodyID2, CharacterID(), inSubShapeID2 }) != mActiveContacts.end());
 	}
 }
 
@@ -294,7 +298,9 @@ void CharacterVirtualTest::OnContactRemoved(const CharacterVirtual *inCharacter,
 	if (inCharacter == mCharacter)
 	{
 		Trace("Contact removed with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.erase({ inBodyID2, CharacterID(), inSubShapeID2 }) == 1);
+		ContactSet::iterator it = std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey { inBodyID2, CharacterID(), inSubShapeID2 });
+		JPH_ASSERT(it != mActiveContacts.end());
+		mActiveContacts.erase(it);
 	}
 }
 
@@ -320,7 +326,9 @@ void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCha
 	if (inCharacter == mCharacter)
 	{
 		Trace("Contact added with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.insert({ BodyID(), inOtherCharacter->GetID(), inSubShapeID2 }).second);
+		CharacterVirtual::ContactKey c { BodyID(), inOtherCharacter->GetID(), inSubShapeID2 };
+		JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), c) == mActiveContacts.end());
+		mActiveContacts.push_back(c);
 	}
 }
 
@@ -331,7 +339,7 @@ void CharacterVirtualTest::OnCharacterContactPersisted(const CharacterVirtual *i
 	if (inCharacter == mCharacter)
 	{
 		Trace("Contact persisted with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.find({ BodyID(), inOtherCharacter->GetID(), inSubShapeID2 }) != mActiveContacts.end());
+		JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey { BodyID(), inOtherCharacter->GetID(), inSubShapeID2 }) != mActiveContacts.end());
 	}
 }
 
@@ -340,7 +348,9 @@ void CharacterVirtualTest::OnCharacterContactRemoved(const CharacterVirtual *inC
 	if (inCharacter == mCharacter)
 	{
 		Trace("Contact removed with character %08x, sub shape %08x", inOtherCharacterID.GetValue(), inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.erase({ BodyID(), inOtherCharacterID, inSubShapeID2 }) == 1);
+		ContactSet::iterator it = std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey { BodyID(), inOtherCharacterID, inSubShapeID2 });
+		JPH_ASSERT(it != mActiveContacts.end());
+		mActiveContacts.erase(it);
 	}
 }
 
