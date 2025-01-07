@@ -309,16 +309,19 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 		mPostStepCallback(*this, inContext);
 
 	// If the wheels are rotating, we don't want to go to sleep yet
-	bool allow_sleep = mController->AllowSleep();
-	if (allow_sleep)
-		for (const Wheel *w : mWheels)
-			if (abs(w->mAngularVelocity) > DegreesToRadians(10.0f))
-			{
-				allow_sleep = false;
-				break;
-			}
-	if (mBody->GetAllowSleeping() != allow_sleep)
-		mBody->SetAllowSleeping(allow_sleep);
+	if (mBody->GetAllowSleeping())
+	{
+		bool allow_sleep = mController->AllowSleep();
+		if (allow_sleep)
+			for (const Wheel *w : mWheels)
+				if (abs(w->mAngularVelocity) > DegreesToRadians(10.0f))
+				{
+					allow_sleep = false;
+					break;
+				}
+		if (!allow_sleep)
+			mBody->ResetSleepTimer();
+	}
 
 	// Increment step counter
 	++mCurrentStep;
