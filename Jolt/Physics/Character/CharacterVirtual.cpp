@@ -473,7 +473,10 @@ void CharacterVirtual::ContactAdded(const Contact &inContact, CharacterContactSe
 			if (it != mListenerContacts.end())
 			{
 				if (++it->second.mCount == 1)
+				{
 					mListener->OnCharacterContactPersisted(this, inContact.mCharacterB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+					ioSettings = it->second.mSettings;
+				}
 				else
 					ioSettings = it->second.mSettings;
 				return;
@@ -489,7 +492,10 @@ void CharacterVirtual::ContactAdded(const Contact &inContact, CharacterContactSe
 			if (it != mListenerContacts.end())
 			{
 				if (++it->second.mCount == 1)
+				{
 					mListener->OnContactPersisted(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+					it->second.mSettings = ioSettings;
+				}
 				else
 					ioSettings = it->second.mSettings;
 				return;
@@ -1856,6 +1862,16 @@ void CharacterVirtual::SaveState(StateRecorder &inStream) const
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision)
 			c.SaveState(inStream);
+
+#ifdef JPH_ENABLE_ASSERTS
+	if (mListener != nullptr)
+	{
+		JPH_ASSERT(mListenerContacts.size() == num_contacts);
+		for (const Contact &c : mActiveContacts)
+			if (c.mHadCollision)
+				JPH_ASSERT(mListenerContacts.find(c) != mListenerContacts.end());
+	}
+#endif
 }
 
 void CharacterVirtual::RestoreState(StateRecorder &inStream)
@@ -1883,7 +1899,7 @@ void CharacterVirtual::RestoreState(StateRecorder &inStream)
 	// Assign all active contacts to the list of contacts for the listener. The idea is that
 	// these contacts should receive a 'contact persisted' or 'contact removed' call during the
 	// next update since they should have had an 'contact added' call prior to saving the state.
-	// The state of these contacts doesn't really matter as it will be updated in StartTrackingContactChanges.
+	// The state of these contacts doesn't really matter as it will be updated in StartTrackingContactChanges / ContactAdded.
 	if (mListener != nullptr)
 	{
 		mListenerContacts.clear();
