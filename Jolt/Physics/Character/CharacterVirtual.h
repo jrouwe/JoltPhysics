@@ -50,6 +50,10 @@ public:
 	/// - Fast moving objects of motion quality LinearCast will not be able to pass through the CharacterVirtual in 1 time step
 	RefConst<Shape>						mInnerBodyShape;
 
+	/// For a deterministic simulation, it is important to have a deterministic body ID. When set and when mInnerBodyShape is specified,
+	/// the inner body will be created with this specified ID instead of a generated ID.
+	BodyID								mInnerBodyIDOverride;
+
 	/// Layer that the inner rigid body will be added to
 	ObjectLayer							mInnerBodyLayer = 0;
 };
