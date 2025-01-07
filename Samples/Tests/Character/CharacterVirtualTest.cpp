@@ -90,7 +90,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Validate that our contact list is in sync with that of the character
 	for (const CharacterVirtual::Contact &c : mCharacter->GetActiveContacts())
 		if (c.mHadCollision)
-			JPH_ASSERT(mActiveContacts.find({ c.mCharacterB, c.mBodyB, c.mSubShapeIDB }) != mActiveContacts.end());
+			JPH_ASSERT(mActiveContacts.find(c) != mActiveContacts.end());
 #endif
 
 	// Calculate effective velocity
@@ -273,8 +273,8 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 
 	if (inCharacter == mCharacter)
 	{
-		Trace("Contact added with body %d, sub shape %08x", inBodyID2.GetIndex(), inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.insert({ nullptr, inBodyID2, inSubShapeID2 }).second);
+		Trace("Contact added with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.insert({ inBodyID2, CharacterID(), inSubShapeID2 }).second);
 	}
 }
 
@@ -284,8 +284,8 @@ void CharacterVirtualTest::OnContactPersisted(const CharacterVirtual *inCharacte
 
 	if (inCharacter == mCharacter)
 	{
-		Trace("Contact persisted with body %d, sub shape %08x", inBodyID2.GetIndex(), inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.find({ nullptr, inBodyID2, inSubShapeID2 }) != mActiveContacts.end());
+		Trace("Contact persisted with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.find({ inBodyID2, CharacterID(), inSubShapeID2 }) != mActiveContacts.end());
 	}
 }
 
@@ -293,8 +293,8 @@ void CharacterVirtualTest::OnContactRemoved(const CharacterVirtual *inCharacter,
 {
 	if (inCharacter == mCharacter)
 	{
-		Trace("Contact removed with body %d, sub shape %08x", inBodyID2.GetIndex(), inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.erase({ nullptr, inBodyID2, inSubShapeID2 }) == 1);
+		Trace("Contact removed with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.erase({ inBodyID2, CharacterID(), inSubShapeID2 }) == 1);
 	}
 }
 
@@ -319,8 +319,8 @@ void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCha
 
 	if (inCharacter == mCharacter)
 	{
-		Trace("Contact added with character %p, sub shape %08x", inOtherCharacter, inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.insert({ inOtherCharacter, BodyID(), inSubShapeID2 }).second);
+		Trace("Contact added with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.insert({ BodyID(), inOtherCharacter->GetID(), inSubShapeID2 }).second);
 	}
 }
 
@@ -330,17 +330,17 @@ void CharacterVirtualTest::OnCharacterContactPersisted(const CharacterVirtual *i
 
 	if (inCharacter == mCharacter)
 	{
-		Trace("Contact persisted with character %p, sub shape %08x", inOtherCharacter, inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.find({ inOtherCharacter, BodyID(), inSubShapeID2 }) != mActiveContacts.end());
+		Trace("Contact persisted with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.find({ BodyID(), inOtherCharacter->GetID(), inSubShapeID2 }) != mActiveContacts.end());
 	}
 }
 
-void CharacterVirtualTest::OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2)
+void CharacterVirtualTest::OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterID &inOtherCharacterID, const SubShapeID &inSubShapeID2)
 {
 	if (inCharacter == mCharacter)
 	{
-		Trace("Contact removed with character %p, sub shape %08x", inOtherCharacter, inSubShapeID2.GetValue());
-		JPH_ASSERT(mActiveContacts.erase({ inOtherCharacter, BodyID(), inSubShapeID2 }) == 1);
+		Trace("Contact removed with character %08x, sub shape %08x", inOtherCharacterID.GetValue(), inSubShapeID2.GetValue());
+		JPH_ASSERT(mActiveContacts.erase({ BodyID(), inOtherCharacterID, inSubShapeID2 }) == 1);
 	}
 }
 

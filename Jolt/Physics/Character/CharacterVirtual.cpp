@@ -87,6 +87,7 @@ void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *
 
 CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
+	mID(inSettings->mID),
 	mBackFaceMode(inSettings->mBackFaceMode),
 	mPredictiveContactDistance(inSettings->mPredictiveContactDistance),
 	mMaxCollisionIterations(inSettings->mMaxCollisionIterations),
@@ -103,6 +104,8 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 	mRotation(inRotation),
 	mUserData(inUserData)
 {
+	JPH_ASSERT(!mID.IsInvalid());
+
 	// Copy settings
 	SetMaxStrength(inSettings->mMaxStrength);
 	SetMass(inSettings->mMass);
@@ -210,6 +213,7 @@ void CharacterVirtual::sFillCharacterContactProperties(Contact &outContact, Char
 	outContact.mLinearVelocity = inOtherCharacter->GetLinearVelocity();
 	outContact.mSurfaceNormal = outContact.mContactNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
 	outContact.mDistance = -inResult.mPenetrationDepth;
+	outContact.mCharacterIDB = inOtherCharacter->GetID();
 	outContact.mCharacterB = inOtherCharacter;
 	outContact.mSubShapeIDB = inResult.mSubShapeID2;
 	outContact.mMotionTypeB = EMotionType::Kinematic; // Other character is kinematic, we can't directly move it
@@ -306,8 +310,8 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 		&& inResult.mPenetrationAxis.Dot(mDisplacement) > 0.0f) // Ignore penetrations that we're moving away from
 	{
 		// Test if this contact should be ignored
-		for (const IgnoredContact &c : mIgnoredContacts)
-			if (c.mBodyID == inResult.mBodyID2 && c.mSubShapeID == inResult.mSubShapeID2)
+		for (const ContactKey &c : mIgnoredContacts)
+			if (c.mBodyB == inResult.mBodyID2 && c.mSubShapeIDB == inResult.mSubShapeID2)
 				return;
 
 		Contact contact;
@@ -429,14 +433,14 @@ void CharacterVirtual::RemoveConflictingContacts(TempContactList &ioContacts, Ig
 					if (contact1.mDistance < contact2.mDistance)
 					{
 						// Discard the 2nd contact
-						outIgnoredContacts.emplace_back(contact2.mBodyB, contact2.mSubShapeIDB);
+						outIgnoredContacts.emplace_back(contact2);
 						ioContacts.erase(ioContacts.begin() + c2);
 						c2--;
 					}
 					else
 					{
 						// Discard the first contact
-						outIgnoredContacts.emplace_back(contact1.mBodyB, contact1.mSubShapeIDB);
+						outIgnoredContacts.emplace_back(contact1);
 						ioContacts.erase(ioContacts.begin() + c1);
 						c1--;
 						break;
@@ -569,7 +573,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 		mCharacterVsCharacterCollision->CastCharacter(this, start, inDisplacement, settings, base_offset, collector);
 	}
 
-	if (contact.mBodyB.IsInvalid() && contact.mCharacterB == nullptr)
+	if (contact.mBodyB.IsInvalid() && contact.mCharacterIDB.IsInvalid())
 		return false;
 
 	// Store contact
@@ -837,7 +841,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 				c->mContact->mWasDiscarded = true;
 
 				// Mark it as ignored for GetFirstContactForSweep
-				ioIgnoredContacts.emplace_back(c->mContact->mBodyB, c->mContact->mSubShapeIDB);
+				ioIgnoredContacts.emplace_back(*c->mContact);
 				continue;
 			}
 
@@ -1354,8 +1358,8 @@ void CharacterVirtual::FinishTrackingContactChanges(TempAllocator &inAllocator)
 	for (ContactKey &c : removed_contacts)
 	{
 		// Call contact removal callbacks
-		if (c.mCharacterB != nullptr)
-			mListener->OnCharacterContactRemoved(this, c.mCharacterB, c.mSubShapeIDB);
+		if (!c.mCharacterIDB.IsInvalid())
+			mListener->OnCharacterContactRemoved(this, c.mCharacterIDB, c.mSubShapeIDB);
 		else
 			mListener->OnContactRemoved(this, c.mBodyB, c.mSubShapeIDB);
 
@@ -1781,16 +1785,30 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 	}
 }
 
+void CharacterVirtual::ContactKey::SaveState(StateRecorder &inStream) const
+{
+	inStream.Write(mBodyB);
+	inStream.Write(mCharacterIDB);
+	inStream.Write(mSubShapeIDB);
+}
+
+void CharacterVirtual::ContactKey::RestoreState(StateRecorder &inStream)
+{
+	inStream.Read(mBodyB);
+	inStream.Read(mCharacterIDB);
+	inStream.Read(mSubShapeIDB);
+}
+
 void CharacterVirtual::Contact::SaveState(StateRecorder &inStream) const
 {
+	ContactKey::SaveState(inStream);
+
 	inStream.Write(mPosition);
 	inStream.Write(mLinearVelocity);
 	inStream.Write(mContactNormal);
 	inStream.Write(mSurfaceNormal);
 	inStream.Write(mDistance);
 	inStream.Write(mFraction);
-	inStream.Write(mBodyB);
-	inStream.Write(mSubShapeIDB);
 	inStream.Write(mMotionTypeB);
 	inStream.Write(mIsSensorB);
 	inStream.Write(mHadCollision);
@@ -1801,14 +1819,14 @@ void CharacterVirtual::Contact::SaveState(StateRecorder &inStream) const
 
 void CharacterVirtual::Contact::RestoreState(StateRecorder &inStream)
 {
+	ContactKey::RestoreState(inStream);
+
 	inStream.Read(mPosition);
 	inStream.Read(mLinearVelocity);
 	inStream.Read(mContactNormal);
 	inStream.Read(mSurfaceNormal);
 	inStream.Read(mDistance);
 	inStream.Read(mFraction);
-	inStream.Read(mBodyB);
-	inStream.Read(mSubShapeIDB);
 	inStream.Read(mMotionTypeB);
 	inStream.Read(mIsSensorB);
 	inStream.Read(mHadCollision);

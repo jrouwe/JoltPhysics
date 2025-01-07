@@ -179,9 +179,9 @@ TEST_SUITE("CharacterVirtualTests")
 			mContactLog.OnCharacterContactPersisted(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
 		}
 
-		virtual void			OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2) override
+		virtual void			OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterID &inOtherCharacterID, const SubShapeID &inSubShapeID2) override
 		{
-			mContactLog.OnCharacterContactRemoved(inCharacter, inOtherCharacter, inSubShapeID2);
+			mContactLog.OnCharacterContactRemoved(inCharacter, inOtherCharacterID, inSubShapeID2);
 		}
 
 		virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) override

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Jolt/Physics/Character/CharacterBase.h>
+#include <Jolt/Physics/Character/CharacterID.h>
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Body/BodyFilter.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
@@ -22,6 +23,9 @@ class JPH_EXPORT CharacterVirtualSettings : public CharacterBaseSettings
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
+
+	/// ID to give to this character. This is used for deterministically sorting and as an identifier to represent the character in the contact removal callback.
+	CharacterID							mID = CharacterID::sNextCharacterID();
 
 	/// Character mass (kg). Used to push down objects with gravity when the character is standing on top.
 	float								mMass = 70.0f;
@@ -120,8 +124,8 @@ public:
 	virtual void						OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
 
 	/// Same as OnContactRemoved but when colliding with a CharacterVirtual
-	/// Note that CharacterVirtual has no way of knowing if inOtherCharacter is a pointer to a valid character (it can be a dangling pointer if the character was deleted since the last update)
-	virtual void						OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2) { /* Default do nothing */ }
+	/// Note that inOtherCharacterID can be the ID of a character that has been deleted. This happens if the character was in contact with this character during the last update, but has been deleted since.
+	virtual void						OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterID &inOtherCharacterID, const SubShapeID &inSubShapeID2) { /* Default do nothing */ }
 
 	/// Called whenever a contact is being used by the solver. Allows the listener to override the resulting character velocity (e.g. by preventing sliding along certain surfaces).
 	/// @param inCharacter Character that is being solved
@@ -206,6 +210,9 @@ public:
 
 	/// Destructor
 	virtual								~CharacterVirtual() override;
+
+	/// The ID of this character
+	CharacterID							GetID() const											{ return mID; }
 
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
@@ -428,12 +435,12 @@ public:
 		ContactKey &					operator = (const ContactKey &inContact) = default;
 
 		/// Checks if two contacts refer to the same body (or virtual character)
-		inline bool						IsSameBody(const ContactKey &inOther) const				{ return mBodyB == inOther.mBodyB && mCharacterB == inOther.mCharacterB; }
+		inline bool						IsSameBody(const ContactKey &inOther) const				{ return mBodyB == inOther.mBodyB && mCharacterIDB == inOther.mCharacterIDB; }
 
 		/// Equality operator
 		bool							operator == (const ContactKey &inRHS) const
 		{
-			return mCharacterB == inRHS.mCharacterB && mBodyB == inRHS.mBodyB && mSubShapeIDB == inRHS.mSubShapeIDB;
+			return mBodyB == inRHS.mBodyB && mCharacterIDB == inRHS.mCharacterIDB && mSubShapeIDB == inRHS.mSubShapeIDB;
 		}
 
 		bool							operator != (const ContactKey &inRHS) const
@@ -441,13 +448,17 @@ public:
 			return !(*this == inRHS);
 		}
 
-		const CharacterVirtual *		mCharacterB = nullptr;									///< Character we're colliding with (if not null)
+		// Saving / restoring state for replay
+		void							SaveState(StateRecorder &inStream) const;
+		void							RestoreState(StateRecorder &inStream);
+
 		BodyID							mBodyB;													///< ID of body we're colliding with (if not invalid)
+		CharacterID						mCharacterIDB;											///< Character we're colliding with (if not invalid)
 		SubShapeID						mSubShapeIDB;											///< Sub shape ID of body or character we're colliding with
 	};
 
 	/// So that we can use ContactKey as a key in a hash map
-	JPH_MAKE_HASH_STRUCT(ContactKey, ContactKeyHash, t.mBodyB.GetIndexAndSequenceNumber(), t.mCharacterB, t.mSubShapeIDB.GetValue())
+	JPH_MAKE_HASH_STRUCT(ContactKey, ContactKeyHash, t.mBodyB.GetIndexAndSequenceNumber(), t.mCharacterIDB.GetValue(), t.mSubShapeIDB.GetValue())
 
 	/// Encapsulates a collision contact
 	struct Contact : public ContactKey
@@ -464,6 +475,7 @@ public:
 		float							mFraction;												///< Fraction along the path where this contact takes place
 		EMotionType						mMotionTypeB;											///< Motion type of B, used to determine the priority of the contact
 		bool							mIsSensorB;												///< If B is a sensor
+		const CharacterVirtual *		mCharacterB = nullptr;									///< Character we're colliding with (if not nullptr). Note that this may be a dangling pointer when accessed through GetActiveContacts(), use mCharacterIDB instead.
 		uint64							mUserData;												///< User data of B
 		const PhysicsMaterial *			mMaterial;												///< Material of B
 		bool							mHadCollision = false;									///< If the character actually collided with the contact (can be false if a predictive contact never becomes a real one)
@@ -488,12 +500,18 @@ public:
 	}
 
 	/// Check if the character is currently in contact with or has collided with another character in the last time step (e.g. Update or WalkStairs)
-	bool								HasCollidedWith(const CharacterVirtual *inCharacter) const
+	bool								HasCollidedWith(const CharacterID &inCharacterID) const
 	{
 		for (const CharacterVirtual::Contact &c : mActiveContacts)
-			if (c.mHadCollision && c.mCharacterB == inCharacter)
+			if (c.mHadCollision && c.mCharacterIDB == inCharacterID)
 				return true;
 		return false;
+	}
+
+	/// Check if the character is currently in contact with or has collided with another character in the last time step (e.g. Update or WalkStairs)
+	bool								HasCollidedWith(const CharacterVirtual *inCharacter) const
+	{
+		return HasCollidedWith(inCharacter->GetID());
 	}
 
 private:
@@ -505,21 +523,14 @@ private:
 			if (inLHS.mBodyB != inRHS.mBodyB)
 				return inLHS.mBodyB < inRHS.mBodyB;
 
+			if (inLHS.mCharacterIDB != inRHS.mCharacterIDB)
+				return inLHS.mCharacterIDB < inRHS.mCharacterIDB;
+
 			return inLHS.mSubShapeIDB.GetValue() < inRHS.mSubShapeIDB.GetValue();
 		}
 	};
 
-	// A contact that needs to be ignored
-	struct IgnoredContact
-	{
-										IgnoredContact() = default;
-										IgnoredContact(const BodyID &inBodyID, const SubShapeID &inSubShapeID) : mBodyID(inBodyID), mSubShapeID(inSubShapeID) { }
-
-		BodyID							mBodyID;												///< ID of body we're colliding with
-		SubShapeID						mSubShapeID;											///< Sub shape of body we're colliding with
-	};
-
-	using IgnoredContactList = Array<IgnoredContact, STLTempAllocator<IgnoredContact>>;
+	using IgnoredContactList = Array<ContactKey, STLTempAllocator<ContactKey>>;
 
 	// A constraint that limits the movement of the character
 	struct Constraint
@@ -646,6 +657,9 @@ private:
 
 	// Move the inner rigid body to the current position
 	void								UpdateInnerBodyTransform();
+
+	// ID
+	CharacterID							mID;
 
 	// Our main listener for contacts
 	CharacterContactListener *			mListener = nullptr;
