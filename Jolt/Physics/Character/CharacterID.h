@@ -80,7 +80,7 @@ public:
 		}
 	}
 
-	/// @brief
+	/// Set the next available character ID, can be used after destroying all character to prepare for a second deterministic run
 	static void				sSetNextCharacterID(uint32 inNextValue = 1)
 	{
 		sNextID.store(inNextValue, std::memory_order_relaxed);

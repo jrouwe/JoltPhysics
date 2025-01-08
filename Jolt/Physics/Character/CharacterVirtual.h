@@ -307,7 +307,7 @@ public:
 	void								StartTrackingContactChanges();
 
 	/// This call triggers contact removal callbacks and is used in conjunction with StartTrackingContactChanges.
-	void								FinishTrackingContactChanges(TempAllocator &ioTempAllocator);
+	void								FinishTrackingContactChanges();
 
 	/// This is the main update function. It moves the character according to its current velocity (the character is similar to a kinematic body in the sense
 	/// that you set the velocity and the character will follow unless collision is blocking the way). Note it's your own responsibility to apply gravity to the character velocity!
@@ -427,11 +427,14 @@ public:
 #endif
 
 	/// Uniquely identifies a contact between a character and another body or character
-	struct ContactKey
+	class ContactKey
 	{
+	public:
 		/// Constructor
 										ContactKey() = default;
 										ContactKey(const ContactKey &inContact) = default;
+										ContactKey(const BodyID &inBodyB, const SubShapeID &inSubShapeID) : mBodyB(inBodyB), mSubShapeIDB(inSubShapeID) { }
+										ContactKey(const CharacterID &inCharacterIDB, const SubShapeID &inSubShapeID) : mCharacterIDB(inCharacterIDB), mSubShapeIDB(inSubShapeID) { }
 		ContactKey &					operator = (const ContactKey &inContact) = default;
 
 		/// Checks if two contacts refer to the same body (or virtual character)
@@ -448,6 +451,13 @@ public:
 			return !(*this == inRHS);
 		}
 
+		/// Hash of this structure
+		uint64							GetHash() const
+		{
+			static_assert(sizeof(BodyID) + sizeof(CharacterID) + sizeof(SubShapeID) == sizeof(ContactKey), "No padding expected");
+			return HashBytes(this, sizeof(ContactKey));
+		}
+
 		// Saving / restoring state for replay
 		void							SaveState(StateRecorder &inStream) const;
 		void							RestoreState(StateRecorder &inStream);
@@ -456,9 +466,6 @@ public:
 		CharacterID						mCharacterIDB;											///< Character we're colliding with (if not invalid)
 		SubShapeID						mSubShapeIDB;											///< Sub shape ID of body or character we're colliding with
 	};
-
-	/// So that we can use ContactKey as a key in a hash map
-	JPH_MAKE_HASH_STRUCT(ContactKey, ContactKeyHash, t.mBodyB.GetIndexAndSequenceNumber(), t.mCharacterIDB.GetValue(), t.mSubShapeIDB.GetValue())
 
 	/// Encapsulates a collision contact
 	struct Contact : public ContactKey
@@ -714,7 +721,7 @@ private:
 		int								mCount = 0;
 	};
 
-	using ListenerContacts = UnorderedMap<ContactKey, ListenerContactValue, ContactKeyHash>;
+	using ListenerContacts = UnorderedMap<ContactKey, ListenerContactValue>;
 	ListenerContacts					mListenerContacts;
 
 	// Remembers the delta time of the last update

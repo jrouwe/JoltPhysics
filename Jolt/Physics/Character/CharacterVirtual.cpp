@@ -1170,9 +1170,13 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 
 void CharacterVirtual::StoreActiveContacts(const TempContactList &inContacts, TempAllocator &inAllocator)
 {
+	StartTrackingContactChanges();
+
 	mActiveContacts.assign(inContacts.begin(), inContacts.end());
 
 	UpdateSupportingContact(true, inAllocator);
+	
+	FinishTrackingContactChanges();
 }
 
 void CharacterVirtual::MoveShape(RVec3 &ioPosition, Vec3Arg inVelocity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator
@@ -1304,21 +1308,18 @@ void CharacterVirtual::StartTrackingContactChanges()
 		return;
 
 	// No need to track anything if we don't have a listener
+	JPH_ASSERT(mListenerContacts.empty());
 	if (mListener == nullptr)
-	{
-		mListenerContacts.clear();
 		return;
-	}
 
 	// Mark all current contacts as not seen
-	JPH_ASSERT(mListenerContacts.empty());
 	mListenerContacts.reserve(ListenerContacts::size_type(mActiveContacts.size()));
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision)
 			mListenerContacts.insert(ListenerContacts::value_type(c, ListenerContactValue()));
 }
 
-void CharacterVirtual::FinishTrackingContactChanges(TempAllocator &inAllocator)
+void CharacterVirtual::FinishTrackingContactChanges()
 {
 	// Check if we have to do anything
 	int count = --mTrackingContactChanges;
@@ -1348,7 +1349,6 @@ void CharacterVirtual::FinishTrackingContactChanges(TempAllocator &inAllocator)
 	for (ListenerContacts::iterator it = mListenerContacts.begin(); it != mListenerContacts.end(); ++it)
 		if (it->second.mCount == 0)
 		{
-			// Call contact removal callbacks
 			const ContactKey &c = it->first;
 			if (!c.mCharacterIDB.IsInvalid())
 				mListener->OnCharacterContactRemoved(this, c.mCharacterIDB, c.mSubShapeIDB);
@@ -1365,7 +1365,7 @@ void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadP
 		return;
 
 	StartTrackingContactChanges();
-	JPH_SCOPE_EXIT([this, &inAllocator]() { FinishTrackingContactChanges(inAllocator); });
+	JPH_SCOPE_EXIT([this]() { FinishTrackingContactChanges(); });
 
 	// Remember delta time for checking if we're supported by the ground
 	mLastDeltaTime = inDeltaTime;
@@ -1403,9 +1403,7 @@ void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhase
 	contacts.reserve(mMaxNumHits);
 	GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
 
-	StartTrackingContactChanges();
 	StoreActiveContacts(contacts, inAllocator);
-	FinishTrackingContactChanges(inAllocator);
 }
 
 void CharacterVirtual::UpdateGroundVelocity()
@@ -1486,9 +1484,7 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 					&& !c.mIsSensorB)
 					return false;
 
-			StartTrackingContactChanges();
 			StoreActiveContacts(contacts, inAllocator);
-			FinishTrackingContactChanges(inAllocator);
 		}
 
 		// Set new shape
@@ -1528,7 +1524,7 @@ bool CharacterVirtual::CanWalkStairs(Vec3Arg inLinearVelocity) const
 bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg inStepForward, Vec3Arg inStepForwardTest, Vec3Arg inStepDownExtra, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator)
 {
 	StartTrackingContactChanges();
-	JPH_SCOPE_EXIT([this, &inAllocator]() { FinishTrackingContactChanges(inAllocator); });
+	JPH_SCOPE_EXIT([this]() { FinishTrackingContactChanges(); });
 
 	// Move up
 	Vec3 up = inStepUp;
@@ -1669,7 +1665,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator)
 {
 	StartTrackingContactChanges();
-	JPH_SCOPE_EXIT([this, &inAllocator]() { FinishTrackingContactChanges(inAllocator); });
+	JPH_SCOPE_EXIT([this]() { FinishTrackingContactChanges(); });
 
 	// Try to find the floor
 	Contact contact;
@@ -1697,7 +1693,7 @@ bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFil
 void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, const ExtendedUpdateSettings &inSettings, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator)
 {
 	StartTrackingContactChanges();
-	JPH_SCOPE_EXIT([this, &inAllocator]() { FinishTrackingContactChanges(inAllocator); });
+	JPH_SCOPE_EXIT([this]() { FinishTrackingContactChanges(); });
 
 	// Update the velocity
 	Vec3 desired_velocity = mLinearVelocity;
