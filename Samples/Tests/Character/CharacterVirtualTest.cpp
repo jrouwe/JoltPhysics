@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Layers.h>
+#include <Utils/Log.h>
 #include <Renderer/DebugRendererImp.h>
 #include <Application/DebugUI.h>
 
@@ -286,7 +287,8 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 		Trace("Contact added with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
 	#endif
 		CharacterVirtual::ContactKey c(inBodyID2, inSubShapeID2);
-		JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), c) == mActiveContacts.end());
+		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), c) != mActiveContacts.end())
+			FatalError("Got an add contact that should have been a persisted contact");
 		mActiveContacts.push_back(c);
 	}
 }
@@ -300,7 +302,8 @@ void CharacterVirtualTest::OnContactPersisted(const CharacterVirtual *inCharacte
 	#ifdef CHARACTER_TRACE_CONTACTS
 		Trace("Contact persisted with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
 	#endif
-		JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inBodyID2, inSubShapeID2)) != mActiveContacts.end());
+		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inBodyID2, inSubShapeID2)) == mActiveContacts.end())
+			FatalError("Got a persisted contact that should have been an add contact");
 	}
 }
 
@@ -312,7 +315,8 @@ void CharacterVirtualTest::OnContactRemoved(const CharacterVirtual *inCharacter,
 		Trace("Contact removed with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
 	#endif
 		ContactSet::iterator it = std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inBodyID2, inSubShapeID2));
-		JPH_ASSERT(it != mActiveContacts.end());
+		if (it == mActiveContacts.end())
+			FatalError("Got a remove contact that has not been added");
 		mActiveContacts.erase(it);
 	}
 }
@@ -342,7 +346,8 @@ void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCha
 		Trace("Contact added with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
 	#endif
 		CharacterVirtual::ContactKey c(inOtherCharacter->GetID(), inSubShapeID2);
-		JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), c) == mActiveContacts.end());
+		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), c) != mActiveContacts.end())
+			FatalError("Got an add contact that should have been a persisted contact");
 		mActiveContacts.push_back(c);
 	}
 }
@@ -356,7 +361,8 @@ void CharacterVirtualTest::OnCharacterContactPersisted(const CharacterVirtual *i
 	#ifdef CHARACTER_TRACE_CONTACTS
 		Trace("Contact persisted with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
 	#endif
-		JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inOtherCharacter->GetID(), inSubShapeID2)) != mActiveContacts.end());
+		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inOtherCharacter->GetID(), inSubShapeID2)) == mActiveContacts.end())
+			FatalError("Got a persisted contact that should have been an add contact");
 	}
 }
 
@@ -368,7 +374,8 @@ void CharacterVirtualTest::OnCharacterContactRemoved(const CharacterVirtual *inC
 		Trace("Contact removed with character %08x, sub shape %08x", inOtherCharacterID.GetValue(), inSubShapeID2.GetValue());
 	#endif
 		ContactSet::iterator it = std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inOtherCharacterID, inSubShapeID2));
-		JPH_ASSERT(it != mActiveContacts.end());
+		if (it == mActiveContacts.end())
+			FatalError("Got a remove contact that has not been added");
 		mActiveContacts.erase(it);
 	}
 }

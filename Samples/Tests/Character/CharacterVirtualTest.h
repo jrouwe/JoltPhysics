@@ -92,9 +92,7 @@ private:
 	// True when the player is pressing movement controls
 	bool					mAllowSliding = false;
 
-#ifdef JPH_ENABLE_ASSERTS
 	// Track active contacts for debugging purposes
 	using ContactSet = Array<CharacterVirtual::ContactKey>;
 	ContactSet				mActiveContacts;
-#endif // JPH_ENABLE_ASSERTS
 };
