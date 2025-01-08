@@ -207,7 +207,7 @@ void CharacterVirtual::sFillContactProperties(const CharacterVirtual *inCharacte
 	outContact.mMaterial = inCollector.GetContext()->GetMaterial(inResult.mSubShapeID2);
 }
 
-void CharacterVirtual::sFillCharacterContactProperties(Contact &outContact, CharacterVirtual *inOtherCharacter, RVec3Arg inBaseOffset, const CollideShapeResult &inResult)
+void CharacterVirtual::sFillCharacterContactProperties(Contact &outContact, const CharacterVirtual *inOtherCharacter, RVec3Arg inBaseOffset, const CollideShapeResult &inResult)
 {
 	outContact.mPosition = inBaseOffset + inResult.mContactPointOn2;
 	outContact.mLinearVelocity = inOtherCharacter->GetLinearVelocity();
@@ -466,8 +466,7 @@ void CharacterVirtual::ContactAdded(const Contact &inContact, CharacterContactSe
 	if (mListener != nullptr)
 	{
 		// Check if we already know this contact
-		ContactKey key(inContact);
-		ListenerContacts::iterator it = mListenerContacts.find(key);
+		ListenerContacts::iterator it = mListenerContacts.find(inContact);
 		if (it != mListenerContacts.end())
 		{
 			// Max 1 contact persisted callback
@@ -492,7 +491,7 @@ void CharacterVirtual::ContactAdded(const Contact &inContact, CharacterContactSe
 				mListener->OnCharacterContactAdded(this, inContact.mCharacterB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
 			else
 				mListener->OnContactAdded(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
-			mListenerContacts.insert(ListenerContacts::value_type(key, ioSettings));
+			mListenerContacts.insert(ListenerContacts::value_type(inContact, ioSettings));
 		}
 	}
 }
@@ -1337,7 +1336,7 @@ void CharacterVirtual::FinishTrackingContactChanges()
 	// to ensure that these lists are in sync.
 	for (ListenerContacts::value_type &c : mListenerContacts)
 		c.second.mCount = 0;
-	for (Contact &c : mActiveContacts)
+	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision)
 		{
 			ListenerContacts::iterator it = mListenerContacts.find(c);
