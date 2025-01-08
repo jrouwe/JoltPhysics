@@ -711,7 +711,7 @@ private:
 										ListenerContactValue(const CharacterContactSettings &inSettings) : mSettings(inSettings) { }
 
 		CharacterContactSettings		mSettings;
-		int								mCount = 1;
+		int								mCount = 0;
 	};
 
 	using ListenerContacts = UnorderedMap<ContactKey, ListenerContactValue, ContactKeyHash>;

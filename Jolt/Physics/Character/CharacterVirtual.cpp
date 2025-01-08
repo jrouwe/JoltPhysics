@@ -465,44 +465,33 @@ void CharacterVirtual::ContactAdded(const Contact &inContact, CharacterContactSe
 {
 	if (mListener != nullptr)
 	{
+		// Check if we already know this contact
 		ContactKey key(inContact);
 		ListenerContacts::iterator it = mListenerContacts.find(key);
-		if (inContact.mCharacterB != nullptr)
+		if (it != mListenerContacts.end())
 		{
-			// Check if we already know this contact
-			if (it != mListenerContacts.end())
+			// Max 1 contact persisted callback
+			if (++it->second.mCount == 1)
 			{
-				if (++it->second.mCount == 1)
-				{
+				if (inContact.mCharacterB != nullptr)
 					mListener->OnCharacterContactPersisted(this, inContact.mCharacterB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
-					ioSettings = it->second.mSettings;
-				}
 				else
-					ioSettings = it->second.mSettings;
-				return;
+					mListener->OnContactPersisted(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+				it->second.mSettings = ioSettings;
 			}
-
-			// New contact
-			mListener->OnCharacterContactAdded(this, inContact.mCharacterB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
-			mListenerContacts.insert(ListenerContacts::value_type(key, ioSettings));
+			else
+			{
+				// Reuse the settings from the last call
+				ioSettings = it->second.mSettings;
+			}
 		}
 		else
 		{
-			// Check if we already know this contact
-			if (it != mListenerContacts.end())
-			{
-				if (++it->second.mCount == 1)
-				{
-					mListener->OnContactPersisted(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
-					it->second.mSettings = ioSettings;
-				}
-				else
-					ioSettings = it->second.mSettings;
-				return;
-			}
-
 			// New contact
-			mListener->OnContactAdded(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+			if (inContact.mCharacterB != nullptr)
+				mListener->OnCharacterContactAdded(this, inContact.mCharacterB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
+			else
+				mListener->OnContactAdded(this, inContact.mBodyB, inContact.mSubShapeIDB, inContact.mPosition, -inContact.mContactNormal, ioSettings);
 			mListenerContacts.insert(ListenerContacts::value_type(key, ioSettings));
 		}
 	}
@@ -1321,9 +1310,12 @@ void CharacterVirtual::StartTrackingContactChanges()
 		return;
 	}
 
-	// Mark all contacts as not seen
-	for (ListenerContacts::value_type &c : mListenerContacts)
-		c.second.mCount = 0;
+	// Mark all current contacts as not seen
+	JPH_ASSERT(mListenerContacts.empty());
+	mListenerContacts.reserve(ListenerContacts::size_type(mActiveContacts.size()));
+	for (const Contact &c : mActiveContacts)
+		if (c.mHadCollision)
+			mListenerContacts.insert(ListenerContacts::value_type(c, ListenerContactValue()));
 }
 
 void CharacterVirtual::FinishTrackingContactChanges(TempAllocator &inAllocator)
@@ -1352,26 +1344,18 @@ void CharacterVirtual::FinishTrackingContactChanges(TempAllocator &inAllocator)
 			it->second.mCount = 1;
 		}
 
-	// Store contacts that need to be removed in a separate list as we cannot
-	// remove them while iterating over the map
-	Array<ContactKey, STLTempAllocator<ContactKey>> removed_contacts(inAllocator);
-	removed_contacts.reserve(mListenerContacts.size());
-	for (ListenerContacts::value_type &c : mListenerContacts)
-		if (c.second.mCount == 0)
-			removed_contacts.push_back(c.first);
-
-	// Do the actual removal
-	for (ContactKey &c : removed_contacts)
-	{
-		// Call contact removal callbacks
-		if (!c.mCharacterIDB.IsInvalid())
-			mListener->OnCharacterContactRemoved(this, c.mCharacterIDB, c.mSubShapeIDB);
-		else
-			mListener->OnContactRemoved(this, c.mBodyB, c.mSubShapeIDB);
-
-		// Remove from the map
-		mListenerContacts.erase(c);
-	}
+	// Call contact removal callbacks
+	for (ListenerContacts::iterator it = mListenerContacts.begin(); it != mListenerContacts.end(); ++it)
+		if (it->second.mCount == 0)
+		{
+			// Call contact removal callbacks
+			const ContactKey &c = it->first;
+			if (!c.mCharacterIDB.IsInvalid())
+				mListener->OnCharacterContactRemoved(this, c.mCharacterIDB, c.mSubShapeIDB);
+			else
+				mListener->OnContactRemoved(this, c.mBodyB, c.mSubShapeIDB);
+		}
+	mListenerContacts.ClearAndKeepMemory();
 }
 
 void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator)
@@ -1862,16 +1846,6 @@ void CharacterVirtual::SaveState(StateRecorder &inStream) const
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision)
 			c.SaveState(inStream);
-
-#ifdef JPH_ENABLE_ASSERTS
-	if (mListener != nullptr)
-	{
-		JPH_ASSERT(mListenerContacts.size() == num_contacts);
-		for (const Contact &c : mActiveContacts)
-			if (c.mHadCollision)
-				JPH_ASSERT(mListenerContacts.find(c) != mListenerContacts.end());
-	}
-#endif
 }
 
 void CharacterVirtual::RestoreState(StateRecorder &inStream)
@@ -1895,19 +1869,6 @@ void CharacterVirtual::RestoreState(StateRecorder &inStream)
 	mActiveContacts.resize(num_contacts);
 	for (Contact &c : mActiveContacts)
 		c.RestoreState(inStream);
-
-	// Assign all active contacts to the list of contacts for the listener. The idea is that
-	// these contacts should receive a 'contact persisted' or 'contact removed' call during the
-	// next update since they should have had an 'contact added' call prior to saving the state.
-	// The state of these contacts doesn't really matter as it will be updated in StartTrackingContactChanges / ContactAdded.
-	if (mListener != nullptr)
-	{
-		mListenerContacts.clear();
-		mListenerContacts.reserve(ListenerContacts::size_type(mActiveContacts.size()));
-		for (const Contact &c : mActiveContacts)
-			if (c.mHadCollision)
-				mListenerContacts.insert(ListenerContacts::value_type(c, ListenerContactValue()));
-	}
 }
 
 JPH_NAMESPACE_END
