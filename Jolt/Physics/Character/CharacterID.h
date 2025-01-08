@@ -9,7 +9,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// ID of a character. Used primarily to identify deleted characters and to sort deterministically.
-class CharacterID
+class JPH_EXPORT CharacterID
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
