@@ -804,8 +804,8 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	// Wait for this frame to complete
 	vkWaitForFences(mDevice, 1, &mInFlightFences[mFrameIndex], VK_TRUE, UINT64_MAX);
 
-	VkResult result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mFrameIndex], VK_NULL_HANDLE, &mImageIndex);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	VkResult result = mSubOptimalSwapChain? VK_ERROR_OUT_OF_DATE_KHR : vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mFrameIndex], VK_NULL_HANDLE, &mImageIndex);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
 		vkDeviceWaitIdle(mDevice);
 		DestroySwapChain();
@@ -813,6 +813,13 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 		if (mSwapChain == nullptr)
 			return;
 		result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mFrameIndex], VK_NULL_HANDLE, &mImageIndex);
+		mSubOptimalSwapChain = false;
+	}
+	else if (result == VK_SUBOPTIMAL_KHR)
+	{
+		// Render this frame with the suboptimal swap chain as we've already acquired an image
+		mSubOptimalSwapChain = true;
+		result = VK_SUCCESS;
 	}
 	FatalErrorIfFailed(result);
 

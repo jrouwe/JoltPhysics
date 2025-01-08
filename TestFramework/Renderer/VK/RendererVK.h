@@ -78,6 +78,7 @@ private:
 	VkQueue							mPresentQueue = VK_NULL_HANDLE;
 	VkSurfaceKHR					mSurface = VK_NULL_HANDLE;
 	VkSwapchainKHR					mSwapChain = VK_NULL_HANDLE;
+	bool							mSubOptimalSwapChain = false;
 	Array<VkImage>					mSwapChainImages;
 	VkFormat						mSwapChainImageFormat;
 	VkExtent2D						mSwapChainExtent;
