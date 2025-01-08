@@ -159,9 +159,29 @@ TEST_SUITE("CharacterVirtualTests")
 			mContactLog.OnContactAdded(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
 		}
 
+		virtual void			OnContactPersisted(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+		{
+			mContactLog.OnContactPersisted(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+		}
+
+		virtual void			OnContactRemoved(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) override
+		{
+			mContactLog.OnContactRemoved(inCharacter, inBodyID2, inSubShapeID2);
+		}
+
 		virtual void			OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
 		{
 			mContactLog.OnCharacterContactAdded(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+		}
+
+		virtual void			OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+		{
+			mContactLog.OnCharacterContactPersisted(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+		}
+
+		virtual void			OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterID &inOtherCharacterID, const SubShapeID &inSubShapeID2) override
+		{
+			mContactLog.OnCharacterContactRemoved(inCharacter, inOtherCharacterID, inSubShapeID2);
 		}
 
 		virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) override
@@ -346,7 +366,7 @@ TEST_SUITE("CharacterVirtualTests")
 					// Should have received callbacks
 					CHECK(character.mContactLog.GetEntryCount() == 2);
 					CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::ValidateBody, character.mCharacter, floor.GetID()));
-					CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::AddBody, character.mCharacter, floor.GetID()));
+					CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::PersistBody, character.mCharacter, floor.GetID()));
 					character.mContactLog.Clear();
 				}
 				else
@@ -354,8 +374,9 @@ TEST_SUITE("CharacterVirtualTests")
 					// Should be off ground
 					CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::InAir);
 
-					// No callbacks
-					CHECK(character.mContactLog.GetEntryCount() == 0);
+					// Remove callbacks
+					CHECK(character.mContactLog.GetEntryCount() == 1);
+					CHECK(character.mContactLog.Contains(LoggingCharacterContactListener::EType::RemoveBody, character.mCharacter, floor.GetID()));
 				}
 			}
 
