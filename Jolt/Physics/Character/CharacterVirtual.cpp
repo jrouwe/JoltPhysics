@@ -1174,7 +1174,7 @@ void CharacterVirtual::StoreActiveContacts(const TempContactList &inContacts, Te
 	mActiveContacts.assign(inContacts.begin(), inContacts.end());
 
 	UpdateSupportingContact(true, inAllocator);
-	
+
 	FinishTrackingContactChanges();
 }
 

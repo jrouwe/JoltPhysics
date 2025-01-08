@@ -84,7 +84,7 @@ public:
 	static void				sSetNextCharacterID(uint32 inNextValue = 1)
 	{
 		sNextID.store(inNextValue, std::memory_order_relaxed);
-	}	
+	}
 
 private:
 	/// Next character ID to be assigned
