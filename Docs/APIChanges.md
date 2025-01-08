@@ -6,6 +6,8 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v5.2.0 and latest
 
+* 20240108 - CharacterVirtual::Contact::mHadCollision is now true for sensor contacts (mIsSensorB). Make sure you ignore all discarded contacts (mWasDiscarded) when using CharacterVirtual::GetActiveContacts. (0ce60932501cdadcb8b209b3e03c143fac4cbcd6)
+* 20240108 - CharacterContactListener now has OnContactPersisted, OnContactRemoved, OnCharacterContactPersisted and OnCharacterContactRemoved functions. If you relied on OnContactAdded/OnCharacterContactAdded callbacks, you may want to call those functions from OnContactPersisted/OnCharacterContactPersisted to keep the behavior the same. (0ce60932501cdadcb8b209b3e03c143fac4cbcd6)
 * 20241221 - BodyInterface::AddForce applied a force per soft body vertex rather than to the whole body, this resulted in a soft body accelerating much more compared to a rigid body of the same mass. If you are applying forces to soft bodies, you need to multiply the force by the number of vertices of the soft body to get the same effect as before. (7850b05a97d2079fc52e538507c843026a555ef3)
 * 20241125 - *SBS* - Changed the binary serialization format of MeshShape to allow for bigger meshes of up to 110M triangles. (c738b3490c72cf868bdd704db7d0191b41541751)
 * 20241119 - Removed the use of std::unordered_map and std::unordered_set and replaced them with our own implementation: UnorderedMap and UnorderedSet. The public facing interface includes some instances of these, e.g. Shape::ShapeToIDMap. Since these are typedeffed and the interface remained the same, applications should not notice the change. (f1420822d39c440492602b670eac8ae2f5821401)

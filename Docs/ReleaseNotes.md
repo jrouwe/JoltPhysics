@@ -17,6 +17,10 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added support for RISC-V, LoongArch and PowerPC (Little Endian) CPUs.
 * Added the ability to add a sub shape at a specified index in a MutableCompoundShape rather than at the end.
 * The Samples and JoltViewer can run on Linux/macOS using Vulkan now. Make sure to install the Vulkan SDK before compiling (see: Build/ubuntu24_install_vulkan_sdk.sh or [download](https://vulkan.lunarg.com/sdk/home) the SDK).
+* Added STLLocalAllocator which is an allocator that can be used in e.g. the Array class. It keeps a fixed size buffer for N elements and only when it runs out of space falls back to the heap.
+* Added support for CharacterVirtual to override the inner rigid body ID. This can be used to make the simulation deterministic in e.g. client/server setups.
+* Added OnContactPersisted, OnContactRemoved, OnCharacterContactPersisted and OnCharacterContactRemoved functions on CharacterContactListener to better match the interface of ContactListener.
+* Every CharacterVirtual now has a CharacterID. This ID can be used to identify the character after removal and is used to make the simulation deterministic in case a character collides with multiple other virtual characters.
 
 ### Bug fixes
 
@@ -26,6 +30,9 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed a GCC warning `-Wshadow=global`.
 * BodyInterface::AddForce applied a force per soft body vertex rather than to the whole body, this resulted in a soft body accelerating much more compared to a rigid body of the same mass.
 * Removing a sub shape from a MutableCompoundShape would not update the bounding box if the last shape was removed, which can result in a small performance loss.
+* VehicleConstraint would override Body::SetAllowSleeping every frame, making it impossible for client code to configure a vehicle that cannot go to sleep.
+* Fixed CharacterVirtual::Contact::mIsSensorB not being persisted in SaveState.
+* Fixed CharacterVirtual::Contact::mHadContact not being true for collisions with sensors. They will still be marked as mWasDiscarded to prevent any further interaction.
 
 ## v5.2.0
 
