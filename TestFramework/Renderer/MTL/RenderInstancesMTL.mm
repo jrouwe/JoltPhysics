@@ -6,7 +6,6 @@
 
 #include <Renderer/MTL/RenderInstancesMTL.h>
 #include <Renderer/MTL/RenderPrimitiveMTL.h>
-#include <Renderer/MTL/FatalErrorIfFailedMTL.h>
 
 void RenderInstancesMTL::Clear()
 {

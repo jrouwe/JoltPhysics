@@ -6,10 +6,10 @@
 
 #include <Renderer/MTL/ConstantBufferMTL.h>
 #include <Renderer/MTL/RendererMTL.h>
-#include <Renderer/MTL/FatalErrorIfFailedMTL.h>
 
 ConstantBufferMTL::ConstantBufferMTL(RendererMTL *inRenderer, uint inBufferSize)
 {
+	mBuffer = [inRenderer->GetDevice() newBufferWithLength: inBufferSize options: MTLResourceStorageModeShared];
 }
 
 ConstantBufferMTL::~ConstantBufferMTL()
@@ -18,7 +18,7 @@ ConstantBufferMTL::~ConstantBufferMTL()
 
 void *ConstantBufferMTL::MapInternal()
 {
-	return nullptr;
+	return mBuffer.contents;
 }
 
 void ConstantBufferMTL::Unmap()

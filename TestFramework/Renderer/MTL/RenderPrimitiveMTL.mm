@@ -5,7 +5,6 @@
 #include <TestFramework.h>
 
 #include <Renderer/MTL/RenderPrimitiveMTL.h>
-#include <Renderer/MTL/FatalErrorIfFailedMTL.h>
 
 void RenderPrimitiveMTL::ReleaseVertexBuffer()
 {
@@ -26,7 +25,10 @@ void RenderPrimitiveMTL::CreateVertexBuffer(int inNumVtx, int inVtxSize, const v
 	RenderPrimitive::CreateVertexBuffer(inNumVtx, inVtxSize, inData);
 
 	NSUInteger size = NSUInteger(inNumVtx) * inVtxSize;
-	mVertexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceStorageModeShared];
+	if (inData != nullptr)
+		mVertexBuffer = [mRenderer->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceStorageModeShared];
+	else
+		mVertexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceStorageModeShared];
 }
 
 void *RenderPrimitiveMTL::LockVertexBuffer()
@@ -43,7 +45,10 @@ void RenderPrimitiveMTL::CreateIndexBuffer(int inNumIdx, const uint32 *inData)
 	RenderPrimitive::CreateIndexBuffer(inNumIdx, inData);
 
 	NSUInteger size = NSUInteger(inNumIdx) * sizeof(uint32);
-	mIndexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceStorageModeShared];
+	if (inData != nullptr)
+		mIndexBuffer = [mRenderer->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceStorageModeShared];
+	else
+		mIndexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceStorageModeShared];
 }
 
 uint32 *RenderPrimitiveMTL::LockIndexBuffer()
