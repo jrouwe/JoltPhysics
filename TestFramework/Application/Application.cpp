@@ -17,6 +17,8 @@
 	#include <Renderer/VK/RendererVK.h>
 #elif defined(JPH_ENABLE_DIRECTX)
 	#include <Renderer/DX12/RendererDX12.h>
+#elif defined(JPH_ENABLE_METAL)
+	#include <Renderer/MTL/RendererMTL.h>
 #endif
 #ifdef JPH_PLATFORM_WINDOWS
 	#include <crtdbg.h>
@@ -88,6 +90,8 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 		mRenderer = new RendererVK;
 	#elif defined(JPH_ENABLE_DIRECTX)
 		mRenderer = new RendererDX12;
+	#elif defined(JPH_ENABLE_METAL)
+		mRenderer = new RendererMTL;
 	#else
 		#error No renderer defined
 	#endif

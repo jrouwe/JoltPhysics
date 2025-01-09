@@ -1,6 +1,6 @@
 # Find Vulkan
 find_package(Vulkan)
-if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
+if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")))
 	# We have Vulkan/DirectX so we can compile TestFramework
 	set(TEST_FRAMEWORK_AVAILABLE TRUE)
 
@@ -158,6 +158,22 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 		# macOS source files
 		set(TEST_FRAMEWORK_SRC_FILES
 			${TEST_FRAMEWORK_SRC_FILES}
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/ConstantBufferMTL.mm
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/ConstantBufferMTL.h
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/FatalErrorIfFailedMTL.mm
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/FatalErrorIfFailedMTL.h
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/PipelineStateMTL.mm
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/PipelineStateMTL.h
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/PixelShaderMTL.h
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/RendererMTL.mm
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/RendererMTL.h
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/RenderInstancesMTL.mm
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/RenderInstancesMTL.h
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/RenderPrimitiveMTL.mm
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/RenderPrimitiveMTL.h
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/TextureMTL.mm
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/TextureMTL.h
+			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/VertexShaderMTL.h
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.h
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.mm
@@ -254,7 +270,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 		# macOS configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework Metal -framework MetalKit -framework GameController")
-		
+		target_compile_definitions(TestFramework PRIVATE JPH_ENABLE_METAL)
+
 		# Ignore PCH files for .mm files
 		foreach(SRC_FILE ${TEST_FRAMEWORK_SRC_FILES})
 			if (SRC_FILE MATCHES "\.mm")
