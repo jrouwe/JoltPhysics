@@ -707,3 +707,10 @@ void RendererDX12::RecycleD3DObject(ID3D12Object *inResource)
 	if (!mIsExiting)
 		mDelayReleased[mFrameIndex].push_back(inResource);
 }
+
+#ifndef JPH_USE_VULKAN
+Renderer *Renderer::sCreate()
+{
+	return new RendererDX12;
+}
+#endif

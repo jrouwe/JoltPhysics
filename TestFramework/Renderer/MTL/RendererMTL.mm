@@ -12,15 +12,22 @@
 #include <Renderer/MTL/PixelShaderMTL.h>
 #include <Renderer/MTL/TextureMTL.h>
 #include <Renderer/MTL/FatalErrorIfFailedMTL.h>
+#include <Window/ApplicationWindowMacOS.h>
 #include <Utils/Log.h>
 #include <Jolt/Core/Profiler.h>
 
 RendererMTL::~RendererMTL()
 {
+	mShadowMap = nullptr;
 }
 
 void RendererMTL::Initialize(ApplicationWindow *inWindow)
 {
+	mView = static_cast<ApplicationWindowMacOS *>(inWindow)->GetMetalView();
+
+	// Create depth only texture (no color buffer, as seen from light)
+	mShadowMap = new TextureMTL(this, cShadowMapSize, cShadowMapSize);
+
 	Renderer::Initialize(inWindow);
 }
 
@@ -85,3 +92,10 @@ RenderInstances *RendererMTL::CreateRenderInstances()
 void RendererMTL::OnWindowResize()
 {
 }
+
+#ifndef JPH_USE_VULKAN
+Renderer *Renderer::sCreate()
+{
+	return new RendererMTL;
+}
+#endif

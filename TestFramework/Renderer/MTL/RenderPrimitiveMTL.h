@@ -32,4 +32,6 @@ public:
 
 private:
 	RendererMTL *			mRenderer;
+	id<MTLBuffer>			mVertexBuffer;
+	id<MTLBuffer>			mIndexBuffer;
 };

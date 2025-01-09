@@ -87,7 +87,7 @@ void ApplicationWindowMacOS::Initialize()
 {
 	// Create metal view
 	MetalView *view = [[MetalView alloc] init: this];
-	mMetalLayer = (CAMetalLayer *)view.layer;
+	mMetalView = view;
 
 	// Create window
 	NSWindow *window = [[NSWindow alloc] initWithContentRect: NSMakeRect(0, 0, mWindowWidth, mWindowHeight)
@@ -111,4 +111,9 @@ void ApplicationWindowMacOS::MainLoop(ApplicationWindow::RenderCallback inRender
 		[app setDelegate:delegate];
 		[app run];
 	}
+}
+
+CAMetalLayer *ApplicationWindowMacOS::GetMetalLayer() const
+{
+	return (CAMetalLayer *)mMetalView.layer;
 }

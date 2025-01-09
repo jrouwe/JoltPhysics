@@ -9,22 +9,29 @@
 
 void RenderPrimitiveMTL::ReleaseVertexBuffer()
 {
+	mVertexBuffer = nil;
+
 	RenderPrimitive::ReleaseVertexBuffer();
 }
 
 void RenderPrimitiveMTL::ReleaseIndexBuffer()
 {
+	mIndexBuffer = nil;
+
 	RenderPrimitive::ReleaseIndexBuffer();
 }
 
 void RenderPrimitiveMTL::CreateVertexBuffer(int inNumVtx, int inVtxSize, const void *inData)
 {
 	RenderPrimitive::CreateVertexBuffer(inNumVtx, inVtxSize, inData);
+
+	NSUInteger size = NSUInteger(inNumVtx) * inVtxSize;
+	mVertexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceStorageModeShared];
 }
 
 void *RenderPrimitiveMTL::LockVertexBuffer()
 {
-	return nullptr;
+	return mVertexBuffer.contents;
 }
 
 void RenderPrimitiveMTL::UnlockVertexBuffer()
@@ -34,11 +41,14 @@ void RenderPrimitiveMTL::UnlockVertexBuffer()
 void RenderPrimitiveMTL::CreateIndexBuffer(int inNumIdx, const uint32 *inData)
 {
 	RenderPrimitive::CreateIndexBuffer(inNumIdx, inData);
+
+	NSUInteger size = NSUInteger(inNumIdx) * sizeof(uint32);
+	mIndexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceStorageModeShared];
 }
 
 uint32 *RenderPrimitiveMTL::LockIndexBuffer()
 {
-	return nullptr;
+	return (uint32 *)mIndexBuffer.contents;
 }
 
 void RenderPrimitiveMTL::UnlockIndexBuffer()
@@ -47,5 +57,4 @@ void RenderPrimitiveMTL::UnlockIndexBuffer()
 
 void RenderPrimitiveMTL::Draw() const
 {
-	(void)mRenderer;
 }

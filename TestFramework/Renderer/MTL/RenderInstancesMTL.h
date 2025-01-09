@@ -30,4 +30,5 @@ public:
 
 private:
 	RendererMTL *			mRenderer;
+	id<MTLBuffer>			mBuffer;
 };

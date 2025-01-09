@@ -94,6 +94,9 @@ public:
 	/// Callback when the window resizes and the back buffer needs to be adjusted
 	virtual void					OnWindowResize() = 0;
 
+	/// Create a platform specific Renderer instance
+	static Renderer *				sCreate();
+
 protected:
 	struct VertexShaderConstantBuffer
 	{

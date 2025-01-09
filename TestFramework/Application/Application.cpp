@@ -13,13 +13,6 @@
 #include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
 #include <Renderer/DebugRendererImp.h>
-#ifdef JPH_ENABLE_VULKAN
-	#include <Renderer/VK/RendererVK.h>
-#elif defined(JPH_ENABLE_DIRECTX)
-	#include <Renderer/DX12/RendererDX12.h>
-#elif defined(JPH_ENABLE_METAL)
-	#include <Renderer/MTL/RendererMTL.h>
-#endif
 #ifdef JPH_PLATFORM_WINDOWS
 	#include <crtdbg.h>
 	#include <Input/Win/KeyboardWin.h>
@@ -86,15 +79,7 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 		mWindow->Initialize();
 
 		// Create renderer
-	#ifdef JPH_ENABLE_VULKAN
-		mRenderer = new RendererVK;
-	#elif defined(JPH_ENABLE_DIRECTX)
-		mRenderer = new RendererDX12;
-	#elif defined(JPH_ENABLE_METAL)
-		mRenderer = new RendererMTL;
-	#else
-		#error No renderer defined
-	#endif
+		mRenderer = Renderer::sCreate();
 		mRenderer->Initialize(mWindow);
 
 		// Create font

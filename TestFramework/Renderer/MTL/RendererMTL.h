@@ -8,6 +8,8 @@
 #include <Renderer/MTL/ConstantBufferMTL.h>
 #include <Renderer/MTL/TextureMTL.h>
 
+#include <MetalKit/MetalKit.h>
+
 /// Metal renderer
 class RendererMTL : public Renderer
 {
@@ -28,6 +30,13 @@ public:
 	virtual unique_ptr<PipelineState> CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode) override;
 	virtual RenderPrimitive *		CreateRenderPrimitive(PipelineState::ETopology inType) override;
 	virtual RenderInstances *		CreateRenderInstances() override;
-	virtual Texture *				GetShadowMap() const override									{ return nullptr; }
+	virtual Texture *				GetShadowMap() const override									{ return mShadowMap; }
 	virtual void					OnWindowResize() override;
+
+	MTKView *						GetView() const													{ return mView; }
+	id<MTLDevice>					GetDevice() const												{ return mView.device; }
+
+private:
+	MTKView *						mView;
+	Ref<TextureMTL>					mShadowMap;
 };
