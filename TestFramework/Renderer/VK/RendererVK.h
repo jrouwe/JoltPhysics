@@ -26,8 +26,8 @@ public:
 	virtual void					SetProjectionMode() override;
 	virtual void					SetOrthoMode() override;
 	virtual Ref<Texture>			CreateTexture(const Surface *inSurface) override;
-	virtual Ref<VertexShader>		CreateVertexShader(const char *inFileName) override;
-	virtual Ref<PixelShader>		CreatePixelShader(const char *inFileName) override;
+	virtual Ref<VertexShader>		CreateVertexShader(const char *inName) override;
+	virtual Ref<PixelShader>		CreatePixelShader(const char *inName) override;
 	virtual unique_ptr<PipelineState> CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode) override;
 	virtual RenderPrimitive *		CreateRenderPrimitive(PipelineState::ETopology inType) override;
 	virtual RenderInstances *		CreateRenderInstances() override;

@@ -51,10 +51,10 @@ public:
 	virtual Ref<Texture>			CreateTexture(const Surface *inSurface) = 0;
 
 	/// Compile a vertex shader
-	virtual Ref<VertexShader>		CreateVertexShader(const char *inFileName) = 0;
+	virtual Ref<VertexShader>		CreateVertexShader(const char *inName) = 0;
 
 	/// Compile a pixel shader
-	virtual Ref<PixelShader>		CreatePixelShader(const char *inFileName) = 0;
+	virtual Ref<PixelShader>		CreatePixelShader(const char *inName) = 0;
 
 	/// Create pipeline state object that defines the complete state of how primitives should be rendered
 	virtual unique_ptr<PipelineState> CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode) = 0;

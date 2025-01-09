@@ -1,6 +1,6 @@
 #version 450
 
-#include "VertexConstantsVK.h"
+#include "VertexConstants.h"
 
 layout(location = 0) in vec3 vPos;
 layout(location = 1) in vec2 vTex;

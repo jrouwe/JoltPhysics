@@ -38,11 +38,11 @@ UIManager::UIManager(Renderer *inRenderer) :
 	};
 
 	// Load vertex shader
-	Ref<VertexShader> vtx = mRenderer->CreateVertexShader("Assets/Shaders/UIVertexShader");
+	Ref<VertexShader> vtx = mRenderer->CreateVertexShader("UIVertexShader");
 
 	// Load pixel shader
-	Ref<PixelShader> pix_textured = mRenderer->CreatePixelShader("Assets/Shaders/UIPixelShader");
-	Ref<PixelShader> pix_untextured = mRenderer->CreatePixelShader("Assets/Shaders/UIPixelShaderUntextured");
+	Ref<PixelShader> pix_textured = mRenderer->CreatePixelShader("UIPixelShader");
+	Ref<PixelShader> pix_untextured = mRenderer->CreatePixelShader("UIPixelShaderUntextured");
 
 	mTextured = mRenderer->CreatePipelineState(vtx, vertex_desc, std::size(vertex_desc), pix_textured, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 	mUntextured = mRenderer->CreatePipelineState(vtx, vertex_desc, std::size(vertex_desc), pix_untextured, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);

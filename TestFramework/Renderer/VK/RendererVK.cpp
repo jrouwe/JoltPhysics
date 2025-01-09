@@ -965,9 +965,9 @@ Ref<Texture> RendererVK::CreateTexture(const Surface *inSurface)
 	return new TextureVK(this, inSurface);
 }
 
-Ref<VertexShader> RendererVK::CreateVertexShader(const char *inFileName)
+Ref<VertexShader> RendererVK::CreateVertexShader(const char *inName)
 {
-	Array<uint8> data = ReadData((String(inFileName) + ".vert.spv").c_str());
+	Array<uint8> data = ReadData((String("Assets/Shaders/VK/") + inName + ".vert.spv").c_str());
 
 	VkShaderModuleCreateInfo create_info = {};
 	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -979,9 +979,9 @@ Ref<VertexShader> RendererVK::CreateVertexShader(const char *inFileName)
 	return new VertexShaderVK(mDevice, shader_module);
 }
 
-Ref<PixelShader> RendererVK::CreatePixelShader(const char *inFileName)
+Ref<PixelShader> RendererVK::CreatePixelShader(const char *inName)
 {
-	Array<uint8> data = ReadData((String(inFileName) + ".frag.spv").c_str());
+	Array<uint8> data = ReadData((String("Assets/Shaders/VK/") + inName + ".frag.spv").c_str());
 
 	VkShaderModuleCreateInfo create_info = {};
 	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

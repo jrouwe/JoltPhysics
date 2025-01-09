@@ -114,28 +114,28 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 
 		# All shaders
 		set(TEST_FRAMEWORK_SRC_FILES_SHADERS
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/VertexConstants.h
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/VertexConstants.h
 		)
 
 		# HLSL vertex shaders
 		set(TEST_FRAMEWORK_HLSL_VERTEX_SHADERS
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/FontVertexShader.hlsl
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/LineVertexShader.hlsl
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthVertexShader.hlsl
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleVertexShader.hlsl
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/UIVertexShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/FontVertexShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/LineVertexShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/TriangleDepthVertexShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/TriangleVertexShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/UIVertexShader.hlsl
 		)
 		set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_HLSL_VERTEX_SHADERS})
 		set_source_files_properties(${TEST_FRAMEWORK_HLSL_VERTEX_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T vs_5_0")
 
 		# HLSL pixel shaders
 		set(TEST_FRAMEWORK_HLSL_PIXEL_SHADERS
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/FontPixelShader.hlsl
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/LinePixelShader.hlsl
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthPixelShader.hlsl
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/TrianglePixelShader.hlsl
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShader.hlsl
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShaderUntextured.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/FontPixelShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/LinePixelShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/TriangleDepthPixelShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/TrianglePixelShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/UIPixelShader.hlsl
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/UIPixelShaderUntextured.hlsl
 		)
 		set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_HLSL_PIXEL_SHADERS})
 		set_source_files_properties(${TEST_FRAMEWORK_HLSL_PIXEL_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T ps_5_0")
@@ -194,22 +194,22 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32))
 		# GLSL headers
 		set(TEST_FRAMEWORK_SRC_FILES_SHADERS
 			${TEST_FRAMEWORK_SRC_FILES_SHADERS}
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/VertexConstantsVK.h
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/VertexConstants.h
 		)
 
 		# GLSL shaders
 		set(TEST_FRAMEWORK_GLSL_SHADERS
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/FontVertexShader.vert
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/LineVertexShader.vert
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthVertexShader.vert
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleVertexShader.vert
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/UIVertexShader.vert
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/FontPixelShader.frag
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/LinePixelShader.frag
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthPixelShader.frag
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/TrianglePixelShader.frag
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShader.frag
-			${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShaderUntextured.frag
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/FontVertexShader.vert
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/LineVertexShader.vert
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/TriangleDepthVertexShader.vert
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/TriangleVertexShader.vert
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/UIVertexShader.vert
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/FontPixelShader.frag
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/LinePixelShader.frag
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/TriangleDepthPixelShader.frag
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/TrianglePixelShader.frag
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/UIPixelShader.frag
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/UIPixelShaderUntextured.frag
 		)
 
 		# Compile GLSL shaders
