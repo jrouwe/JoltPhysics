@@ -181,6 +181,29 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.h
 		)
+
+		# Metal shaders
+		set(TEST_FRAMEWORK_METAL_SHADERS
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/TriangleShader.metal
+		)
+
+		# Compile Metal shaders
+		foreach(SHADER ${TEST_FRAMEWORK_METAL_SHADERS})
+			cmake_path(GET SHADER FILENAME AIR_SHADER)
+			set(AIR_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${AIR_SHADER}.air")
+			add_custom_command(OUTPUT ${AIR_SHADER}
+				COMMAND xcrun -sdk macosx metal -c ${SHADER} -o ${AIR_SHADER}
+				DEPENDS ${SHADER}
+				COMMENT "Compiling ${SHADER}")
+			list(APPEND TEST_FRAMEWORK_AIR_SHADERS ${AIR_SHADER})
+		endforeach()
+
+		# Link Metal shaders
+		set(TEST_FRAMEWORK_METAL_LIB ${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/Shaders.metallib)
+		add_custom_command(OUTPUT ${TEST_FRAMEWORK_METAL_LIB}
+			COMMAND xcrun -sdk macosx metallib -o ${TEST_FRAMEWORK_METAL_LIB} ${TEST_FRAMEWORK_AIR_SHADERS}
+			DEPENDS ${TEST_FRAMEWORK_AIR_SHADERS}
+			COMMENT "Linking shaders")
 	endif()
 
 	# Include the Vulkan library
@@ -243,10 +266,10 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 	source_group(TREE ${TEST_FRAMEWORK_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES})
 
 	# Group shader files
-	source_group(TREE ${PHYSICS_REPO_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_GLSL_SHADERS} ${TEST_FRAMEWORK_SPV_SHADERS})
+	source_group(TREE ${PHYSICS_REPO_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_GLSL_SHADERS} ${TEST_FRAMEWORK_SPV_SHADERS} ${TEST_FRAMEWORK_METAL_LIB})
 
 	# Create TestFramework lib
-	add_library(TestFramework STATIC ${TEST_FRAMEWORK_SRC_FILES} ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_SPV_SHADERS})
+	add_library(TestFramework STATIC ${TEST_FRAMEWORK_SRC_FILES} ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_SPV_SHADERS} ${TEST_FRAMEWORK_METAL_LIB})
 	target_include_directories(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT})
 	target_precompile_headers(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT}/TestFramework.h)
 
