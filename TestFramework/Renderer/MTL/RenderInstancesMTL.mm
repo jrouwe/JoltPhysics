@@ -14,10 +14,14 @@ void RenderInstancesMTL::Clear()
 
 void RenderInstancesMTL::CreateBuffer(int inNumInstances, int inInstanceSize)
 {
-	Clear();
-
 	NSUInteger size = NSUInteger(inNumInstances) * inInstanceSize;
-	mBuffer = [mRenderer->GetView().device newBufferWithLength: size options: MTLResourceStorageModeShared];
+	if (mBuffer == nullptr || mBufferSize < size)
+	{
+		Clear();
+
+		mBuffer = [mRenderer->GetView().device newBufferWithLength: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
+		mBufferSize = size;
+	}
 }
 
 void *RenderInstancesMTL::Lock()

@@ -48,6 +48,9 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	Renderer::BeginFrame(inCamera, inWorldScale);
 
+	// Update frame index
+	mFrameIndex = (mFrameIndex + 1) % cFrameCount;
+
 	// Create a new command buffer
 	mCommandBuffer = [mCommandQueue commandBuffer];
 

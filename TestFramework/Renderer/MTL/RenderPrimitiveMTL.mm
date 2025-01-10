@@ -26,9 +26,9 @@ void RenderPrimitiveMTL::CreateVertexBuffer(int inNumVtx, int inVtxSize, const v
 
 	NSUInteger size = NSUInteger(inNumVtx) * inVtxSize;
 	if (inData != nullptr)
-		mVertexBuffer = [mRenderer->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceStorageModeShared];
+		mVertexBuffer = [mRenderer->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
 	else
-		mVertexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceStorageModeShared];
+		mVertexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
 }
 
 void *RenderPrimitiveMTL::LockVertexBuffer()
@@ -46,9 +46,9 @@ void RenderPrimitiveMTL::CreateIndexBuffer(int inNumIdx, const uint32 *inData)
 
 	NSUInteger size = NSUInteger(inNumIdx) * sizeof(uint32);
 	if (inData != nullptr)
-		mIndexBuffer = [mRenderer->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceStorageModeShared];
+		mIndexBuffer = [mRenderer->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
 	else
-		mIndexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceStorageModeShared];
+		mIndexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
 }
 
 uint32 *RenderPrimitiveMTL::LockIndexBuffer()

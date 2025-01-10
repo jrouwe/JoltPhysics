@@ -31,4 +31,5 @@ public:
 private:
 	RendererMTL *			mRenderer;
 	id<MTLBuffer>			mBuffer;
+	NSUInteger				mBufferSize;
 };
