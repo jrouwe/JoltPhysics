@@ -13,9 +13,6 @@
 class RendererMTL : public Renderer
 {
 public:
-	/// Destructor
-	virtual							~RendererMTL() override;
-
 	// See: Renderer
 	virtual void					Initialize(ApplicationWindow *inWindow) override;
 	virtual void					BeginFrame(const CameraState &inCamera, float inWorldScale) override;
@@ -30,7 +27,7 @@ public:
 	virtual RenderPrimitive *		CreateRenderPrimitive(PipelineState::ETopology inType) override;
 	virtual RenderInstances *		CreateRenderInstances() override;
 	virtual Texture *				GetShadowMap() const override									{ return mShadowMap; }
-	virtual void					OnWindowResize() override;
+	virtual void					OnWindowResize() override										{ }
 
 	MTKView *						GetView() const													{ return mView; }
 	id<MTLDevice>					GetDevice() const												{ return mView.device; }

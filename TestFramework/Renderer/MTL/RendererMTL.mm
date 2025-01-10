@@ -16,11 +16,6 @@
 #include <Utils/Log.h>
 #include <Jolt/Core/Profiler.h>
 
-RendererMTL::~RendererMTL()
-{
-	mShadowMap = nullptr;
-}
-
 void RendererMTL::Initialize(ApplicationWindow *inWindow)
 {
 	Renderer::Initialize(inWindow);
@@ -83,6 +78,7 @@ void RendererMTL::EndShadowPass()
 	[mRenderEncoder endEncoding];
 	mRenderEncoder = nil;
 
+	// Get the descriptor for the main window
 	MTLRenderPassDescriptor *render_pass_descriptor = mView.currentRenderPassDescriptor;
 	if (render_pass_descriptor == nullptr)
 		return;
@@ -169,11 +165,7 @@ RenderInstances *RendererMTL::CreateRenderInstances()
 	return new RenderInstancesMTL(this);
 }
 
-void RendererMTL::OnWindowResize()
-{
-}
-
-#ifndef JPH_USE_VULKAN
+#ifndef JPH_ENABLE_VULKAN
 Renderer *Renderer::sCreate()
 {
 	return new RendererMTL;

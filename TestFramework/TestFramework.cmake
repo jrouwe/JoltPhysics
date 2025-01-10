@@ -287,7 +287,6 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 	if (WIN32)
 		# Windows configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt dxguid.lib dinput8.lib dxgi.lib d3d12.lib d3dcompiler.lib shcore.lib)
-		target_compile_definitions(TestFramework PRIVATE JPH_ENABLE_DIRECTX)
 	endif()
 	if (LINUX)
 		# Linux configuration
@@ -296,7 +295,6 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 		# macOS configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework Metal -framework MetalKit -framework GameController")
-		target_compile_definitions(TestFramework PRIVATE JPH_ENABLE_METAL)
 
 		# Ignore PCH files for .mm files
 		foreach(SRC_FILE ${TEST_FRAMEWORK_SRC_FILES})

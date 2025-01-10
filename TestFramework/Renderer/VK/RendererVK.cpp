@@ -1268,9 +1268,9 @@ void RendererVK::UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight)
 	vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 }
 
-#ifdef JPH_USE_VULKAN
+#ifdef JPH_ENABLE_VULKAN
 Renderer *Renderer::sCreate()
 {
-	return new RendererMTL;
+	return new RendererVK;
 }
 #endif
