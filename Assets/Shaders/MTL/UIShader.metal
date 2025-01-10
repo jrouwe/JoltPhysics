@@ -2,22 +2,37 @@
 
 using namespace metal;
 
-struct RasterizerData
+#include "VertexConstants.h"
+
+struct UIVertex
 {
-    float4 position [[position]];
-    float4 color;
+	float3		vPos [[attribute(0)]];
+	float2		vTex [[attribute(1)]];
+	uchar4		vCol [[attribute(2)]];
 };
 
-vertex RasterizerData UIVertexShader(uint vertexID [[vertex_id]])
+struct UIOut
 {
-    RasterizerData out;
-    out.position = float4(0.0, 0.0, 0.0, 1.0);
-    out.color = float4(1.0, 1.0, 1.0, 1.0);
+    float4 oPosition [[position]];
+    float2 oTex;
+    float4 oColor;
+};
+
+vertex UIOut UIVertexShader(UIVertex vert [[stage_in]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])
+{
+    UIOut out;
+    out.oPosition = constants->Projection * constants->View * float4(vert.vPos, 1.0);
+    out.oTex = vert.vTex;
+    out.oColor = float4(vert.vCol) / 255.0;
     return out;
 }
 
-fragment float4 UIPixelShader(RasterizerData in [[stage_in]])
+fragment float4 UIPixelShader(UIOut in [[stage_in]])
 {
-	discard_fragment();
-    return in.color;
+    return in.oColor;
+}
+
+fragment float4 UIPixelShaderUntextured(UIOut in [[stage_in]])
+{
+    return in.oColor;
 }

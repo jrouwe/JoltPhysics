@@ -119,12 +119,18 @@ Ref<Texture> RendererMTL::CreateTexture(const Surface *inSurface)
 
 Ref<VertexShader> RendererMTL::CreateVertexShader(const char *inName)
 {
-	return new VertexShaderMTL([mShaderLibrary newFunctionWithName: [[NSString alloc] initWithUTF8String: inName]]);
+	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [[NSString alloc] initWithUTF8String: inName]];
+	if (function == nil)
+		FatalError("Vertex shader %s not found", inName);
+	return new VertexShaderMTL(function);
 }
 
 Ref<PixelShader> RendererMTL::CreatePixelShader(const char *inName)
 {
-	return new PixelShaderMTL([mShaderLibrary newFunctionWithName: [[NSString alloc] initWithUTF8String: inName]]);
+	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [[NSString alloc] initWithUTF8String: inName]];
+	if (function == nil)
+		FatalError("Pixel shader %s not found", inName);
+	return new PixelShaderMTL(function);
 }
 
 unique_ptr<PipelineState> RendererMTL::CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode)
