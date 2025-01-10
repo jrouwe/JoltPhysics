@@ -29,22 +29,22 @@ void RendererMTL::Initialize(ApplicationWindow *inWindow)
 
 	id<MTLDevice> device = GetDevice();
 
+	// Load the shader library containing all shaders for the test framework
+	NSError *error = nullptr;
+	NSURL *url = [NSURL URLWithString: @"Assets/Shaders/MTL/Shaders.metallib"];
+	mShaderLibrary = [device newLibraryWithURL: url error: &error];
+	FatalErrorIfFailed(error);
+
 	// Create depth only texture (no color buffer, as seen from light)
 	mShadowMap = new TextureMTL(this, cShadowMapSize, cShadowMapSize);
 
-	NSError *error = nullptr;
-
-	NSURL *url = [NSURL URLWithString: @"Assets/Shaders/MTL/Shaders.metallib"];
-	id<MTLLibrary> defaultLibrary = [device newLibraryWithURL: url error: &error];
-	FatalErrorIfFailed(error);
-
-	id<MTLFunction> vertexFunction = [defaultLibrary newFunctionWithName:@"vertexShader"];
-	id<MTLFunction> fragmentFunction = [defaultLibrary newFunctionWithName:@"fragmentShader"];
+	Ref<VertexShader> vtx = CreateVertexShader("vertexShader");
+	Ref<PixelShader> pix = CreatePixelShader("fragmentShader");
 
 	// Configure a pipeline descriptor that is used to create a pipeline state.
 	MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
-	pipelineStateDescriptor.vertexFunction = vertexFunction;
-	pipelineStateDescriptor.fragmentFunction = fragmentFunction;
+	pipelineStateDescriptor.vertexFunction = static_cast<VertexShaderMTL *>(vtx.GetPtr())->GetFunction();
+	pipelineStateDescriptor.fragmentFunction = static_cast<PixelShaderMTL *>(pix.GetPtr())->GetFunction();
 	pipelineStateDescriptor.colorAttachments[0].pixelFormat = mView.colorPixelFormat;
 
 	mPipelineState = [device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
@@ -139,12 +139,12 @@ Ref<Texture> RendererMTL::CreateTexture(const Surface *inSurface)
 
 Ref<VertexShader> RendererMTL::CreateVertexShader(const char *inName)
 {
-	return new VertexShaderMTL();
+	return new VertexShaderMTL([mShaderLibrary newFunctionWithName: [[NSString alloc] initWithUTF8String: inName]]);
 }
 
 Ref<PixelShader> RendererMTL::CreatePixelShader(const char *inName)
 {
-	return new PixelShaderMTL();
+	return new PixelShaderMTL([mShaderLibrary newFunctionWithName: [[NSString alloc] initWithUTF8String: inName]]);
 }
 
 unique_ptr<PipelineState> RendererMTL::CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode)

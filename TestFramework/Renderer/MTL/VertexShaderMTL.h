@@ -6,17 +6,18 @@
 
 #include <Renderer/VertexShader.h>
 
+#include <MetalKit/MetalKit.h>
+
 /// Vertex shader handle for Metal
 class VertexShaderMTL : public VertexShader
 {
 public:
 	/// Constructor
-							VertexShaderMTL()
-	{
-	}
+							VertexShaderMTL(id<MTLFunction> inFunction) : mFunction(inFunction) { }
 
-	/// Destructor
-	virtual					~VertexShaderMTL() override
-	{
-	}
+	/// Access to the function
+	id<MTLFunction>			GetFunction() const				{ return mFunction; }
+
+private:
+	id<MTLFunction>			mFunction;
 };

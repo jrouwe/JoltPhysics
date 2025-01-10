@@ -6,17 +6,18 @@
 
 #include <Renderer/PixelShader.h>
 
+#include <MetalKit/MetalKit.h>
+
 /// Pixel shader handle for Metal
 class PixelShaderMTL : public PixelShader
 {
 public:
 	/// Constructor
-							PixelShaderMTL()
-	{
-	}
+							PixelShaderMTL(id<MTLFunction> inFunction) : mFunction(inFunction) { }
 
-	/// Destructor
-	virtual					~PixelShaderMTL() override
-	{
-	}
+	/// Access to the function
+	id<MTLFunction>			GetFunction() const				{ return mFunction; }
+
+private:
+	id<MTLFunction>			mFunction;
 };

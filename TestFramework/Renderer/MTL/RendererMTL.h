@@ -39,6 +39,7 @@ public:
 private:
 	MTKView *						mView;
 	Ref<TextureMTL>					mShadowMap;
+	id<MTLLibrary>					mShaderLibrary;
 	id<MTLRenderPipelineState> 		mPipelineState;
 	id<MTLCommandQueue>				mCommandQueue;
 };
