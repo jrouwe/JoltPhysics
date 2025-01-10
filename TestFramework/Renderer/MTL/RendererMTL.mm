@@ -112,6 +112,7 @@ void RendererMTL::EndFrame()
 
 	// Finish the encoder
 	[mRenderEncoder endEncoding];
+	mRenderEncoder = nil;
 
 	// Schedule a present
 	[mCommandBuffer presentDrawable: mView.currentDrawable];
