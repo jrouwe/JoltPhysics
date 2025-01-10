@@ -68,6 +68,9 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Set viewport
 	[mRenderEncoder setViewport: (MTLViewport){ 0.0, 0.0, double(mWindow->GetWindowWidth()), double(mWindow->GetWindowHeight()), 0.0, 1.0 }];
+
+	// Set pixel shader constants
+	[mRenderEncoder setFragmentBytes: &mPSBuffer length: sizeof(mPSBuffer) atIndex: 0];
 }
 
 void RendererMTL::EndShadowPass()
@@ -119,11 +122,15 @@ void RendererMTL::EndFrame()
 void RendererMTL::SetProjectionMode()
 {
 	JPH_ASSERT(mInFrame);
+
+	[mRenderEncoder setVertexBytes: &mVSBuffer length: sizeof(mVSBuffer) atIndex: 2];
 }
 
 void RendererMTL::SetOrthoMode()
 {
 	JPH_ASSERT(mInFrame);
+
+	[mRenderEncoder setVertexBytes: &mVSBufferOrtho length: sizeof(mVSBufferOrtho) atIndex: 2];
 }
 
 Ref<Texture> RendererMTL::CreateTexture(const Surface *inSurface)

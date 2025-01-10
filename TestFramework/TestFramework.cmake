@@ -158,8 +158,6 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 		# macOS source files
 		set(TEST_FRAMEWORK_SRC_FILES
 			${TEST_FRAMEWORK_SRC_FILES}
-			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/ConstantBufferMTL.mm
-			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/ConstantBufferMTL.h
 			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/FatalErrorIfFailedMTL.mm
 			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/FatalErrorIfFailedMTL.h
 			${TEST_FRAMEWORK_ROOT}/Renderer/MTL/PipelineStateMTL.mm

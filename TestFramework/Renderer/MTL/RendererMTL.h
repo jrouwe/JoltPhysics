@@ -5,7 +5,6 @@
 #pragma once
 
 #include <Renderer/Renderer.h>
-#include <Renderer/MTL/ConstantBufferMTL.h>
 #include <Renderer/MTL/TextureMTL.h>
 
 #include <MetalKit/MetalKit.h>
