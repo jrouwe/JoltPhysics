@@ -66,6 +66,8 @@ TextureMTL::TextureMTL(RendererMTL *inRenderer, const Surface *inSurface) :
 	surface->Lock(ESurfaceLockMode::Read);
 	[mTexture replaceRegion: region mipmapLevel:0 withBytes: surface->GetData() bytesPerRow: surface->GetStride()];
 	surface->UnLock();
+
+	[descriptor release];
 }
 
 TextureMTL::TextureMTL(RendererMTL *inRenderer, int inWidth, int inHeight) :
@@ -81,6 +83,8 @@ TextureMTL::TextureMTL(RendererMTL *inRenderer, int inWidth, int inHeight) :
 	descriptor.storageMode = MTLStorageModePrivate;
 
 	mTexture = [inRenderer->GetDevice() newTextureWithDescriptor: descriptor];
+	
+	[descriptor release];
 }
 
 TextureMTL::~TextureMTL()

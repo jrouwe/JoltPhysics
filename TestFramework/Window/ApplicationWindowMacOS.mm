@@ -19,8 +19,10 @@
 
 - (MetalView *)init:(ApplicationWindowMacOS *)window
 {
-	[super initWithFrame: NSMakeRect(0, 0, window->GetWindowWidth(), window->GetWindowHeight()) device: MTLCreateSystemDefaultDevice()];
-	
+	id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+	self = [super initWithFrame: NSMakeRect(0, 0, window->GetWindowWidth(), window->GetWindowHeight()) device: device];
+	[device release];
+
 	mWindow = window;
 	
 	self.delegate = self;

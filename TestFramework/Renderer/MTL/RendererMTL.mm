@@ -144,7 +144,7 @@ Ref<Texture> RendererMTL::CreateTexture(const Surface *inSurface)
 
 Ref<VertexShader> RendererMTL::CreateVertexShader(const char *inName)
 {
-	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [[NSString alloc] initWithUTF8String: inName]];
+	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [[[NSString alloc] initWithUTF8String: inName] autorelease]];
 	if (function == nil)
 		FatalError("Vertex shader %s not found", inName);
 	return new VertexShaderMTL(function);
@@ -152,7 +152,7 @@ Ref<VertexShader> RendererMTL::CreateVertexShader(const char *inName)
 
 Ref<PixelShader> RendererMTL::CreatePixelShader(const char *inName)
 {
-	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [[NSString alloc] initWithUTF8String: inName]];
+	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [[[NSString alloc] initWithUTF8String: inName] autorelease]];
 	if (function == nil)
 		FatalError("Pixel shader %s not found", inName);
 	return new PixelShaderMTL(function);
