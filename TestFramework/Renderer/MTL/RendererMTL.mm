@@ -40,15 +40,7 @@ void RendererMTL::Initialize(ApplicationWindow *inWindow)
 
 	Ref<VertexShader> vtx = CreateVertexShader("vertexShader");
 	Ref<PixelShader> pix = CreatePixelShader("fragmentShader");
-
-	// Configure a pipeline descriptor that is used to create a pipeline state.
-	MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
-	pipelineStateDescriptor.vertexFunction = static_cast<VertexShaderMTL *>(vtx.GetPtr())->GetFunction();
-	pipelineStateDescriptor.fragmentFunction = static_cast<PixelShaderMTL *>(pix.GetPtr())->GetFunction();
-	pipelineStateDescriptor.colorAttachments[0].pixelFormat = mView.colorPixelFormat;
-
-	mPipelineState = [device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
-	FatalErrorIfFailed(error);
+	mPipelineState = CreatePipelineState(vtx, nullptr, 0, pix, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
 
 	// Create the command queue
 	mCommandQueue = [device newCommandQueue];
@@ -59,6 +51,32 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	JPH_PROFILE_FUNCTION();
 
 	Renderer::BeginFrame(inCamera, inWorldScale);
+
+	// Create a new command buffer
+	mCommandBuffer = [mCommandQueue commandBuffer];
+
+	// Obtain a render_pass_descriptor generated from the view's drawable textures.
+	MTLRenderPassDescriptor *render_pass_descriptor = mView.currentRenderPassDescriptor;
+	if (render_pass_descriptor == nullptr)
+	{
+		mRenderEncoder = nil;
+		return;
+	}
+
+	// Create render encoder
+	mRenderEncoder = [mCommandBuffer renderCommandEncoderWithDescriptor: render_pass_descriptor];
+
+	// Set viewport
+	[mRenderEncoder setViewport: (MTLViewport){ 0.0, 0.0, double(mWindow->GetWindowWidth()), double(mWindow->GetWindowHeight()), 0.0, 1.0 }];
+}
+
+void RendererMTL::EndShadowPass()
+{
+}
+
+void RendererMTL::EndFrame()
+{
+	JPH_PROFILE_FUNCTION();
 
 	typedef struct
 	{
@@ -74,50 +92,26 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 		{ {    0,   0.5 }, { 0, 0, 1, 1 } },
 	};
 
-	// Create a new command buffer for each render pass to the current drawable.
-	id<MTLCommandBuffer> commandBuffer = [mCommandQueue commandBuffer];
+	mPipelineState->Activate();
 
-	// Obtain a renderPassDescriptor generated from the view's drawable textures.
-	MTLRenderPassDescriptor *renderPassDescriptor = mView.currentRenderPassDescriptor;
+	// Pass in the parameter data.
+	[mRenderEncoder setVertexBytes:vertices
+						   length:sizeof(vertices)
+						  atIndex:0];
 
-	if(renderPassDescriptor != nil)
-	{
-		// Create a render command encoder.
-		id<MTLRenderCommandEncoder> renderEncoder =
-		[commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+	// Draw the triangle.
+	[mRenderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
+					  vertexStart:0
+					  vertexCount:3];
 
-		// Set the region of the drawable to draw into.
-		[renderEncoder setViewport:(MTLViewport){0.0, 0.0, double(mWindow->GetWindowWidth()), double(mWindow->GetWindowHeight()), 0.0, 1.0 }];
+	// Finish the encoder
+	[mRenderEncoder endEncoding];
 
-		[renderEncoder setRenderPipelineState:mPipelineState];
+	// Schedule a present
+	[mCommandBuffer presentDrawable: mView.currentDrawable];
 
-		// Pass in the parameter data.
-		[renderEncoder setVertexBytes:vertices
-							   length:sizeof(vertices)
-							  atIndex:0];
-
-		// Draw the triangle.
-		[renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
-						  vertexStart:0
-						  vertexCount:3];
-
-		[renderEncoder endEncoding];
-
-		// Schedule a present once the framebuffer is complete using the current drawable.
-		[commandBuffer presentDrawable:mView.currentDrawable];
-	}
-
-	// Finalize rendering here & push the command buffer to the GPU.
-	[commandBuffer commit];
-}
-
-void RendererMTL::EndShadowPass()
-{
-}
-
-void RendererMTL::EndFrame()
-{
-	JPH_PROFILE_FUNCTION();
+	// Commit the command buffer
+	[mCommandBuffer commit];
 
 	Renderer::EndFrame();
 }

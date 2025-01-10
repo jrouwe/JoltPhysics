@@ -184,7 +184,10 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 
 		# Metal shaders
 		set(TEST_FRAMEWORK_METAL_SHADERS
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/FontShader.metal
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/LineShader.metal
 			${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/TriangleShader.metal
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/UIShader.metal
 		)
 
 		# Compile Metal shaders

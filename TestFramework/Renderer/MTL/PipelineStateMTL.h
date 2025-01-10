@@ -25,4 +25,5 @@ private:
 	RendererMTL *						mRenderer;
 	RefConst<VertexShaderMTL>			mVertexShader;
 	RefConst<PixelShaderMTL>			mPixelShader;
+	id<MTLRenderPipelineState> 			mPipelineState;
 };

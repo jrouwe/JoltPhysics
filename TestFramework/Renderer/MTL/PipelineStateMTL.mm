@@ -13,7 +13,14 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 	mVertexShader(inVertexShader),
 	mPixelShader(inPixelShader)
 {
-	(void)mRenderer;
+	MTLRenderPipelineDescriptor *descriptor = [[MTLRenderPipelineDescriptor alloc] init];
+	descriptor.vertexFunction = inVertexShader->GetFunction();
+	descriptor.fragmentFunction = inPixelShader->GetFunction();
+	descriptor.colorAttachments[0].pixelFormat = mRenderer->GetView().colorPixelFormat;
+
+	NSError *error = nullptr;
+	mPipelineState = [mRenderer->GetDevice() newRenderPipelineStateWithDescriptor: descriptor error: &error];
+	FatalErrorIfFailed(error);
 }
 
 PipelineStateMTL::~PipelineStateMTL()
@@ -22,4 +29,5 @@ PipelineStateMTL::~PipelineStateMTL()
 
 void PipelineStateMTL::Activate()
 {
+	[mRenderer->GetRenderEncoder() setRenderPipelineState: mPipelineState];
 }

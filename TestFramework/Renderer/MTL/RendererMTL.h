@@ -35,11 +35,14 @@ public:
 
 	MTKView *						GetView() const													{ return mView; }
 	id<MTLDevice>					GetDevice() const												{ return mView.device; }
+	id<MTLRenderCommandEncoder>		GetRenderEncoder() const										{ return mRenderEncoder; }
 
 private:
 	MTKView *						mView;
 	Ref<TextureMTL>					mShadowMap;
 	id<MTLLibrary>					mShaderLibrary;
-	id<MTLRenderPipelineState> 		mPipelineState;
 	id<MTLCommandQueue>				mCommandQueue;
+	id<MTLCommandBuffer> 			mCommandBuffer;
+	id<MTLRenderCommandEncoder>		mRenderEncoder;
+	unique_ptr<PipelineState>		mPipelineState;
 };
