@@ -24,6 +24,7 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 		switch (inInputDescription[i])
 		{
 		case EInputDescription::Position:
+		case EInputDescription::Normal:
 			temp_vtx.format = VK_FORMAT_R32G32B32_SFLOAT;
 			attribute_descriptions.push_back(temp_vtx);
 			temp_vtx.offset += 3 * sizeof(float);
@@ -33,12 +34,6 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 			temp_vtx.format = VK_FORMAT_R8G8B8A8_UNORM;
 			attribute_descriptions.push_back(temp_vtx);
 			temp_vtx.offset += 4 * sizeof(uint8);
-			break;
-
-		case EInputDescription::Normal:
-			temp_vtx.format = VK_FORMAT_R32G32B32_SFLOAT;
-			attribute_descriptions.push_back(temp_vtx);
-			temp_vtx.offset += 3 * sizeof(float);
 			break;
 
 		case EInputDescription::TexCoord:
@@ -55,15 +50,6 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 			break;
 
 		case EInputDescription::InstanceTransform:
-			instance_alignment = max(instance_alignment, 16u);
-			temp_instance.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-			for (int j = 0; j < 4; ++j)
-			{
-				attribute_descriptions.push_back(temp_instance);
-				temp_instance.offset += 4 * sizeof(float);
-			}
-			break;
-
 		case EInputDescription::InstanceInvTransform:
 			instance_alignment = max(instance_alignment, 16u);
 			temp_instance.format = VK_FORMAT_R32G32B32A32_SFLOAT;

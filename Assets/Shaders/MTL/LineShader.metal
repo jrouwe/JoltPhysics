@@ -6,8 +6,8 @@ using namespace metal;
 
 struct LineVertex
 {
-	float  iPosition[3];
-	uchar4 iColor;
+	float3	iPosition [[attribute(0)]];
+	uchar4	iColor [[attribute(1)]];
 };
 
 struct LineOut
@@ -16,13 +16,11 @@ struct LineOut
     float4 color;
 };
 
-vertex LineOut LineVertexShader(uint vertexID [[vertex_id]], constant LineVertex *vertices [[buffer(0)]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])
+vertex LineOut LineVertexShader(LineVertex vert [[stage_in]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])
 {
-	constant LineVertex &vert = vertices[vertexID];
-
     LineOut out;
-	out.position = constants->Projection * constants->View * float4(vert.iPosition[0], vert.iPosition[1], vert.iPosition[2], 1.0);
-    out.color = float4(vert.iColor) / 255.0f;
+	out.position = constants->Projection * constants->View * float4(vert.iPosition, 1.0);
+    out.color = float4(vert.iColor) / 255.0;
     return out;
 }
 
