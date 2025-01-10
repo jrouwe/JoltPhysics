@@ -86,11 +86,54 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 	descriptor.vertexFunction = inVertexShader->GetFunction();
 	descriptor.fragmentFunction = inPixelShader->GetFunction();
 	descriptor.colorAttachments[0].pixelFormat = mRenderer->GetView().colorPixelFormat;
+	switch (inBlendMode)
+	{
+	case EBlendMode::Write:
+		descriptor.colorAttachments[0].blendingEnabled = NO;
+		break;
+
+	case EBlendMode::AlphaBlend:
+		descriptor.colorAttachments[0].blendingEnabled = YES;
+		descriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+		descriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+		descriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+		descriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorZero;
+		descriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorZero;
+		descriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+		break;
+	}
+	descriptor.depthAttachmentPixelFormat = mRenderer->GetView().depthStencilPixelFormat;
 	descriptor.vertexDescriptor = vertex_descriptor;
 
 	NSError *error = nullptr;
 	mPipelineState = [mRenderer->GetDevice() newRenderPipelineStateWithDescriptor: descriptor error: &error];
 	FatalErrorIfFailed(error);
+
+	// Create depth descriptor
+	MTLDepthStencilDescriptor *depth_descriptor = [MTLDepthStencilDescriptor new];
+	if (inDepthTest == EDepthTest::On)
+	{
+		depth_descriptor.depthCompareFunction = MTLCompareFunctionGreater;
+		depth_descriptor.depthWriteEnabled = YES;
+	}
+	else
+	{
+		depth_descriptor.depthCompareFunction = MTLCompareFunctionAlways;
+		depth_descriptor.depthWriteEnabled = NO;
+	}
+	mDepthState = [mRenderer->GetDevice() newDepthStencilStateWithDescriptor: depth_descriptor];
+
+	// Determine cull mode
+	if (inCullMode == ECullMode::FrontFace)
+		mCullMode = MTLCullModeFront;
+	else
+		mCullMode = MTLCullModeBack;
+
+	// Determine fill mode
+	if (inFillMode == EFillMode::Solid)
+		mFillMode = MTLTriangleFillModeFill;
+	else
+		mFillMode = MTLTriangleFillModeLines;
 }
 
 PipelineStateMTL::~PipelineStateMTL()
@@ -99,5 +142,9 @@ PipelineStateMTL::~PipelineStateMTL()
 
 void PipelineStateMTL::Activate()
 {
-	[mRenderer->GetRenderEncoder() setRenderPipelineState: mPipelineState];
+	id<MTLRenderCommandEncoder> encoder = mRenderer->GetRenderEncoder();
+	[encoder setRenderPipelineState: mPipelineState];
+	[encoder setDepthStencilState: mDepthState];
+	[encoder setCullMode: mCullMode];
+	[encoder setTriangleFillMode: mFillMode];
 }

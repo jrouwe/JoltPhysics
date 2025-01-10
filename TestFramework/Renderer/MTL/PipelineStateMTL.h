@@ -26,4 +26,7 @@ private:
 	RefConst<VertexShaderMTL>			mVertexShader;
 	RefConst<PixelShaderMTL>			mPixelShader;
 	id<MTLRenderPipelineState> 			mPipelineState;
+	id<MTLDepthStencilState>			mDepthState;
+	MTLCullMode							mCullMode;
+	MTLTriangleFillMode					mFillMode;
 };

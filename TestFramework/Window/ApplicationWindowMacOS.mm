@@ -89,6 +89,8 @@ void ApplicationWindowMacOS::Initialize()
 	// Create metal view
 	MetalView *view = [[MetalView alloc] init: this];
 	view.clearColor = MTLClearColorMake(0.098f, 0.098f, 0.439f, 1.000f);
+	view.depthStencilPixelFormat = MTLPixelFormatDepth32Float;
+	view.clearDepth = 0.0f;
 	mMetalView = view;
 
 	// Create window

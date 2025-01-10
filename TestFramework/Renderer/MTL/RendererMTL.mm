@@ -68,6 +68,9 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	// Set pixel shader constants
 	[mRenderEncoder setFragmentBytes: &mPSBuffer length: sizeof(mPSBuffer) atIndex: 0];
 
+	// Counter clockwise is default winding order
+	[mRenderEncoder setFrontFacingWinding: MTLWindingCounterClockwise];
+
 	// Start with projection mode
 	SetProjectionMode();
 }
