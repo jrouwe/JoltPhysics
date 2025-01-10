@@ -43,5 +43,4 @@ private:
 	id<MTLCommandQueue>				mCommandQueue;
 	id<MTLCommandBuffer> 			mCommandBuffer;
 	id<MTLRenderCommandEncoder>		mRenderEncoder;
-	unique_ptr<PipelineState>		mPipelineState;
 };

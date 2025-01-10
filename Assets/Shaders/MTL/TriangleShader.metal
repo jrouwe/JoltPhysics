@@ -2,56 +2,89 @@
 
 using namespace metal;
 
-typedef struct
-{
-	float2 position;
-	float4 color;
-} Vertex;
+#include "VertexConstants.h"
 
-struct RasterizerData
+struct Vertex
 {
-    float4 position [[position]];
-    float4 color;
+	float3		vPos;
+	float3		vNorm;
+	float2		vTex;
+	uint32_t	vCol;
 };
 
-vertex RasterizerData vertexShader(uint vertexID [[vertex_id]], constant Vertex *vertices [[buffer(0)]])
+struct Instance
 {
-    RasterizerData out;
-    out.position = float4(0.0, 0.0, 0.0, 1.0);
-    out.position.xy = vertices[vertexID].position.xy;
-    out.color = vertices[vertexID].color;
-    return out;
-}
+	float4x4	iModel;
+	float4x4	iModelInvTrans;
+	uint32_t	iCol;
+};
 
-fragment float4 fragmentShader(RasterizerData in [[stage_in]])
+struct Pix
 {
-    return in.color;
-}
+	float4		oPosition [[position]];
+	float3		oNormal;
+	float3		oWorldPos;
+	float2		oTex;
+	float4		oPositionL;
+	float4		oColor;
+};
 
-vertex RasterizerData TriangleVertexShader(uint vertexID [[vertex_id]])
+vertex Pix TriangleVertexShader(uint vertexID [[vertex_id]], uint instanceID [[instance_id]], constant Vertex *vertices [[buffer(0)]], constant Instance *instances [[buffer(1)]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])
 {
-	RasterizerData out;
-	out.position = float4(0.0, 0.0, 0.0, 1.0);
-	out.color = float4(1.0, 1.0, 1.0, 1.0);
+	Pix out;
+
+	constant Vertex &vert = vertices[vertexID];
+	constant Instance &inst = instances[instanceID];
+
+	// Get world position
+	float4 pos = float4(vert.vPos, 1.0f);
+	float4 world_pos = inst.iModel * pos;
+
+	// Transform the position from world space to homogeneous projection space
+	float4 proj_pos = constants->View * world_pos;
+	proj_pos = constants->Projection * proj_pos;
+	out.oPosition = proj_pos;
+
+	// Transform the position from world space to projection space of the light
+	float4 proj_lpos = constants->LightView * world_pos;
+	proj_lpos = constants->LightProjection * proj_lpos;
+	out.oPositionL = proj_lpos;
+
+	// output normal
+	float4 norm = float4(vert.vNorm, 0.0f);
+	out.oNormal = normalize(inst.iModelInvTrans * norm).xyz;
+
+	// output world position of the vertex
+	out.oWorldPos = world_pos.xyz;
+
+	// output texture coordinates
+	out.oTex = vert.vTex;
+
+	// output color
+	out.oColor = vert.vCol * inst.iCol;
+
 	return out;
 }
 
-fragment float4 TrianglePixelShader(RasterizerData in [[stage_in]])
+fragment float4 TrianglePixelShader(Pix in [[stage_in]], constant PixelShaderConstantBuffer *constants)
 {
-	discard_fragment();
-	return in.color;
+	return float4(1.0, 1.0, 1.0, 1.0);
 }
 
-vertex RasterizerData TriangleDepthVertexShader(uint vertexID [[vertex_id]])
+struct Depth
 {
-	RasterizerData out;
-	out.position = float4(0.0, 0.0, 0.0, 1.0);
-	out.color = float4(1.0, 1.0, 1.0, 1.0);
+	float4		oPosition [[position]];
+};
+
+vertex Depth TriangleDepthVertexShader(uint vertexID [[vertex_id]])
+{
+	Depth out;
+	out.oPosition = float4(0.0, 0.0, 0.0, 1.0);
 	return out;
 }
 
-fragment float4 TriangleDepthPixelShader(RasterizerData in [[stage_in]])
+fragment float4 TriangleDepthPixelShader(Depth in [[stage_in]], constant PixelShaderConstantBuffer *constants [[buffer(0)]])
 {
 	discard_fragment();
-	return in.color;
+	return float4(1.0, 1.0, 1.0, 1.0);
 }

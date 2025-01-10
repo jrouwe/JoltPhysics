@@ -38,10 +38,6 @@ void RendererMTL::Initialize(ApplicationWindow *inWindow)
 	// Create depth only texture (no color buffer, as seen from light)
 	mShadowMap = new TextureMTL(this, cShadowMapSize, cShadowMapSize);
 
-	Ref<VertexShader> vtx = CreateVertexShader("vertexShader");
-	Ref<PixelShader> pix = CreatePixelShader("fragmentShader");
-	mPipelineState = CreatePipelineState(vtx, nullptr, 0, pix, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
-
 	// Create the command queue
 	mCommandQueue = [device newCommandQueue];
 }
@@ -71,6 +67,9 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Set pixel shader constants
 	[mRenderEncoder setFragmentBytes: &mPSBuffer length: sizeof(mPSBuffer) atIndex: 0];
+
+	// Start with projection mode
+	SetProjectionMode();
 }
 
 void RendererMTL::EndShadowPass()
@@ -80,32 +79,6 @@ void RendererMTL::EndShadowPass()
 void RendererMTL::EndFrame()
 {
 	JPH_PROFILE_FUNCTION();
-
-	typedef struct
-	{
-		simd::float2 position;
-		simd::float4 color;
-	} Vertex;
-
-	static const Vertex vertices[] =
-	{
-		// 2D positions,    RGBA colors
-		{ {  0.5,  -0.5 }, { 1, 0, 0, 1 } },
-		{ { -0.5,  -0.5 }, { 0, 1, 0, 1 } },
-		{ {    0,   0.5 }, { 0, 0, 1, 1 } },
-	};
-
-	mPipelineState->Activate();
-
-	// Pass in the parameter data.
-	[mRenderEncoder setVertexBytes:vertices
-						   length:sizeof(vertices)
-						  atIndex:0];
-
-	// Draw the triangle.
-	[mRenderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
-					  vertexStart:0
-					  vertexCount:3];
 
 	// Finish the encoder
 	[mRenderEncoder endEncoding];

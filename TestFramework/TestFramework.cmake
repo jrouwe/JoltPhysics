@@ -112,12 +112,10 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowWin.h
 		)
 
-		# All shaders
+		# HLSL vertex shaders
 		set(TEST_FRAMEWORK_SRC_FILES_SHADERS
 			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/VertexConstants.h
 		)
-
-		# HLSL vertex shaders
 		set(TEST_FRAMEWORK_HLSL_VERTEX_SHADERS
 			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/FontVertexShader.hlsl
 			${PHYSICS_REPO_ROOT}/Assets/Shaders/DX/LineVertexShader.hlsl
@@ -181,6 +179,9 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 		)
 
 		# Metal shaders
+		set(TEST_FRAMEWORK_SRC_FILES_SHADERS
+			${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/VertexConstants.h
+		)
 		set(TEST_FRAMEWORK_METAL_SHADERS
 			${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/FontShader.metal
 			${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/LineShader.metal
@@ -236,8 +237,6 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 			${TEST_FRAMEWORK_SRC_FILES_SHADERS}
 			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/VertexConstants.h
 		)
-
-		# GLSL shaders
 		set(TEST_FRAMEWORK_GLSL_SHADERS
 			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/FontVertexShader.vert
 			${PHYSICS_REPO_ROOT}/Assets/Shaders/VK/LineVertexShader.vert
