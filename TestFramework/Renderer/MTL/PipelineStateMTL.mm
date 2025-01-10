@@ -15,7 +15,7 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 {
 	// Create a vertex descriptor
 	MTLVertexDescriptor *vertex_descriptor = [[MTLVertexDescriptor alloc] init];
-	uint vertex_offset = 0, vertex_alignment = 4;
+	uint vertex_offset = 0;
 	uint instance_offset = 0, instance_alignment = 4;
 	uint index = 0;
 	for (uint i = 0; i < inInputDescriptionCount; ++i)
@@ -56,7 +56,7 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 
 		case EInputDescription::InstanceTransform:
 		case EInputDescription::InstanceInvTransform:
-			vertex_alignment = max(vertex_alignment, 16u);
+			instance_alignment = max(instance_alignment, 16u);
 			instance_offset = AlignUp(instance_offset, 16u);
 			for (int j = 0; j < 4; ++j)
 			{
@@ -70,7 +70,7 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 		}
 
 	// Configure layouts
-	vertex_descriptor.layouts[0].stride = AlignUp(vertex_offset, vertex_alignment);
+	vertex_descriptor.layouts[0].stride = vertex_offset;
 	vertex_descriptor.layouts[0].stepRate = 1;
 	vertex_descriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
 
