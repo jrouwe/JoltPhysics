@@ -4,6 +4,8 @@ using namespace metal;
 
 #include "VertexConstants.h"
 
+constexpr sampler depthSampler(mag_filter::nearest, min_filter::nearest);
+
 struct Vertex
 {
 	float3		vPos [[attribute(0)]];
@@ -21,7 +23,7 @@ struct Vertex
 	uchar4		iCol [[attribute(12)]];
 };
 
-struct Pix
+struct TriangleOut
 {
 	float4		oPosition [[position]];
 	float3		oNormal;
@@ -31,9 +33,9 @@ struct Pix
 	float4		oColor;
 };
 
-vertex Pix TriangleVertexShader(Vertex vert [[stage_in]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])
+vertex TriangleOut TriangleVertexShader(Vertex vert [[stage_in]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])
 {
-	Pix out;
+	TriangleOut out;
 
 	// Convert input matrices
 	float4x4 iModel(vert.iModel0, vert.iModel1, vert.iModel2, vert.iModel3);
@@ -69,9 +71,94 @@ vertex Pix TriangleVertexShader(Vertex vert [[stage_in]], constant VertexShaderC
 	return out;
 }
 
-fragment float4 TrianglePixelShader(Pix in [[stage_in]], constant PixelShaderConstantBuffer *constants)
+fragment float4 TrianglePixelShader(TriangleOut vert [[stage_in]], constant PixelShaderConstantBuffer *constants, texture2d<float> depthTexture [[texture(0)]])
 {
-	return in.oColor;
+	// Constants
+	float AmbientFactor = 0.3;
+	float3 DiffuseColor = float3(vert.oColor.r, vert.oColor.g, vert.oColor.b);
+	float3 SpecularColor = float3(1, 1, 1);
+	float SpecularPower = 100.0;
+	float bias = 1.0e-7;
+
+	// Homogenize position in light space
+	float3 position_l = vert.oPositionL.xyz / vert.oPositionL.w;
+
+	// Calculate dot product between direction to light and surface normal and clamp between [0, 1]
+	float3 view_dir = normalize(constants->CameraPos - vert.oWorldPos);
+	float3 world_to_light = constants->LightPos - vert.oWorldPos;
+	float3 light_dir = normalize(world_to_light);
+	float3 normal = normalize(vert.oNormal);
+	if (dot(view_dir, normal) < 0) // If we're viewing the triangle from the back side, flip the normal to get the correct lighting
+		normal = -normal;
+	float normal_dot_light_dir = clamp(dot(normal, light_dir), 0.0, 1.0);
+
+	// Calculate texture coordinates in light depth texture
+	float2 tex_coord;
+	tex_coord.x = position_l.x / 2.0 + 0.5;
+	tex_coord.y = position_l.y / 2.0 + 0.5;
+
+	// Check that the texture coordinate is inside the depth texture, if not we don't know if it is lit or not so we assume lit
+	float shadow_factor = 1.0;
+	if (vert.oColor.a > 0 // Alpha = 0 means don't receive shadows
+		&& tex_coord.x == clamp(tex_coord.x, 0.0, 1.0) && tex_coord.y == clamp(tex_coord.y, 0.0, 1.0))
+	{
+		// Modify shadow bias according to the angle between the normal and the light dir
+		float modified_bias = bias * tan(acos(normal_dot_light_dir));
+		modified_bias = min(modified_bias, 10.0 * bias);
+		
+		// Get texture size
+		float width = 1.0 / 4096;
+		float height = 1.0 / 4096;
+
+		// Samples to take
+		uint num_samples = 16;
+		float2 offsets[] = { 
+			float2(-1.5 * width, -1.5 * height),
+			float2(-0.5 * width, -1.5 * height),
+			float2(0.5 * width, -1.5 * height),
+			float2(1.5 * width, -1.5 * height),
+
+			float2(-1.5 * width, -0.5 * height),
+			float2(-0.5 * width, -0.5 * height),
+			float2(0.5 * width, -0.5 * height),
+			float2(1.5 * width, -0.5 * height),
+
+			float2(-1.5 * width, 0.5 * height),
+			float2(-0.5 * width, 0.5 * height),
+			float2(0.5 * width, 0.5 * height),
+			float2(1.5 * width, 0.5 * height),
+
+			float2(-1.5 * width, 1.5 * height),
+			float2(-0.5 * width, 1.5 * height),
+			float2(0.5 * width, 1.5 * height),
+			float2(1.5 * width, 1.5 * height),
+		};
+
+		// Calculate depth of this pixel relative to the light
+		float light_depth = position_l.z + modified_bias;
+
+		// Sample shadow factor
+		shadow_factor = 0.0;
+		for (uint i = 0; i < num_samples; ++i)
+			shadow_factor += depthTexture.sample(depthSampler, tex_coord + offsets[i]).x <= light_depth? 1.0 : 0.0;
+		shadow_factor /= num_samples;
+	}
+
+	// Calculate diffuse and specular
+	float diffuse = normal_dot_light_dir;
+	float specular = diffuse > 0.0? pow(clamp(-dot(reflect(light_dir, normal), view_dir), 0.0, 1.0), SpecularPower) : 0.0;
+
+	// Apply procedural pattern based on the uv coordinates
+	bool2 less_half = (vert.oTex - floor(vert.oTex)) < float2(0.5, 0.5);
+	float darken_factor = less_half.r ^ less_half.g? 0.5 : 1.0;
+
+	// Fade out checkerboard pattern when it tiles too often
+	float2 dx = dfdx(vert.oTex), dy = dfdy(vert.oTex);
+	float texel_distance = sqrt(dot(dx, dx) + dot(dy, dy));
+	darken_factor = mix(darken_factor, 0.75, clamp(5.0 * texel_distance - 1.5, 0.0, 1.0));
+
+	// Calculate color
+	return float4(clamp((AmbientFactor + diffuse * shadow_factor) * darken_factor * DiffuseColor + SpecularColor * specular * shadow_factor, 0, 1), 1);
 }
 
 struct Depth
