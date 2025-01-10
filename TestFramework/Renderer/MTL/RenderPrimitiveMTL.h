@@ -12,7 +12,7 @@ class RenderPrimitiveMTL : public RenderPrimitive
 {
 public:
 	/// Constructor
-							RenderPrimitiveMTL(RendererMTL *inRenderer)										: mRenderer(inRenderer) { }
+							RenderPrimitiveMTL(RendererMTL *inRenderer, MTLPrimitiveType inType)			: mRenderer(inRenderer), mPrimitiveType(inType) { }
 	virtual					~RenderPrimitiveMTL() override													{ Clear(); }
 
 	/// Vertex buffer management functions
@@ -31,7 +31,10 @@ public:
 	virtual void			Draw() const override;
 
 private:
+	friend class 			RenderInstancesMTL;
+	
 	RendererMTL *			mRenderer;
+	MTLPrimitiveType		mPrimitiveType;
 	id<MTLBuffer>			mVertexBuffer;
 	id<MTLBuffer>			mIndexBuffer;
 };

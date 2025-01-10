@@ -62,4 +62,11 @@ void RenderPrimitiveMTL::UnlockIndexBuffer()
 
 void RenderPrimitiveMTL::Draw() const
 {
+	id<MTLRenderCommandEncoder> encoder = mRenderer->GetRenderEncoder();
+
+	[encoder setVertexBuffer: mVertexBuffer offset: 0 atIndex: 0];
+	if (mIndexBuffer == nil)
+		[encoder drawPrimitives: mPrimitiveType vertexStart: 0 vertexCount: mNumVtxToDraw];
+	else
+		[encoder drawIndexedPrimitives: mPrimitiveType indexCount: mNumIdxToDraw indexType: MTLIndexTypeUInt32 indexBuffer: mIndexBuffer indexBufferOffset: 0];
 }

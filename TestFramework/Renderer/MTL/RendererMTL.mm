@@ -148,7 +148,7 @@ unique_ptr<PipelineState> RendererMTL::CreatePipelineState(const VertexShader *i
 
 RenderPrimitive *RendererMTL::CreateRenderPrimitive(PipelineState::ETopology inType)
 {
-	return new RenderPrimitiveMTL(this);
+	return new RenderPrimitiveMTL(this, inType == PipelineState::ETopology::Line? MTLPrimitiveTypeLine : MTLPrimitiveTypeTriangle);
 }
 
 RenderInstances *RendererMTL::CreateRenderInstances()

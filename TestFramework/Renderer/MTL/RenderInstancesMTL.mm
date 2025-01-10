@@ -33,4 +33,14 @@ void RenderInstancesMTL::Draw(RenderPrimitive *inPrimitive, int inStartInstance,
 {
 	if (inNumInstances <= 0)
 		return;
+
+	id<MTLRenderCommandEncoder> encoder = mRenderer->GetRenderEncoder();
+	RenderPrimitiveMTL *prim = static_cast<RenderPrimitiveMTL *>(inPrimitive);
+
+	[encoder setVertexBuffer: prim->mVertexBuffer offset: 0 atIndex: 0];
+	[encoder setVertexBuffer: mBuffer offset: 0 atIndex: 1];
+	if (prim->mIndexBuffer == nil)
+		[encoder drawPrimitives: prim->mPrimitiveType vertexStart: 0 vertexCount: prim->mNumVtxToDraw instanceCount: inNumInstances];
+	else
+		[encoder drawIndexedPrimitives: prim->mPrimitiveType indexCount: prim->mNumIdxToDraw indexType: MTLIndexTypeUInt32 indexBuffer: prim->mIndexBuffer indexBufferOffset: 0 instanceCount: inNumInstances];
 }
