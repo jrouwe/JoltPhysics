@@ -14,7 +14,8 @@ void RenderInstancesMTL::Clear()
 
 void RenderInstancesMTL::CreateBuffer(int inNumInstances, int inInstanceSize)
 {
-	NSUInteger size = NSUInteger(inNumInstances) * inInstanceSize;
+	mInstanceSize = NSUInteger(inInstanceSize);
+	NSUInteger size = mInstanceSize * inNumInstances;
 	if (mBuffer == nullptr || mBufferSize < size)
 	{
 		Clear();
@@ -42,7 +43,7 @@ void RenderInstancesMTL::Draw(RenderPrimitive *inPrimitive, int inStartInstance,
 	RenderPrimitiveMTL *prim = static_cast<RenderPrimitiveMTL *>(inPrimitive);
 
 	[encoder setVertexBuffer: prim->mVertexBuffer offset: 0 atIndex: 0];
-	[encoder setVertexBuffer: mBuffer offset: 0 atIndex: 1];
+	[encoder setVertexBuffer: mBuffer offset: mInstanceSize * inStartInstance atIndex: 1];
 	if (prim->mIndexBuffer == nil)
 		[encoder drawPrimitives: prim->mPrimitiveType vertexStart: 0 vertexCount: prim->mNumVtxToDraw instanceCount: inNumInstances];
 	else
