@@ -1267,3 +1267,10 @@ void RendererVK::UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight)
 	scissor.extent = { inWidth, inHeight };
 	vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 }
+
+#ifdef JPH_ENABLE_VULKAN
+Renderer *Renderer::sCreate()
+{
+	return new RendererVK;
+}
+#endif

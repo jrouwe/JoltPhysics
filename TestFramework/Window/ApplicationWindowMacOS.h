@@ -7,8 +7,10 @@
 #include <Window/ApplicationWindow.h>
 
 #ifdef __OBJC__
+@class MTKView;
 @class CAMetalLayer;
 #else
+typedef void MTKView;
 typedef void CAMetalLayer;
 #endif
 
@@ -16,11 +18,15 @@ typedef void CAMetalLayer;
 class ApplicationWindowMacOS : public ApplicationWindow
 {
 public:
+	/// Destructor
+	virtual							~ApplicationWindowMacOS() override;
+
 	/// Initialize the window
 	virtual void					Initialize() override;
 
-	/// Access to the metal layer
-	CAMetalLayer *					GetMetalLayer() const					{ return mMetalLayer; }
+	/// Access to the metal objects
+	MTKView *						GetMetalView() const					{ return mMetalView; }
+	CAMetalLayer *					GetMetalLayer() const;
 
 	/// Enter the main loop and keep rendering frames until the window is closed
 	virtual void					MainLoop(RenderCallback inRenderCallback) override;
@@ -34,7 +40,7 @@ public:
 	void							OnMouseMoved(int inX, int inY)			{ mMouseMovedCallback(inX, inY); }
 
 protected:
-	CAMetalLayer *					mMetalLayer = nullptr;
+	MTKView *						mMetalView = nullptr;
 	ApplicationWindow::RenderCallback mRenderCallback;
 	MouseMovedCallback				mMouseMovedCallback;
 };

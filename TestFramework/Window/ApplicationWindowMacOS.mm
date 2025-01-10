@@ -19,8 +19,10 @@
 
 - (MetalView *)init:(ApplicationWindowMacOS *)window
 {
-	[super initWithFrame: NSMakeRect(0, 0, window->GetWindowWidth(), window->GetWindowHeight()) device: MTLCreateSystemDefaultDevice()];
-	
+	id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+	self = [super initWithFrame: NSMakeRect(0, 0, window->GetWindowWidth(), window->GetWindowHeight()) device: device];
+	[device release];
+
 	mWindow = window;
 	
 	self.delegate = self;
@@ -38,20 +40,24 @@
 	return YES;
 }
 
-- (BOOL)isFlipped {
-    return YES;
+- (BOOL)isFlipped
+{
+	return YES;
 }
 
 - (void)mouseMoved:(NSEvent *)event
 {
-    NSPoint locationInView = [self convertPoint:event.locationInWindow fromView:nil];
-    NSPoint locationInBacking = [self convertPointToBacking:locationInView];
-	mWindow->OnMouseMoved(locationInBacking.x, -locationInBacking.y);
+	NSPoint location_in_view = [self convertPoint: event.locationInWindow fromView: nil];
+	NSPoint location_in_backing = [self convertPointToBacking: location_in_view];
+	mWindow->OnMouseMoved(location_in_backing.x, -location_in_backing.y);
 }
 
 - (void)drawInMTKView:(MTKView *)view
 {
-	mWindow->RenderCallback();
+	@autoreleasepool
+	{
+		mWindow->RenderCallback();
+	}
 }
 
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
@@ -71,8 +77,8 @@
 {
 	// Add the Quit button to the first menu item on the toolbar
 	NSMenu *app_menu = [[NSApp mainMenu] itemAtIndex: 0].submenu;
-	NSMenuItem *quit_item = [[NSMenuItem alloc] initWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
-	[app_menu addItem:quit_item];
+	NSMenuItem *quit_item = [[NSMenuItem alloc] initWithTitle: @"Quit" action: @selector(terminate:) keyEquivalent: @"q"];
+	[app_menu addItem: quit_item];
 }
 
 -(bool)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
@@ -83,11 +89,19 @@
 
 @end
 
+ApplicationWindowMacOS::~ApplicationWindowMacOS()
+{
+	[mMetalView release];
+}
+
 void ApplicationWindowMacOS::Initialize()
 {
 	// Create metal view
 	MetalView *view = [[MetalView alloc] init: this];
-	mMetalLayer = (CAMetalLayer *)view.layer;
+	view.clearColor = MTLClearColorMake(0.098f, 0.098f, 0.439f, 1.000f);
+	view.depthStencilPixelFormat = MTLPixelFormatDepth32Float;
+	view.clearDepth = 0.0f;
+	mMetalView = view;
 
 	// Create window
 	NSWindow *window = [[NSWindow alloc] initWithContentRect: NSMakeRect(0, 0, mWindowWidth, mWindowHeight)
@@ -108,7 +122,13 @@ void ApplicationWindowMacOS::MainLoop(ApplicationWindow::RenderCallback inRender
 	{
 		NSApplication *app = [NSApplication sharedApplication];
 		AppDelegate *delegate = [[AppDelegate alloc] init];
-		[app setDelegate:delegate];
+		[app setDelegate: delegate];
 		[app run];
+		[delegate release];
 	}
+}
+
+CAMetalLayer *ApplicationWindowMacOS::GetMetalLayer() const
+{
+	return (CAMetalLayer *)mMetalView.layer;
 }

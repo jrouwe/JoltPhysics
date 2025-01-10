@@ -16,7 +16,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added binary serialization to `SkeletalAnimation`.
 * Added support for RISC-V, LoongArch and PowerPC (Little Endian) CPUs.
 * Added the ability to add a sub shape at a specified index in a MutableCompoundShape rather than at the end.
-* The Samples and JoltViewer can run on Linux/macOS using Vulkan now. Make sure to install the Vulkan SDK before compiling (see: Build/ubuntu24_install_vulkan_sdk.sh or [download](https://vulkan.lunarg.com/sdk/home) the SDK).
+* The Samples and JoltViewer can run on Linux using Vulkan. Make sure to install the Vulkan SDK before compiling (see: Build/ubuntu24_install_vulkan_sdk.sh).
+* The Samples and JoltViewer can run on macOS using Metal.
 * Added STLLocalAllocator which is an allocator that can be used in e.g. the Array class. It keeps a fixed size buffer for N elements and only when it runs out of space falls back to the heap.
 * Added support for CharacterVirtual to override the inner rigid body ID. This can be used to make the simulation deterministic in e.g. client/server setups.
 * Added OnContactPersisted, OnContactRemoved, OnCharacterContactPersisted and OnCharacterContactRemoved functions on CharacterContactListener to better match the interface of ContactListener.
