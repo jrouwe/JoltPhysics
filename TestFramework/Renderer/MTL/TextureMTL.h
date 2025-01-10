@@ -6,6 +6,8 @@
 
 #include <Renderer/Texture.h>
 
+#include <MetalKit/MetalKit.h>
+
 class RendererMTL;
 
 /// Metal texture
@@ -19,5 +21,9 @@ public:
 
 	/// Bind texture to the pixel shader
 	virtual void						Bind() const override;
+
+private:
+	RendererMTL *						mRenderer;
+	id<MTLTexture> 						mTexture;
 };
 

@@ -4,6 +4,8 @@ using namespace metal;
 
 #include "VertexConstants.h"
 
+constexpr sampler alphaTextureSampler(mag_filter::linear, min_filter::linear);
+
 struct FontVertex
 {
 	float3		vPos [[attribute(0)]];
@@ -13,9 +15,9 @@ struct FontVertex
 
 struct FontOut
 {
-    float4 oPosition [[position]];
-    float2 oTex;
-    float4 oColor;
+    float4 		oPosition [[position]];
+    float2 		oTex;
+    float4 		oColor;
 };
 
 vertex FontOut FontVertexShader(FontVertex vert [[stage_in]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])
@@ -27,7 +29,11 @@ vertex FontOut FontVertexShader(FontVertex vert [[stage_in]], constant VertexSha
     return out;
 }
 
-fragment float4 FontPixelShader(FontOut in [[stage_in]])
+fragment float4 FontPixelShader(FontOut in [[stage_in]], texture2d<float> alphaTexture [[texture(0)]])
 {
-    return in.oColor;
+	const float4 sample = alphaTexture.sample(alphaTextureSampler, in.oTex);
+	if (sample.x < 0.5)
+		discard_fragment();
+
+    return float4(in.oColor.xyz, sample.x);
 }

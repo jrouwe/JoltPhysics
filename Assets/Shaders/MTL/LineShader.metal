@@ -12,8 +12,8 @@ struct LineVertex
 
 struct LineOut
 {
-    float4 oPosition [[position]];
-    float4 oColor;
+    float4 	oPosition [[position]];
+    float4 	oColor;
 };
 
 vertex LineOut LineVertexShader(LineVertex vert [[stage_in]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])

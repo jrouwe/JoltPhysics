@@ -4,6 +4,8 @@ using namespace metal;
 
 #include "VertexConstants.h"
 
+constexpr sampler uiTextureSampler(mag_filter::linear, min_filter::linear);
+
 struct UIVertex
 {
 	float3		vPos [[attribute(0)]];
@@ -13,9 +15,9 @@ struct UIVertex
 
 struct UIOut
 {
-    float4 oPosition [[position]];
-    float2 oTex;
-    float4 oColor;
+    float4 		oPosition [[position]];
+    float2 		oTex;
+    float4 		oColor;
 };
 
 vertex UIOut UIVertexShader(UIVertex vert [[stage_in]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])
@@ -27,9 +29,10 @@ vertex UIOut UIVertexShader(UIVertex vert [[stage_in]], constant VertexShaderCon
     return out;
 }
 
-fragment float4 UIPixelShader(UIOut in [[stage_in]])
+fragment float4 UIPixelShader(UIOut in [[stage_in]], texture2d<float> uiTexture [[texture(0)]])
 {
-    return in.oColor;
+	const float4 sample = uiTexture.sample(uiTextureSampler, in.oTex);
+    return sample * in.oColor;
 }
 
 fragment float4 UIPixelShaderUntextured(UIOut in [[stage_in]])
