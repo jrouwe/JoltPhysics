@@ -76,14 +76,13 @@ static EKey sToKey(GCKeyCode inValue)
 {
 	mKeyboard = Keyboard;
 
-    [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown handler:^NSEvent *(NSEvent *event) {
-        // Ignore all keystrokes except Command-Q (Quit).
-        if ((event.modifierFlags & NSEventModifierFlagCommand) && [event.charactersIgnoringModifiers isEqual:@"q"]) {
-            return event;
-        } else {
-            return nil;
-        }
-    }];
+	[NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown handler:^NSEvent *(NSEvent *event) {
+		// Ignore all keystrokes except Command-Q (Quit).
+		if ((event.modifierFlags & NSEventModifierFlagCommand) && [event.charactersIgnoringModifiers isEqual:@"q"])
+			return event;
+		else
+			return nil;
+	}];
 
 	return self;
 }

@@ -38,15 +38,16 @@
 	return YES;
 }
 
-- (BOOL)isFlipped {
-    return YES;
+- (BOOL)isFlipped
+{
+	return YES;
 }
 
 - (void)mouseMoved:(NSEvent *)event
 {
-    NSPoint locationInView = [self convertPoint:event.locationInWindow fromView:nil];
-    NSPoint locationInBacking = [self convertPointToBacking:locationInView];
-	mWindow->OnMouseMoved(locationInBacking.x, -locationInBacking.y);
+	NSPoint location_in_view = [self convertPoint: event.locationInWindow fromView: nil];
+	NSPoint location_in_backing = [self convertPointToBacking: location_in_view];
+	mWindow->OnMouseMoved(location_in_backing.x, -location_in_backing.y);
 }
 
 - (void)drawInMTKView:(MTKView *)view
@@ -71,7 +72,7 @@
 {
 	// Add the Quit button to the first menu item on the toolbar
 	NSMenu *app_menu = [[NSApp mainMenu] itemAtIndex: 0].submenu;
-	NSMenuItem *quit_item = [[NSMenuItem alloc] initWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
+	NSMenuItem *quit_item = [[NSMenuItem alloc] initWithTitle: @"Quit" action: @selector(terminate:) keyEquivalent: @"q"];
 	[app_menu addItem:quit_item];
 }
 
@@ -108,7 +109,7 @@ void ApplicationWindowMacOS::MainLoop(ApplicationWindow::RenderCallback inRender
 	{
 		NSApplication *app = [NSApplication sharedApplication];
 		AppDelegate *delegate = [[AppDelegate alloc] init];
-		[app setDelegate:delegate];
+		[app setDelegate: delegate];
 		[app run];
 	}
 }
