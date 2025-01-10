@@ -14,6 +14,7 @@ class PixelShaderMTL : public PixelShader
 public:
 	/// Constructor
 							PixelShaderMTL(id<MTLFunction> inFunction) : mFunction(inFunction) { }
+	virtual					~PixelShaderMTL() override { [mFunction release]; }
 
 	/// Access to the function
 	id<MTLFunction>			GetFunction() const				{ return mFunction; }

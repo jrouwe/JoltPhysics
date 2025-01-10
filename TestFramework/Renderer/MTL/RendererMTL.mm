@@ -16,6 +16,13 @@
 #include <Utils/Log.h>
 #include <Jolt/Core/Profiler.h>
 
+RendererMTL::~RendererMTL()
+{
+	[mCommandQueue release];
+	[mShadowRenderPass release];
+	[mShaderLibrary release];
+}
+
 void RendererMTL::Initialize(ApplicationWindow *inWindow)
 {
 	Renderer::Initialize(inWindow);

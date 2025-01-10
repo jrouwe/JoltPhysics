@@ -52,7 +52,10 @@
 
 - (void)drawInMTKView:(MTKView *)view
 {
-	mWindow->RenderCallback();
+	@autoreleasepool
+	{
+		mWindow->RenderCallback();
+	}
 }
 
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
@@ -73,7 +76,7 @@
 	// Add the Quit button to the first menu item on the toolbar
 	NSMenu *app_menu = [[NSApp mainMenu] itemAtIndex: 0].submenu;
 	NSMenuItem *quit_item = [[NSMenuItem alloc] initWithTitle: @"Quit" action: @selector(terminate:) keyEquivalent: @"q"];
-	[app_menu addItem:quit_item];
+	[app_menu addItem: quit_item];
 }
 
 -(bool)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
@@ -83,6 +86,11 @@
 }
 
 @end
+
+ApplicationWindowMacOS::~ApplicationWindowMacOS()
+{
+	[mMetalView release];
+}
 
 void ApplicationWindowMacOS::Initialize()
 {
@@ -114,6 +122,7 @@ void ApplicationWindowMacOS::MainLoop(ApplicationWindow::RenderCallback inRender
 		AppDelegate *delegate = [[AppDelegate alloc] init];
 		[app setDelegate: delegate];
 		[app run];
+		[delegate release];
 	}
 }
 

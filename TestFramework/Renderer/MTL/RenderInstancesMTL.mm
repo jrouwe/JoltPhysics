@@ -9,6 +9,7 @@
 
 void RenderInstancesMTL::Clear()
 {
+	[mBuffer release];
 	mBuffer = nil;
 }
 

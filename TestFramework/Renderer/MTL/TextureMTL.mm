@@ -48,9 +48,12 @@ TextureMTL::TextureMTL(RendererMTL *inRenderer, const Surface *inSurface) :
 
 	// Create descriptor
 	MTLTextureDescriptor *descriptor = [[MTLTextureDescriptor alloc] init];
+	descriptor.textureType = MTLTextureType2D;
+	descriptor.usage = MTLTextureUsageShaderRead;
 	descriptor.pixelFormat = mt_format;
 	descriptor.width = mWidth;
 	descriptor.height = mHeight;
+	descriptor.storageMode = MTLStorageModeManaged;
 
 	MTLRegion region =
 	{
@@ -82,6 +85,7 @@ TextureMTL::TextureMTL(RendererMTL *inRenderer, int inWidth, int inHeight) :
 
 TextureMTL::~TextureMTL()
 {
+	[mTexture release];
 }
 
 void TextureMTL::Bind() const

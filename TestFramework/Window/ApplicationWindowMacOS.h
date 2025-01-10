@@ -18,6 +18,9 @@ typedef void CAMetalLayer;
 class ApplicationWindowMacOS : public ApplicationWindow
 {
 public:
+	/// Destructor
+	virtual							~ApplicationWindowMacOS() override;
+
 	/// Initialize the window
 	virtual void					Initialize() override;
 

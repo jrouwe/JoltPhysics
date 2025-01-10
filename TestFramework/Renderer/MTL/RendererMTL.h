@@ -13,6 +13,8 @@
 class RendererMTL : public Renderer
 {
 public:
+	virtual 						~RendererMTL() override;
+	
 	// See: Renderer
 	virtual void					Initialize(ApplicationWindow *inWindow) override;
 	virtual void					BeginFrame(const CameraState &inCamera, float inWorldScale) override;

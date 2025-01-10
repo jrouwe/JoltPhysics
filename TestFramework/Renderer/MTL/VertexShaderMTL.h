@@ -14,6 +14,7 @@ class VertexShaderMTL : public VertexShader
 public:
 	/// Constructor
 							VertexShaderMTL(id<MTLFunction> inFunction) : mFunction(inFunction) { }
+	virtual					~VertexShaderMTL() override { [mFunction release]; }
 
 	/// Access to the function
 	id<MTLFunction>			GetFunction() const				{ return mFunction; }

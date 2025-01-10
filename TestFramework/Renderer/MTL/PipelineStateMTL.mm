@@ -116,9 +116,11 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 	NSError *error = nullptr;
 	mPipelineState = [mRenderer->GetDevice() newRenderPipelineStateWithDescriptor: descriptor error: &error];
 	FatalErrorIfFailed(error);
+	[descriptor release];
+	[vertex_descriptor release];
 
 	// Create depth descriptor
-	MTLDepthStencilDescriptor *depth_descriptor = [MTLDepthStencilDescriptor new];
+	MTLDepthStencilDescriptor *depth_descriptor = [[MTLDepthStencilDescriptor new] init];
 	if (inDepthTest == EDepthTest::On)
 	{
 		depth_descriptor.depthCompareFunction = MTLCompareFunctionGreater;
@@ -130,6 +132,7 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 		depth_descriptor.depthWriteEnabled = NO;
 	}
 	mDepthState = [mRenderer->GetDevice() newDepthStencilStateWithDescriptor: depth_descriptor];
+	[depth_descriptor release];
 
 	// Determine cull mode
 	if (inCullMode == ECullMode::FrontFace)
@@ -146,6 +149,8 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 
 PipelineStateMTL::~PipelineStateMTL()
 {
+	[mPipelineState release];
+	[mDepthState release];
 }
 
 void PipelineStateMTL::Activate()
