@@ -85,25 +85,33 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 	MTLRenderPipelineDescriptor *descriptor = [[MTLRenderPipelineDescriptor alloc] init];
 	descriptor.vertexFunction = inVertexShader->GetFunction();
 	descriptor.fragmentFunction = inPixelShader->GetFunction();
-	descriptor.colorAttachments[0].pixelFormat = mRenderer->GetView().colorPixelFormat;
-	switch (inBlendMode)
+	descriptor.vertexDescriptor = vertex_descriptor;
+	switch (inDrawPass)
 	{
-	case EBlendMode::Write:
-		descriptor.colorAttachments[0].blendingEnabled = NO;
+	case EDrawPass::Shadow:
+		descriptor.depthAttachmentPixelFormat = static_cast<TextureMTL *>(mRenderer->GetShadowMap())->GetTexture().pixelFormat;
 		break;
 
-	case EBlendMode::AlphaBlend:
-		descriptor.colorAttachments[0].blendingEnabled = YES;
-		descriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
-		descriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
-		descriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
-		descriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorZero;
-		descriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorZero;
-		descriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
-		break;
+	case EDrawPass::Normal:
+		descriptor.colorAttachments[0].pixelFormat = mRenderer->GetView().colorPixelFormat;
+		switch (inBlendMode)
+		{
+		case EBlendMode::Write:
+			descriptor.colorAttachments[0].blendingEnabled = NO;
+			break;
+
+		case EBlendMode::AlphaBlend:
+			descriptor.colorAttachments[0].blendingEnabled = YES;
+			descriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+			descriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+			descriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+			descriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorZero;
+			descriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorZero;
+			descriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+			break;
+		}
+		descriptor.depthAttachmentPixelFormat = mRenderer->GetView().depthStencilPixelFormat;
 	}
-	descriptor.depthAttachmentPixelFormat = mRenderer->GetView().depthStencilPixelFormat;
-	descriptor.vertexDescriptor = vertex_descriptor;
 
 	NSError *error = nullptr;
 	mPipelineState = [mRenderer->GetDevice() newRenderPipelineStateWithDescriptor: descriptor error: &error];

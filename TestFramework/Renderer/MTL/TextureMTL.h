@@ -22,6 +22,9 @@ public:
 	/// Bind texture to the pixel shader
 	virtual void						Bind() const override;
 
+	/// Access to the metal texture
+	id<MTLTexture>						GetTexture() const					{ return mTexture; }
+
 private:
 	RendererMTL *						mRenderer;
 	id<MTLTexture> 						mTexture;

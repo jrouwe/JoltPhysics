@@ -38,6 +38,7 @@ public:
 
 private:
 	MTKView *						mView;
+	MTLRenderPassDescriptor *		mShadowRenderPass;
 	Ref<TextureMTL>					mShadowMap;
 	id<MTLLibrary>					mShaderLibrary;
 	id<MTLCommandQueue>				mCommandQueue;

@@ -69,6 +69,15 @@ TextureMTL::TextureMTL(RendererMTL *inRenderer, int inWidth, int inHeight) :
 	Texture(inWidth, inHeight),
 	mRenderer(inRenderer)
 {
+	MTLTextureDescriptor *descriptor = [[MTLTextureDescriptor alloc] init];
+	descriptor.textureType = MTLTextureType2D;
+	descriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+	descriptor.pixelFormat = MTLPixelFormatDepth32Float;
+	descriptor.width = mWidth;
+	descriptor.height = mHeight;
+	descriptor.storageMode = MTLStorageModePrivate;
+
+	mTexture = [inRenderer->GetDevice() newTextureWithDescriptor: descriptor];
 }
 
 TextureMTL::~TextureMTL()

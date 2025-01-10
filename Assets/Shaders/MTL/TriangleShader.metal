@@ -95,7 +95,7 @@ fragment float4 TrianglePixelShader(TriangleOut vert [[stage_in]], constant Pixe
 	// Calculate texture coordinates in light depth texture
 	float2 tex_coord;
 	tex_coord.x = position_l.x / 2.0 + 0.5;
-	tex_coord.y = position_l.y / 2.0 + 0.5;
+	tex_coord.y = -position_l.y / 2.0 + 0.5;
 
 	// Check that the texture coordinate is inside the depth texture, if not we don't know if it is lit or not so we assume lit
 	float shadow_factor = 1.0;
@@ -161,20 +161,39 @@ fragment float4 TrianglePixelShader(TriangleOut vert [[stage_in]], constant Pixe
 	return float4(clamp((AmbientFactor + diffuse * shadow_factor) * darken_factor * DiffuseColor + SpecularColor * specular * shadow_factor, 0, 1), 1);
 }
 
-struct Depth
+struct DepthOut
 {
 	float4		oPosition [[position]];
 };
 
-vertex Depth TriangleDepthVertexShader(uint vertexID [[vertex_id]])
+vertex DepthOut TriangleDepthVertexShader(Vertex vert [[stage_in]], constant VertexShaderConstantBuffer *constants [[buffer(2)]])
 {
-	Depth out;
-	out.oPosition = float4(0.0, 0.0, 0.0, 1.0);
+	DepthOut out;
+
+	// Check if the alpha = 0
+	if (vert.vCol.a * vert.iCol.a == 0.0)
+	{
+		// Don't draw the triangle by moving it to an invalid location
+		out.oPosition = float4(0, 0, 0, 0);
+	}
+	else
+	{
+		// Convert input matrix
+		float4x4 iModel(vert.iModel0, vert.iModel1, vert.iModel2, vert.iModel3);
+
+		// Transform the position from world space to homogeneous projection space for the light
+		float4 pos = float4(vert.vPos, 1.0f);
+		pos = iModel * pos;
+		pos = constants->LightView * pos;
+		pos = constants->LightProjection * pos;
+		out.oPosition = pos;
+	}
+
 	return out;
 }
 
-fragment float4 TriangleDepthPixelShader(Depth in [[stage_in]], constant PixelShaderConstantBuffer *constants [[buffer(0)]])
+fragment float4 TriangleDepthPixelShader(DepthOut in [[stage_in]])
 {
-	discard_fragment();
-	return float4(1.0, 1.0, 1.0, 1.0);
+	// We only write depth, so this shader does nothing
+	return float4(0.0, 0.0, 0.0, 1.0);
 }

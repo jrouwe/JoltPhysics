@@ -38,6 +38,13 @@ void RendererMTL::Initialize(ApplicationWindow *inWindow)
 	// Create depth only texture (no color buffer, as seen from light)
 	mShadowMap = new TextureMTL(this, cShadowMapSize, cShadowMapSize);
 
+	// Create render pass descriptor for shadow pass
+	mShadowRenderPass = [[MTLRenderPassDescriptor alloc] init];
+	mShadowRenderPass.depthAttachment.texture = mShadowMap->GetTexture();
+	mShadowRenderPass.depthAttachment.loadAction = MTLLoadActionClear;
+	mShadowRenderPass.depthAttachment.storeAction = MTLStoreActionStore;
+	mShadowRenderPass.depthAttachment.clearDepth = 0.0f;
+
 	// Create the command queue
 	mCommandQueue = [device newCommandQueue];
 }
@@ -54,13 +61,31 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	// Create a new command buffer
 	mCommandBuffer = [mCommandQueue commandBuffer];
 
-	// Obtain a render_pass_descriptor generated from the view's drawable textures.
+	// Create shadow render encoder
+	mRenderEncoder = [mCommandBuffer renderCommandEncoderWithDescriptor: mShadowRenderPass];
+
+	// Set viewport to size of shadow map
+	[mRenderEncoder setViewport: (MTLViewport){ 0.0, 0.0, double(cShadowMapSize), double(cShadowMapSize), 0.0, 1.0 }];
+
+	// Set pixel shader constants
+	[mRenderEncoder setFragmentBytes: &mPSBuffer length: sizeof(mPSBuffer) atIndex: 0];
+
+	// Counter clockwise is default winding order
+	[mRenderEncoder setFrontFacingWinding: MTLWindingCounterClockwise];
+
+	// Start with projection mode
+	SetProjectionMode();
+}
+
+void RendererMTL::EndShadowPass()
+{
+	// Finish the shadow encoder
+	[mRenderEncoder endEncoding];
+	mRenderEncoder = nil;
+
 	MTLRenderPassDescriptor *render_pass_descriptor = mView.currentRenderPassDescriptor;
 	if (render_pass_descriptor == nullptr)
-	{
-		mRenderEncoder = nil;
 		return;
-	}
 
 	// Create render encoder
 	mRenderEncoder = [mCommandBuffer renderCommandEncoderWithDescriptor: render_pass_descriptor];
@@ -76,10 +101,6 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Start with projection mode
 	SetProjectionMode();
-}
-
-void RendererMTL::EndShadowPass()
-{
 }
 
 void RendererMTL::EndFrame()
