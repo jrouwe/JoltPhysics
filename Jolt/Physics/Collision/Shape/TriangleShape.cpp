@@ -413,6 +413,9 @@ void TriangleShape::sRegister()
 	{
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::Triangle, sCollideConvexVsTriangle);
 		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::Triangle, sCastConvexVsTriangle);
+
+		CollisionDispatch::sRegisterCollideShape(EShapeSubType::Triangle, s, CollisionDispatch::sReversedCollideShape);
+		CollisionDispatch::sRegisterCastShape(EShapeSubType::Triangle, s, CollisionDispatch::sReversedCastShape);
 	}
 
 	// Specialized collision functions

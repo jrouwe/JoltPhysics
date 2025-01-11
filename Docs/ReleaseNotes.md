@@ -34,6 +34,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * VehicleConstraint would override Body::SetAllowSleeping every frame, making it impossible for client code to configure a vehicle that cannot go to sleep.
 * Fixed CharacterVirtual::Contact::mIsSensorB not being persisted in SaveState.
 * Fixed CharacterVirtual::Contact::mHadContact not being true for collisions with sensors. They will still be marked as mWasDiscarded to prevent any further interaction.
+* Fixed numerical inaccuracy in penetration depth calculation when CollideShapeSettings::mMaxSeparationDistance was set to a really high value (e.g. 1000).
 
 ## v5.2.0
 

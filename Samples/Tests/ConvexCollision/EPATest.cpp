@@ -33,8 +33,8 @@ bool EPATest::CollideBoxSphere(Mat44Arg inMatrix, const AABox &inBox, const Sphe
 	DrawSphereSP(mDebugRenderer, inMatrix * inSphere.GetCenter(), inSphere.GetRadius(), Color::sGrey);
 
 	// Transform the box and sphere according to inMatrix
-	TransformedConvexObject<AABox> transformed_box(inMatrix, inBox);
-	TransformedConvexObject<Sphere> transformed_sphere(inMatrix, inSphere);
+	TransformedConvexObject transformed_box(inMatrix, inBox);
+	TransformedConvexObject transformed_sphere(inMatrix, inSphere);
 
 	// Run the EPA algorithm
 	EPAPenetrationDepth epa;

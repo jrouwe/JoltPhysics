@@ -141,7 +141,7 @@ void ConvexHullShrinkTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		// Get the support function of the shape excluding convex radius and add the convex radius
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = shape->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
-		AddConvexRadius<ConvexShape::Support> add_cvx(*support, convex_radius);
+		AddConvexRadius add_cvx(*support, convex_radius);
 
 		// Calculate the error w.r.t. the original hull
 		float max_error = -FLT_MAX;
