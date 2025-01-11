@@ -483,4 +483,57 @@ TEST_SUITE("CollideShapeTests")
 
 		CHECK(angle >= 2.0f * JPH_PI);
 	}
+
+	// This test checks extreme values of the max separation distance and how it affects ConvexShape::sCollideConvexVsConvex
+	// See: https://github.com/jrouwe/JoltPhysics/discussions/1379
+	TEST_CASE("TestBoxVsSphereLargeSeparationDistance")
+	{
+		constexpr float cRadius = 1.0f;
+		constexpr float cHalfExtent = 10.0f;
+		RefConst<Shape> sphere_shape = new SphereShape(cRadius);
+		RefConst<Shape> box_shape = new BoxShape(Vec3::sReplicate(cHalfExtent));
+		float distances[] = { 0.0f, 0.5f, 1.0f, 5.0f, 10.0f, 50.0f, 100.0f, 500.0f, 1000.0f, 5000.0f, 10000.0f };
+		for (float x : distances)
+			for (float max_separation : distances)
+			{
+				CollideShapeSettings collide_settings;
+				collide_settings.mMaxSeparationDistance = max_separation;
+				ClosestHitCollisionCollector<CollideShapeCollector> collector;
+				CollisionDispatch::sCollideShapeVsShape(box_shape, sphere_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sTranslation(Vec3(x, 0, 0)), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
+
+				float expected_penetration = cHalfExtent - (x - cRadius);
+				if (collector.HadHit())
+					CHECK_APPROX_EQUAL(expected_penetration, collector.mHit.mPenetrationDepth, 1.0e-3f);
+				else
+					CHECK(expected_penetration < -max_separation);
+			}
+	}
+
+	// This test case checks extreme values of the max separation distance and how it affects CollideConvexVsTriangles::Collide
+	// See: https://github.com/jrouwe/JoltPhysics/discussions/1379
+	TEST_CASE("TestTriangleVsBoxLargeSeparationDistance")
+	{
+		constexpr float cTriangleX = -0.1f;
+		constexpr float cHalfExtent = 10.0f;
+		RefConst<Shape> triangle_shape = new TriangleShape(Vec3(cTriangleX, -10, 10), Vec3(cTriangleX, -10, -10), Vec3(cTriangleX, 10, 0));
+		RefConst<Shape> box_shape = new BoxShape(Vec3::sReplicate(cHalfExtent));
+		float distances[] = { 0.0f, 0.5f, 1.0f, 5.0f, 10.0f, 50.0f, 100.0f, 500.0f, 1000.0f, 5000.0f, 10000.0f };
+		for (float x : distances)
+			for (float max_separation : distances)
+			{
+				CollideShapeSettings collide_settings;
+				collide_settings.mMaxSeparationDistance = max_separation;
+				ClosestHitCollisionCollector<CollideShapeCollector> collector;
+				CollisionDispatch::sCollideShapeVsShape(triangle_shape, box_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sTranslation(Vec3(x, 0, 0)), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
+
+				float expected_penetration = cTriangleX - (x - cHalfExtent);
+				if (collector.HadHit())
+					CHECK_APPROX_EQUAL(expected_penetration, collector.mHit.mPenetrationDepth, 1.0e-3f);
+				else
+				{
+					CHECK(expected_penetration < -max_separation);
+					CHECK_APPROX_EQUAL(collector.mHit.mPenetrationAxis.NormalizedOr(Vec3::sZero()), Vec3::sAxisX(), 1.0e-5f);
+				}
+			}
+	}
 }
