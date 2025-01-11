@@ -100,7 +100,7 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 			mShape1IncCvxRadius = mShape1->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, mBufferIncCvxRadius, mScale1);
 
 		// Add convex radius
-		AddConvexRadius<ConvexShape::Support> shape1_add_max_separation_distance(*mShape1IncCvxRadius, max_separation_distance);
+		AddConvexRadius shape1_add_max_separation_distance(*mShape1IncCvxRadius, max_separation_distance);
 
 		// Perform EPA step
 		if (!pen_depth.GetPenetrationDepthStepEPA(shape1_add_max_separation_distance, triangle, mCollideShapeSettings.mPenetrationTolerance, penetration_axis, point1, point2))

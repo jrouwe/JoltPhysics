@@ -27,8 +27,8 @@ TEST_SUITE("EPATests")
 	/// @return If a collision was detected
 	static bool CollideBoxSphere(Mat44Arg inMatrix, const AABox &inBox, const Sphere &inSphere)
 	{
-		TransformedConvexObject<AABox> transformed_box(inMatrix, inBox);
-		TransformedConvexObject<Sphere> transformed_sphere(inMatrix, inSphere);
+		TransformedConvexObject transformed_box(inMatrix, inBox);
+		TransformedConvexObject transformed_sphere(inMatrix, inSphere);
 
 		// Use EPA algorithm. Don't use convex radius to avoid EPA being skipped because the inner hulls are not touching.
 		EPAPenetrationDepth epa;

@@ -110,10 +110,10 @@ void InteractivePairsTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 void InteractivePairsTest::TestBoxVsBox(Vec3Arg inTranslationA, Vec3Arg inRotationA, float inConvexRadiusA, const AABox &inA, Vec3Arg inTranslationB, Vec3Arg inRotationB, float inConvexRadiusB, const AABox &inB)
 {
 	Mat44 mat_a = Mat44::sTranslation(inTranslationA) * Mat44::sRotationX(inRotationA.GetX()) * Mat44::sRotationY(inRotationA.GetY()) * Mat44::sRotationZ(inRotationA.GetZ());
-	TransformedConvexObject<AABox> a(mat_a, inA);
+	TransformedConvexObject a(mat_a, inA);
 
 	Mat44 mat_b = Mat44::sTranslation(inTranslationB) * Mat44::sRotationX(inRotationB.GetX()) * Mat44::sRotationY(inRotationB.GetY()) * Mat44::sRotationZ(inRotationB.GetZ());
-	TransformedConvexObject<AABox> b(mat_b, inB);
+	TransformedConvexObject b(mat_b, inB);
 
 	EPAPenetrationDepth pen_depth;
 	Vec3 v = Vec3::sAxisX(), pa, pb;
@@ -130,8 +130,8 @@ void InteractivePairsTest::TestBoxVsBox(Vec3Arg inTranslationA, Vec3Arg inRotati
 	if (inConvexRadiusA > 0.0f)
 		DrawWireBoxSP(mDebugRenderer, mat_a, widened_a, Color::sWhite);
 
-	AddConvexRadius<TransformedConvexObject<AABox>> a_inc(a, inConvexRadiusA);
-	AddConvexRadius<TransformedConvexObject<AABox>> b_inc(b, inConvexRadiusB);
+	AddConvexRadius a_inc(a, inConvexRadiusA);
+	AddConvexRadius b_inc(b, inConvexRadiusB);
 
 	if (pen_depth.GetPenetrationDepth(a, a_inc, inConvexRadiusA, b, b_inc, inConvexRadiusB, 1.0e-4f, FLT_EPSILON, v, pa, pb))
 	{
@@ -154,7 +154,7 @@ void InteractivePairsTest::TestSphereVsBox(Vec3Arg inTranslationA, float inRadiu
 {
 	Sphere s(inTranslationA, inRadiusA);
 	Mat44 mat_b = Mat44::sTranslation(inTranslationB) * Mat44::sRotationX(inRotationB.GetX()) * Mat44::sRotationY(inRotationB.GetY()) * Mat44::sRotationZ(inRotationB.GetZ());
-	TransformedConvexObject<AABox> b(mat_b, inB);
+	TransformedConvexObject b(mat_b, inB);
 
 	AABox widened_b = inB;
 	widened_b.ExpandBy(Vec3::sReplicate(inConvexRadiusB));
@@ -164,7 +164,7 @@ void InteractivePairsTest::TestSphereVsBox(Vec3Arg inTranslationA, float inRadiu
 
 	DrawSphereSP(mDebugRenderer, inTranslationA, inRadiusA, Color::sWhite);
 
-	AddConvexRadius<TransformedConvexObject<AABox>> b_inc(b, inConvexRadiusB);
+	AddConvexRadius	b_inc(b, inConvexRadiusB);
 
 	if (pen_depth.GetPenetrationDepth(s, s, 0.0f, b, b_inc, inConvexRadiusB, 1.0e-4f, FLT_EPSILON, v, pa, pb))
 	{

@@ -87,7 +87,7 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 		const Support *shape2_excl_cvx_radius = shape2->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer2_excl_cvx_radius, inScale2);
 
 		// Transform shape 2 in the space of shape 1
-		TransformedConvexObject<Support> transformed2_excl_cvx_radius(transform_2_to_1, *shape2_excl_cvx_radius);
+		TransformedConvexObject transformed2_excl_cvx_radius(transform_2_to_1, *shape2_excl_cvx_radius);
 
 		// Perform GJK step
 		status = pen_depth.GetPenetrationDepthStepGJK(*shape1_excl_cvx_radius, shape1_excl_cvx_radius->GetConvexRadius() + max_separation_distance, transformed2_excl_cvx_radius, shape2_excl_cvx_radius->GetConvexRadius(), inCollideShapeSettings.mCollisionTolerance, penetration_axis, point1, point2);
@@ -118,10 +118,10 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 			const Support *shape2_incl_cvx_radius = shape2->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer2_incl_cvx_radius, inScale2);
 
 			// Add separation distance
-			AddConvexRadius<Support> shape1_add_max_separation_distance(*shape1_incl_cvx_radius, max_separation_distance);
+			AddConvexRadius shape1_add_max_separation_distance(*shape1_incl_cvx_radius, max_separation_distance);
 
 			// Transform shape 2 in the space of shape 1
-			TransformedConvexObject<Support> transformed2_incl_cvx_radius(transform_2_to_1, *shape2_incl_cvx_radius);
+			TransformedConvexObject transformed2_incl_cvx_radius(transform_2_to_1, *shape2_incl_cvx_radius);
 
 			// Perform EPA step
 			if (!pen_depth.GetPenetrationDepthStepEPA(shape1_add_max_separation_distance, transformed2_incl_cvx_radius, inCollideShapeSettings.mPenetrationTolerance, penetration_axis, point1, point2))
@@ -453,7 +453,7 @@ void ConvexShape::DrawGetSupportFunction(DebugRenderer *inRenderer, RMat44Arg in
 	// Get the support function with convex radius
 	SupportBuffer buffer;
 	const Support *support = GetSupportFunction(ESupportMode::ExcludeConvexRadius, buffer, inScale);
-	AddConvexRadius<Support> add_convex(*support, support->GetConvexRadius());
+	AddConvexRadius add_convex(*support, support->GetConvexRadius());
 
 	// Draw the shape
 	DebugRenderer::GeometryRef geometry = inRenderer->CreateTriangleGeometryForConvex([&add_convex](Vec3Arg inDirection) { return add_convex.GetSupport(inDirection); });
