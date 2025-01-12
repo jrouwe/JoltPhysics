@@ -25,7 +25,7 @@ public:
 		return "ConvexVsMesh";
 	}
 
-	virtual bool			Load() override
+	virtual bool			Load(const String &inAssetPath) override
 	{
 		const int n = 100;
 		const float cell_size = 3.0f;
