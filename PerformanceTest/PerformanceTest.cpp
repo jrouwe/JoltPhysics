@@ -22,6 +22,9 @@
 #include <android/log.h>
 #include <android_native_app_glue.h>
 #endif // JPH_PLATFORM_ANDROID
+#ifdef JPH_PLATFORM_LINUX
+#include <unistd.h>
+#endif
 
 // STL includes
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
@@ -30,6 +33,7 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <chrono>
 #include <memory>
 #include <cstdarg>
+#include <filesystem>
 JPH_SUPPRESS_WARNINGS_STD_END
 
 using namespace JPH;
@@ -224,8 +228,30 @@ int main(int argc, char** argv)
 	// Output scene we're running
 	Trace("Running scene: %s", scene->GetName());
 
+	// Find the asset path (note that Linux doesn't pass in the full path to the executable so we use readlink)
+#ifdef JPH_PLATFORM_LINUX
+	char application_path[PATH_MAX] = { 0 };
+	int count = readlink("/proc/self/exe", application_path, PATH_MAX);
+	if (count > 0)
+		application_path[count] = 0;
+#else
+	const char *application_path = argv[0];
+#endif
+	filesystem::path asset_path(application_path);
+	while (!asset_path.empty())
+	{
+		filesystem::path parent_path = asset_path.parent_path();
+		if (parent_path == asset_path)
+			break;
+		asset_path = parent_path;
+		if (filesystem::exists(asset_path / "Assets"))
+			break;
+	}
+	asset_path /= "Assets";
+	asset_path /= "";
+
 	// Load the scene
-	if (!scene->Load())
+	if (!scene->Load(String(asset_path.string())))
 		return 1;
 
 	// Create mapping table from object layer to broadphase layer

@@ -25,7 +25,7 @@ public:
 		return "LargeMeshScene";
 	}
 
-	virtual bool			Load() override
+	virtual bool			Load(const String &inAssetPath) override
 	{
 		// Create mesh shape creation settings
 		mMeshCreationSettings.mMotionType = EMotionType::Static;
