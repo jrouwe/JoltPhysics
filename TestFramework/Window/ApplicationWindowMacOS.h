@@ -32,8 +32,8 @@ public:
 	virtual void					MainLoop(RenderCallback inRenderCallback) override;
 	
 	/// Call the render callback
-	bool							RenderCallback()						{ return mRenderCallback(); }
-	
+	bool							RenderCallback()						{ return mRenderCallback && mRenderCallback(); }
+
 	/// Subscribe to mouse move callbacks that supply window coordinates
 	using MouseMovedCallback = function<void(int, int)>;
 	void							SetMouseMovedCallback(MouseMovedCallback inCallback) { mMouseMovedCallback = inCallback; }

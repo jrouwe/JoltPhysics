@@ -14,6 +14,7 @@
 #include <Renderer/MTL/FatalErrorIfFailedMTL.h>
 #include <Window/ApplicationWindowMacOS.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 #include <Jolt/Core/Profiler.h>
 
 RendererMTL::~RendererMTL()
@@ -33,7 +34,7 @@ void RendererMTL::Initialize(ApplicationWindow *inWindow)
 
 	// Load the shader library containing all shaders for the test framework
 	NSError *error = nullptr;
-	NSURL *url = [NSURL URLWithString: @"Assets/Shaders/MTL/Shaders.metallib"];
+	NSURL *url = [NSURL URLWithString: [NSString stringWithCString: (AssetStream::sGetAssetsBasePath() + "Shaders/MTL/Shaders.metallib").c_str() encoding: NSUTF8StringEncoding]];
 	mShaderLibrary = [device newLibraryWithURL: url error: &error];
 	FatalErrorIfFailed(error);
 
@@ -144,7 +145,7 @@ Ref<Texture> RendererMTL::CreateTexture(const Surface *inSurface)
 
 Ref<VertexShader> RendererMTL::CreateVertexShader(const char *inName)
 {
-	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [[[NSString alloc] initWithUTF8String: inName] autorelease]];
+	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [NSString stringWithCString: inName encoding: NSUTF8StringEncoding]];
 	if (function == nil)
 		FatalError("Vertex shader %s not found", inName);
 	return new VertexShaderMTL(function);
@@ -152,7 +153,7 @@ Ref<VertexShader> RendererMTL::CreateVertexShader(const char *inName)
 
 Ref<PixelShader> RendererMTL::CreatePixelShader(const char *inName)
 {
-	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [[[NSString alloc] initWithUTF8String: inName] autorelease]];
+	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [NSString stringWithCString: inName encoding: NSUTF8StringEncoding]];
 	if (function == nil)
 		FatalError("Pixel shader %s not found", inName);
 	return new PixelShaderMTL(function);

@@ -29,7 +29,7 @@ void LoadSaveBinaryRigTest::Initialize()
 
 	{
 		// Load ragdoll
-		Ref<RagdollSettings> settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
+		Ref<RagdollSettings> settings = RagdollLoader::sLoad("Human.tof", EMotionType::Dynamic);
 
 		// Add an additional constraint between the left and right arm to test loading/saving of additional constraints
 		const Skeleton *skeleton = settings->GetSkeleton();

@@ -15,6 +15,7 @@
 #include <UI/UITextButton.h>
 #include <Image/LoadTGA.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
@@ -25,11 +26,8 @@ DebugUI::DebugUI(UIManager *inUIManager, const Font *inFont) :
 	mFont(inFont)
 {
 	// Load UI texture with commonly used UI elements
-	ifstream texture_stream;
-	texture_stream.open("Assets/UI.tga", ifstream::binary);
-	if (texture_stream.fail())
-		FatalError("Failed to open UI.tga");
-	Ref<Surface> texture_surface = LoadTGA(texture_stream);
+	AssetStream texture_stream("UI.tga", std::ios::in | std::ios::binary);
+	Ref<Surface> texture_surface = LoadTGA(texture_stream.Get());
 	if (texture_surface == nullptr)
 		FatalError("Failed to load UI.tga");
 	mUITexture = mUI->GetRenderer()->CreateTexture(texture_surface);

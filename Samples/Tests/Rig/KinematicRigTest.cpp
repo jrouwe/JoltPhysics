@@ -11,6 +11,7 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(KinematicRigTest)
 {
@@ -50,15 +51,15 @@ void KinematicRigTest::Initialize()
 		}
 
 	// Load ragdoll
-	mRagdollSettings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Kinematic);
+	mRagdollSettings = RagdollLoader::sLoad("Human.tof", EMotionType::Kinematic);
 
 	// Create ragdoll
 	mRagdoll = mRagdollSettings->CreateRagdoll(0, 0, mPhysicsSystem);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 
 	// Load animation
-	String filename = String("Assets/Human/") + sAnimationName + ".tof";
-	if (!ObjectStreamIn::sReadObject(filename.c_str(), mAnimation))
+	AssetStream stream(String("Human/") + sAnimationName + ".tof", std::ios::in);
+	if (!ObjectStreamIn::sReadObject(stream.Get(), mAnimation))
 		FatalError("Could not open animation");
 
 	// Initialize pose

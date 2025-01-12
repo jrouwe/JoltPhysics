@@ -75,7 +75,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 		${TEST_FRAMEWORK_ROOT}/UI/UIVerticalStack.h
 		${TEST_FRAMEWORK_ROOT}/Utils/CustomMemoryHook.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/CustomMemoryHook.h
-		${TEST_FRAMEWORK_ROOT}/Utils/Log.cpp
+		${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.h
 		${TEST_FRAMEWORK_ROOT}/Utils/Log.h
 		${TEST_FRAMEWORK_ROOT}/Utils/ReadData.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/ReadData.h
@@ -108,6 +108,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.cpp
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.h
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/VertexShaderDX12.h
+			${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.cpp
+			${TEST_FRAMEWORK_ROOT}/Utils/Log.cpp
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowWin.cpp
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowWin.h
 		)
@@ -147,6 +149,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/KeyboardLinux.h
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.cpp
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.h
+			${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.cpp
+			${TEST_FRAMEWORK_ROOT}/Utils/Log.cpp
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowLinux.cpp
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowLinux.h
 		)
@@ -174,6 +178,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.h
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.h
+			${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.mm
+			${TEST_FRAMEWORK_ROOT}/Utils/Log.mm
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.h
 		)
@@ -262,6 +268,17 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 		endforeach()
 	endif()
 
+	# Assets used by the test framework
+	set(TEST_FRAMEWORK_ASSETS
+		${PHYSICS_REPO_ROOT}/Assets/Fonts/Roboto-Regular.ttf
+		${PHYSICS_REPO_ROOT}/Assets/UI.tga
+		${TEST_FRAMEWORK_SRC_FILES_SHADERS}
+		${TEST_FRAMEWORK_HLSL_VERTEX_SHADERS}
+		${TEST_FRAMEWORK_HLSL_PIXEL_SHADERS}
+		${TEST_FRAMEWORK_SPV_SHADERS}
+		${TEST_FRAMEWORK_METAL_LIB}
+	)
+
 	# Group source files
 	source_group(TREE ${TEST_FRAMEWORK_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES})
 
@@ -295,6 +312,13 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 		# macOS configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework Metal -framework MetalKit -framework GameController")
+
+		# Make sure that all test framework assets move to the Resources folder in the package
+		foreach(ASSET_FILE ${TEST_FRAMEWORK_ASSETS})
+			string(REPLACE ${PHYSICS_REPO_ROOT}/Assets "Resources" ASSET_DST ${ASSET_FILE})
+			get_filename_component(ASSET_DST ${ASSET_DST} DIRECTORY)
+			set_source_files_properties(${ASSET_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION ${ASSET_DST})
+		endforeach()
 
 		# Ignore PCH files for .mm files
 		foreach(SRC_FILE ${TEST_FRAMEWORK_SRC_FILES})

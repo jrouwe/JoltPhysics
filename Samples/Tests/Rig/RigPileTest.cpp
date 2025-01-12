@@ -17,6 +17,7 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 #include <random>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(RigPileTest)
@@ -64,7 +65,8 @@ void RigPileTest::Initialize()
 	{
 		// Load scene
 		Ref<PhysicsScene> scene;
-		if (!ObjectStreamIn::sReadObject((String("Assets/") + sSceneName + ".bof").c_str(), scene))
+		AssetStream stream(String(sSceneName) + ".bof", std::ios::in | std::ios::binary);
+		if (!ObjectStreamIn::sReadObject(stream.Get(), scene))
 			FatalError("Failed to load scene");
 		for (BodyCreationSettings &body : scene->GetBodies())
 			body.mObjectLayer = Layers::NON_MOVING;
@@ -73,14 +75,15 @@ void RigPileTest::Initialize()
 	}
 
 	// Load ragdoll
-	Ref<RagdollSettings> settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
+	Ref<RagdollSettings> settings = RagdollLoader::sLoad("Human.tof", EMotionType::Dynamic);
 
 	// Load animation
 	const int cAnimationCount = 4;
 	Ref<SkeletalAnimation> animation[cAnimationCount];
 	for (int i = 0; i < cAnimationCount; ++i)
 	{
-		if (!ObjectStreamIn::sReadObject(StringFormat("Assets/Human/dead_pose%d.tof", i + 1).c_str(), animation[i]))
+		AssetStream stream(StringFormat("Human/dead_pose%d.tof", i + 1), std::ios::in);
+		if (!ObjectStreamIn::sReadObject(stream.Get(), animation[i]))
 			FatalError("Could not open animation");
 	}
 

@@ -16,6 +16,7 @@
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 #include <random>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(BigWorldTest)
@@ -39,11 +40,12 @@ void BigWorldTest::Initialize()
 	RefConst<Shape> shape = floor.GetShape();
 
 	// Load ragdoll
-	Ref<RagdollSettings> settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
+	Ref<RagdollSettings> settings = RagdollLoader::sLoad("Human.tof", EMotionType::Dynamic);
 
 	// Load animation
 	Ref<SkeletalAnimation> animation;
-	if (!ObjectStreamIn::sReadObject("Assets/Human/dead_pose1.tof", animation))
+	AssetStream stream("Human/dead_pose1.tof", std::ios::in);
+	if (!ObjectStreamIn::sReadObject(stream.Get(), animation))
 		FatalError("Could not open animation");
 	SkeletonPose pose;
 	pose.SetSkeleton(settings->GetSkeleton());

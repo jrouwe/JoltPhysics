@@ -10,6 +10,7 @@
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 #include <Application/DebugUI.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(SkeletonMapperTest)
@@ -28,7 +29,7 @@ void SkeletonMapperTest::Initialize()
 	CreateFloor();
 
 	// Load ragdoll
-	mRagdollSettings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
+	mRagdollSettings = RagdollLoader::sLoad("Human.tof", EMotionType::Dynamic);
 
 	// Create ragdoll
 	mRagdoll = mRagdollSettings->CreateRagdoll(0, 0, mPhysicsSystem);
@@ -36,23 +37,35 @@ void SkeletonMapperTest::Initialize()
 
 	// Load neutral animation for ragdoll
 	Ref<SkeletalAnimation> neutral_ragdoll;
-	if (!ObjectStreamIn::sReadObject("Assets/Human/neutral.tof", neutral_ragdoll))
-		FatalError("Could not open neutral animation");
+	{
+		AssetStream stream("Human/neutral.tof", std::ios::in);
+		if (!ObjectStreamIn::sReadObject(stream.Get(), neutral_ragdoll))
+			FatalError("Could not open neutral animation");
+	}
 
 	// Load animation skeleton
 	Ref<Skeleton> animation_skeleton;
-	if (!ObjectStreamIn::sReadObject("Assets/Human/skeleton_hd.tof", animation_skeleton))
-		FatalError("Could not open skeleton_hd");
-	animation_skeleton->CalculateParentJointIndices();
+	{
+		AssetStream stream("Human/skeleton_hd.tof", std::ios::in);
+		if (!ObjectStreamIn::sReadObject(stream.Get(), animation_skeleton))
+			FatalError("Could not open skeleton_hd");
+		animation_skeleton->CalculateParentJointIndices();
+	}
 
 	// Load neutral animation
 	Ref<SkeletalAnimation> neutral_animation;
-	if (!ObjectStreamIn::sReadObject("Assets/Human/neutral_hd.tof", neutral_animation))
-		FatalError("Could not open neutral_hd animation");
+	{
+		AssetStream stream("Human/neutral_hd.tof", std::ios::in);
+		if (!ObjectStreamIn::sReadObject(stream.Get(), neutral_animation))
+			FatalError("Could not open neutral_hd animation");
+	}
 
 	// Load test animation
-	if (!ObjectStreamIn::sReadObject("Assets/Human/jog_hd.tof", mAnimation))
-		FatalError("Could not open jog_hd animation");
+	{
+		AssetStream stream("Human/jog_hd.tof", std::ios::in);
+		if (!ObjectStreamIn::sReadObject(stream.Get(), mAnimation))
+			FatalError("Could not open jog_hd animation");
+	}
 
 	// Initialize pose
 	mAnimatedPose.SetSkeleton(animation_skeleton);
