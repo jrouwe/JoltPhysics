@@ -308,6 +308,26 @@ if (ENABLE_OBJECT_STREAM)
 	)
 endif()
 
+# Assets used by the samples
+set(SAMPLES_ASSETS
+	convex_hulls.bin
+	heightfield1.bin
+	Human/dead_pose1.tof
+	Human/dead_pose2.tof
+	Human/dead_pose3.tof
+	Human/dead_pose4.tof
+	Human/jog_hd.tof
+	Human/neutral.tof
+	Human/neutral_hd.tof
+	Human/skeleton_hd.tof
+	Human/sprint.tof
+	Human/walk.tof
+	Human.tof
+	Racetracks/Zandvoort.csv
+	terrain1.bof
+	terrain2.bof
+)
+
 # Group source files
 source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 

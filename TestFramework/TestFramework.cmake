@@ -84,6 +84,12 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 		${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindow.h
 	)
 
+	# Assets used by the test framework
+	set(TEST_FRAMEWORK_ASSETS
+		Fonts/Roboto-Regular.ttf
+		UI.tga
+	)
+
 	if (WIN32)
 		# Windows source files
 		set(TEST_FRAMEWORK_SRC_FILES
