@@ -30,12 +30,12 @@
 	return self;
 }
 
-- (bool)acceptsFirstResponder
+- (BOOL)acceptsFirstResponder
 {
 	return YES;
 }
 
-- (bool)canBecomeKeyView
+- (BOOL)canBecomeKeyView
 {
 	return YES;
 }
@@ -81,7 +81,7 @@
 	[app_menu addItem: quit_item];
 }
 
--(bool)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
+-(BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
 {
 	// Close the app when the window is closed
 	return YES;
