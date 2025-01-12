@@ -12,7 +12,7 @@ String AssetStream::sGetAssetsBasePath()
 {
 	NSBundle *bundle = [NSBundle mainBundle];
 	String path = [[[bundle resourceURL] path] cStringUsingEncoding: NSUTF8StringEncoding];
-	path += "/Assets/";
+	path += "/";
 	return path;
 }
 

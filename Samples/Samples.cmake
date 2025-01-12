@@ -310,22 +310,22 @@ endif()
 
 # Assets used by the samples
 set(SAMPLES_ASSETS
-	convex_hulls.bin
-	heightfield1.bin
-	Human/dead_pose1.tof
-	Human/dead_pose2.tof
-	Human/dead_pose3.tof
-	Human/dead_pose4.tof
-	Human/jog_hd.tof
-	Human/neutral.tof
-	Human/neutral_hd.tof
-	Human/skeleton_hd.tof
-	Human/sprint.tof
-	Human/walk.tof
-	Human.tof
-	Racetracks/Zandvoort.csv
-	terrain1.bof
-	terrain2.bof
+	${PHYSICS_REPO_ROOT}/Assets/convex_hulls.bin
+	${PHYSICS_REPO_ROOT}/Assets/heightfield1.bin
+	${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose1.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose2.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose3.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose4.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human/jog_hd.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human/neutral.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human/neutral_hd.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human/skeleton_hd.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human/sprint.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human/walk.tof
+	${PHYSICS_REPO_ROOT}/Assets/Human.tof
+	${PHYSICS_REPO_ROOT}/Assets/Racetracks/Zandvoort.csv
+	${PHYSICS_REPO_ROOT}/Assets/terrain1.bof
+	${PHYSICS_REPO_ROOT}/Assets/terrain2.bof
 )
 
 # Group source files
@@ -333,7 +333,16 @@ source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 
 # Create Samples executable
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
-	add_executable(Samples MACOSX_BUNDLE ${SAMPLES_SRC_FILES})
+	# macOS configuration
+	add_executable(Samples MACOSX_BUNDLE ${SAMPLES_SRC_FILES} ${TEST_FRAMEWORK_ASSETS} ${SAMPLES_ASSETS})
+
+	# Make sure that all samples assets move to the Resources folder in the package
+	foreach(ASSET_FILE ${SAMPLES_ASSETS})
+		string(REPLACE ${PHYSICS_REPO_ROOT}/Assets "Resources" ASSET_DST ${ASSET_FILE})
+		get_filename_component(ASSET_DST ${ASSET_DST} DIRECTORY)
+		set_source_files_properties(${ASSET_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION ${ASSET_DST})
+	endforeach()
+
 	set_property(TARGET Samples PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/SamplesInfo.plist")
 	set_property(TARGET Samples PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.samples")
 else()

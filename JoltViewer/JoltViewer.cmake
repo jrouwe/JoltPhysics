@@ -13,7 +13,7 @@ source_group(TREE ${JOLT_VIEWER_ROOT} FILES ${JOLT_VIEWER_SRC_FILES})
 
 # Create JoltViewer executable
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
-	add_executable(JoltViewer MACOSX_BUNDLE ${JOLT_VIEWER_SRC_FILES})
+	add_executable(JoltViewer MACOSX_BUNDLE ${JOLT_VIEWER_SRC_FILES} ${TEST_FRAMEWORK_ASSETS})
 	set_property(TARGET JoltViewer PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/JoltViewerInfo.plist")
 	set_property(TARGET JoltViewer PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.joltviewer")
 else()
