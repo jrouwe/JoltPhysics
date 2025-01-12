@@ -7,7 +7,7 @@
 #include <Window/ApplicationWindowLinux.h>
 #include <Utils/Log.h>
 
-void ApplicationWindowLinux::Initialize()
+void ApplicationWindowLinux::Initialize(const char *inTitle)
 {
 	// Open connection to X server
 	mDisplay = XOpenDisplay(nullptr);
@@ -22,7 +22,7 @@ void ApplicationWindowLinux::Initialize()
 	XSelectInput(mDisplay, mWindow, ExposureMask | StructureNotifyMask | KeyPressMask);
 
 	// Set window title
-	XStoreName(mDisplay, mWindow, "TestFramework");
+	XStoreName(mDisplay, mWindow, inTitle);
 
 	// Register WM_DELETE_WINDOW to handle the close button
 	mWmDeleteWindow = XInternAtom(mDisplay, "WM_DELETE_WINDOW", false);

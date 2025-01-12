@@ -27,7 +27,7 @@ JPH_GCC_SUPPRESS_WARNING("-Wswitch")
 #endif
 
 JoltViewer::JoltViewer(const String &inCommandLine) :
-	Application(inCommandLine)
+	Application("Jolt Viewer", inCommandLine)
 {
 	// Get file name from command line
 	Array<String> args;

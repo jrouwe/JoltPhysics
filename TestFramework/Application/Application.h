@@ -52,7 +52,7 @@ protected:
 
 public:
 	/// Constructor
-								Application(const String &inCommandLine);
+								Application(const char *inApplicationName, const String &inCommandLine);
 	virtual						~Application();
 
 	/// Create a single string command line

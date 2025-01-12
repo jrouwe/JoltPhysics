@@ -443,7 +443,7 @@ static constexpr uint cMaxBodyPairs = 65536;
 static constexpr uint cMaxContactConstraints = 20480;
 
 SamplesApp::SamplesApp(const String &inCommandLine) :
-	Application(inCommandLine)
+	Application("Jolt Physics Samples", inCommandLine)
 {
 	// Limit the render frequency to our simulation frequency so we don't play back the simulation too fast
 	// Note that if the simulation frequency > vsync frequency the simulation will slow down as we want

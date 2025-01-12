@@ -94,7 +94,7 @@ ApplicationWindowMacOS::~ApplicationWindowMacOS()
 	[mMetalView release];
 }
 
-void ApplicationWindowMacOS::Initialize()
+void ApplicationWindowMacOS::Initialize(const char *inTitle)
 {
 	// Create metal view
 	MetalView *view = [[MetalView alloc] init: this];
@@ -110,7 +110,7 @@ void ApplicationWindowMacOS::Initialize()
 													   defer: NO];
 	window.contentView = view;
 	[window setAcceptsMouseMovedEvents: YES];
-	[window setTitle: @"TestFramework"];
+	[window setTitle: [NSString stringWithCString: inTitle encoding: NSUTF8StringEncoding]];
 	[window makeKeyAndOrderFront: nil];
 }
 

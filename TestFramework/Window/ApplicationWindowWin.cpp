@@ -45,7 +45,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	return 0;
 }
 
-void ApplicationWindowWin::Initialize()
+void ApplicationWindowWin::Initialize(const char *inTitle)
 {
 	// Prevent this window from auto scaling
 	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
@@ -70,7 +70,7 @@ void ApplicationWindowWin::Initialize()
 	// Create window
 	RECT rc = { 0, 0, mWindowWidth, mWindowHeight };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-	mhWnd = CreateWindow(TEXT("TestFrameworkClass"), TEXT("TestFramework"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+	mhWnd = CreateWindow(TEXT("TestFrameworkClass"), inTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
 		rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, wcex.hInstance, nullptr);
 	if (!mhWnd)
 		FatalError("Failed to create window");
