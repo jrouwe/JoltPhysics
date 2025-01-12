@@ -75,7 +75,6 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 		${TEST_FRAMEWORK_ROOT}/UI/UIVerticalStack.h
 		${TEST_FRAMEWORK_ROOT}/Utils/CustomMemoryHook.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/CustomMemoryHook.h
-		${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.h
 		${TEST_FRAMEWORK_ROOT}/Utils/Log.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/Log.h
@@ -116,6 +115,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.cpp
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/TextureDX12.h
 			${TEST_FRAMEWORK_ROOT}/Renderer/DX12/VertexShaderDX12.h
+			${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.cpp
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowWin.cpp
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowWin.h
 		)
@@ -155,6 +155,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/KeyboardLinux.h
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.cpp
 			${TEST_FRAMEWORK_ROOT}/Input/Linux/MouseLinux.h
+			${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.cpp
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowLinux.cpp
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowLinux.h
 		)
@@ -182,6 +183,7 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.h
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.h
+			${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.mm
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.mm
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.h
 		)
