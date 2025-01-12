@@ -35,7 +35,7 @@ void LoadRigTest::Initialize()
 	CreateFloor();
 
 	// Load ragdoll
-	mRagdollSettings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic, sConstraintType);
+	mRagdollSettings = RagdollLoader::sLoad("Human.tof", EMotionType::Dynamic, sConstraintType);
 
 	// Create ragdoll
 	mRagdoll = mRagdollSettings->CreateRagdoll(0, 0, mPhysicsSystem);

@@ -16,6 +16,7 @@
 #include <Layers.h>
 #include <Application/DebugUI.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 #include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleTest)
@@ -49,7 +50,7 @@ void VehicleTest::Initialize()
 		mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
 
 		// Load a race track to have something to assess speed and steering behavior
-		LoadRaceTrack("Assets/Racetracks/Zandvoort.csv");
+		LoadRaceTrack("Racetracks/Zandvoort.csv");
 	}
 	else if (strcmp(sSceneName, "Flat With Slope") == 0)
 	{
@@ -164,7 +165,8 @@ void VehicleTest::Initialize()
 	{
 		// Load scene
 		Ref<PhysicsScene> scene;
-		if (!ObjectStreamIn::sReadObject((String("Assets/") + sSceneName + ".bof").c_str(), scene))
+		AssetStream stream(String(sSceneName) + ".bof", std::ios::in | std::ios::binary);
+		if (!ObjectStreamIn::sReadObject(stream.Get(), scene))
 			FatalError("Failed to load scene");
 		for (BodyCreationSettings &body : scene->GetBodies())
 			body.mObjectLayer = Layers::NON_MOVING;
@@ -262,10 +264,8 @@ void VehicleTest::CreateRubble()
 void VehicleTest::LoadRaceTrack(const char *inFileName)
 {
 	// Open the track file
-	std::ifstream stream;
-	stream.open(inFileName, std::ifstream::in);
-	if (!stream.is_open())
-		return;
+	AssetStream asset_stream(inFileName, std::ios::in);
+	std::istream &stream = asset_stream.Get();
 
 	// Ignore header line
 	String line;

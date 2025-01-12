@@ -18,6 +18,7 @@
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Application/DebugUI.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(HighSpeedTest)
@@ -330,7 +331,8 @@ void HighSpeedTest::CreateConvexOnTerrain1()
 #ifdef JPH_OBJECT_STREAM
 	// Load scene
 	Ref<PhysicsScene> scene;
-	if (!ObjectStreamIn::sReadObject("Assets/terrain1.bof", scene))
+	AssetStream stream("terrain1.bof", std::ios::in | std::ios::binary);
+	if (!ObjectStreamIn::sReadObject(stream.Get(), scene))
 		FatalError("Failed to load scene");
 	for (BodyCreationSettings &body : scene->GetBodies())
 		body.mObjectLayer = Layers::NON_MOVING;

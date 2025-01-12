@@ -16,6 +16,7 @@
 #include <Jolt/Core/Profiler.h>
 #include <Utils/ReadData.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 
 #include <d3dcompiler.h>
 #ifdef JPH_DEBUG
@@ -525,14 +526,14 @@ Ref<VertexShader> RendererDX12::CreateVertexShader(const char *inName)
 	};
 
 	// Read shader source file
-	String file_name = String("Assets/Shaders/DX/") + inName + ".hlsl";
+	String file_name = String("Shaders/DX/") + inName + ".hlsl";
 	Array<uint8> data = ReadData(file_name.c_str());
 
 	// Compile source
 	ComPtr<ID3DBlob> shader_blob, error_blob;
 	HRESULT hr = D3DCompile(&data[0],
 							(uint)data.size(),
-							file_name.c_str(),
+							(AssetStream::sGetAssetsBasePath() + file_name).c_str(),
 							defines,
 							D3D_COMPILE_STANDARD_FILE_INCLUDE,
 							"main",
@@ -565,14 +566,14 @@ Ref<PixelShader> RendererDX12::CreatePixelShader(const char *inName)
 	};
 
 	// Read shader source file
-	String file_name = String("Assets/Shaders/DX/") + inName + ".hlsl";
+	String file_name = String("Shaders/DX/") + inName + ".hlsl";
 	Array<uint8> data = ReadData(file_name.c_str());
 
 	// Compile source
 	ComPtr<ID3DBlob> shader_blob, error_blob;
 	HRESULT hr = D3DCompile(&data[0],
 							(uint)data.size(),
-							file_name.c_str(),
+							(AssetStream::sGetAssetsBasePath() + file_name).c_str(),
 							defines,
 							D3D_COMPILE_STANDARD_FILE_INCLUDE,
 							"main",

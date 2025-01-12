@@ -18,6 +18,7 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 #include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_ABSTRACT(CharacterBaseTest)
@@ -563,7 +564,8 @@ void CharacterBaseTest::Initialize()
 	{
 		// Load scene
 		Ref<PhysicsScene> scene;
-		if (!ObjectStreamIn::sReadObject((String("Assets/") + sSceneName + ".bof").c_str(), scene))
+		AssetStream stream(String(sSceneName) + ".bof", std::ios::in | std::ios::binary);
+		if (!ObjectStreamIn::sReadObject(stream.Get(), scene))
 			FatalError("Failed to load scene");
 		scene->FixInvalidScales();
 		for (BodyCreationSettings &settings : scene->GetBodies())

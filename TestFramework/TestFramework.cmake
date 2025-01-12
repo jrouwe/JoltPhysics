@@ -75,6 +75,8 @@ if (NOT CROSS_COMPILE_ARM AND (Vulkan_FOUND OR WIN32 OR ("${CMAKE_SYSTEM_NAME}" 
 		${TEST_FRAMEWORK_ROOT}/UI/UIVerticalStack.h
 		${TEST_FRAMEWORK_ROOT}/Utils/CustomMemoryHook.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/CustomMemoryHook.h
+		${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.cpp
+		${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.h
 		${TEST_FRAMEWORK_ROOT}/Utils/Log.cpp
 		${TEST_FRAMEWORK_ROOT}/Utils/Log.h
 		${TEST_FRAMEWORK_ROOT}/Utils/ReadData.cpp

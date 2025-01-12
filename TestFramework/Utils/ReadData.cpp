@@ -5,6 +5,7 @@
 #include <TestFramework.h>
 #include <Utils/ReadData.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
@@ -14,9 +15,8 @@ JPH_SUPPRESS_WARNINGS_STD_END
 Array<uint8> ReadData(const char *inFileName)
 {
 	Array<uint8> data;
-	ifstream input(inFileName, std::ios::binary);
-	if (!input)
-		FatalError("Unable to open file: %s", inFileName);
+	AssetStream asset_stream(inFileName, std::ios::in | std::ios::binary);
+	std::istream &input = asset_stream.Get();
 	input.seekg(0, ios_base::end);
 	ifstream::pos_type length = input.tellg();
 	input.seekg(0, ios_base::beg);

@@ -17,6 +17,7 @@
 #include <Layers.h>
 #include <Utils/RagdollLoader.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 #include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(MultithreadedTest)
@@ -137,7 +138,7 @@ void MultithreadedTest::RagdollSpawner()
 
 #ifdef JPH_OBJECT_STREAM
 	// Load ragdoll
-	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
+	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sLoad("Human.tof", EMotionType::Dynamic);
 	if (ragdoll_settings == nullptr)
 		FatalError("Could not load ragdoll");
 #else
@@ -151,7 +152,8 @@ void MultithreadedTest::RagdollSpawner()
 	{
 #ifdef JPH_OBJECT_STREAM
 		Ref<SkeletalAnimation> animation;
-		if (!ObjectStreamIn::sReadObject("Assets/Human/dead_pose1.tof", animation))
+		AssetStream stream("Human/dead_pose1.tof", std::ios::in);
+		if (!ObjectStreamIn::sReadObject(stream.Get(), animation))
 			FatalError("Could not open animation");
 		animation->Sample(0.0f, ragdoll_pose);
 #else

@@ -7,6 +7,7 @@
 #include <Tests/ConvexCollision/ConvexHullTest.h>
 #include <Jolt/Geometry/ConvexHullBuilder.h>
 #include <Utils/Log.h>
+#include <Utils/AssetStream.h>
 #include <Utils/DebugRendererSP.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
@@ -457,29 +458,27 @@ void ConvexHullTest::Initialize()
 
 	// Open the external file with hulls
 	// A stream containing predefined convex hulls
-	ifstream points_stream("Assets/convex_hulls.bin", std::ios::binary);
-	if (points_stream.is_open())
+	AssetStream points_asset_stream("convex_hulls.bin", std::ios::in | std::ios::binary);
+	std::istream &points_stream = points_asset_stream.Get();
+	for (;;)
 	{
-		for (;;)
-		{
-			// Read the length of the next point cloud
-			uint32 len = 0;
-			points_stream.read((char *)&len, sizeof(len));
-			if (points_stream.eof())
-				break;
+		// Read the length of the next point cloud
+		uint32 len = 0;
+		points_stream.read((char *)&len, sizeof(len));
+		if (points_stream.eof())
+			break;
 
-			// Read the points
-			if (len > 0)
+		// Read the points
+		if (len > 0)
+		{
+			Points p;
+			for (uint32 i = 0; i < len; ++i)
 			{
-				Points p;
-				for (uint32 i = 0; i < len; ++i)
-				{
-					Float3 v;
-					points_stream.read((char *)&v, sizeof(v));
-					p.push_back(Vec3(v));
-				}
-				mPoints.push_back(std::move(p));
+				Float3 v;
+				points_stream.read((char *)&v, sizeof(v));
+				p.push_back(Vec3(v));
 			}
+			mPoints.push_back(std::move(p));
 		}
 	}
 }

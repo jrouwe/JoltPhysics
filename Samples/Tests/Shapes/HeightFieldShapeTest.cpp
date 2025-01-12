@@ -90,7 +90,7 @@ void HeightFieldShapeTest::Initialize()
 		const float cell_size = 0.5f;
 
 		// Get height samples
-		Array<uint8> data = ReadData("Assets/heightfield1.bin");
+		Array<uint8> data = ReadData("heightfield1.bin");
 		if (data.size() != sizeof(float) * n * n)
 			FatalError("Invalid file size");
 		mTerrainSize = n;
