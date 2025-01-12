@@ -22,7 +22,7 @@ public:
 	virtual							~ApplicationWindowMacOS() override;
 
 	/// Initialize the window
-	virtual void					Initialize() override;
+	virtual void					Initialize(const char *inTitle) override;
 
 	/// Access to the metal objects
 	MTKView *						GetMetalView() const					{ return mMetalView; }

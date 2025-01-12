@@ -31,7 +31,7 @@
 JPH_GCC_SUPPRESS_WARNING("-Wswitch")
 
 // Constructor
-Application::Application([[maybe_unused]] const String &inCommandLine) :
+Application::Application(const char *inApplicationName, [[maybe_unused]] const String &inCommandLine) :
 	mDebugRenderer(nullptr),
 	mRenderer(nullptr),
 	mKeyboard(nullptr),
@@ -76,7 +76,7 @@ Application::Application([[maybe_unused]] const String &inCommandLine) :
 	#else
 		#error No window defined
 	#endif
-		mWindow->Initialize();
+		mWindow->Initialize(inApplicationName);
 
 		// Create renderer
 		mRenderer = Renderer::sCreate();

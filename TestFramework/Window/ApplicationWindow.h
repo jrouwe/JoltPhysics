@@ -14,7 +14,7 @@ public:
 	virtual							~ApplicationWindow() = default;
 
 	/// Initialize the window
-	virtual void					Initialize() = 0;
+	virtual void					Initialize(const char *inTitle) = 0;
 
 	/// Get window size
 	int								GetWindowWidth()					{ return mWindowWidth; }

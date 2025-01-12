@@ -11,7 +11,7 @@ class ApplicationWindowLinux : public ApplicationWindow
 {
 public:
 	/// Initialize the window
-	virtual void					Initialize() override;
+	virtual void					Initialize(const char *inTitle) override;
 
 	/// Access to the window handle
 	Display *						GetDisplay() const					{ return mDisplay; }
