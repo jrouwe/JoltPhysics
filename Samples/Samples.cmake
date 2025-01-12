@@ -333,8 +333,12 @@ source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 
 # Create Samples executable
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
+	# Icon
+	set(JPH_ICON "${CMAKE_CURRENT_SOURCE_DIR}/macOS/icon.icns")
+	set_source_files_properties(${JPH_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
 	# macOS configuration
-	add_executable(Samples MACOSX_BUNDLE ${SAMPLES_SRC_FILES} ${TEST_FRAMEWORK_ASSETS} ${SAMPLES_ASSETS})
+	add_executable(Samples MACOSX_BUNDLE ${SAMPLES_SRC_FILES} ${TEST_FRAMEWORK_ASSETS} ${SAMPLES_ASSETS} ${JPH_ICON})
 
 	# Make sure that all samples assets move to the Resources folder in the package
 	foreach(ASSET_FILE ${SAMPLES_ASSETS})

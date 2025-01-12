@@ -9,7 +9,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string></string>
 	<key>CFBundleIconFile</key>
-	<string></string>
+	<string>icon.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.joltphysics.samples</string>
 	<key>CFBundleInfoDictionaryVersion</key>
