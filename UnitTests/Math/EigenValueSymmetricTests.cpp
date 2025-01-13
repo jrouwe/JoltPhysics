@@ -10,7 +10,7 @@ TEST_SUITE("EigenValueSymmetricTests")
 {
 	TEST_CASE("TestEigenValueSymmetric")
 	{
-		default_random_engine random;
+		UnitTestRandom random;
 		uniform_real_distribution<float> angle_distribution(0, 2.0f * JPH_PI);
 		uniform_real_distribution<float> scale_distribution(0.1f, 10.0f);
 

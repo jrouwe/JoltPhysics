@@ -86,7 +86,8 @@ void MutableCompoundShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			shape->ModifyShapes(0, count, &pos_rot.front().mPosition, &pos_rot.front().mRotation, sizeof(PositionRotation), sizeof(PositionRotation));
 
 			// Initialize frame dependent random number generator
-			default_random_engine frame_random(mFrameNumber++);
+			// Note: Explicitly using the Mersenne Twister random generator as on some platforms you get the seed back as the first random number
+			mt19937 frame_random(mFrameNumber++);
 
 			// Roll the dice
 			float roll = roll_distribution(frame_random);
