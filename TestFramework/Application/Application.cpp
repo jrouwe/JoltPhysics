@@ -9,7 +9,6 @@
 #include <Application/DebugUI.h>
 #include <Utils/Log.h>
 #include <Utils/CustomMemoryHook.h>
-#include <Jolt/Core/FPException.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
 #include <Renderer/DebugRendererImp.h>

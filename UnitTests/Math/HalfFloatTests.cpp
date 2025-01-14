@@ -4,7 +4,6 @@
 
 #include "UnitTestFramework.h"
 #include <Jolt/Math/HalfFloat.h>
-#include <Jolt/Core/FPException.h>
 
 TEST_SUITE("HalfFloatTests")
 {
