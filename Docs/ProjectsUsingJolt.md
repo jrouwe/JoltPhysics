@@ -12,7 +12,7 @@
 * [Sceneri](https://www.sceneri.com/) - A mobile app for creating and sharing 3D games and experiences. See [this](https://www.sceneri.com/blog/2023-07-27-jolt-physics-bringing-sceneris-worlds-to-life) blog post.
 * [Substrata](https://substrata.info/) - A metaverse platform.
 * [Supernova Engine](https://www.supernovaengine.org/) - Game engine for 2D and 3D projects with entity component system (ECS) and data-oriented design.
-* [Traktor Engine](https://github.com/apistol78/traktor/) - An open-source 3d game engine written in C++, it has powered several successful commercial titles across various platforms including Steam, PSN, iOS, and the Mac Store.
+* [Traktor Engine](https://github.com/apistol78/traktor/) - An open-source 3d game engine written in C++.
 * [VPhysics Jolt](https://github.com/Joshua-Ashton/VPhysics-Jolt), a replacement for Ipion Virtual Physics in the Source Engine. Can be used in e.g. [Garry's Mod](https://store.steampowered.com/app/4000/Garrys_Mod/).
 * [Wicked Engine](https://wickedengine.net/) - 3D engine with modern graphics. See [X post](https://x.com/turanszkij/status/1805979390557528217) and [github](https://github.com/turanszkij/WickedEngine/blob/master/WickedEngine/wiPhysics_Jolt.cpp).
 * [X4 Foundations](https://store.steampowered.com/app/392160/X4_Foundations/) - A space simulation game. See [this](https://forum.egosoft.com/viewtopic.php?t=451046) announcement.
