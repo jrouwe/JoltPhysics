@@ -140,7 +140,6 @@ If you're interested in how Jolt scales with multiple CPUs and compares to other
 * Samples - This contains the sample application, see the [Samples](Docs/Samples.md) section. Currently available on Windows, macOS and Linux.
 * TestFramework - A rendering framework to visualize the results of the physics engine. Used by Samples and JoltViewer. Currently available on Windows, macOS and Linux.
 * UnitTests - A set of unit tests to validate the behavior of the physics engine.
-* WebIncludes - A number of JavaScript resources used by the internal profiling framework of the physics engine.
 
 ## Bindings for other languages
 
