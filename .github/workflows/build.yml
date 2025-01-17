@@ -19,7 +19,7 @@ env:
 
 jobs:
   linux-clang:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang
     strategy:
         fail-fast: false
