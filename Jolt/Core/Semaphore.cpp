@@ -17,7 +17,6 @@
 #else
 	#include <windows.h>
 #endif
-
 	JPH_SUPPRESS_WARNING_POP
 #endif
 
@@ -27,6 +26,8 @@ Semaphore::Semaphore()
 {
 #ifdef JPH_PLATFORM_WINDOWS
 	mSemaphore = CreateSemaphore(nullptr, 0, INT_MAX, nullptr);
+#elif defined(JPH_USE_PTHREADS)
+	sem_init(&mSemaphore, 0, 0);
 #endif
 }
 
@@ -34,6 +35,8 @@ Semaphore::~Semaphore()
 {
 #ifdef JPH_PLATFORM_WINDOWS
 	CloseHandle(mSemaphore);
+#elif defined(JPH_USE_PTHREADS)
+	sem_destroy(&mSemaphore);
 #endif
 }
 
@@ -42,12 +45,21 @@ void Semaphore::Release(uint inNumber)
 	JPH_ASSERT(inNumber > 0);
 
 #ifdef JPH_PLATFORM_WINDOWS
-	int old_value = mCount.fetch_add(inNumber);
+	int old_value = mCount.fetch_add(inNumber, std::memory_order_release);
 	if (old_value < 0)
 	{
 		int new_value = old_value + (int)inNumber;
 		int num_to_release = min(new_value, 0) - old_value;
 		::ReleaseSemaphore(mSemaphore, num_to_release, nullptr);
+	}
+#elif defined(JPH_USE_PTHREADS)
+	int old_value = mCount.fetch_add(inNumber, std::memory_order_release);
+	if (old_value < 0)
+	{
+		int new_value = old_value + (int)inNumber;
+		int num_to_release = min(new_value, 0) - old_value;
+		for (int i = 0; i < num_to_release; ++i)
+			sem_post(&mSemaphore);
 	}
 #else
 	std::lock_guard lock(mLock);
@@ -64,13 +76,22 @@ void Semaphore::Acquire(uint inNumber)
 	JPH_ASSERT(inNumber > 0);
 
 #ifdef JPH_PLATFORM_WINDOWS
-	int old_value = mCount.fetch_sub(inNumber);
+	int old_value = mCount.fetch_sub(inNumber, std::memory_order_acquire);
 	int new_value = old_value - (int)inNumber;
 	if (new_value < 0)
 	{
 		int num_to_acquire = min(old_value, 0) - new_value;
 		for (int i = 0; i < num_to_acquire; ++i)
 			WaitForSingleObject(mSemaphore, INFINITE);
+	}
+#elif defined(JPH_USE_PTHREADS)
+	int old_value = mCount.fetch_sub(inNumber, std::memory_order_acquire);
+	int new_value = old_value - (int)inNumber;
+	if (new_value < 0)
+	{
+		int num_to_acquire = min(old_value, 0) - new_value;
+		for (int i = 0; i < num_to_acquire; ++i)
+			sem_wait(&mSemaphore);
 	}
 #else
 	std::unique_lock lock(mLock);
