@@ -296,7 +296,7 @@ jobs:
 #      run: qemu-ppc64le -L /usr/powerpc64le-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   loongarch_gcc:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: LoongArch GCC Determinism Check
     steps:
     - name: Checkout Code
