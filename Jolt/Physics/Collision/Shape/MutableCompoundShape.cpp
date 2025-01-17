@@ -142,8 +142,8 @@ void MutableCompoundShape::CalculateLocalBounds()
 	}
 	else
 	{
-		// There are no subshapes, set the bounding box to invalid
-		mLocalBounds.SetEmpty();
+		// There are no subshapes, make the bounding box empty
+		mLocalBounds.mMin = mLocalBounds.mMax = Vec3::sZero();
 	}
 
 	// Cache the inner radius as it can take a while to recursively iterate over all sub shapes
