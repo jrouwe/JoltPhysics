@@ -19,7 +19,7 @@ env:
 
 jobs:
   linux-clang:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang
     strategy:
         fail-fast: false
@@ -42,7 +42,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux_clang_tsan:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang Sanitizers
     strategy:
         fail-fast: false
@@ -68,7 +68,7 @@ jobs:
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll
 
   linux-clang-so:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang Shared Library
     strategy:
         fail-fast: false
@@ -88,7 +88,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-clang-32-bit:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang 32-bit
     strategy:
         fail-fast: false
@@ -112,7 +112,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-clang-use-std-vector:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang using std::vector
     strategy:
         fail-fast: false
@@ -133,7 +133,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-gcc:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux GCC
     strategy:
         fail-fast: false
@@ -155,7 +155,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-gcc-so:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux GCC Shared Library
     strategy:
         fail-fast: false

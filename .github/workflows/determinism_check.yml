@@ -5,11 +5,11 @@ env:
   RAGDOLL_HASH: '0x275057ded572c916'
   PYRAMID_HASH: '0x198b8eeaee57e29a'
   EMSCRIPTEN_VERSION: 3.1.73
-  UBUNTU_CLANG_VERSION: clang++-15
-  UBUNTU_GCC_VERSION: g++-12
-  UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-12
-  UBUNTU_GCC_RISCV_VERSION: riscv64-linux-gnu-g++-12
-  UBUNTU_GCC_POWERPC_VERSION: powerpc64le-linux-gnu-g++-12
+  UBUNTU_CLANG_VERSION: clang++-18
+  UBUNTU_GCC_VERSION: g++-14
+  UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-14
+  UBUNTU_GCC_RISCV_VERSION: riscv64-linux-gnu-g++-14
+  UBUNTU_GCC_POWERPC_VERSION: powerpc64le-linux-gnu-g++-14
   UBUNTU_GCC_LOONGARCH_VERSION: loongarch64-linux-gnu-g++-14
 
 on:
@@ -163,7 +163,7 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install gcc-12-aarch64-linux-gnu gcc-12-multilib g++-12-multilib libstdc++-12-dev-arm64-cross qemu-user -y
+      run: sudo apt-get install gcc-14-aarch64-linux-gnu gcc-14-multilib g++-14-multilib libstdc++-14-dev-arm64-cross qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -191,7 +191,7 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-12-arm-linux-gnueabihf qemu-user -y
+      run: sudo apt-get install g++-14-arm-linux-gnueabihf qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_COMPILE_ARM_TARGET="arm-linux-gnueabihf" -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -219,7 +219,7 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-12-aarch64-linux-gnu gcc-12-multilib g++-12-multilib libstdc++-12-dev-arm64-cross qemu-user -y
+      run: sudo apt-get install g++-14-aarch64-linux-gnu gcc-14-multilib g++-14-multilib libstdc++-14-dev-arm64-cross qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_AARCH64_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -247,7 +247,7 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-12-riscv64-linux-gnu gcc-12-multilib g++-12-multilib qemu-user -y
+      run: sudo apt-get install g++-14-riscv64-linux-gnu gcc-14-multilib g++-14-multilib qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_RISCV_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -275,7 +275,7 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-12-powerpc64le-linux-gnu gcc-12-multilib g++-12-multilib qemu-user -y
+      run: sudo apt-get install g++-14-powerpc64le-linux-gnu gcc-14-multilib g++-14-multilib qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_POWERPC_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -304,7 +304,7 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-14-loongarch64-linux-gnu gcc-12-multilib g++-12-multilib qemu-user -y
+      run: sudo apt-get install g++-14-loongarch64-linux-gnu gcc-14-multilib g++-14-multilib qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_LOONGARCH_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
