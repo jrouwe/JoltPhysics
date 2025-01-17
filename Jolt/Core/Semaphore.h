@@ -8,7 +8,7 @@
 
 // Determine if we will use pthreads or not
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#if defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_BSD) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_WASM)
+#if defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_BSD) || defined(JPH_PLATFORM_WASM)
 	#include <semaphore.h>
 	#define JPH_USE_PTHREADS
 #elif !defined(JPH_PLATFORM_WINDOWS)
