@@ -181,7 +181,7 @@ void MutableCompoundShape::CalculateSubShapeBounds(uint inStartIdx, uint inNumbe
 				Mat44 transform = Mat44::sRotationTranslation(sub_shape.GetRotation(), sub_shape.GetPositionCOM());
 
 				// Get the bounding box
-				sub_shape_bounds = sub_shape.mShape->GetWorldSpaceBounds(transform, Vec3::sReplicate(1.0f));
+				sub_shape_bounds = sub_shape.mShape->GetWorldSpaceBounds(transform, Vec3::sOne());
 			}
 
 			// Put the bounds as columns in a matrix

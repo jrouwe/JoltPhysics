@@ -111,10 +111,10 @@ void SliderConstraintTest::Initialize()
 
 	{
 		// Two bodies vertically stacked with a slider constraint
-		Body *vert1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(5, 9, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		Body *vert1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sOne()), RVec3(5, 9, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		vert1->SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
 		mBodyInterface->AddBody(vert1->GetID(), EActivation::Activate);
-		Body *vert2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(5, 3, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		Body *vert2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sOne()), RVec3(5, 3, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		vert2->SetCollisionGroup(CollisionGroup(group_filter, group_id, 1));
 		mBodyInterface->AddBody(vert2->GetID(), EActivation::Activate);
 		++group_id;
@@ -129,10 +129,10 @@ void SliderConstraintTest::Initialize()
 
 	{
 		// Two bodies vertically stacked with a slider constraint using soft limits
-		Body *vert1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(10, 9, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		Body *vert1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sOne()), RVec3(10, 9, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		vert1->SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
 		mBodyInterface->AddBody(vert1->GetID(), EActivation::Activate);
-		Body *vert2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(10, 3, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		Body *vert2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sOne()), RVec3(10, 3, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		vert2->SetCollisionGroup(CollisionGroup(group_filter, group_id, 1));
 		mBodyInterface->AddBody(vert2->GetID(), EActivation::Activate);
 		++group_id;

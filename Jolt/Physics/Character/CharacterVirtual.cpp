@@ -53,7 +53,7 @@ void CharacterVsCharacterCollisionSimple::CollideCharacter(const CharacterVirtua
 			settings.mMaxSeparationDistance = inCollideShapeSettings.mMaxSeparationDistance + c->GetCharacterPadding();
 
 			// Note that this collides against the character's shape without padding, this will be corrected for in CharacterVirtual::GetContactsAtPosition
-			CollisionDispatch::sCollideShapeVsShape(shape, c->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, SubShapeIDCreator(), SubShapeIDCreator(), settings, ioCollector);
+			CollisionDispatch::sCollideShapeVsShape(shape, c->GetShape(), Vec3::sOne(), Vec3::sOne(), transform1, transform2, SubShapeIDCreator(), SubShapeIDCreator(), settings, ioCollector);
 		}
 
 	// Reset the user data
@@ -64,7 +64,7 @@ void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *
 {
 	// Convert shape cast relative to inBaseOffset
 	Mat44 transform1 = inCenterOfMassTransform.PostTranslated(-inBaseOffset).ToMat44();
-	ShapeCast shape_cast(inCharacter->GetShape(), Vec3::sReplicate(1.0f), transform1, inDirection);
+	ShapeCast shape_cast(inCharacter->GetShape(), Vec3::sOne(), transform1, inDirection);
 
 	// Iterate over all characters
 	for (const CharacterVirtual *c : mCharacters)
@@ -78,7 +78,7 @@ void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *
 			Mat44 transform2 = c->GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
 
 			// Note that this collides against the character's shape without padding, this will be corrected for in CharacterVirtual::GetFirstContactForSweep
-			CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, inShapeCastSettings, c->GetShape(), Vec3::sReplicate(1.0f), { }, transform2, SubShapeIDCreator(), SubShapeIDCreator(), ioCollector);
+			CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, inShapeCastSettings, c->GetShape(), Vec3::sOne(), { }, transform2, SubShapeIDCreator(), SubShapeIDCreator(), ioCollector);
 		}
 
 	// Reset the user data
@@ -371,7 +371,7 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 	auto collide_shape_function = mEnhancedInternalEdgeRemoval? &NarrowPhaseQuery::CollideShapeWithInternalEdgeRemoval : &NarrowPhaseQuery::CollideShape;
 
 	// Collide shape
-	(mSystem->GetNarrowPhaseQuery().*collide_shape_function)(inShape, Vec3::sReplicate(1.0f), transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, body_filter, inShapeFilter);
+	(mSystem->GetNarrowPhaseQuery().*collide_shape_function)(inShape, Vec3::sOne(), transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, body_filter, inShapeFilter);
 
 	// Also collide with other characters
 	if (mCharacterVsCharacterCollision != nullptr)
@@ -557,7 +557,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	RVec3 base_offset = start.GetTranslation();
 	ContactCastCollector collector(mSystem, this, inDisplacement, mUp, inIgnoredContacts, base_offset, contact);
 	collector.ResetEarlyOutFraction(contact.mFraction);
-	RShapeCast shape_cast(mShape, Vec3::sReplicate(1.0f), start, inDisplacement);
+	RShapeCast shape_cast(mShape, Vec3::sOne(), start, inDisplacement);
 	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, base_offset, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, body_filter, inShapeFilter);
 
 	// Also collide with other characters
@@ -602,7 +602,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 		AddConvexRadius add_cvx(polygon, character_padding);
 
 		// Correct fraction to hit this inflated face instead of the inner shape
-		corrected = sCorrectFractionForCharacterPadding(mShape, start.GetRotation(), inDisplacement, Vec3::sReplicate(1.0f), add_cvx, outContact.mFraction);
+		corrected = sCorrectFractionForCharacterPadding(mShape, start.GetRotation(), inDisplacement, Vec3::sOne(), add_cvx, outContact.mFraction);
 	}
 	if (!corrected)
 	{
@@ -1602,7 +1602,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 		RVec3 debug_pos = new_position + contact.mFraction * down;
 		DebugRenderer::sInstance->DrawArrow(new_position, debug_pos, Color::sWhite, 0.01f);
 		DebugRenderer::sInstance->DrawArrow(contact.mPosition, contact.mPosition + contact.mSurfaceNormal, Color::sWhite, 0.01f);
-		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sWhite, false, true);
+		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sOne(), Color::sWhite, false, true);
 	}
 #endif // JPH_DEBUG_RENDERER
 
@@ -1640,7 +1640,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 			RVec3 debug_pos = test_position + test_contact.mFraction * down;
 			DebugRenderer::sInstance->DrawArrow(test_position, debug_pos, Color::sCyan, 0.01f);
 			DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mSurfaceNormal, Color::sCyan, 0.01f);
-			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sCyan, false, true);
+			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sOne(), Color::sCyan, false, true);
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -1680,7 +1680,7 @@ bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFil
 	if (sDrawStickToFloor)
 	{
 		DebugRenderer::sInstance->DrawArrow(mPosition, new_position, Color::sOrange, 0.01f);
-		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(new_position, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sOrange, false, true);
+		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(new_position, mRotation, mShape), Vec3::sOne(), Color::sOrange, false, true);
 	}
 #endif // JPH_DEBUG_RENDERER
 

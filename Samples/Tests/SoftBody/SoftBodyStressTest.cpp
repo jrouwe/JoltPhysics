@@ -37,7 +37,7 @@ void SoftBodyStressTest::Initialize()
 		sphere.mPressure = 2000.0f;
 
 		// Box settings
-		BodyCreationSettings box(new BoxShape(Vec3::sReplicate(1.0f)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		BodyCreationSettings box(new BoxShape(Vec3::sOne()), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		box.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 		box.mMassPropertiesOverride.mMass = 100.0f;
 

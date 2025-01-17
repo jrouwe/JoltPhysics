@@ -86,7 +86,7 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Draw character pre update (the sim is also drawn pre update)
 	// Note that we have first updated the position so that it matches the new position of the ship
 #ifdef JPH_DEBUG_RENDERER
-	mCharacter->GetShape()->Draw(mDebugRenderer, mCharacter->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sGreen, false, true);
+	mCharacter->GetShape()->Draw(mDebugRenderer, mCharacter->GetCenterOfMassTransform(), Vec3::sOne(), Color::sGreen, false, true);
 #endif // JPH_DEBUG_RENDERER
 
 	// Determine new character velocity

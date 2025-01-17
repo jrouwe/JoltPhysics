@@ -523,7 +523,7 @@ void CharacterBaseTest::Initialize()
 
 		// Create a sensor
 		{
-			BodyCreationSettings sensor(new BoxShape(Vec3::sReplicate(1.0f)), cSensorPosition, Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
+			BodyCreationSettings sensor(new BoxShape(Vec3::sOne()), cSensorPosition, Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
 			sensor.mIsSensor = true;
 			mSensorBody = mBodyInterface->CreateAndAddBody(sensor, EActivation::Activate);
 		}
@@ -639,7 +639,7 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		if (character != nullptr)
 		{
 		#ifdef JPH_DEBUG_RENDERER
-			character->GetShape()->Draw(mDebugRenderer, character->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sOrange, false, true);
+			character->GetShape()->Draw(mDebugRenderer, character->GetCenterOfMassTransform(), Vec3::sOne(), Color::sOrange, false, true);
 		#else
 			mDebugRenderer->DrawCapsule(character->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding + character->GetCharacterPadding(), Color::sOrange, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 		#endif // JPH_DEBUG_RENDERER

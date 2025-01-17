@@ -375,7 +375,7 @@ TEST_SUITE("ContactListenerTests")
 
 		for (int iteration = 0; iteration < 2; ++iteration)
 		{
-			Body &box = c.CreateBox(RVec3(0, 0.999f, 0), Quat::sRotation(Vec3::sAxisY(), DegreesToRadians(30.0f)), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f));
+			Body &box = c.CreateBox(RVec3(0, 0.999f, 0), Quat::sRotation(Vec3::sAxisY(), DegreesToRadians(30.0f)), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne());
 			box.SetFriction(1.0f);
 
 			// Contact listener sets a constant surface velocity

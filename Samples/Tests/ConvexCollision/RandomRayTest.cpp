@@ -138,10 +138,10 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		RVec3 render_offset(5, 0, 0);
 		SphereShape sphere_shape(1.1f);
 	#ifdef JPH_DEBUG_RENDERER
-		sphere_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sReplicate(1.0f), Color::sYellow, false, false);
+		sphere_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sOne(), Color::sYellow, false, false);
 	#endif // JPH_DEBUG_RENDERER
 		ConvexShape::SupportBuffer buffer;
-		const ConvexShape::Support *support = sphere_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+		const ConvexShape::Support *support = sphere_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sOne());
 		TestRay<ConvexShape::Support, SphereShape>("Sphere Shape", render_offset, *support, sphere_shape, [](const SphereShape &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
 			return RaySphere(inRayOrigin, inRayDirection, Vec3::sZero(), inSphere.GetRadius());
 		});
@@ -161,10 +161,10 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		RVec3 render_offset(15, 0, 0);
 		BoxShape box_shape(Vec3(0.9f, 1.0f, 1.1f), 0.0f);
 	#ifdef JPH_DEBUG_RENDERER
-		box_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sReplicate(1.0f), Color::sYellow, false, false);
+		box_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sOne(), Color::sYellow, false, false);
 	#endif // JPH_DEBUG_RENDERER
 		ConvexShape::SupportBuffer buffer;
-		const ConvexShape::Support *support = box_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+		const ConvexShape::Support *support = box_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sOne());
 		TestRay<ConvexShape::Support, BoxShape>("Box Shape", render_offset, *support, box_shape, [](const BoxShape &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
 			float fraction = RayAABox(inRayOrigin, RayInvDirection(inRayDirection), -inBox.GetHalfExtent(), inBox.GetHalfExtent());
 			return max(fraction, 0.0f);
@@ -175,10 +175,10 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		RVec3 render_offset(20, 0, 0);
 		CapsuleShape capsule_shape(1.1f, 0.6f);
 	#ifdef JPH_DEBUG_RENDERER
-		capsule_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sReplicate(1.0f), Color::sYellow, false, false);
+		capsule_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sOne(), Color::sYellow, false, false);
 	#endif // JPH_DEBUG_RENDERER
 		ConvexShape::SupportBuffer buffer;
-		const ConvexShape::Support *support = capsule_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+		const ConvexShape::Support *support = capsule_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sOne());
 		TestRay<ConvexShape::Support, CapsuleShape>("Capsule Shape", render_offset, *support, capsule_shape, [](const CapsuleShape &inCapsule, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
 			return RayCapsule(inRayOrigin, inRayDirection, inCapsule.GetHalfHeightOfCylinder(), inCapsule.GetRadius());
 		});
@@ -188,10 +188,10 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		RVec3 render_offset(25, 0, 0);
 		CylinderShape cylinder_shape(1.5f, 0.6f, 0.0f);
 	#ifdef JPH_DEBUG_RENDERER
-		cylinder_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sReplicate(1.0f), Color::sYellow, false, false);
+		cylinder_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sOne(), Color::sYellow, false, false);
 	#endif // JPH_DEBUG_RENDERER
 		ConvexShape::SupportBuffer buffer;
-		const ConvexShape::Support *support = cylinder_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+		const ConvexShape::Support *support = cylinder_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sOne());
 		TestRay<ConvexShape::Support, CylinderShape>("Cylinder Shape", render_offset, *support, cylinder_shape, [](const CylinderShape &inCylinder, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
 			return RayCylinder(inRayOrigin, inRayDirection, inCylinder.GetHalfHeight(), inCylinder.GetRadius());
 		});

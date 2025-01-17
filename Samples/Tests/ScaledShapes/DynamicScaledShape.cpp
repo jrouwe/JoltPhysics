@@ -21,7 +21,7 @@ void DynamicScaledShape::Initialize()
 	CreateHeightFieldTerrain();
 
 	// Create scaled sphere
-	RefConst<Shape> scaled_sphere_shape = new ScaledShape(new SphereShape(2.0f), Vec3::sReplicate(1.0f));
+	RefConst<Shape> scaled_sphere_shape = new ScaledShape(new SphereShape(2.0f), Vec3::sOne());
 	mBodyID = mBodyInterface->CreateAndAddBody(BodyCreationSettings(scaled_sphere_shape, RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }
 

@@ -85,7 +85,7 @@ TEST_SUITE("ShapeTests")
 
 		// Extract support points
 		ConvexShape::SupportBuffer buffer;
-		const ConvexShape::Support *support = capsule.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+		const ConvexShape::Support *support = capsule.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sOne());
 		Array<Vec3> capsule_points;
 		capsule_points.reserve(Vec3::sUnitSphere.size());
 		for (const Vec3 &v : Vec3::sUnitSphere)
@@ -715,7 +715,7 @@ TEST_SUITE("ShapeTests")
 		// Create a heightfield
 		float *samples = new float [cHeightFieldSamples * cHeightFieldSamples];
 		memset(samples, 0, cHeightFieldSamples * cHeightFieldSamples * sizeof(float));
-		RefConst<Shape> previous_shape = HeightFieldShapeSettings(samples, Vec3::sZero(), Vec3::sReplicate(1.0f), cHeightFieldSamples).Create().Get();
+		RefConst<Shape> previous_shape = HeightFieldShapeSettings(samples, Vec3::sZero(), Vec3::sOne(), cHeightFieldSamples).Create().Get();
 		delete [] samples;
 
 		// Calculate the amount of bits needed to address all triangles in the heightfield
@@ -868,7 +868,7 @@ TEST_SUITE("ShapeTests")
 		AllHitCollisionCollector<CollideShapeCollector> collector;
 		CollideShapeSettings settings;
 		settings.mCollectFacesMode = ECollectFacesMode::CollectFaces;
-		CollisionDispatch::sCollideShapeVsShape(box, compound, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(100.0f, 0, 100.0f)), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+		CollisionDispatch::sCollideShapeVsShape(box, compound, Vec3::sOne(), Vec3::sOne(), Mat44::sTranslation(Vec3(100.0f, 0, 100.0f)), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
 		CHECK(collector.mHits.size() == triangles[0].size() + triangles[1].size());
 		for (const CollideShapeResult &r : collector.mHits)
 		{

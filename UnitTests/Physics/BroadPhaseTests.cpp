@@ -27,7 +27,7 @@ TEST_SUITE("BroadPhaseTests")
 		broadphase.Init(&body_manager, broad_phase_layer_interface);
 
 		// Create a box
-		BodyCreationSettings settings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings settings(new BoxShape(Vec3::sOne()), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 		Body &body = *body_manager.AllocateBody(settings);
 		body_manager.AddBody(&body);
 

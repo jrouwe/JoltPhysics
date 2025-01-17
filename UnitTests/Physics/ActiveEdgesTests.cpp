@@ -50,7 +50,7 @@ TEST_SUITE("ActiveEdgesTest")
 	{
 		float samples[8*8];
 		memset(samples, 0, sizeof(samples));
-		return new HeightFieldShapeSettings(samples, Vec3(-3.5f, 0, -3.5f), Vec3::sReplicate(1.0f), 8);
+		return new HeightFieldShapeSettings(samples, Vec3(-3.5f, 0, -3.5f), Vec3::sOne(), 8);
 	}
 
 	// This struct indicates what we hope to find as hit
@@ -84,7 +84,7 @@ TEST_SUITE("ActiveEdgesTest")
 	static void sTestCollideShape(Shape *inProbeShape, Shape *inTestShape, Vec3Arg inTestShapeScale, const CollideShapeSettings &inSettings, Vec3Arg inProbeShapePos, const Array<ExpectedHit> &inExpectedHits)
 	{
 		AllHitCollisionCollector<CollideShapeCollector> collector;
-		CollisionDispatch::sCollideShapeVsShape(inProbeShape, inTestShape, Vec3::sReplicate(1.0f), inTestShapeScale, Mat44::sTranslation(inProbeShapePos), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), inSettings, collector);
+		CollisionDispatch::sCollideShapeVsShape(inProbeShape, inTestShape, Vec3::sOne(), inTestShapeScale, Mat44::sTranslation(inProbeShapePos), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), inSettings, collector);
 
 		sCheckMatch(collector.mHits, inExpectedHits, 1.0e-8f);
 	}
@@ -116,9 +116,9 @@ TEST_SUITE("ActiveEdgesTest")
 	{
 		Ref<ShapeSettings> shape = sCreateMeshShape();
 
-		sTestCollideShape(shape, Vec3::sReplicate(1.0f), false);
+		sTestCollideShape(shape, Vec3::sOne(), false);
 
-		sTestCollideShape(shape, Vec3::sReplicate(1.0f), true);
+		sTestCollideShape(shape, Vec3::sOne(), true);
 
 		sTestCollideShape(shape, Vec3(-1, 1, 1), false);
 
@@ -129,9 +129,9 @@ TEST_SUITE("ActiveEdgesTest")
 	{
 		Ref<ShapeSettings> shape = sCreateHeightFieldShape();
 
-		sTestCollideShape(shape, Vec3::sReplicate(1.0f), false);
+		sTestCollideShape(shape, Vec3::sOne(), false);
 
-		sTestCollideShape(shape, Vec3::sReplicate(1.0f), true);
+		sTestCollideShape(shape, Vec3::sOne(), true);
 
 		sTestCollideShape(shape, Vec3(-1, 1, 1), false);
 
@@ -142,7 +142,7 @@ TEST_SUITE("ActiveEdgesTest")
 	static void sTestCastShape(Shape *inProbeShape, Shape *inTestShape, Vec3Arg inTestShapeScale, const ShapeCastSettings &inSettings, Vec3Arg inProbeShapePos, Vec3Arg inProbeShapeDirection, const Array<ExpectedHit> &inExpectedHits)
 	{
 		AllHitCollisionCollector<CastShapeCollector> collector;
-		ShapeCast shape_cast(inProbeShape, Vec3::sReplicate(1.0f), Mat44::sTranslation(inProbeShapePos), inProbeShapeDirection);
+		ShapeCast shape_cast(inProbeShape, Vec3::sOne(), Mat44::sTranslation(inProbeShapePos), inProbeShapeDirection);
 		CollisionDispatch::sCastShapeVsShapeLocalSpace(shape_cast, inSettings, inTestShape, inTestShapeScale, ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
 
 		sCheckMatch(collector.mHits, inExpectedHits, 1.0e-6f);
@@ -173,9 +173,9 @@ TEST_SUITE("ActiveEdgesTest")
 	{
 		Ref<ShapeSettings> shape = sCreateMeshShape();
 
-		sTestCastShape(shape, Vec3::sReplicate(1.0f), false);
+		sTestCastShape(shape, Vec3::sOne(), false);
 
-		sTestCastShape(shape, Vec3::sReplicate(1.0f), true);
+		sTestCastShape(shape, Vec3::sOne(), true);
 
 		sTestCastShape(shape, Vec3(-1, 1, 1), false);
 
@@ -186,9 +186,9 @@ TEST_SUITE("ActiveEdgesTest")
 	{
 		Ref<ShapeSettings> shape = sCreateHeightFieldShape();
 
-		sTestCastShape(shape, Vec3::sReplicate(1.0f), false);
+		sTestCastShape(shape, Vec3::sOne(), false);
 
-		sTestCastShape(shape, Vec3::sReplicate(1.0f), true);
+		sTestCastShape(shape, Vec3::sOne(), true);
 
 		sTestCastShape(shape, Vec3(-1, 1, 1), false);
 

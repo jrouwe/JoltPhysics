@@ -108,5 +108,5 @@ void ShapeFilterTest::PostPhysicsUpdate(float inDeltaTime)
 		color = Color::sRed;
 	}
 	mDebugRenderer->DrawArrow(cast_origin, cast_point, Color::sOrange, 0.1f);
-	JPH_IF_DEBUG_RENDERER(mCastShape->Draw(mDebugRenderer, RMat44::sTranslation(RVec3(cast_point)), Vec3::sReplicate(1.0f), color, false, true);)
+	JPH_IF_DEBUG_RENDERER(mCastShape->Draw(mDebugRenderer, RMat44::sTranslation(RVec3(cast_point)), Vec3::sOne(), color, false, true);)
 }

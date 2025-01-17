@@ -39,7 +39,7 @@ void SoftBodyCustomUpdateTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw it as well since it's not added to the world
-	mBody->GetShape()->Draw(mDebugRenderer, mBody->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sWhite, false, false);
+	mBody->GetShape()->Draw(mDebugRenderer, mBody->GetCenterOfMassTransform(), Vec3::sOne(), Color::sWhite, false, false);
 #else
 	// Draw the vertices
 	RMat44 com = mBody->GetCenterOfMassTransform();

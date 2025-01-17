@@ -139,7 +139,7 @@ void ConvexHullShrinkTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	{
 		// Get the support function of the shape excluding convex radius and add the convex radius
 		ConvexShape::SupportBuffer buffer;
-		const ConvexShape::Support *support = shape->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+		const ConvexShape::Support *support = shape->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer, Vec3::sOne());
 		AddConvexRadius add_cvx(*support, convex_radius);
 
 		// Calculate the error w.r.t. the original hull
@@ -169,8 +169,8 @@ void ConvexHullShrinkTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw the hulls
-	shape->Draw(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sReplicate(1.0f), Color::sRed, false, false);
-	shape->DrawGetSupportFunction(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sReplicate(1.0f), Color::sLightGrey, false);
-	shape->DrawShrunkShape(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sReplicate(1.0f));
+	shape->Draw(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sOne(), Color::sRed, false, false);
+	shape->DrawGetSupportFunction(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sOne(), Color::sLightGrey, false);
+	shape->DrawShrunkShape(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sOne());
 #endif // JPH_DEBUG_RENDERER
 }

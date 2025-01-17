@@ -349,7 +349,7 @@ MassProperties MeshShape::GetMassProperties() const
 	// creating a Body:
 	//
 	// BodyCreationSettings::mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
-	// BodyCreationSettings::mMassPropertiesOverride.SetMassAndInertiaOfSolidBox(Vec3::sReplicate(1.0f), 1000.0f);
+	// BodyCreationSettings::mMassPropertiesOverride.SetMassAndInertiaOfSolidBox(Vec3::sOne(), 1000.0f);
 	//
 	// Note that for a mesh shape to simulate properly, it is best if the mesh is manifold
 	// (i.e. closed, all edges shared by only two triangles, consistent winding order).

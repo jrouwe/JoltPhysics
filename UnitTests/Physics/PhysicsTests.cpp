@@ -57,13 +57,13 @@ TEST_SUITE("PhysicsTests")
 		BodyID body1_id;
 		{
 			// Create a box
-			Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+			Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sOne());
 			body1_id = body1.GetID();
 			CHECK(body1_id.GetIndex() == 0);
 			CHECK(body1_id.GetSequenceNumber() == 1);
 
 			// Create another box
-			Body &body2 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+			Body &body2 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sOne());
 			BodyID body2_id = body2.GetID();
 			CHECK(body2_id.GetIndex() == 1);
 			CHECK(body2_id.GetSequenceNumber() == 1);
@@ -97,7 +97,7 @@ TEST_SUITE("PhysicsTests")
 		}
 
 		// Create another box
-		Body &body3 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+		Body &body3 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sOne());
 		BodyID body3_id = body3.GetID();
 		CHECK(body3_id.GetIndex() == 0); // Check index reused
 		CHECK(body3_id.GetSequenceNumber() == 2); // Check sequence number changed
@@ -131,8 +131,8 @@ TEST_SUITE("PhysicsTests")
 
 		{
 			// Create two bodies
-			Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
-			Body &body2 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+			Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sOne());
+			Body &body2 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sOne());
 			BodyID bodies[] = { body1.GetID(), body2.GetID() };
 
 			{
@@ -199,7 +199,7 @@ TEST_SUITE("PhysicsTests")
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Dummy creation settings
-		BodyCreationSettings bc(new BoxShape(Vec3::sReplicate(1.0f)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings bc(new BoxShape(Vec3::sOne()), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 
 		// Create a body
 		Body *b1 = bi.CreateBody(bc);
@@ -260,7 +260,7 @@ TEST_SUITE("PhysicsTests")
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Create a body and pass user data through the creation settings
-		BodyCreationSettings body_settings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		BodyCreationSettings body_settings(new BoxShape(Vec3::sOne()), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		body_settings.mUserData = 0x1234567887654321;
 		Body *body = bi.CreateBody(body_settings);
 		CHECK(body->GetUserData() == 0x1234567887654321);
@@ -279,7 +279,7 @@ TEST_SUITE("PhysicsTests")
 		PhysicsTestContext c;
 
 		// Create a body
-		Body &body = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f));
+		Body &body = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne());
 
 		// Create constraint with user data
 		PointConstraintSettings constraint_settings;
@@ -312,7 +312,7 @@ TEST_SUITE("PhysicsTests")
 		RMat44 com_transform = body_transform * Mat44::sTranslation(box_pos);
 
 		// Create body
-		BodyCreationSettings body_settings(new RotatedTranslatedShapeSettings(box_pos, box_rotation, new BoxShape(Vec3::sReplicate(1.0f))), body_pos, body_rotation, EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings body_settings(new RotatedTranslatedShapeSettings(box_pos, box_rotation, new BoxShape(Vec3::sOne())), body_pos, body_rotation, EMotionType::Static, Layers::NON_MOVING);
 		Body *body = bi.CreateBody(body_settings);
 
 		// Check that the correct positions / rotations are reported
@@ -1436,10 +1436,10 @@ TEST_SUITE("PhysicsTests")
 		c2.ZeroGravity();
 
 		const RVec3 cBox1Position(1.0f, 2.0f, 3.0f);
-		Body &box1 = c1.CreateBox(cBox1Position, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+		Body &box1 = c1.CreateBox(cBox1Position, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
 
 		const RVec3 cBox2Position(4.0f, 5.0f, 6.0f);
-		Body& box2 = c2.CreateBox(cBox2Position, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+		Body& box2 = c2.CreateBox(cBox2Position, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
 
 		const Vec3 cBox1Velocity(1.0f, 0, 0);
 		const Vec3 cBox2Velocity(2.0f, 0, 0);
@@ -1504,14 +1504,14 @@ TEST_SUITE("PhysicsTests")
 
 		// The first 8 boxes should be fine
 		for (int i = 0; i < 8; ++i)
-			c.CreateBox(RVec3(3.0_r * i, 0.9_r, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+			c.CreateBox(RVec3(3.0_r * i, 0.9_r, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
 
 		// Step
 		EPhysicsUpdateError errors = c.SimulateSingleStep();
 		CHECK(errors == EPhysicsUpdateError::None);
 
 		// Adding one more box should introduce an error
-		c.CreateBox(RVec3(24.0_r, 0.9_r, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+		c.CreateBox(RVec3(24.0_r, 0.9_r, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
 
 		// Step
 		{
@@ -1537,7 +1537,7 @@ TEST_SUITE("PhysicsTests")
 			floor.SetFriction(friction_floor);
 
 			// Create box with a velocity that will make it slide over the floor (making sure it intersects a little bit initially)
-			BodyCreationSettings box_settings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(0, 0.999_r, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			BodyCreationSettings box_settings(new BoxShape(Vec3::sOne()), RVec3(0, 0.999_r, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 			box_settings.mFriction = friction_box;
 			box_settings.mLinearDamping = 0;
 			box_settings.mLinearVelocity = Vec3(Sin(DegreesToRadians(angle)), 0, Cos(DegreesToRadians(angle))) * 20.0f;
@@ -1596,7 +1596,7 @@ TEST_SUITE("PhysicsTests")
 			c.SimulateSingleStep();
 
 			// Cancel components that should not be allowed by the allowed DOFs
-			Vec3 linear_lock = Vec3::sReplicate(1.0f), angular_lock = Vec3::sReplicate(1.0f);
+			Vec3 linear_lock = Vec3::sOne(), angular_lock = Vec3::sOne();
 			for (uint axis = 0; axis < 3; ++axis)
 			{
 				if ((allowed_dofs & (1 << axis)) == 0)
@@ -1637,7 +1637,7 @@ TEST_SUITE("PhysicsTests")
 
 		// Create box that can only rotate around Y that intersects with the floor
 		RVec3 initial_position(0, 0.99f, 0);
-		BodyCreationSettings box_settings(new BoxShape(Vec3::sReplicate(1.0f)), initial_position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		BodyCreationSettings box_settings(new BoxShape(Vec3::sOne()), initial_position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		box_settings.mAllowedDOFs = EAllowedDOFs::RotationY;
 		box_settings.mAngularDamping = 0.0f; // No damping to make the calculation for expected angular velocity simple
 		box_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
@@ -1698,10 +1698,10 @@ TEST_SUITE("PhysicsTests")
 			Body &ground = c.CreateFloor();
 
 			// Create two sets of bodies that each overlap
-			Body &box1 = c.CreateBox(RVec3(0, 1, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+			Body &box1 = c.CreateBox(RVec3(0, 1, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
 			Body &sphere1 = c.CreateSphere(RVec3(0, 1, 0.1f), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
 
-			Body &box2 = c.CreateBox(RVec3(5, 1, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+			Body &box2 = c.CreateBox(RVec3(5, 1, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
 			Body &sphere2 = c.CreateSphere(RVec3(5, 1, 0.1f), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
 
 			// Store the absolute initial state, that will be used for the final test.

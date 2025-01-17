@@ -89,7 +89,7 @@ TEST_SUITE("CollideShapeTests")
 		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 
 		// Test against wrong layer
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sOne(), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
 
 		// Collector that tests that collision happens at position A
 		class PositionACollideShapeCollector : public CollideShapeCollector
@@ -116,20 +116,20 @@ TEST_SUITE("CollideShapeTests")
 
 		// Test collision against correct layer
 		CHECK(!position_a_collector.mWasHit);
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), position_a_collector, broadphase_non_moving_filter, object_non_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sOne(), shape1_transform, settings, RVec3::sZero(), position_a_collector, broadphase_non_moving_filter, object_non_moving_filter);
 		CHECK(position_a_collector.mWasHit);
 
 		// Now move body to position B
 		c.GetSystem()->GetBodyInterface().SetPositionAndRotation(body2.GetID(), cPosition2B, Quat::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI), EActivation::DontActivate);
 
 		// Test that original position doesn't collide anymore
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_non_moving_filter, object_non_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sOne(), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_non_moving_filter, object_non_moving_filter);
 
 		// Move test shape to position B
 		shape1_transform = RMat44::sTranslation(cPosition1B) * Mat44::sRotationZ(0.3f * JPH_PI) * shape1_com;
 
 		// Test against wrong layer
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sOne(), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
 
 		// Callback that tests that collision happens at position B
 		class PositionBCollideShapeCollector : public CollideShapeCollector
@@ -163,19 +163,19 @@ TEST_SUITE("CollideShapeTests")
 
 		// Test collision
 		CHECK(!position_b_collector.mWasHit);
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), position_b_collector, broadphase_non_moving_filter, object_non_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sOne(), shape1_transform, settings, RVec3::sZero(), position_b_collector, broadphase_non_moving_filter, object_non_moving_filter);
 		CHECK(position_b_collector.mWasHit);
 
 		// Update the physics system (optimizes the broadphase)
 		c.Simulate(c.GetDeltaTime());
 
 		// Test against wrong layer
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sOne(), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
 
 		// Test collision again
 		position_b_collector.Reset();
 		CHECK(!position_b_collector.mWasHit);
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), position_b_collector, broadphase_non_moving_filter, object_non_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sOne(), shape1_transform, settings, RVec3::sZero(), position_b_collector, broadphase_non_moving_filter, object_non_moving_filter);
 		CHECK(position_b_collector.mWasHit);
 	}
 
@@ -186,7 +186,7 @@ TEST_SUITE("CollideShapeTests")
 
 		// Create box to collide against (shape 2)
 		// The box is scaled up by a factor 10 in the X axis and then rotated so that the X axis is up
-		BoxShapeSettings box(Vec3::sReplicate(1.0f));
+		BoxShapeSettings box(Vec3::sOne());
 		box.SetEmbedded();
 		ScaledShapeSettings scaled_box(&box, Vec3(10, 1, 1));
 		scaled_box.SetEmbedded();
@@ -203,7 +203,7 @@ TEST_SUITE("CollideShapeTests")
 
 			// Collect hit with normal sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			c.GetSystem()->GetNarrowPhaseQuery().CollideShape(normal_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(0, 11, 0)), settings, RVec3::sZero(), collector);
+			c.GetSystem()->GetNarrowPhaseQuery().CollideShape(normal_sphere, Vec3::sOne(), RMat44::sTranslation(RVec3(0, 11, 0)), settings, RVec3::sZero(), collector);
 			CHECK(collector.mHits.size() == 1);
 			const CollideShapeResult &result = collector.mHits.front();
 			CHECK(result.mBodyID2 == body2.GetID());
@@ -258,7 +258,7 @@ TEST_SUITE("CollideShapeTests")
 
 		// Collide the two shapes
 		AllHitCollisionCollector<CollideShapeCollector> collector;
-		CollisionDispatch::sCollideShapeVsShape(capsule_shape, box_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), capsule_transform, box_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+		CollisionDispatch::sCollideShapeVsShape(capsule_shape, box_shape, Vec3::sOne(), Vec3::sOne(), capsule_transform, box_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
 
 		// Check that there was a hit
 		CHECK(collector.mHits.size() == 1);
@@ -268,11 +268,11 @@ TEST_SUITE("CollideShapeTests")
 		Vec3 distance_to_move_box = result.mPenetrationAxis.Normalized() * result.mPenetrationDepth;
 		collector.Reset();
 		CHECK(!collector.HadHit());
-		CollisionDispatch::sCollideShapeVsShape(capsule_shape, box_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), capsule_transform, Mat44::sTranslation(1.01f * distance_to_move_box) * box_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+		CollisionDispatch::sCollideShapeVsShape(capsule_shape, box_shape, Vec3::sOne(), Vec3::sOne(), capsule_transform, Mat44::sTranslation(1.01f * distance_to_move_box) * box_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
 		CHECK(!collector.HadHit());
 
 		// Now check that moving 1% less than the penetration distance makes the shapes still overlap
-		CollisionDispatch::sCollideShapeVsShape(capsule_shape, box_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), capsule_transform, Mat44::sTranslation(0.99f * distance_to_move_box) * box_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+		CollisionDispatch::sCollideShapeVsShape(capsule_shape, box_shape, Vec3::sOne(), Vec3::sOne(), capsule_transform, Mat44::sTranslation(0.99f * distance_to_move_box) * box_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
 		CHECK(collector.mHits.size() == 1);
 	}
 
@@ -303,7 +303,7 @@ TEST_SUITE("CollideShapeTests")
 
 		// Create the convex hull support function
 		ConvexShape::SupportBuffer buffer;
-		const ConvexShape::Support *support = convex_hull->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+		const ConvexShape::Support *support = convex_hull->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sOne());
 
 		// Triangle is close enough to make GJK report indeterminate
 		Vec3 penetration_axis = Vec3::sAxisX(), point1, point2;
@@ -331,7 +331,7 @@ TEST_SUITE("CollideShapeTests")
 
 		CollideShapeSettings settings;
 		AllHitCollisionCollector<CollideShapeCollector> collector;
-		CollisionDispatch::sCollideShapeVsShape(&triangle, &capsule, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+		CollisionDispatch::sCollideShapeVsShape(&triangle, &capsule, Vec3::sOne(), Vec3::sOne(), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
 
 		// The capsule's center is closest to the triangle's edge v2 v3
 		Vec3 capsule_center_to_triangle_v2_v3 = v3;
@@ -365,7 +365,7 @@ TEST_SUITE("CollideShapeTests")
 
 		CollideShapeSettings settings;
 		AllHitCollisionCollector<CollideShapeCollector> collector;
-		CollisionDispatch::sCollideShapeVsShape(&triangle, &capsule, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+		CollisionDispatch::sCollideShapeVsShape(&triangle, &capsule, Vec3::sOne(), Vec3::sOne(), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
 
 		// The capsule intersects with the triangle and the closest point is in the interior of the triangle
 		Vec3 expected_penetration_axis = Vec3(0, 0, -1); // Triangle is in the XY plane so the normal is Z
@@ -397,7 +397,7 @@ TEST_SUITE("CollideShapeTests")
 		CollideShapeSettings settings;
 		settings.mMaxSeparationDistance = 0.120000005f;
 		ClosestHitCollisionCollector<CollideShapeCollector> collector;
-		CollisionDispatch::sCollideShapeVsShape(&capsule, &triangle, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+		CollisionDispatch::sCollideShapeVsShape(&capsule, &triangle, Vec3::sOne(), Vec3::sOne(), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
 
 		CHECK(collector.HadHit());
 		Vec3 expected_normal = (v2 - v1).Cross(v3 - v1).Normalized();
@@ -418,7 +418,7 @@ TEST_SUITE("CollideShapeTests")
 		CollideShapeSettings settings;
 		settings.mMaxSeparationDistance = 0.001f;
 		ClosestHitCollisionCollector<CollideShapeCollector> collector;
-		CollideConvexVsTriangles c(&cylinder, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), cylinder_transform, Mat44::sIdentity(), SubShapeID(), settings, collector);
+		CollideConvexVsTriangles c(&cylinder, Vec3::sOne(), Vec3::sOne(), cylinder_transform, Mat44::sIdentity(), SubShapeID(), settings, collector);
 
 		Vec3 v0(-42.7954292f, -0.647318780f, 12.4227943f);
 		Vec3 v1(-29.9111290f, -0.647318780f, 12.4227943f);
@@ -471,7 +471,7 @@ TEST_SUITE("CollideShapeTests")
 			CollideShapeSettings settings;
 			settings.mMaxSeparationDistance = separation_distance;
 			ClosestHitCollisionCollector<CollideShapeCollector> collector;
-			CollisionDispatch::sCollideShapeVsShape(box_shape, hull_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), box_transform, hull_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+			CollisionDispatch::sCollideShapeVsShape(box_shape, hull_shape, Vec3::sOne(), Vec3::sOne(), box_transform, hull_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
 
 			// Check that there was a hit and that the contact normal is correct
 			CHECK(collector.HadHit());
@@ -499,7 +499,7 @@ TEST_SUITE("CollideShapeTests")
 				CollideShapeSettings collide_settings;
 				collide_settings.mMaxSeparationDistance = max_separation;
 				ClosestHitCollisionCollector<CollideShapeCollector> collector;
-				CollisionDispatch::sCollideShapeVsShape(box_shape, sphere_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sTranslation(Vec3(x, 0, 0)), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
+				CollisionDispatch::sCollideShapeVsShape(box_shape, sphere_shape, Vec3::sOne(), Vec3::sOne(), Mat44::sIdentity(), Mat44::sTranslation(Vec3(x, 0, 0)), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
 
 				float expected_penetration = cHalfExtent - (x - cRadius);
 				if (collector.HadHit())
@@ -524,7 +524,7 @@ TEST_SUITE("CollideShapeTests")
 				CollideShapeSettings collide_settings;
 				collide_settings.mMaxSeparationDistance = max_separation;
 				ClosestHitCollisionCollector<CollideShapeCollector> collector;
-				CollisionDispatch::sCollideShapeVsShape(triangle_shape, box_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sTranslation(Vec3(x, 0, 0)), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
+				CollisionDispatch::sCollideShapeVsShape(triangle_shape, box_shape, Vec3::sOne(), Vec3::sOne(), Mat44::sIdentity(), Mat44::sTranslation(Vec3(x, 0, 0)), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
 
 				float expected_penetration = cTriangleX - (x - cHalfExtent);
 				if (collector.HadHit())

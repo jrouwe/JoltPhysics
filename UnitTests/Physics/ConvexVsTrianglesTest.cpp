@@ -31,7 +31,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		{
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			Collider collider(sphere, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(inCenter), Mat44::sIdentity(), SubShapeID(), inSettings, collector);
+			Collider collider(sphere, Vec3::sOne(), Vec3::sOne(), Mat44::sTranslation(inCenter), Mat44::sIdentity(), SubShapeID(), inSettings, collector);
 			collider.Collide(v1, v2, v3, inActiveEdges, SubShapeID());
 			CHECK(!collector.HadHit());
 		}
@@ -45,7 +45,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(inCenter)), inSettings, RVec3::sZero(), collector);
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sOne(), RMat44::sTranslation(RVec3(inCenter)), inSettings, RVec3::sZero(), collector);
 			CHECK(!collector.HadHit());
 		}
 
@@ -60,7 +60,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(inCenter)), inSettings, RVec3::sZero(), collector);
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sOne(), RMat44::sTranslation(RVec3(inCenter)), inSettings, RVec3::sZero(), collector);
 			CHECK(!collector.HadHit());
 		}
 	}
@@ -97,7 +97,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			Collider collider(sphere, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), sphere_transform, transform, sub_shape_id1, settings, collector);
+			Collider collider(sphere, Vec3::sOne(), Vec3::sOne(), sphere_transform, transform, sub_shape_id1, settings, collector);
 			collider.Collide(v1, v2, v3, inActiveEdges, sub_shape_id2);
 
 			// Test result
@@ -125,7 +125,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), RMat44(sphere_transform), settings, RVec3::sZero(), collector);
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sOne(), RMat44(sphere_transform), settings, RVec3::sZero(), collector);
 
 			// Test result
 			CHECK(collector.mHits.size() == 1);
@@ -154,7 +154,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), RMat44(sphere_transform), settings, RVec3::sZero(), collector);
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sOne(), RMat44(sphere_transform), settings, RVec3::sZero(), collector);
 
 			// Test result
 			CHECK(collector.mHits.size() == 1);

@@ -49,7 +49,7 @@ TEST_SUITE("StepListenerTest")
 			CHECK(l.mCount == 0);
 
 		// Now add an active body
-		c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f));
+		c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne());
 
 		// Step the simulation
 		c.SimulateSingleStep();

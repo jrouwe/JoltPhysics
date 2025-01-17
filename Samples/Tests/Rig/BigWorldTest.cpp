@@ -131,7 +131,7 @@ void BigWorldTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 						#ifdef JPH_DEBUG_RENDERER
 							// Draw the shape
-							body.GetShape()->Draw(mDebugRenderer, transform, Vec3::sReplicate(1.0f), color, false, sDrawWireframe);
+							body.GetShape()->Draw(mDebugRenderer, transform, Vec3::sOne(), color, false, sDrawWireframe);
 						#endif // JPH_DEBUG_RENDERER
 						}
 					}

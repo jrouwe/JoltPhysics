@@ -53,7 +53,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	RMat44 com = mCharacter->GetCenterOfMassTransform();
 	RMat44 world_transform = mCharacter->GetWorldTransform();
 #ifdef JPH_DEBUG_RENDERER
-	mCharacter->GetShape()->Draw(mDebugRenderer, com, Vec3::sReplicate(1.0f), Color::sGreen, false, true);
+	mCharacter->GetShape()->Draw(mDebugRenderer, com, Vec3::sOne(), Color::sGreen, false, true);
 #endif // JPH_DEBUG_RENDERER
 
 	// Draw shape including padding (only implemented for capsules right now)
@@ -257,7 +257,7 @@ void CharacterVirtualTest::OnContactCommon(const CharacterVirtual *inCharacter, 
 	// Draw a box around the character when it enters the sensor
 	if (inBodyID2 == mSensorBody)
 	{
-		AABox box = inCharacter->GetShape()->GetWorldSpaceBounds(inCharacter->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f));
+		AABox box = inCharacter->GetShape()->GetWorldSpaceBounds(inCharacter->GetCenterOfMassTransform(), Vec3::sOne());
 		mDebugRenderer->DrawBox(box, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 	}
 

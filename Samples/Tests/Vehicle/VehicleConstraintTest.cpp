@@ -249,7 +249,7 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		// When overriding gravity is requested, we cast a sphere downwards (opposite to the previous up position) and use the contact normal as the new gravity direction
 		SphereShape sphere(0.5f);
 		sphere.SetEmbedded();
-		RShapeCast shape_cast(&sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(mCarBody->GetPosition()), -3.0f * mVehicleConstraint->GetWorldUp());
+		RShapeCast shape_cast(&sphere, Vec3::sOne(), RMat44::sTranslation(mCarBody->GetPosition()), -3.0f * mVehicleConstraint->GetWorldUp());
 		ShapeCastSettings settings;
 		ClosestHitCollisionCollector<CastShapeCollector> collector;
 		mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, mCarBody->GetPosition(), collector, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING));

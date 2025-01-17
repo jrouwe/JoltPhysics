@@ -88,10 +88,10 @@ void HingeConstraintTest::Initialize()
 
 	{
 		// Two bodies connected with a hard hinge
-		Body *body1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(4, 5, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		Body *body1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sOne()), RVec3(4, 5, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 		body1->SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
 		mBodyInterface->AddBody(body1->GetID(), EActivation::DontActivate);
-		Body *body2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(6, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		Body *body2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sOne()), RVec3(6, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		body2->SetCollisionGroup(CollisionGroup(group_filter, 0, 1));
 		mBodyInterface->AddBody(body2->GetID(), EActivation::Activate);
 
@@ -106,10 +106,10 @@ void HingeConstraintTest::Initialize()
 
 	{
 		// Two bodies connected with a soft hinge
-		Body *body1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(10, 5, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		Body *body1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sOne()), RVec3(10, 5, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 		body1->SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
 		mBodyInterface->AddBody(body1->GetID(), EActivation::DontActivate);
-		Body *body2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(12, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		Body *body2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sOne()), RVec3(12, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		body2->SetCollisionGroup(CollisionGroup(group_filter, 0, 1));
 		mBodyInterface->AddBody(body2->GetID(), EActivation::Activate);
 
