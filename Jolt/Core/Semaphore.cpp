@@ -45,6 +45,12 @@ Semaphore::Semaphore()
 		Trace("Failed to create semaphore");
 		std::abort();
 	}
+#elif defined(JPH_PLATFORM_BLUE)
+	if (!JPH_PLATFORM_BLUE_SEMAPHORE_INIT(mSemaphore))
+	{
+		Trace("Failed to create semaphore");
+		std::abort();
+	}
 #endif
 }
 
@@ -56,6 +62,8 @@ Semaphore::~Semaphore()
 	sem_destroy(&mSemaphore);
 #elif defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
 	dispatch_release(mSemaphore);
+#elif defined(JPH_PLATFORM_BLUE)
+	JPH_PLATFORM_BLUE_SEMAPHORE_DESTROY(mSemaphore);
 #endif
 }
 
@@ -63,7 +71,7 @@ void Semaphore::Release(uint inNumber)
 {
 	JPH_ASSERT(inNumber > 0);
 
-#if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_USE_PTHREADS) || defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+#if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_USE_PTHREADS) || defined(JPH_USE_GRAND_CENTRAL_DISPATCH) || defined(JPH_PLATFORM_BLUE)
 	int old_value = mCount.fetch_add(inNumber, std::memory_order_release);
 	if (old_value < 0)
 	{
@@ -77,6 +85,8 @@ void Semaphore::Release(uint inNumber)
 	#elif defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
 		for (int i = 0; i < num_to_release; ++i)
 			dispatch_semaphore_signal(mSemaphore);
+	#elif defined(JPH_PLATFORM_BLUE)
+		JPH_PLATFORM_BLUE_SEMAPHORE_SIGNAL(mSemaphore, num_to_release);
 	#endif
 	}
 #else
@@ -93,20 +103,24 @@ void Semaphore::Acquire(uint inNumber)
 {
 	JPH_ASSERT(inNumber > 0);
 
-#if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_USE_PTHREADS) || defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+#if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_USE_PTHREADS) || defined(JPH_USE_GRAND_CENTRAL_DISPATCH) || defined(JPH_PLATFORM_BLUE)
 	int old_value = mCount.fetch_sub(inNumber, std::memory_order_acquire);
 	int new_value = old_value - (int)inNumber;
 	if (new_value < 0)
 	{
 		int num_to_acquire = min(old_value, 0) - new_value;
+	#ifdef JPH_PLATFORM_WINDOWS
 		for (int i = 0; i < num_to_acquire; ++i)
-		#ifdef JPH_PLATFORM_WINDOWS
 			WaitForSingleObject(mSemaphore, INFINITE);
-		#elif defined(JPH_USE_PTHREADS)
+	#elif defined(JPH_USE_PTHREADS)
+		for (int i = 0; i < num_to_acquire; ++i)
 			sem_wait(&mSemaphore);
-		#elif defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+	#elif defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+		for (int i = 0; i < num_to_acquire; ++i)
 			dispatch_semaphore_wait(mSemaphore, DISPATCH_TIME_FOREVER);
-		#endif
+	#elif defined(JPH_PLATFORM_BLUE)
+		JPH_PLATFORM_BLUE_SEMAPHORE_WAIT(mSemaphore, num_to_acquire);
+	#endif
 	}
 #else
 	std::unique_lock lock(mLock);
