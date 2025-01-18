@@ -17,7 +17,6 @@
 #else
 	#include <windows.h>
 #endif
-
 	JPH_SUPPRESS_WARNING_POP
 #endif
 
@@ -27,6 +26,25 @@ Semaphore::Semaphore()
 {
 #ifdef JPH_PLATFORM_WINDOWS
 	mSemaphore = CreateSemaphore(nullptr, 0, INT_MAX, nullptr);
+	if (mSemaphore == nullptr)
+	{
+		Trace("Failed to create semaphore");
+		std::abort();
+	}
+#elif defined(JPH_USE_PTHREADS)
+	int ret = sem_init(&mSemaphore, 0, 0);
+	if (ret == -1)
+	{
+		Trace("Failed to create semaphore");
+		std::abort();
+	}
+#elif defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+	mSemaphore = dispatch_semaphore_create(0);
+	if (mSemaphore == nullptr)
+	{
+		Trace("Failed to create semaphore");
+		std::abort();
+	}
 #endif
 }
 
@@ -34,6 +52,10 @@ Semaphore::~Semaphore()
 {
 #ifdef JPH_PLATFORM_WINDOWS
 	CloseHandle(mSemaphore);
+#elif defined(JPH_USE_PTHREADS)
+	sem_destroy(&mSemaphore);
+#elif defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+	dispatch_release(mSemaphore);
 #endif
 }
 
@@ -41,13 +63,21 @@ void Semaphore::Release(uint inNumber)
 {
 	JPH_ASSERT(inNumber > 0);
 
-#ifdef JPH_PLATFORM_WINDOWS
-	int old_value = mCount.fetch_add(inNumber);
+#if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_USE_PTHREADS) || defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+	int old_value = mCount.fetch_add(inNumber, std::memory_order_release);
 	if (old_value < 0)
 	{
 		int new_value = old_value + (int)inNumber;
 		int num_to_release = min(new_value, 0) - old_value;
+	#ifdef JPH_PLATFORM_WINDOWS
 		::ReleaseSemaphore(mSemaphore, num_to_release, nullptr);
+	#elif defined(JPH_USE_PTHREADS)
+		for (int i = 0; i < num_to_release; ++i)
+			sem_post(&mSemaphore);
+	#elif defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+		for (int i = 0; i < num_to_release; ++i)
+			dispatch_semaphore_signal(mSemaphore);
+	#endif
 	}
 #else
 	std::lock_guard lock(mLock);
@@ -63,14 +93,20 @@ void Semaphore::Acquire(uint inNumber)
 {
 	JPH_ASSERT(inNumber > 0);
 
-#ifdef JPH_PLATFORM_WINDOWS
-	int old_value = mCount.fetch_sub(inNumber);
+#if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_USE_PTHREADS) || defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+	int old_value = mCount.fetch_sub(inNumber, std::memory_order_acquire);
 	int new_value = old_value - (int)inNumber;
 	if (new_value < 0)
 	{
 		int num_to_acquire = min(old_value, 0) - new_value;
 		for (int i = 0; i < num_to_acquire; ++i)
+		#ifdef JPH_PLATFORM_WINDOWS
 			WaitForSingleObject(mSemaphore, INFINITE);
+		#elif defined(JPH_USE_PTHREADS)
+			sem_wait(&mSemaphore);
+		#elif defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
+			dispatch_semaphore_wait(mSemaphore, DISPATCH_TIME_FOREVER);
+		#endif
 	}
 #else
 	std::unique_lock lock(mLock);
