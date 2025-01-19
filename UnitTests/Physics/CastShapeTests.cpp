@@ -377,8 +377,11 @@ TEST_SUITE("CastShapeTests")
 
 		ShapeCastSettings cast_settings;
 
+		SphereShape sphere(0.1f);
+		sphere.SetEmbedded();
+
 		{
-			RShapeCast shape_cast(new SphereShape(0.1f), Vec3::sOne(), RMat44::sTranslation(RVec3(-1, 0, 0)), Vec3(3, 0, 0));
+			RShapeCast shape_cast(&sphere, Vec3::sOne(), RMat44::sTranslation(RVec3(-1, 0, 0)), Vec3(3, 0, 0));
 
 			// Check that the all hit collector finds 20 hits (2 x 10 slabs)
 			AllHitCollisionCollector<CastShapeCollector> all_collector;
@@ -409,7 +412,7 @@ TEST_SUITE("CastShapeTests")
 
 		{
 			// Cast in reverse direction
-			RShapeCast shape_cast(new SphereShape(0.1f), Vec3::sOne(), RMat44::sTranslation(RVec3(2, 0, 0)), Vec3(-3, 0, 0));
+			RShapeCast shape_cast(&sphere, Vec3::sOne(), RMat44::sTranslation(RVec3(2, 0, 0)), Vec3(-3, 0, 0));
 
 			// Check that the all hit collector finds 20 hits (2 x 10 slabs)
 			AllHitCollisionCollector<CastShapeCollector> all_collector;
