@@ -1948,11 +1948,13 @@ TEST_SUITE("PhysicsTests")
 			new RotatedTranslatedShapeSettings(Vec3(0, 0, 0), Quat::sIdentity(), new SphereShape(0.35f)), RVec3(0.0f, 10.0f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		Body *body_a = bi.CreateBody(body_a_settings);
 		bi.AddBody(body_a->GetID(), EActivation::Activate);
+		bi.SetLinearVelocity(body_a->GetID(), Vec3(0.1f, -9.81f, 0.0f));
 
 		BodyCreationSettings body_b_settings(
 			new RotatedTranslatedShapeSettings(Vec3(0, 0, 0), Quat::sIdentity(), new SphereShape(0.35f)), RVec3(0.0f, 10.0f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		Body *body_b = bi.CreateBody(body_b_settings);
 		bi.AddBody(body_b->GetID(), EActivation::Activate);
+		bi.SetLinearVelocity(body_b->GetID(), Vec3(-0.1f, -9.81f, 0.0f));
 		
 		c.Simulate(1.0f);
 		
