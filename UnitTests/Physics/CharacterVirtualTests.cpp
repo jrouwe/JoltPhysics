@@ -881,7 +881,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
         	JPH::CharacterVirtual::ExtendedUpdateSettings update_settings_a;
 			TempAllocatorMalloc allocator_a;
-			character_a->ExtendedUpdate(0.0016f, c.GetSystem()->GetGravity(), update_settings_a, 
+			character_a->Update(0.0016f, c.GetSystem()->GetGravity(), 
 				c.GetSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 				c.GetSystem()->GetDefaultLayerFilter(Layers::MOVING),
 				{}, {},
@@ -889,7 +889,7 @@ TEST_SUITE("CharacterVirtualTests")
 
         	JPH::CharacterVirtual::ExtendedUpdateSettings update_settings_b;
 			TempAllocatorMalloc allocator_b;
-			character_b->ExtendedUpdate(0.0016f, c.GetSystem()->GetGravity(), update_settings_b, 
+			character_b->Update(0.0016f, c.GetSystem()->GetGravity(), 
 				c.GetSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 				c.GetSystem()->GetDefaultLayerFilter(Layers::MOVING),
 				{}, {},
