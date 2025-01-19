@@ -110,14 +110,14 @@ public:
 	virtual void		OnBody(const Body &inBody) override
 	{
 		// Store the early out fraction so we can restore it after we've collected all hits for this body
-		mPreviousEarlyOutFraction = GetEarlyOutFraction();
+		mPreviousEarlyOutFraction = CollectorType::GetEarlyOutFraction();
 	}
 
 	// See: CollectorType::AddHit
 	virtual void		AddHit(const ResultType &inResult) override
 	{
 		float early_out = inResult.GetEarlyOutFraction();
-		if (!mHadHit || early_out < GetEarlyOutFraction())
+		if (!mHadHit || early_out < CollectorType::GetEarlyOutFraction())
 		{
 			// Update early out fraction to avoid spending work on collecting further hits for this body
 			CollectorType::UpdateEarlyOutFraction(early_out);
@@ -144,7 +144,7 @@ public:
 			// Reset the early out fraction to the configured value so that we will continue
 			// to collect hits at any distance for other bodies
 			JPH_ASSERT(mPreviousEarlyOutFraction != -FLT_MAX); // Check that we got a call to OnBody
-			ResetEarlyOutFraction(mPreviousEarlyOutFraction);
+			CollectorType::ResetEarlyOutFraction(mPreviousEarlyOutFraction);
 			mHadHit = false;
 		}
 
