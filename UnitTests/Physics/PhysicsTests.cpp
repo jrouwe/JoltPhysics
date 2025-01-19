@@ -14,6 +14,7 @@
 #include <Jolt/Physics/Body/BodyLockMulti.h>
 #include <Jolt/Physics/Constraints/PointConstraint.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
+#include <iostream>
 
 TEST_SUITE("PhysicsTests")
 {
@@ -1936,5 +1937,26 @@ TEST_SUITE("PhysicsTests")
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[0]));
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[1]));
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[2]));
+	}
+
+	TEST_CASE("Test2RigidBodiesCreatedAtTheExactSamePosition")
+	{
+		PhysicsTestContext c;
+		BodyInterface &bi = c.GetBodyInterface();
+
+		BodyCreationSettings body_a_settings(
+			new RotatedTranslatedShapeSettings(Vec3(0, 0, 0), Quat::sIdentity(), new SphereShape(0.35f)), RVec3(0.0f, 10.0f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		Body *body_a = bi.CreateBody(body_a_settings);
+		bi.AddBody(body_a->GetID(), EActivation::Activate);
+
+		BodyCreationSettings body_b_settings(
+			new RotatedTranslatedShapeSettings(Vec3(0, 0, 0), Quat::sIdentity(), new SphereShape(0.35f)), RVec3(0.0f, 10.0f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		Body *body_b = bi.CreateBody(body_b_settings);
+		bi.AddBody(body_b->GetID(), EActivation::Activate);
+		
+		c.Simulate(1.0f);
+		
+		std::cout << "Body A Position: " << body_a->GetPosition().GetX() << ", " << body_a->GetPosition().GetY() << ", " << body_a->GetPosition().GetZ() << std::endl;
+		std::cout << "Body B Position: " << body_b->GetPosition().GetX() << ", " << body_b->GetPosition().GetY() << ", " << body_b->GetPosition().GetZ() << std::endl;
 	}
 }
