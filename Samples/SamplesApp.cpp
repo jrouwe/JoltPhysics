@@ -590,6 +590,7 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 			mDebugUI->CreateCheckBox(probe_options, "Shrunken Shape + Convex Radius", mUseShrunkenShapeAndConvexRadius, [this](UICheckBox::EState inState) { mUseShrunkenShapeAndConvexRadius = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(probe_options, "Draw Supporting Face", mDrawSupportingFace, [this](UICheckBox::EState inState) { mDrawSupportingFace = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateSlider(probe_options, "Max Hits", float(mMaxHits), 0, 10, 1, [this](float inValue) { mMaxHits = (int)inValue; });
+			mDebugUI->CreateCheckBox(probe_options, "Closest Hit Per Body", mClosestHitPerBody, [this](UICheckBox::EState inState) { mClosestHitPerBody = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->ShowMenu(probe_options);
 		});
 		mDebugUI->CreateTextButton(main_menu, "Shoot Object", [this]() {
@@ -1166,6 +1167,15 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 				if (collector.HadHit())
 					hits.push_back(collector.mHit);
 			}
+			else if (mClosestHitPerBody)
+			{
+				ClosestHitPerBodyCollisionCollector<CastRayCollector> collector;
+				mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, settings, collector);
+				collector.Sort();
+				hits.insert(hits.end(), collector.mHits.begin(), collector.mHits.end());
+				if ((int)hits.size() > mMaxHits)
+					hits.resize(mMaxHits);
+			}
 			else
 			{
 				AllHitCollisionCollector<CastRayCollector> collector;
@@ -1305,6 +1315,15 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 				if (collector.HadHit())
 					hits.push_back(collector.mHit);
 			}
+			else if (mClosestHitPerBody)
+			{
+				ClosestHitPerBodyCollisionCollector<CollideShapeCollector> collector;
+				(mPhysicsSystem->GetNarrowPhaseQuery().*collide_shape_function)(shape, Vec3::sOne(), shape_transform, settings, base_offset, collector, { }, { }, { }, { });
+				collector.Sort();
+				hits.insert(hits.end(), collector.mHits.begin(), collector.mHits.end());
+				if ((int)hits.size() > mMaxHits)
+					hits.resize(mMaxHits);
+			}
 			else
 			{
 				AllHitCollisionCollector<CollideShapeCollector> collector;
@@ -1395,6 +1414,15 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, base_offset, collector);
 				if (collector.HadHit())
 					hits.push_back(collector.mHit);
+			}
+			else if (mClosestHitPerBody)
+			{
+				ClosestHitPerBodyCollisionCollector<CastShapeCollector> collector;
+				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, base_offset, collector);
+				collector.Sort();
+				hits.insert(hits.end(), collector.mHits.begin(), collector.mHits.end());
+				if ((int)hits.size() > mMaxHits)
+					hits.resize(mMaxHits);
 			}
 			else
 			{

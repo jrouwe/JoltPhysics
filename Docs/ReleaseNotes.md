@@ -22,6 +22,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added support for CharacterVirtual to override the inner rigid body ID. This can be used to make the simulation deterministic in e.g. client/server setups.
 * Added OnContactPersisted, OnContactRemoved, OnCharacterContactPersisted and OnCharacterContactRemoved functions on CharacterContactListener to better match the interface of ContactListener.
 * Every CharacterVirtual now has a CharacterID. This ID can be used to identify the character after removal and is used to make the simulation deterministic in case a character collides with multiple other virtual characters.
+* Added overridable CollisionCollector::OnBodyEnd that is called after all hits for a body have been processed when collecting hits through NarrowPhaseQuery.
+* Added ClosestHitPerBodyCollisionCollector which will report the closest / deepest hit per body that the collision query collides with.
 
 ### Bug fixes
 

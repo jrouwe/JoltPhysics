@@ -202,6 +202,7 @@ private:
 	bool					mUseShrunkenShapeAndConvexRadius = false;					// Shrink then expand the shape by the convex radius
 	bool					mDrawSupportingFace = false;								// Draw the result of GetSupportingFace
 	int						mMaxHits = 10;												// The maximum number of hits to request for a collision probe.
+	bool					mClosestHitPerBody = false;									// If we are only interested in the closest hit for every body
 
 	// Which object to shoot
 	enum class EShootObjectShape

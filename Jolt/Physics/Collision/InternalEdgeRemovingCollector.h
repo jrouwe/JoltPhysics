@@ -17,6 +17,9 @@ JPH_NAMESPACE_BEGIN
 
 /// Removes internal edges from collision results. Can be used to filter out 'ghost collisions'.
 /// Based on: Contact generation for meshes - Pierre Terdiman (https://www.codercorner.com/MeshContacts.pdf)
+///
+/// Note that this class requires that CollideSettingsBase::mActiveEdgeMode == EActiveEdgeMode::CollideWithAll
+/// and CollideSettingsBase::mCollectFacesMode == ECollectFacesMode::CollectFaces.
 class InternalEdgeRemovingCollector : public CollideShapeCollector
 {
 	static constexpr uint cMaxDelayedResults = 16;
@@ -219,6 +222,13 @@ public:
 		// All delayed results have been processed
 		mVoidedFeatures.clear();
 		mDelayedResults.clear();
+	}
+
+	// See: CollideShapeCollector::OnBodyEnd
+	virtual void			OnBodyEnd() override
+	{
+		Flush();
+		mChainedCollector.OnBodyEnd();
 	}
 
 	/// Version of CollisionDispatch::sCollideShapeVsShape that removes internal edges
