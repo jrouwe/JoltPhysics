@@ -380,6 +380,20 @@ TEST_SUITE("CastShapeTests")
 		SphereShape sphere(0.1f);
 		sphere.SetEmbedded();
 
+		// Override ClosestHitPerBodyCollisionCollector so that we can count the number of calls to AddHit
+		class MyClosestHitPerBodyCollisionCollector : public ClosestHitPerBodyCollisionCollector<CastShapeCollector>
+		{
+		public:
+			virtual void		AddHit(const ResultType &inResult) override
+			{
+				ClosestHitPerBodyCollisionCollector<CastShapeCollector>::AddHit(inResult);
+
+				++mNumCalls;
+			}
+
+			int					mNumCalls = 0;
+		};
+
 		{
 			RShapeCast shape_cast(&sphere, Vec3::sOne(), RMat44::sTranslation(RVec3(-1, 0, 0)), Vec3(3, 0, 0));
 
@@ -400,8 +414,9 @@ TEST_SUITE("CastShapeTests")
 			}
 
 			// Check that the closest hit per body collector only finds 2
-			ClosestHitPerBodyCollisionCollector<CastShapeCollector> closest_collector;
+			MyClosestHitPerBodyCollisionCollector closest_collector;
 			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, cast_settings, RVec3::sZero(), closest_collector);
+			CHECK(closest_collector.mNumCalls == 2); // Spatial ordering by the broad phase and compound shape and the early out value should have resulted in only 2 calls to AddHit
 			closest_collector.Sort();
 			CHECK(closest_collector.mHits.size() == 2);
 			CHECK(closest_collector.mHits[0].mBodyID2 == body1.GetID());
@@ -431,8 +446,9 @@ TEST_SUITE("CastShapeTests")
 			}
 
 			// Check that the closest hit per body collector only finds 2
-			ClosestHitPerBodyCollisionCollector<CastShapeCollector> closest_collector;
+			MyClosestHitPerBodyCollisionCollector closest_collector;
 			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, cast_settings, RVec3::sZero(), closest_collector);
+			CHECK(closest_collector.mNumCalls == 2); // Spatial ordering by the broad phase and compound shape and the early out value should have resulted in only 2 calls to AddHit
 			closest_collector.Sort();
 			CHECK(closest_collector.mHits.size() == 2);
 			CHECK(closest_collector.mHits[0].mBodyID2 == body2.GetID());
