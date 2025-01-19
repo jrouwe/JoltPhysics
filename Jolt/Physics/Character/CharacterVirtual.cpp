@@ -18,7 +18,6 @@
 #include <Jolt/Geometry/GJKClosestPoint.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
-#include "CharacterVirtual.h"
 #endif // JPH_DEBUG_RENDERER
 
 JPH_NAMESPACE_BEGIN
@@ -106,12 +105,24 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 	// Copy settings
 	SetMaxStrength(inSettings->mMaxStrength);
 	SetMass(inSettings->mMass);
-	CreateInnerBody(inSettings->mInnerBodyShape, inSettings->mInnerBodyLayer, inSettings->mInnerBodyID, inUserData);
+
+	// Create an inner rigid body if requested
+	if (inSettings->mInnerBodyShape != nullptr)
+	{
+		BodyCreationSettings settings(inSettings->mInnerBodyShape, GetInnerBodyPosition(), mRotation, EMotionType::Kinematic, inSettings->mInnerBodyLayer);
+		settings.mAllowSleeping = false; // Disable sleeping so that we will receive sensor callbacks
+		settings.mUserData = inUserData;
+		mInnerBodyID = inSystem->GetBodyInterface().CreateAndAddBody(settings, EActivation::Activate);
+	}
 }
 
 CharacterVirtual::~CharacterVirtual()
 {
-	DestroyInnerBody();
+	if (!mInnerBodyID.IsInvalid())
+	{
+		mSystem->GetBodyInterface().RemoveBody(mInnerBodyID);
+		mSystem->GetBodyInterface().DestroyBody(mInnerBodyID);
+	}
 }
 
 void CharacterVirtual::UpdateInnerBodyTransform()
@@ -1446,41 +1457,6 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 void CharacterVirtual::SetInnerBodyShape(const Shape *inShape)
 {
 	mSystem->GetBodyInterface().SetShape(mInnerBodyID, inShape, false, EActivation::DontActivate);
-}
-
-void CharacterVirtual::CreateInnerBody(const RefConst<Shape> inInnerBodyShape, const ObjectLayer inInnerBodyLayer, const BodyID inInnerBodyID, const uint64 inUserData)
-{
-	// Create an inner rigid body if requested
-	if (inInnerBodyShape != nullptr)
-	{
-		BodyCreationSettings settings(inInnerBodyShape, GetInnerBodyPosition(), mRotation, EMotionType::Kinematic, inInnerBodyLayer);
-		settings.mAllowSleeping = false; // Disable sleeping so that we will receive sensor callbacks
-		settings.mUserData = inUserData;
-
-		if (inInnerBodyID.IsInvalid())
-		{
-			mInnerBodyID = mSystem->GetBodyInterface().CreateAndAddBody(settings, EActivation::Activate);
-		} else {
-			JPH::Body *body	= mSystem->GetBodyInterface().CreateBodyWithID(inInnerBodyID, settings);
-			mSystem->GetBodyInterface().AddBody(body->GetID(), EActivation::Activate);
-			mInnerBodyID = body->GetID();
-		}
-	}
-}
-
-BodyID CharacterVirtual::DestroyInnerBody()
-{
-	if (!mInnerBodyID.IsInvalid())
-	{
-		mSystem->GetBodyInterface().RemoveBody(mInnerBodyID);
-		mSystem->GetBodyInterface().DestroyBody(mInnerBodyID);
-
-		BodyID bodyId = mInnerBodyID;
-		mInnerBodyID = BodyID(); 
-
-		return bodyId;
-	}
-	return mInnerBodyID;
 }
 
 bool CharacterVirtual::CanWalkStairs(Vec3Arg inLinearVelocity) const
