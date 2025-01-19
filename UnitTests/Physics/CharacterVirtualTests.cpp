@@ -870,29 +870,30 @@ TEST_SUITE("CharacterVirtualTests")
 		return new JPH::CharacterVirtual(&character_settings, JPH::RVec3(0.0f, 10.0f, 0.0f), JPH::Quat::sIdentity(), c.GetSystem());
 	}
 
-	TEST_CASE("Filip2")
+	TEST_CASE("Test2CharactersSpawnedAtTheExactSamePosition")
 	{
 		PhysicsTestContext c;
 
 		auto character_a = add_character(c);
 		auto character_b = add_character(c);
 		
-        JPH::CharacterVirtual::ExtendedUpdateSettings update_settings;
-		TempAllocatorMalloc allocator;
-
 		for (int i = 0; i < 100; i++)
 		{
-			character_a->ExtendedUpdate(0.0016f, c.GetSystem()->GetGravity(), update_settings, 
+        	JPH::CharacterVirtual::ExtendedUpdateSettings update_settings_a;
+			TempAllocatorMalloc allocator_a;
+			character_a->ExtendedUpdate(0.0016f, c.GetSystem()->GetGravity(), update_settings_a, 
 				c.GetSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 				c.GetSystem()->GetDefaultLayerFilter(Layers::MOVING),
 				{}, {},
-				allocator);
+				allocator_a);
 
-			character_b->ExtendedUpdate(0.0016f, c.GetSystem()->GetGravity(), update_settings, 
+        	JPH::CharacterVirtual::ExtendedUpdateSettings update_settings_b;
+			TempAllocatorMalloc allocator_b;
+			character_b->ExtendedUpdate(0.0016f, c.GetSystem()->GetGravity(), update_settings_b, 
 				c.GetSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 				c.GetSystem()->GetDefaultLayerFilter(Layers::MOVING),
 				{}, {},
-				allocator);
+				allocator_b);
 		}
 	
 		std::cout << "Character A BodyID: " << (int)character_a->GetInnerBodyID().GetSequenceNumber() << "/" << (int)character_a->GetInnerBodyID().GetIndex() << std::endl;	
