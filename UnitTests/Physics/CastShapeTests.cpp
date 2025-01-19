@@ -359,4 +359,83 @@ TEST_SUITE("CastShapeTests")
 		caster.Cast(Vec3(14.5536213f, 10.5973721f, -0.00600051880f), Vec3(14.5536213f, 10.5969315f, -3.18638134f), Vec3(14.5536213f, 10.5969315f, -5.18637228f), 0b111, SubShapeID());
 		CHECK(!collector.HadHit());
 	}
+
+	// Test ClosestHitPerBodyCollisionCollector
+	TEST_CASE("TestClosestHitPerBodyCollisionCollector")
+	{
+		PhysicsTestContext c;
+
+		// Create a 1 by 1 by 1 box consisting of 10 slabs
+		StaticCompoundShapeSettings compound_settings;
+		compound_settings.SetEmbedded();
+		for (int i = 0; i < 10; ++i)
+			compound_settings.AddShape(Vec3(0.1f * i - 0.45f, 0, 0), Quat::sIdentity(), new BoxShape(Vec3(0.05f, 0.5f, 0.5f)));
+
+		// Create 2 instances
+		Body &body1 = c.CreateBody(&compound_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+		Body &body2 = c.CreateBody(&compound_settings, RVec3(1.0_r, 0, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+		ShapeCastSettings cast_settings;
+
+		{
+			RShapeCast shape_cast(new SphereShape(0.1f), Vec3::sOne(), RMat44::sTranslation(RVec3(-1, 0, 0)), Vec3(3, 0, 0));
+
+			// Check that the all hit collector finds 20 hits (2 x 10 slabs)
+			AllHitCollisionCollector<CastShapeCollector> all_collector;
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, cast_settings, RVec3::sZero(), all_collector);
+			all_collector.Sort();
+			CHECK(all_collector.mHits.size() == 20);
+			for (int i = 0; i < 10; ++i)
+			{
+				CHECK(all_collector.mHits[i].mBodyID2 == body1.GetID());
+				CHECK_APPROX_EQUAL(all_collector.mHits[i].mContactPointOn1, Vec3(-0.5f + 0.1f * i, 0, 0));
+			}
+			for (int i = 0; i < 10; ++i)
+			{
+				CHECK(all_collector.mHits[10 + i].mBodyID2 == body2.GetID());
+				CHECK_APPROX_EQUAL(all_collector.mHits[10 + i].mContactPointOn1, Vec3(0.5f + 0.1f * i, 0, 0));
+			}
+
+			// Check that the closest hit per body collector only finds 2
+			ClosestHitPerBodyCollisionCollector<CastShapeCollector> closest_collector;
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, cast_settings, RVec3::sZero(), closest_collector);
+			closest_collector.Sort();
+			CHECK(closest_collector.mHits.size() == 2);
+			CHECK(closest_collector.mHits[0].mBodyID2 == body1.GetID());
+			CHECK_APPROX_EQUAL(closest_collector.mHits[0].mContactPointOn1, Vec3(-0.5f, 0, 0));
+			CHECK(closest_collector.mHits[1].mBodyID2 == body2.GetID());
+			CHECK_APPROX_EQUAL(closest_collector.mHits[1].mContactPointOn1, Vec3(0.5f, 0, 0));
+		}
+
+		{
+			// Cast in reverse direction
+			RShapeCast shape_cast(new SphereShape(0.1f), Vec3::sOne(), RMat44::sTranslation(RVec3(2, 0, 0)), Vec3(-3, 0, 0));
+
+			// Check that the all hit collector finds 20 hits (2 x 10 slabs)
+			AllHitCollisionCollector<CastShapeCollector> all_collector;
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, cast_settings, RVec3::sZero(), all_collector);
+			all_collector.Sort();
+			CHECK(all_collector.mHits.size() == 20);
+			for (int i = 0; i < 10; ++i)
+			{
+				CHECK(all_collector.mHits[i].mBodyID2 == body2.GetID());
+				CHECK_APPROX_EQUAL(all_collector.mHits[i].mContactPointOn1, Vec3(1.5f - 0.1f * i, 0, 0));
+			}
+			for (int i = 0; i < 10; ++i)
+			{
+				CHECK(all_collector.mHits[10 + i].mBodyID2 == body1.GetID());
+				CHECK_APPROX_EQUAL(all_collector.mHits[10 + i].mContactPointOn1, Vec3(0.5f - 0.1f * i, 0, 0));
+			}
+
+			// Check that the closest hit per body collector only finds 2
+			ClosestHitPerBodyCollisionCollector<CastShapeCollector> closest_collector;
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, cast_settings, RVec3::sZero(), closest_collector);
+			closest_collector.Sort();
+			CHECK(closest_collector.mHits.size() == 2);
+			CHECK(closest_collector.mHits[0].mBodyID2 == body2.GetID());
+			CHECK_APPROX_EQUAL(closest_collector.mHits[0].mContactPointOn1, Vec3(1.5f, 0, 0));
+			CHECK(closest_collector.mHits[1].mBodyID2 == body1.GetID());
+			CHECK_APPROX_EQUAL(closest_collector.mHits[1].mContactPointOn1, Vec3(0.5f, 0, 0));
+		}
+	}
 }
