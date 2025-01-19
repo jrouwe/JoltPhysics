@@ -876,37 +876,29 @@ TEST_SUITE("CharacterVirtualTests")
 
 		auto character_a = add_character(c);
 		auto character_b = add_character(c);
+
+		TempAllocatorMalloc allocator;
 		
 		for (int i = 0; i < 100; i++)
 		{
-        	JPH::CharacterVirtual::ExtendedUpdateSettings update_settings_a;
-			TempAllocatorMalloc allocator_a;
 			character_a->Update(0.0016f, c.GetSystem()->GetGravity(), 
 				c.GetSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 				c.GetSystem()->GetDefaultLayerFilter(Layers::MOVING),
 				{}, {},
-				allocator_a);
+				allocator);
 
-        	JPH::CharacterVirtual::ExtendedUpdateSettings update_settings_b;
-			TempAllocatorMalloc allocator_b;
 			character_b->Update(0.0016f, c.GetSystem()->GetGravity(), 
 				c.GetSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 				c.GetSystem()->GetDefaultLayerFilter(Layers::MOVING),
 				{}, {},
-				allocator_b);
+				allocator);
 		}
 	
 		std::cout << "Character A BodyID: " << (int)character_a->GetInnerBodyID().GetSequenceNumber() << "/" << (int)character_a->GetInnerBodyID().GetIndex() << std::endl;	
-		std::cout << "Character A Position: " << 
-			character_a->GetPosition().GetX() << ", " 
-			<< character_a->GetPosition().GetY() << ", " 
-			<< character_a->GetPosition().GetZ() << std::endl;
+		std::cout << "Character A Position: " << character_a->GetPosition().GetX() << ", " << character_a->GetPosition().GetY() << ", " << character_a->GetPosition().GetZ() << std::endl;
 
 		std::cout << "Character B BodyID: " << (int)character_b->GetInnerBodyID().GetSequenceNumber() << "/" << (int)character_b->GetInnerBodyID().GetIndex() << std::endl;	
-		std::cout << "Character B Position: " << 
-			character_b->GetPosition().GetX() << ", " 
-			<< character_b->GetPosition().GetY() << ", " 
-			<< character_b->GetPosition().GetZ() << std::endl;
+		std::cout << "Character B Position: " << character_b->GetPosition().GetX() << ", " << character_b->GetPosition().GetY() << ", " << character_b->GetPosition().GetZ() << std::endl;
 
 		// CHECK(character_a->GetPosition() == Vec3(0.434373f, 10.0063f, 0.556005f));
 		// CHECK(character_b->GetPosition() == Vec3(-0.00886928f, 9.99987f, -0.0113528f));
