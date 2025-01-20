@@ -345,6 +345,10 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		target_include_directories(UnitTests PUBLIC ${UNIT_TESTS_ROOT})
 		target_link_libraries(UnitTests LINK_PUBLIC Jolt)
 
+		if (EMSCRIPTEN)
+			target_link_options(UnitTests PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=134217728)
+		endif()
+
 		# Code coverage doesn't work when using precompiled headers
 		if (CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND MSVC)
 			# The Ninja Multi-Config generator errors out when selectively disabling precompiled headers for certain configurations.
@@ -385,6 +389,9 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			if (MSVC)
 				target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
 			endif()
+			if (EMSCRIPTEN)
+				target_link_options(HelloWorld PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=134217728)
+			endif()
 		endif()
 
 		if (TARGET_PERFORMANCE_TEST)
@@ -401,6 +408,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/Human.tof@/Assets/Human.tof")
 				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose1.tof@/Assets/Human/dead_pose1.tof")
 				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/terrain2.bof@/Assets/terrain2.bof")
+				target_link_options(PerformanceTest PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=134217728)
 			endif()
 			set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 		endif()
