@@ -505,7 +505,7 @@ void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inC
 		SupportingFace face = ftd.first;
 
 		// Displace the face a little bit forward so it is easier to see
-		Vec3 normal = face.size() >= 3? (face[2] - face[1]).Cross(face[0] - face[1]).Normalized() : Vec3::sZero();
+		Vec3 normal = face.size() >= 3? (face[2] - face[1]).Cross(face[0] - face[1]).NormalizedOr(Vec3::sZero()) : Vec3::sZero();
 		Vec3 displacement = 0.001f * normal;
 
 		// Transform face to world space and calculate center of mass

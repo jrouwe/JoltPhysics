@@ -59,7 +59,7 @@ BoxShape::BoxShape(const BoxShapeSettings &inSettings, ShapeResult &outResult) :
 {
 	// Check convex radius
 	if (inSettings.mConvexRadius < 0.0f
-		|| inSettings.mHalfExtent.ReduceMin() <= inSettings.mConvexRadius)
+		|| inSettings.mHalfExtent.ReduceMin() < inSettings.mConvexRadius)
 	{
 		outResult.SetError("Invalid convex radius");
 		return;
