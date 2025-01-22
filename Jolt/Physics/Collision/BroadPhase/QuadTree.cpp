@@ -57,6 +57,15 @@ void QuadTree::Node::GetChildBounds(int inChildIndex, AABox &outBounds) const
 
 void QuadTree::Node::SetChildBounds(int inChildIndex, const AABox &inBounds)
 {
+	// Bounding boxes provided to the quad tree should never be larger than cLargeFloat because this may trigger overflow exceptions
+	// e.g. when squaring the value while testing sphere overlaps
+	JPH_ASSERT(inBounds.mMin.GetX() >= -cLargeFloat && inBounds.mMin.GetX() <= cLargeFloat
+			   && inBounds.mMin.GetY() >= -cLargeFloat && inBounds.mMin.GetY() <= cLargeFloat
+			   && inBounds.mMin.GetZ() >= -cLargeFloat && inBounds.mMin.GetZ() <= cLargeFloat
+			   && inBounds.mMax.GetX() >= -cLargeFloat && inBounds.mMax.GetX() <= cLargeFloat
+			   && inBounds.mMax.GetY() >= -cLargeFloat && inBounds.mMax.GetY() <= cLargeFloat
+			   && inBounds.mMax.GetZ() >= -cLargeFloat && inBounds.mMax.GetZ() <= cLargeFloat);
+
 	// Set max first (this keeps the bounding box invalid for reading threads)
 	mBoundsMaxZ[inChildIndex] = inBounds.mMax.GetZ();
 	mBoundsMaxY[inChildIndex] = inBounds.mMax.GetY();

@@ -752,22 +752,35 @@ TEST_SUITE("ShapeTests")
 	TEST_CASE("TestEmptyMutableCompound")
 	{
 		// Create empty shape
-		RefConst<Shape> mutable_compound = new MutableCompoundShape();
+		Ref<MutableCompoundShape> mutable_compound = new MutableCompoundShape();
 
 		// A non-identity rotation
 		Quat rotation = Quat::sRotation(Vec3::sReplicate(1.0f / sqrt(3.0f)), 0.1f * JPH_PI);
 
-		// Check that local bounding box is invalid
+		// Check that local bounding box is a single point
 		AABox bounds1 = mutable_compound->GetLocalBounds();
-		CHECK(!bounds1.IsValid());
+		CHECK(bounds1 == AABox(Vec3::sZero(), Vec3::sZero()));
 
-		// Check that get world space bounds returns an invalid bounding box
-		AABox bounds2 = mutable_compound->GetWorldSpaceBounds(Mat44::sRotationTranslation(rotation, Vec3(100, 200, 300)), Vec3(1, 2, 3));
-		CHECK(!bounds2.IsValid());
+		// Check that get world space bounds returns a single point
+		Vec3 vec3_pos(100, 200, 300);
+		AABox bounds2 = mutable_compound->GetWorldSpaceBounds(Mat44::sRotationTranslation(rotation, vec3_pos), Vec3(1, 2, 3));
+		CHECK(bounds2 == AABox(vec3_pos, vec3_pos));
 
-		// Check that get world space bounds returns an invalid bounding box for double precision parameters
-		AABox bounds3 = mutable_compound->GetWorldSpaceBounds(DMat44::sRotationTranslation(rotation, DVec3(100, 200, 300)), Vec3(1, 2, 3));
-		CHECK(!bounds3.IsValid());
+		// Check that get world space bounds returns a single point for double precision parameters
+		AABox bounds3 = mutable_compound->GetWorldSpaceBounds(DMat44::sRotationTranslation(rotation, DVec3(vec3_pos)), Vec3(1, 2, 3));
+		CHECK(bounds3 == AABox(vec3_pos, vec3_pos));
+
+		// Add a shape
+		mutable_compound->AddShape(Vec3::sZero(), Quat::sIdentity(), new BoxShape(Vec3::sReplicate(1.0f)));
+		AABox bounds4 = mutable_compound->GetLocalBounds();
+		CHECK(bounds4 == AABox(Vec3::sReplicate(-1.0f), Vec3::sReplicate(1.0f)));
+
+		// Remove it again
+		mutable_compound->RemoveShape(0);
+
+		// Check that the bounding box has zero size again
+		AABox bounds5 = mutable_compound->GetLocalBounds();
+		CHECK(bounds5 == AABox(Vec3::sZero(), Vec3::sZero()));
 	}
 
 	TEST_CASE("TestSaveMeshShape")
