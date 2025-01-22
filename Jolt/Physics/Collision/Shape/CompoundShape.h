@@ -338,7 +338,7 @@ protected:
 	}
 
 	Vec3							mCenterOfMass { Vec3::sZero() };						///< Center of mass of the compound
-	AABox							mLocalBounds;
+	AABox							mLocalBounds { Vec3::sZero(), Vec3::sZero() };
 	SubShapes						mSubShapes;
 	float							mInnerRadius = FLT_MAX;									///< Smallest radius of GetInnerRadius() of child shapes
 
