@@ -10,6 +10,9 @@
 class ApplicationWindowLinux : public ApplicationWindow
 {
 public:
+	/// Destructor
+									~ApplicationWindowLinux();
+
 	/// Initialize the window
 	virtual void					Initialize(const char *inTitle) override;
 

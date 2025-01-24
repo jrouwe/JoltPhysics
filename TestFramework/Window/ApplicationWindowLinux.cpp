@@ -7,6 +7,15 @@
 #include <Window/ApplicationWindowLinux.h>
 #include <Utils/Log.h>
 
+ApplicationWindowLinux::~ApplicationWindowLinux()
+{
+	if (mDisplay)
+	{
+		XDestroyWindow(mDisplay, mWindow);
+		XCloseDisplay(mDisplay);
+	}
+}
+
 void ApplicationWindowLinux::Initialize(const char *inTitle)
 {
 	// Open connection to X server

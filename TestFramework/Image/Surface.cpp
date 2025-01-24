@@ -203,7 +203,7 @@ SoftwareSurface::SoftwareSurface(int inWidth, int inHeight, ESurfaceFormat inFor
 
 SoftwareSurface::~SoftwareSurface()
 {
-	delete mPixelData;
+	delete [] mPixelData;
 }
 
 void SoftwareSurface::HardwareLock() const
