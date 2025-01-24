@@ -1284,6 +1284,9 @@ static stbtt__buf stbtt__cff_index_get(stbtt__buf b, int i)
 #define ttFixed(p)    ttLONG(p)
 
 static stbtt_uint16 ttUSHORT(stbtt_uint8 *p) { return p[0]*256 + p[1]; }
+#if defined(__clang__)
+	__attribute__((no_sanitize("implicit-conversion")))
+#endif
 static stbtt_int16 ttSHORT(stbtt_uint8 *p)   { return p[0]*256 + p[1]; }
 static stbtt_uint32 ttULONG(stbtt_uint8 *p)  { return (p[0]<<24) + (p[1]<<16) + (p[2]<<8) + p[3]; }
 static stbtt_int32 ttLONG(stbtt_uint8 *p)    { return (p[0]<<24) + (p[1]<<16) + (p[2]<<8) + p[3]; }
