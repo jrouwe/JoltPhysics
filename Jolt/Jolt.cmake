@@ -426,23 +426,12 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletonMapper.h
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletonPose.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletonPose.h
-	${JOLT_PHYSICS_ROOT}/TriangleGrouper/TriangleGrouper.h
-	${JOLT_PHYSICS_ROOT}/TriangleGrouper/TriangleGrouperClosestCentroid.cpp
-	${JOLT_PHYSICS_ROOT}/TriangleGrouper/TriangleGrouperClosestCentroid.h
-	${JOLT_PHYSICS_ROOT}/TriangleGrouper/TriangleGrouperMorton.cpp
-	${JOLT_PHYSICS_ROOT}/TriangleGrouper/TriangleGrouperMorton.h
 	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitter.cpp
 	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitter.h
 	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterBinning.cpp
 	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterBinning.h
-	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterFixedLeafSize.cpp
-	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterFixedLeafSize.h
-	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterLongestAxis.cpp
-	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterLongestAxis.h
 	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterMean.cpp
 	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterMean.h
-	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterMorton.cpp
-	${JOLT_PHYSICS_ROOT}/TriangleSplitter/TriangleSplitterMorton.h
 )
 
 if (ENABLE_OBJECT_STREAM)
