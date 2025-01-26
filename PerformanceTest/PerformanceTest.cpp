@@ -460,6 +460,9 @@ int main(int argc, char** argv)
 					hash = HashBytes(&rot, sizeof(Quat), hash);
 				}
 
+				// Let the scene hash its own state
+				scene->UpdateHash(hash);
+
 				// Convert hash to string
 				stringstream hash_stream;
 				hash_stream << "0x" << hex << hash << dec;

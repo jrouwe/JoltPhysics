@@ -17,7 +17,7 @@
 #include "Layers.h"
 
 // A scene that drops a number of virtual characters on a scene and simulates them
-class CharacterVirtualScene : public PerformanceTestScene
+class CharacterVirtualScene : public PerformanceTestScene, public CharacterContactListener
 {
 public:
 	virtual const char *	GetName() const override
@@ -124,12 +124,14 @@ public:
 				settings->mInnerBodyLayer = Layers::MOVING;
 				Ref<CharacterVirtual> character = new CharacterVirtual(settings, RVec3(4.0_r * x - 20.0_r, 2.0_r, 4.0_r * y - 20.0_r), Quat::sIdentity(), 0, &inPhysicsSystem);
 				character->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
+				character->SetListener(this);
 				mCharacters.push_back(character);
 				mCharacterVsCharacterCollision.Add(character);
 			}
 
 		// Start at time 0
 		mTime = 0.0f;
+		mHash = HashBytes(nullptr, 0);
 	}
 
 	virtual void			UpdateTest(PhysicsSystem &inPhysicsSystem, TempAllocator &ioTempAllocator, float inDeltaTime) override
@@ -179,11 +181,73 @@ public:
 		}
 	}
 
+	virtual void			UpdateHash(uint64 &ioHash) const override
+	{
+		// Hash the contact callback hash
+		HashCombine(ioHash, mHash);
+
+		// Hash the state of all characters
+		for (const CharacterVirtual *ch : mCharacters)
+			HashCombine(ioHash, ch->GetPosition());
+	}
+
 	virtual void			StopTest(PhysicsSystem &inPhysicsSystem) override
 	{
 		for (const CharacterVirtual *ch : mCharacters)
 			mCharacterVsCharacterCollision.Remove(ch);
 		mCharacters.clear();
+	}
+
+	// See: CharacterContactListener
+	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	{
+		HashCombine(mHash, 1);
+		HashCombine(mHash, inCharacter->GetID());
+		HashCombine(mHash, inBodyID2);
+		HashCombine(mHash, inSubShapeID2.GetValue());
+		HashCombine(mHash, inContactPosition);
+		HashCombine(mHash, inContactNormal);
+	}
+	virtual void			OnContactPersisted(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	{
+		HashCombine(mHash, 2);
+		HashCombine(mHash, inCharacter->GetID());
+		HashCombine(mHash, inBodyID2);
+		HashCombine(mHash, inSubShapeID2.GetValue());
+		HashCombine(mHash, inContactPosition);
+		HashCombine(mHash, inContactNormal);
+	}
+	virtual void			OnContactRemoved(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) override
+	{
+		HashCombine(mHash, 3);
+		HashCombine(mHash, inCharacter->GetID());
+		HashCombine(mHash, inBodyID2);
+		HashCombine(mHash, inSubShapeID2.GetValue());
+	}
+	virtual void			OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	{
+		HashCombine(mHash, 4);
+		HashCombine(mHash, inCharacter->GetID());
+		HashCombine(mHash, inOtherCharacter->GetID());
+		HashCombine(mHash, inSubShapeID2.GetValue());
+		HashCombine(mHash, inContactPosition);
+		HashCombine(mHash, inContactNormal);
+	}
+	virtual void			OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	{
+		HashCombine(mHash, 5);
+		HashCombine(mHash, inCharacter->GetID());
+		HashCombine(mHash, inOtherCharacter->GetID());
+		HashCombine(mHash, inSubShapeID2.GetValue());
+		HashCombine(mHash, inContactPosition);
+		HashCombine(mHash, inContactNormal);
+	}
+	virtual void			OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterID &inOtherCharacterID, const SubShapeID &inSubShapeID2) override
+	{
+		HashCombine(mHash, 6);
+		HashCombine(mHash, inCharacter->GetID());
+		HashCombine(mHash, inOtherCharacterID);
+		HashCombine(mHash, inSubShapeID2.GetValue());
 	}
 
 private:
@@ -195,6 +259,7 @@ private:
 	static constexpr float	cStairsStepHeight = 0.3f;
 
 	float					mTime = 0.0f;
+	uint64					mHash = 0;
 	Array<BodyCreationSettings> mWorld;
 	Array<Ref<CharacterVirtual>> mCharacters;
 	CharacterVsCharacterCollisionSimple mCharacterVsCharacterCollision;
