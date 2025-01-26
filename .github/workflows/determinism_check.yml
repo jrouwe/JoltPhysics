@@ -4,6 +4,7 @@ env:
   CONVEX_VS_MESH_HASH: '0x610d538e15420778'
   RAGDOLL_HASH: '0x275057ded572c916'
   PYRAMID_HASH: '0x198b8eeaee57e29a'
+  CHARACTER_VIRTUAL_HASH: '0x8fbe7347b302ac43'
   EMSCRIPTEN_VERSION: 3.1.73
   UBUNTU_CLANG_VERSION: clang++-18
   UBUNTU_GCC_VERSION: g++-14
@@ -49,6 +50,9 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   linux_gcc:
     runs-on: ubuntu-latest
@@ -74,6 +78,9 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   msvc_cl:
     runs-on: windows-latest
@@ -101,6 +108,9 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid "-validate_hash=$env:PYRAMID_HASH"
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual "-validate_hash=$env:CHARACTER_VIRTUAL_HASH"
 
   msvc_cl_32:
     runs-on: windows-latest
@@ -128,6 +138,9 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid "-validate_hash=$env:PYRAMID_HASH"
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual "-validate_hash=$env:CHARACTER_VIRTUAL_HASH"
 
   macos:
     runs-on: macos-latest
@@ -153,6 +166,9 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   arm_clang:
     runs-on: ubuntu-latest
@@ -181,6 +197,9 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   arm_clang_32:
     runs-on: ubuntu-latest
@@ -209,6 +228,9 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   arm_gcc:
     runs-on: ubuntu-latest
@@ -237,6 +259,9 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   riscv_gcc:
     runs-on: ubuntu-latest
@@ -265,6 +290,9 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   powerpcle_gcc:
     runs-on: ubuntu-latest
@@ -358,3 +386,6 @@ jobs:
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
       run: node PerformanceTest.js -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node PerformanceTest.js -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
