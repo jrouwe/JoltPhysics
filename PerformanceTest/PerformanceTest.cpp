@@ -45,6 +45,7 @@ JPH_SUPPRESS_WARNINGS
 #include "ConvexVsMeshScene.h"
 #include "PyramidScene.h"
 #include "LargeMeshScene.h"
+#include "CharacterVirtualScene.h"
 
 // Time step for physics
 constexpr float cDeltaTime = 1.0f / 60.0f;
@@ -116,6 +117,8 @@ int main(int argc, char** argv)
 				scene = unique_ptr<PerformanceTestScene>(new PyramidScene);
 			else if (strcmp(arg + 3, "LargeMesh") == 0)
 				scene = unique_ptr<PerformanceTestScene>(new LargeMeshScene);
+			else if (strcmp(arg + 3, "CharacterVirtual") == 0)
+				scene = unique_ptr<PerformanceTestScene>(new CharacterVirtualScene);
 			else
 			{
 				Trace("Invalid scene");
@@ -366,6 +369,9 @@ int main(int argc, char** argv)
 
 					// Start measuring
 					chrono::high_resolution_clock::time_point clock_start = chrono::high_resolution_clock::now();
+
+					// Update the test
+					scene->UpdateTest(physics_system, temp_allocator, cDeltaTime);
 
 					// Do a physics step
 					physics_system.Update(cDeltaTime, 1, &temp_allocator, &job_system);

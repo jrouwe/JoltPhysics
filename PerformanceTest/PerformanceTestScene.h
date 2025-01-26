@@ -20,6 +20,9 @@ public:
 	// Start a new test by adding objects to inPhysicsSystem
 	virtual void			StartTest(PhysicsSystem &inPhysicsSystem, EMotionQuality inMotionQuality) = 0;
 
+	// Step the test
+	virtual void			UpdateTest([[maybe_unused]] PhysicsSystem &inPhysicsSystem, [[maybe_unused]] TempAllocator &ioTempAllocator, [[maybe_unused]] float inDeltaTime) { }
+
 	// Stop a test and remove objects from inPhysicsSystem
 	virtual void			StopTest(PhysicsSystem &inPhysicsSystem)			{ }
 };
