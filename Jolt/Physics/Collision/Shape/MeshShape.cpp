@@ -216,7 +216,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 		JPH_ASSERT(false);
 		break;
 	}
-	
+
 	// Build tree
 	AABBTreeBuilder builder(*splitter, inSettings.mMaxTrianglesPerLeaf);
 	AABBTreeBuilderStats builder_stats;
