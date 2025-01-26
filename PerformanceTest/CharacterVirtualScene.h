@@ -102,8 +102,14 @@ public:
 	{
 		// Construct bodies
 		BodyInterface &bi = inPhysicsSystem.GetBodyInterface();
-		for (const BodyCreationSettings &bcs : mWorld)
-			bi.CreateAndAddBody(bcs, EActivation::Activate);
+		for (BodyCreationSettings &bcs : mWorld)
+			if (bcs.mMotionType == EMotionType::Dynamic)
+			{
+				bcs.mMotionQuality = inMotionQuality;
+				bi.CreateAndAddBody(bcs, EActivation::Activate);
+			}
+			else
+				bi.CreateAndAddBody(bcs, EActivation::DontActivate);
 
 		// Construct characters
 		RefConst<Shape> standing_shape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cCharacterHeightStanding, cCharacterRadiusStanding)).Create().Get();
