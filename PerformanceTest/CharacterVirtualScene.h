@@ -112,6 +112,7 @@ public:
 				bi.CreateAndAddBody(bcs, EActivation::DontActivate);
 
 		// Construct characters
+		CharacterID::sSetNextCharacterID();
 		RefConst<Shape> standing_shape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cCharacterHeightStanding, cCharacterRadiusStanding)).Create().Get();
 		RefConst<Shape> inner_standing_shape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cInnerShapeFraction * cCharacterHeightStanding, cInnerShapeFraction * cCharacterRadiusStanding)).Create().Get();
 		for (int y = 0; y < cNumCharactersY; ++y)
