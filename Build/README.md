@@ -8,6 +8,7 @@ Each platform supports multiple build targets
 - Release - Release version of the library, no asserts but includes profiling support and can draw the world and simulation properties
 - ReleaseASAN - As Release but turns on Address Sanitizer (clang only) to find bugs
 - ReleaseUBSAN - As Release but turns on Undefined Behavior Sanitizer (clang only) to find bugs
+- ReleaseTSAN - As Release but turns on the Thread Sanitizer (clang only) to find bugs
 - ReleaseCoverage - As Release but turns on Coverage reporting (clang only) to find which areas of the code are not executed
 - Distribution - Shippable version of the library, turns off all debugging support
 
