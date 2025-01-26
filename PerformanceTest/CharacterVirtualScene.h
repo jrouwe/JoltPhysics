@@ -65,14 +65,14 @@ public:
 			}
 
 		// Create mesh
-		BodyCreationSettings mesh(new MeshShapeSettings(vertices, indices), RVec3(-center, 0, -center), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings mesh(new MeshShapeSettings(vertices, indices), RVec3(Real(-center), 0, Real(-center)), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 		mWorld.push_back(mesh);
 
 		// Create pyramid stairs
 		for (int i = 0; i < 10; ++i)
 		{
 			float width = 4.0f - 0.4f * i;
-			BodyCreationSettings step(new BoxShape(Vec3(width, 0.5f * cStairsStepHeight, width)), RVec3(-4.0f, -1.0f + i * cStairsStepHeight, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			BodyCreationSettings step(new BoxShape(Vec3(width, 0.5f * cStairsStepHeight, width)), RVec3(-4.0_r, -1.0_r + Real(i * cStairsStepHeight), 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mWorld.push_back(step);
 		}
 
@@ -80,7 +80,7 @@ public:
 		Ref<Shape> wall = new BoxShape(Vec3(0.1f, 2.5f, 0.1f), 0.0f);
 		for (int z = 0; z < 10; ++z)
 		{
-			BodyCreationSettings bcs(wall, RVec3(2.0f, 1.0f, 2.0f + 0.2f * z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			BodyCreationSettings bcs(wall, RVec3(2.0_r, 1.0_r, 2.0_r + 0.2_r * z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mWorld.push_back(bcs);
 		}
 
@@ -89,7 +89,7 @@ public:
 		for (int x = 0; x < 10; ++x)
 			for (int z = 0; z < 10; ++z)
 			{
-				BodyCreationSettings bcs(box, RVec3(4.0f * x - 20.0f, 5.0f, 4.0f * z - 20.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+				BodyCreationSettings bcs(box, RVec3(4.0_r * x - 20.0_r, 5.0_r, 4.0_r * z - 20.0_r), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 				bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 				bcs.mMassPropertiesOverride.mMass = 1.0f;
 				mWorld.push_back(bcs);
@@ -116,7 +116,7 @@ public:
 				settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
 				settings->mInnerBodyShape = inner_standing_shape;
 				settings->mInnerBodyLayer = Layers::MOVING;
-				Ref<CharacterVirtual> character = new CharacterVirtual(settings, RVec3(4.0f * x - 20.0f, 2.0f, 4.0f * y - 20.0f), Quat::sIdentity(), 0, &inPhysicsSystem);
+				Ref<CharacterVirtual> character = new CharacterVirtual(settings, RVec3(4.0_r * x - 20.0_r, 2.0_r, 4.0_r * y - 20.0_r), Quat::sIdentity(), 0, &inPhysicsSystem);
 				character->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
 				mCharacters.push_back(character);
 				mCharacterVsCharacterCollision.Add(character);
@@ -150,7 +150,7 @@ public:
 			int speed = int((hash / 100) % 10);
 
 			// Determine target position
-			RVec3 target = RVec3(4.0f * x - 20.0f, 5.0f, 4.0f * y - 20.0f);
+			RVec3 target = RVec3(4.0_r * x - 20.0_r, 5.0_r, 4.0_r * y - 20.0_r);
 
 			// Determine new character velocity
 			Vec3 direction = Vec3(target - ch->GetPosition()).NormalizedOr(Vec3::sZero());
