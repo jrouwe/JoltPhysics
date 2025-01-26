@@ -170,6 +170,8 @@ public:
 };
 
 /// Simple collision checker that loops over all registered characters.
+/// This is a brute force checking algorithm. If you have a lot of characters you may want to store your characters
+/// in a hierarchical structure to make this more efficient.
 /// Note that this is not thread safe, so make sure that only one CharacterVirtual is checking collision at a time.
 class JPH_EXPORT CharacterVsCharacterCollisionSimple : public CharacterVsCharacterCollision
 {

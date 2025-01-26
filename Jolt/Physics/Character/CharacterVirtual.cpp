@@ -17,6 +17,7 @@
 #include <Jolt/Core/ScopeExit.h>
 #include <Jolt/Geometry/ConvexSupport.h>
 #include <Jolt/Geometry/GJKClosestPoint.h>
+#include <Jolt/Geometry/RayAABox.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -35,25 +36,35 @@ void CharacterVsCharacterCollisionSimple::CollideCharacter(const CharacterVirtua
 	// Make shape 1 relative to inBaseOffset
 	Mat44 transform1 = inCenterOfMassTransform.PostTranslated(-inBaseOffset).ToMat44();
 
-	const Shape *shape = inCharacter->GetShape();
+	const Shape *shape1 = inCharacter->GetShape();
 	CollideShapeSettings settings = inCollideShapeSettings;
+
+	// Get bounds for character
+	AABox bounds1 = shape1->GetWorldSpaceBounds(transform1, Vec3::sOne());
 
 	// Iterate over all characters
 	for (const CharacterVirtual *c : mCharacters)
 		if (c != inCharacter
 			&& !ioCollector.ShouldEarlyOut())
 		{
-			// Collector needs to know which character we're colliding with
-			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
-
 			// Make shape 2 relative to inBaseOffset
 			Mat44 transform2 = c->GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
 
 			// We need to add the padding of character 2 so that we will detect collision with its outer shell
 			settings.mMaxSeparationDistance = inCollideShapeSettings.mMaxSeparationDistance + c->GetCharacterPadding();
 
+			// Check if the bounding boxes of the characters overlap
+			const Shape *shape2 = c->GetShape();
+			AABox bounds2 = shape2->GetWorldSpaceBounds(transform2, Vec3::sOne());
+			bounds2.ExpandBy(Vec3::sReplicate(settings.mMaxSeparationDistance));
+			if (!bounds1.Overlaps(bounds2))
+				continue;
+
+			// Collector needs to know which character we're colliding with
+			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
+
 			// Note that this collides against the character's shape without padding, this will be corrected for in CharacterVirtual::GetContactsAtPosition
-			CollisionDispatch::sCollideShapeVsShape(shape, c->GetShape(), Vec3::sOne(), Vec3::sOne(), transform1, transform2, SubShapeIDCreator(), SubShapeIDCreator(), settings, ioCollector);
+			CollisionDispatch::sCollideShapeVsShape(shape1, shape2, Vec3::sOne(), Vec3::sOne(), transform1, transform2, SubShapeIDCreator(), SubShapeIDCreator(), settings, ioCollector);
 		}
 
 	// Reset the user data
@@ -66,19 +77,30 @@ void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *
 	Mat44 transform1 = inCenterOfMassTransform.PostTranslated(-inBaseOffset).ToMat44();
 	ShapeCast shape_cast(inCharacter->GetShape(), Vec3::sOne(), transform1, inDirection);
 
+	// Get world space bounds of the character in the form of center and extent
+	Vec3 origin = shape_cast.mShapeWorldBounds.GetCenter();
+	Vec3 extents = shape_cast.mShapeWorldBounds.GetExtent();
+
 	// Iterate over all characters
 	for (const CharacterVirtual *c : mCharacters)
 		if (c != inCharacter
 			&& !ioCollector.ShouldEarlyOut())
 		{
-			// Collector needs to know which character we're colliding with
-			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
-
 			// Make shape 2 relative to inBaseOffset
 			Mat44 transform2 = c->GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
 
+			// Sweep bounding box of the character against the bounding box of the other character to see if they can collide
+			const Shape *shape2 = c->GetShape();
+			AABox bounds2 = shape2->GetWorldSpaceBounds(transform2, Vec3::sOne());
+			bounds2.ExpandBy(extents);
+			if (!RayAABoxHits(origin, inDirection, bounds2.mMin, bounds2.mMax))
+				continue;
+
+			// Collector needs to know which character we're colliding with
+			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
+
 			// Note that this collides against the character's shape without padding, this will be corrected for in CharacterVirtual::GetFirstContactForSweep
-			CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, inShapeCastSettings, c->GetShape(), Vec3::sOne(), { }, transform2, SubShapeIDCreator(), SubShapeIDCreator(), ioCollector);
+			CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, inShapeCastSettings, shape2, Vec3::sOne(), { }, transform2, SubShapeIDCreator(), SubShapeIDCreator(), ioCollector);
 		}
 
 	// Reset the user data
