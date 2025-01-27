@@ -182,6 +182,23 @@ An example of saving a shape in binary format:
 
 As the library does not offer an exporter from content creation packages and since most games will have their own content pipeline, we encourage you to store data in your own format, cook data while cooking the game data and store the result using the SaveBinaryState interface (and provide a way to force a re-cook when the library is updated).
 
+A possible pattern for serializing binary data in your own engine could be:
+
+* EngineBody at runtime creates a Body. Note that the prefix 'Engine' means that it's a class in your own engine.
+* It links to an EngineShape, which wraps a Shape.
+* EngineShape comes in different flavors, e.g. EngineMeshShape, EngineSphereShape etc.
+* EngineMeshShape contains the uncompressed mesh data (in a format that's editable in your tools).
+* When 'cooking' the game data:
+  * Create a MeshShape.
+  * Save it using Shape::SaveWithChildren in a binary blob that's associated with the EngineMeshShape (could be in an attribute that's an array of bytes).
+  * Throw away the uncompressed mesh data.
+* When loading the EngineMeshShape using your own serialization system, also restore the MeshShape from the binary blob using Shape::sRestoreWithChildren.
+* Your serialization system should take care that the pointer between EngineBody and EngineShape is restored.
+* There are some tricks for sharing Shapes, e.g. an EngineCompoundShape links to multiple child EngineShapes:
+  * At cooking time create a StaticCompoundShape.
+  * Before writing the shape to the binary blob with Shape::SaveWithChildren it inserts all leaf shapes (the Shape associated with the child EngineShape) in the Shape::ShapeToIDMap so they won't be included in the binary blob.
+  * Before loading the binary blob with Shape::sRestoreWithChildren prepopulate the Shape::IDToShapeMap with the pointers to the restored Shape's from the child EngineShapes (this again assumes that your own serialization system is capable of restoring the pointers between EngineCompoundShape and the child EntityShapes).
+
 ### Convex Radius {#convex-radius}
 
 In order to speed up the collision detection system, all convex shapes use a convex radius. The provided shape will first be shrunken by the convex radius and then inflated again by the same amount, resulting in a rounded off shape:
@@ -282,6 +299,11 @@ When you make a sensor Kinematic or Dynamic and activate it, it will also detect
 To create a sensor, either set [BodyCreationSettings::mIsSensor](@ref BodyCreationSettings::mIsSensor) to true when constructing a body or set it after construction through [Body::SetIsSensor](@ref Body::SetIsSensor). A sensor can only use the discrete motion quality type at this moment.
 
 To make sensors detect collisions with static objects, set the [BodyCreationSettings::mCollideKinematicVsNonDynamic](@ref BodyCreationSettings::mCollideKinematicVsNonDynamic) to true or call [Body::SetCollideKinematicVsNonDynamic](@ref Body::SetCollideKinematicVsNonDynamic). Note that it can place a large burden on the collision detection system if you have a large sensor intersect with e.g. a large mesh terrain or a height field as you will get many contact callbacks and these contacts will take up a lot of space in the contact cache. Ensure that your sensor is in an object layer that collides with as few static bodies as possible.
+
+To temporarily disable a sensor, choose between:
+
+* Remove the sensor by calling BodyInterface::RemoveBody and re-add it later again with BodyInterface::AddBody.
+* Change the collision layer using BodyInterface::SetObjectLayer to a layer that doesn't collide with anything (possibly also in a BroadPhaseLayer that doesn't collide with anything)
 
 ## Sleeping {#sleeping-bodies}
 

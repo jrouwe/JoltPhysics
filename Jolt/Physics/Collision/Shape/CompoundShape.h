@@ -36,7 +36,11 @@ public:
 		RefConst<Shape>				mShapePtr;												///< Sub shape (either this or mShape needs to be filled up)
 		Vec3						mPosition;												///< Position of the sub shape
 		Quat						mRotation;												///< Rotation of the sub shape
-		uint32						mUserData = 0;											///< User data value (can be used by the application for any purpose)
+
+		/// User data value (can be used by the application for any purpose).
+		/// Note this value can be retrieved through GetSubShape(...).mUserData, not through GetSubShapeUserData(...) as that returns Shape::GetUserData() of the leaf shape.
+		/// Use GetSubShapeIndexFromID get a shape index from a SubShapeID to pass to GetSubShape.
+		uint32						mUserData = 0;
 	};
 
 	using SubShapes = Array<SubShapeSettings>;
