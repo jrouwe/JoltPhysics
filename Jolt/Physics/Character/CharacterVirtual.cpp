@@ -1742,6 +1742,9 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 			StickToFloor(inSettings.mStickToFloorStepDown, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter, inAllocator);
 	}
 
+	// Remember actual step that we made due to movement and stick to floor
+	Vec3 delta_position = Vec3(mPosition - old_position);
+
 	// If walk stairs enabled
 	if (!inSettings.mWalkStairsStepUp.IsNearZero())
 	{
@@ -1752,8 +1755,7 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 		if (desired_horizontal_step_len > 0.0f)
 		{
 			// Calculate how much we moved horizontally
-			Vec3 achieved_horizontal_step = Vec3(mPosition - old_position);
-			achieved_horizontal_step -= achieved_horizontal_step.Dot(mUp) * mUp;
+			Vec3 achieved_horizontal_step = delta_position - delta_position.Dot(mUp) * mUp;
 
 			// Only count movement in the direction of the desired movement
 			// (otherwise we find it ok if we're sliding downhill while we're trying to climb uphill)
@@ -1790,6 +1792,10 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 			}
 		}
 	}
+
+	// If requested, update the linear velocity of the character
+	if (inSettings.mUpdateLinearVelocity && inDeltaTime > 0.0f)
+		mLinearVelocity = delta_position / inDeltaTime;
 }
 
 void CharacterVirtual::ContactKey::SaveState(StateRecorder &inStream) const

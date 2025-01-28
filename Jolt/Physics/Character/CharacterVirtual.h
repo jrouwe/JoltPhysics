@@ -363,6 +363,7 @@ public:
 		float							mWalkStairsStepForwardTest { 0.15f };									///< See WalkStairs inStepForwardTest parameter. Note that the parameter only indicates a magnitude, direction is taken from current velocity.
 		float							mWalkStairsCosAngleForwardContact { Cos(DegreesToRadians(75.0f)) };		///< Cos(angle) where angle is the maximum angle between the ground normal in the horizontal plane and the character forward vector where we're willing to adjust the step forward test towards the contact normal.
 		Vec3							mWalkStairsStepDownExtra { Vec3::sZero() };								///< See WalkStairs inStepDownExtra
+		bool							mUpdateLinearVelocity = false;											///< Updates the linear velocity of the character to reflect the velocity that was actually achieved. This can be useful if you want to know the velocity of the character after the collision response.
 	};
 
 	/// This function combines Update, StickToFloor and WalkStairs. This function serves as an example of how these functions could be combined.
