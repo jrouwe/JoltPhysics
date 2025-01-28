@@ -960,6 +960,24 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 	}
 }
 
+void PhysicsSystem::sDefaultSimCollideShapeVsShape(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
+{
+	SubShapeIDCreator part1, part2;
+
+	if (inBody1.GetEnhancedInternalEdgeRemovalWithBody(inBody2))
+	{
+		// Collide with enhanced internal edge removal
+		CollideShapeSettings settings = inCollideShapeSettings;
+		settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
+		InternalEdgeRemovingCollector::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, settings, ioCollector, inShapeFilter);
+	}
+	else
+	{
+		// Regular collide
+		CollisionDispatch::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, inCollideShapeSettings, ioCollector, inShapeFilter);
+	}
+}
+
 void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair)
 {
 	JPH_PROFILE_FUNCTION();
@@ -1003,13 +1021,10 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		if (body_pair_handle == nullptr)
 			return; // Out of cache space
 
-		// If we want enhanced active edge detection for this body pair
-		bool enhanced_active_edges = body1->GetEnhancedInternalEdgeRemovalWithBody(*body2);
-
 		// Create the query settings
 		CollideShapeSettings settings;
 		settings.mCollectFacesMode = ECollectFacesMode::CollectFaces;
-		settings.mActiveEdgeMode = mPhysicsSettings.mCheckActiveEdges && !enhanced_active_edges? EActiveEdgeMode::CollideOnlyWithActive : EActiveEdgeMode::CollideWithAll;
+		settings.mActiveEdgeMode = mPhysicsSettings.mCheckActiveEdges? EActiveEdgeMode::CollideOnlyWithActive : EActiveEdgeMode::CollideWithAll;
 		settings.mMaxSeparationDistance = body1->IsSensor() || body2->IsSensor()? 0.0f : mPhysicsSettings.mSpeculativeContactDistance;
 		settings.mActiveEdgeMovementDirection = body1->GetLinearVelocity() - body2->GetLinearVelocity();
 
@@ -1137,9 +1152,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			ReductionCollideShapeCollector collector(this, body1, body2);
 
 			// Perform collision detection between the two shapes
-			SubShapeIDCreator part1, part2;
-			auto f = enhanced_active_edges? InternalEdgeRemovingCollector::sCollideShapeVsShape : CollisionDispatch::sCollideShapeVsShape;
-			f(body1->GetShape(), body2->GetShape(), Vec3::sOne(), Vec3::sOne(), transform1, transform2, part1, part2, settings, collector, shape_filter);
+			mSimCollideShapeVsShape(*body1, *body2, transform1, transform2, settings, collector, shape_filter);
 
 			// Add the contacts
 			for (ContactManifold &manifold : collector.mManifolds)
@@ -1238,9 +1251,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			NonReductionCollideShapeCollector collector(this, ioContactAllocator, body1, body2, body_pair_handle);
 
 			// Perform collision detection between the two shapes
-			SubShapeIDCreator part1, part2;
-			auto f = enhanced_active_edges? InternalEdgeRemovingCollector::sCollideShapeVsShape : CollisionDispatch::sCollideShapeVsShape;
-			f(body1->GetShape(), body2->GetShape(), Vec3::sOne(), Vec3::sOne(), transform1, transform2, part1, part2, settings, collector, shape_filter);
+			mSimCollideShapeVsShape(*body1, *body2, transform1, transform2, settings, collector, shape_filter);
 
 			constraint_created = collector.mConstraintCreated;
 		}
