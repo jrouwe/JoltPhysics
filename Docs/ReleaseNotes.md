@@ -15,15 +15,16 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added an example of a body that's both a sensor and a rigid body in `ContactListenerTest`.
 * Added binary serialization to `SkeletalAnimation`.
 * Added support for RISC-V, LoongArch and PowerPC (Little Endian) CPUs.
-* Added the ability to add a sub shape at a specified index in a MutableCompoundShape rather than at the end.
-* The Samples and JoltViewer can run on Linux using Vulkan. Make sure to install the Vulkan SDK before compiling (see: Build/ubuntu24_install_vulkan_sdk.sh).
+* Added the ability to add a sub shape at a specified index in a `MutableCompoundShape` rather than at the end.
+* The Samples and JoltViewer can run on Linux using Vulkan. Make sure to install the Vulkan SDK before compiling (see: `Build/ubuntu24_install_vulkan_sdk.sh`).
 * The Samples and JoltViewer can run on macOS using Metal.
-* Added STLLocalAllocator which is an allocator that can be used in e.g. the Array class. It keeps a fixed size buffer for N elements and only when it runs out of space falls back to the heap.
-* Added support for CharacterVirtual to override the inner rigid body ID. This can be used to make the simulation deterministic in e.g. client/server setups.
-* Added OnContactPersisted, OnContactRemoved, OnCharacterContactPersisted and OnCharacterContactRemoved functions on CharacterContactListener to better match the interface of ContactListener.
-* Every CharacterVirtual now has a CharacterID. This ID can be used to identify the character after removal and is used to make the simulation deterministic in case a character collides with multiple other virtual characters.
-* Added overridable CollisionCollector::OnBodyEnd that is called after all hits for a body have been processed when collecting hits through NarrowPhaseQuery.
-* Added ClosestHitPerBodyCollisionCollector which will report the closest / deepest hit per body that the collision query collides with.
+* Added `STLLocalAllocator` which is an allocator that can be used in e.g. the Array class. It keeps a fixed size buffer for N elements and only when it runs out of space falls back to the heap.
+* Added support for `CharacterVirtual` to override the inner rigid body ID. This can be used to make the simulation deterministic in e.g. client/server setups.
+* Added `OnContactPersisted`, `OnContactRemoved`, `OnCharacterContactPersisted` and `OnCharacterContactRemoved` functions on `CharacterContactListener` to better match the interface of `ContactListener`.
+* Every `CharacterVirtual` now has a `CharacterID`. This ID can be used to identify the character after removal and is used to make the simulation deterministic in case a character collides with multiple other virtual characters.
+* Added overridable `CollisionCollector::OnBodyEnd` that is called after all hits for a body have been processed when collecting hits through `NarrowPhaseQuery`.
+* Added `ClosestHitPerBodyCollisionCollector` which will report the closest / deepest hit per body that the collision query collides with.
+* Added `PhysicsSystem::SetSimCollideBodyVsBody`. This allows overriding the collision detection between two bodies. It can be used to only store the 1st hit for sensor collisions. This makes sensors cheaper if you only need to know if there is an overlap or not. An example can be found in `SimCollideBodyVsBodyTest`.
 
 ### Bug fixes
 
@@ -32,14 +33,14 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added overloads for placement new in the `JPH_OVERRIDE_NEW_DELETE` macro, this means it is no longer needed to do `:: new (address) JPH::class_name(constructor_arguments)` but you can do `new (address) JPH::class_name(constructor_arguments)`.
 * Fixed a GCC warning `-Wshadow=global`.
 * BodyInterface::AddForce applied a force per soft body vertex rather than to the whole body, this resulted in a soft body accelerating much more compared to a rigid body of the same mass.
-* Removing a sub shape from a MutableCompoundShape would not update the bounding box if the last shape was removed, which can result in a small performance loss.
-* VehicleConstraint would override Body::SetAllowSleeping every frame, making it impossible for client code to configure a vehicle that cannot go to sleep.
-* Fixed CharacterVirtual::Contact::mIsSensorB not being persisted in SaveState.
-* Fixed CharacterVirtual::Contact::mHadContact not being true for collisions with sensors. They will still be marked as mWasDiscarded to prevent any further interaction.
-* Fixed numerical inaccuracy in penetration depth calculation when CollideShapeSettings::mMaxSeparationDistance was set to a really high value (e.g. 1000).
-* Bugfix in Semaphore::Acquire for non-windows platform. The count was updated before waiting, meaning that the counter would become -(number of waiting threads) and the semaphore would not wake up until at least the same amount of releases was done. In practice this meant that the main thread had to do the last (number of threads) jobs, slowing down the simulation a bit.
-* An empty MutableCompoundShape now returns the same local bounding box as EmptyShape (a point at (0, 0, 0)). This prevents floating point overflow exceptions.
-* Fixed a bug in ManifoldBetweenTwoFaces that led to incorrect ContactManifold::mRelativeContactPointsOn2 when the contact normal and the face normal were not roughly parallel. Also it led to possibly jitter in the simulation in that case.
+* Removing a sub shape from a `MutableCompoundShape` would not update the bounding box if the last shape was removed, which can result in a small performance loss.
+* VehicleConstraint would override `Body::SetAllowSleeping` every frame, making it impossible for client code to configure a vehicle that cannot go to sleep.
+* Fixed `CharacterVirtual::Contact::mIsSensorB` not being persisted in SaveState.
+* Fixed `CharacterVirtual::Contact::mHadContact` not being true for collisions with sensors. They will still be marked as mWasDiscarded to prevent any further interaction.
+* Fixed numerical inaccuracy in penetration depth calculation when `CollideShapeSettings::mMaxSeparationDistance` was set to a really high value (e.g. 1000).
+* Bugfix in `Semaphore::Acquire` for non-windows platform. The count was updated before waiting, meaning that the counter would become -(number of waiting threads) and the semaphore would not wake up until at least the same amount of releases was done. In practice this meant that the main thread had to do the last (number of threads) jobs, slowing down the simulation a bit.
+* An empty `MutableCompoundShape` now returns the same local bounding box as `EmptyShape` (a point at (0, 0, 0)). This prevents floating point overflow exceptions.
+* Fixed a bug in ManifoldBetweenTwoFaces that led to incorrect `ContactManifold::mRelativeContactPointsOn2` when the contact normal and the face normal were not roughly parallel. Also it led to possibly jitter in the simulation in that case.
 
 ## v5.2.0
 
