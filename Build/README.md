@@ -187,6 +187,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 
 * A vcpkg package is available [here](https://github.com/microsoft/vcpkg/tree/master/ports/joltphysics).
 * A xmake package is available [here](https://github.com/xmake-io/xmake-repo/tree/dev/packages/j/joltphysics).
+* A conan package is available [here](https://conan.io/center/recipes/joltphysics)
 * Jolt has been verified to build with [ninja](https://ninja-build.org/) through CMake.
 
 ## Errors
