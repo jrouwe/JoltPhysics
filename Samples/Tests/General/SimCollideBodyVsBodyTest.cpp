@@ -110,27 +110,27 @@ void SimCollideBodyVsBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	{
 	default:
 		mode_string = "Sensor: Collect all contact points";
-		mPhysicsSystem->SetSimCollideBodyVsBody(PhysicsSystem::sDefaultSimCollideBodyVsBody);
+		mPhysicsSystem->SetSimCollideBodyVsBody(&PhysicsSystem::sDefaultSimCollideBodyVsBody);
 		break;
 
 	case 1:
 		mode_string = "Sensor: Collect any contact point per body";
-		mPhysicsSystem->SetSimCollideBodyVsBody(sCollideBodyVsBodyPerBody<AnyHitCollisionCollector<CollideShapeCollector>>);
+		mPhysicsSystem->SetSimCollideBodyVsBody(&sCollideBodyVsBodyPerBody<AnyHitCollisionCollector<CollideShapeCollector>>);
 		break;
 
 	case 2:
 		mode_string = "Sensor: Collect deepest contact point per body";
-		mPhysicsSystem->SetSimCollideBodyVsBody(sCollideBodyVsBodyPerBody<ClosestHitCollisionCollector<CollideShapeCollector>>);
+		mPhysicsSystem->SetSimCollideBodyVsBody(&sCollideBodyVsBodyPerBody<ClosestHitCollisionCollector<CollideShapeCollector>>);
 		break;
 
 	case 3:
 		mode_string = "Sensor: Collect any contact point per leaf shape";
-		mPhysicsSystem->SetSimCollideBodyVsBody(sCollideBodyVsBodyPerLeaf<AnyHitCollisionCollector<CollideShapeCollector>>);
+		mPhysicsSystem->SetSimCollideBodyVsBody(&sCollideBodyVsBodyPerLeaf<AnyHitCollisionCollector<CollideShapeCollector>>);
 		break;
 
 	case 4:
 		mode_string = "Sensor: Collect deepest contact point per leaf shape";
-		mPhysicsSystem->SetSimCollideBodyVsBody(sCollideBodyVsBodyPerLeaf<ClosestHitCollisionCollector<CollideShapeCollector>>);
+		mPhysicsSystem->SetSimCollideBodyVsBody(&sCollideBodyVsBodyPerLeaf<ClosestHitCollisionCollector<CollideShapeCollector>>);
 		break;
 	}
 	DebugRenderer::sInstance->DrawText3D(RVec3(0, 5, 0), mode_string);

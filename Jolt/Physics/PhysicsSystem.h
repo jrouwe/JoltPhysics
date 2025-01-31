@@ -327,7 +327,7 @@ private:
 	const SimShapeFilter *		mSimShapeFilter = nullptr;
 
 	/// The collision function that is used to collide two shapes during simulation
-	SimCollideBodyVsBody		mSimCollideBodyVsBody = sDefaultSimCollideBodyVsBody;
+	SimCollideBodyVsBody		mSimCollideBodyVsBody = &sDefaultSimCollideBodyVsBody;
 
 	/// Simulation settings
 	PhysicsSettings				mPhysicsSettings;
