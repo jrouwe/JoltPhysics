@@ -42,8 +42,8 @@ void SimCollideBodyVsBodyTest::Initialize()
 	mSensorID = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::Activate);
 
 	// Dynamic bodies
-	for (int i = 0; i < 15; ++i)
-		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.1f, 0.5f, 0.2f)), RVec3(-15.0f + i * 3.0f, 25, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+	for (int i = 0; i < 10; ++i)
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.1f, 0.5f, 0.2f)), RVec3(-4.9_r + i * 1.0_r, 5.0_r, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }
 
 void SimCollideBodyVsBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
