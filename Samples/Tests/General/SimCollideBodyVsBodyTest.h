@@ -30,7 +30,9 @@ public:
 	virtual void		RestoreState(StateRecorder &inStream) override;
 
 private:
+	int					mPrevMode = -1;						// Previous mode
 	float				mTime = 0.0f;						// Total elapsed time
 
 	BodyID				mSensorID;							// Body ID of the sensor
+	BodyIDVector		mBodyIDs;							// List of dynamic bodies
 };
