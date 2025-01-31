@@ -39,6 +39,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed numerical inaccuracy in penetration depth calculation when CollideShapeSettings::mMaxSeparationDistance was set to a really high value (e.g. 1000).
 * Bugfix in Semaphore::Acquire for non-windows platform. The count was updated before waiting, meaning that the counter would become -(number of waiting threads) and the semaphore would not wake up until at least the same amount of releases was done. In practice this meant that the main thread had to do the last (number of threads) jobs, slowing down the simulation a bit.
 * An empty MutableCompoundShape now returns the same local bounding box as EmptyShape (a point at (0, 0, 0)). This prevents floating point overflow exceptions.
+* Fixed a bug in ManifoldBetweenTwoFaces that led to incorrect ContactManifold::mRelativeContactPointsOn2 when the contact normal and the face normal were not roughly parallel. Also it led to possibly jitter in the simulation in that case.
 
 ## v5.2.0
 
