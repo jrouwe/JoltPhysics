@@ -87,6 +87,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/EnhancedInternalEdgeRemovalTest.h
 	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.h
+	${SAMPLES_ROOT}/Tests/General/SimCollideBodyVsBodyTest.cpp
+	${SAMPLES_ROOT}/Tests/General/SimCollideBodyVsBodyTest.h
 	${SAMPLES_ROOT}/Tests/General/SimShapeFilterTest.cpp
 	${SAMPLES_ROOT}/Tests/General/SimShapeFilterTest.h
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.cpp

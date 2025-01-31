@@ -960,21 +960,20 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 	}
 }
 
-void PhysicsSystem::sDefaultSimCollideShapeVsShape(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
+void PhysicsSystem::sDefaultSimCollideBodyVsBody(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, CollideShapeSettings &ioCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
 {
 	SubShapeIDCreator part1, part2;
 
 	if (inBody1.GetEnhancedInternalEdgeRemovalWithBody(inBody2))
 	{
 		// Collide with enhanced internal edge removal
-		CollideShapeSettings settings = inCollideShapeSettings;
-		settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
-		InternalEdgeRemovingCollector::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, settings, ioCollector, inShapeFilter);
+		ioCollideShapeSettings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
+		InternalEdgeRemovingCollector::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, ioCollideShapeSettings, ioCollector, inShapeFilter);
 	}
 	else
 	{
 		// Regular collide
-		CollisionDispatch::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, inCollideShapeSettings, ioCollector, inShapeFilter);
+		CollisionDispatch::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, ioCollideShapeSettings, ioCollector, inShapeFilter);
 	}
 }
 
@@ -1152,7 +1151,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			ReductionCollideShapeCollector collector(this, body1, body2);
 
 			// Perform collision detection between the two shapes
-			mSimCollideShapeVsShape(*body1, *body2, transform1, transform2, settings, collector, shape_filter);
+			mSimCollideBodyVsBody(*body1, *body2, transform1, transform2, settings, collector, shape_filter);
 
 			// Add the contacts
 			for (ContactManifold &manifold : collector.mManifolds)
@@ -1251,7 +1250,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			NonReductionCollideShapeCollector collector(this, ioContactAllocator, body1, body2, body_pair_handle);
 
 			// Perform collision detection between the two shapes
-			mSimCollideShapeVsShape(*body1, *body2, transform1, transform2, settings, collector, shape_filter);
+			mSimCollideBodyVsBody(*body1, *body2, transform1, transform2, settings, collector, shape_filter);
 
 			constraint_created = collector.mConstraintCreated;
 		}
