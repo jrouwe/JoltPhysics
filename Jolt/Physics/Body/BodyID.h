@@ -36,7 +36,7 @@ public:
 	explicit				BodyID(uint32 inID, uint8 inSequenceNumber) :
 		mID((uint32(inSequenceNumber) << 24) | inID)
 	{
-		JPH_ASSERT(inID < cMaxBodyIndex); // Should not use bit pattern for invalid ID and should not use the broadphase bit
+		JPH_ASSERT(inID <= cMaxBodyIndex); // Should not overlap with broadphase bit or sequence number
 	}
 
 	/// Get index in body array
