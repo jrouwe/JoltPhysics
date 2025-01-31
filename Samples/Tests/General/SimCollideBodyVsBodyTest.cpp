@@ -47,14 +47,15 @@ static void sCollideBodyVsBodyPerLeaf(const Body &inBody1, const Body &inBody2, 
 		AABox bounds2 = inBody2.GetShape()->GetWorldSpaceBounds(inCenterOfMassTransform2, Vec3::sOne());
 
 		// Get leaf shapes that overlap with the bounds of the other shape
+		// Note that AllHitCollisionCollector does memory allocations, you probably want to create a custom collector here that uses a temporary buffer
 		SubShapeIDCreator part1, part2;
-		AllHitCollisionCollector<TransformedShapeCollector> leaves1, leaves2;
-		inBody1.GetShape()->CollectTransformedShapes(bounds2, inCenterOfMassTransform1.GetTranslation(), inCenterOfMassTransform1.GetQuaternion(), Vec3::sOne(), part1, leaves1, inShapeFilter);
-		inBody2.GetShape()->CollectTransformedShapes(bounds1, inCenterOfMassTransform2.GetTranslation(), inCenterOfMassTransform2.GetQuaternion(), Vec3::sOne(), part2, leaves2, inShapeFilter);
+		AllHitCollisionCollector<TransformedShapeCollector> leaf_shapes1, leaf_shapes2;
+		inBody1.GetShape()->CollectTransformedShapes(bounds2, inCenterOfMassTransform1.GetTranslation(), inCenterOfMassTransform1.GetQuaternion(), Vec3::sOne(), part1, leaf_shapes1, inShapeFilter);
+		inBody2.GetShape()->CollectTransformedShapes(bounds1, inCenterOfMassTransform2.GetTranslation(), inCenterOfMassTransform2.GetQuaternion(), Vec3::sOne(), part2, leaf_shapes2, inShapeFilter);
 
 		// Now test each leaf shape against each other leaf
-		for (const TransformedShape &leaf1 : leaves1.mHits)
-			for (const TransformedShape &leaf2 : leaves2.mHits)
+		for (const TransformedShape &leaf1 : leaf_shapes1.mHits)
+			for (const TransformedShape &leaf2 : leaf_shapes2.mHits)
 			{
 				LeafCollector collector;
 				CollisionDispatch::sCollideShapeVsShape(leaf1.mShape, leaf2.mShape, leaf1.GetShapeScale(), leaf2.GetShapeScale(), leaf1.GetCenterOfMassTransform().ToMat44(), leaf2.GetCenterOfMassTransform().ToMat44(), leaf1.mSubShapeIDCreator, leaf2.mSubShapeIDCreator, ioCollideShapeSettings, collector);
@@ -71,10 +72,10 @@ static void sCollideBodyVsBodyPerLeaf(const Body &inBody1, const Body &inBody2, 
 
 void SimCollideBodyVsBodyTest::Initialize()
 {
-	// Create pyramid
+	// Create pyramid with flat top
 	MeshShapeSettings pyramid;
-	pyramid.mTriangleVertices = { Float3(1, 0, 1), Float3(1, 0, -1), Float3(-1, 0, -1), Float3(-1, 0, 1), Float3(0, 1, 0) };
-	pyramid.mIndexedTriangles = { IndexedTriangle(0, 1, 4), IndexedTriangle(1, 2, 4), IndexedTriangle(2, 3, 4), IndexedTriangle(3, 0, 4) };
+	pyramid.mTriangleVertices = { Float3(1, 0, 1), Float3(1, 0, -1), Float3(-1, 0, -1), Float3(-1, 0, 1), Float3(0.1f, 1, 0.1f), Float3(0.1f, 1, -0.1f), Float3(-0.1f, 1, -0.1f), Float3(-0.1f, 1, 0.1f) };
+	pyramid.mIndexedTriangles = { IndexedTriangle(0, 1, 4), IndexedTriangle(4, 1, 5), IndexedTriangle(1, 2, 5), IndexedTriangle(2, 6, 5), IndexedTriangle(2, 3, 6), IndexedTriangle(3, 7, 6), IndexedTriangle(3, 0, 7), IndexedTriangle(0, 4, 7), IndexedTriangle(4, 5, 6), IndexedTriangle(4, 6, 7) };
 	pyramid.SetEmbedded();
 
 	// Create floor of many pyramids
@@ -118,7 +119,7 @@ void SimCollideBodyVsBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		break;
 
 	case 2:
-		mode_string = "Sensor: Collect closest contact point per body";
+		mode_string = "Sensor: Collect deepest contact point per body";
 		mPhysicsSystem->SetSimCollideBodyVsBody(sCollideBodyVsBodyPerBody<ClosestHitCollisionCollector<CollideShapeCollector>>);
 		break;
 
@@ -128,7 +129,7 @@ void SimCollideBodyVsBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		break;
 
 	case 4:
-		mode_string = "Sensor: Collect closest contact point per leaf shape";
+		mode_string = "Sensor: Collect deepest contact point per leaf shape";
 		mPhysicsSystem->SetSimCollideBodyVsBody(sCollideBodyVsBodyPerLeaf<ClosestHitCollisionCollector<CollideShapeCollector>>);
 		break;
 	}
@@ -154,14 +155,29 @@ void SimCollideBodyVsBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 void SimCollideBodyVsBodyTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
 {
-	mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn1, Color::sRed, 0.1f);
-	mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn2, Color::sRed, 0.1f);
+	if (!inBody1.IsSensor())
+	{
+		mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn1, Color::sGreen, 0.01f);
+		Vec3 average = Vec3::sZero();
+		for (const Vec3 &p : inManifold.mRelativeContactPointsOn1)
+			average += p;
+		average /= (float)inManifold.mRelativeContactPointsOn1.size();
+		mDebugRenderer->DrawArrow(inManifold.mBaseOffset + average, inManifold.mBaseOffset + average - inManifold.mWorldSpaceNormal, Color::sYellow, 0.1f);
+	}
+	if (!inBody2.IsSensor())
+	{
+		mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn2, Color::sGreen, 0.01f);
+		Vec3 average = Vec3::sZero();
+		for (const Vec3 &p : inManifold.mRelativeContactPointsOn2)
+			average += p;
+		average /= (float)inManifold.mRelativeContactPointsOn2.size();
+		mDebugRenderer->DrawArrow(inManifold.mBaseOffset + average, inManifold.mBaseOffset + average + inManifold.mWorldSpaceNormal, Color::sYellow, 0.1f);
+	}
 }
 
 void SimCollideBodyVsBodyTest::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
 {
-	mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn1, Color::sGreen, 0.1f);
-	mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn2, Color::sGreen, 0.1f);
+	OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
 }
 
 void SimCollideBodyVsBodyTest::SaveState(StateRecorder &inStream) const
