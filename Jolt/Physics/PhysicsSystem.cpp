@@ -1121,7 +1121,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 					// Determine contact points
 					const PhysicsSettings &settings = mSystem->mPhysicsSettings;
-					ManifoldBetweenTwoFaces(inResult.mContactPointOn1, inResult.mContactPointOn2, inResult.mPenetrationAxis, Square(settings.mSpeculativeContactDistance) + settings.mManifoldToleranceSq, inResult.mShape1Face, inResult.mShape2Face, manifold->mRelativeContactPointsOn1, manifold->mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, mBody1->GetCenterOfMassPosition()));
+					ManifoldBetweenTwoFaces(inResult.mContactPointOn1, inResult.mContactPointOn2, inResult.mPenetrationAxis, settings.mSpeculativeContactDistance + settings.mManifoldTolerance, inResult.mShape1Face, inResult.mShape2Face, manifold->mRelativeContactPointsOn1, manifold->mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, mBody1->GetCenterOfMassPosition()));
 
 					// Prune if we have more than 32 points (this means we could run out of space in the next iteration)
 					if (manifold->mRelativeContactPointsOn1.size() > 32)
@@ -1207,7 +1207,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					ContactManifold manifold;
 					manifold.mBaseOffset = mBody1->GetCenterOfMassPosition();
 					const PhysicsSettings &settings = mSystem->mPhysicsSettings;
-					ManifoldBetweenTwoFaces(inResult.mContactPointOn1, inResult.mContactPointOn2, inResult.mPenetrationAxis, Square(settings.mSpeculativeContactDistance) + settings.mManifoldToleranceSq, inResult.mShape1Face, inResult.mShape2Face, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
+					ManifoldBetweenTwoFaces(inResult.mContactPointOn1, inResult.mContactPointOn2, inResult.mPenetrationAxis, settings.mSpeculativeContactDistance + settings.mManifoldTolerance, inResult.mShape1Face, inResult.mShape2Face, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
 
 					// Calculate normal
 					manifold.mWorldSpaceNormal = inResult.mPenetrationAxis.Normalized();
@@ -1929,7 +1929,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			// Determine contact manifold
 			ContactManifold manifold;
 			manifold.mBaseOffset = shape_cast.mCenterOfMassStart.GetTranslation();
-			ManifoldBetweenTwoFaces(cast_shape_result.mContactPointOn1, cast_shape_result.mContactPointOn2, cast_shape_result.mPenetrationAxis, mPhysicsSettings.mManifoldToleranceSq, cast_shape_result.mShape1Face, cast_shape_result.mShape2Face, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
+			ManifoldBetweenTwoFaces(cast_shape_result.mContactPointOn1, cast_shape_result.mContactPointOn2, cast_shape_result.mPenetrationAxis, mPhysicsSettings.mManifoldTolerance, cast_shape_result.mShape1Face, cast_shape_result.mShape2Face, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
 			manifold.mSubShapeID1 = cast_shape_result.mSubShapeID1;
 			manifold.mSubShapeID2 = cast_shape_result.mSubShapeID2;
 			manifold.mPenetrationDepth = cast_shape_result.mPenetrationDepth;
