@@ -153,7 +153,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Modify Mass",						JPH_RTTI(ModifyMassTest) },
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
-	{ "SimCollideBodyVsBody",				JPH_RTTI(SimCollideBodyVsBodyTest) },
+	{ "Override Body Vs Body Collision",	JPH_RTTI(SimCollideBodyVsBodyTest) },
 	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
 	{ "Allowed Degrees of Freedom",			JPH_RTTI(AllowedDOFsTest) },
 	{ "Shape Filter (Collision Detection)",	JPH_RTTI(ShapeFilterTest) },
