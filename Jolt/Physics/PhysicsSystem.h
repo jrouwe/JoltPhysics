@@ -76,6 +76,24 @@ public:
 	void						SetSimShapeFilter(const SimShapeFilter *inShapeFilter)		{ mSimShapeFilter = inShapeFilter; }
 	const SimShapeFilter *		GetSimShapeFilter() const									{ return mSimShapeFilter; }
 
+	/// Advanced use only: This function is similar to CollisionDispatch::sCollideShapeVsShape but only used to collide bodies during simulation.
+	/// inBody1 The first body to collide.
+	/// inBody2 The second body to collide.
+	/// inCenterOfMassTransform1 The center of mass transform of the first body (note this will not be the actual world space position of the body, it will be made relative to some position so we can drop down to single precision).
+	/// inCenterOfMassTransform2 The center of mass transform of the second body.
+	/// ioCollideShapeSettings Settings that control the collision detection. Note that the implementation can freely overwrite the shape settings if needed, the caller provides a temporary that will not be used after the function returns.
+	/// ioCollector The collector that will receive the contact points.
+	/// inShapeFilter The shape filter that can be used to exclude shapes from colliding with each other.
+	using SimCollideBodyVsBody = void (*)(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, CollideShapeSettings &ioCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter);
+
+	/// Advanced use only: Set the function that will be used to collide two bodies during simulation.
+	/// This function is expected to eventually call CollideShapeCollector::AddHit all contact points between the shapes of body 1 and 2 in their given transforms.
+	void						SetSimCollideBodyVsBody(SimCollideBodyVsBody inBodyVsBody)	{ mSimCollideBodyVsBody = inBodyVsBody; }
+	SimCollideBodyVsBody		GetSimCollideBodyVsBody() const								{ return mSimCollideBodyVsBody; }
+
+	/// Advanced use only: Default function that is used to collide two bodies during simulation.
+	static void					sDefaultSimCollideBodyVsBody(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, CollideShapeSettings &ioCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter);
+
 	/// Control the main constants of the physics simulation
 	void						SetPhysicsSettings(const PhysicsSettings &inSettings)		{ mPhysicsSettings = inSettings; }
 	const PhysicsSettings &		GetPhysicsSettings() const									{ return mPhysicsSettings; }
@@ -307,6 +325,9 @@ private:
 
 	/// The shape filter that is used to filter out sub shapes during simulation
 	const SimShapeFilter *		mSimShapeFilter = nullptr;
+
+	/// The collision function that is used to collide two shapes during simulation
+	SimCollideBodyVsBody		mSimCollideBodyVsBody = &sDefaultSimCollideBodyVsBody;
 
 	/// Simulation settings
 	PhysicsSettings				mPhysicsSettings;
