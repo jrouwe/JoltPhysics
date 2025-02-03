@@ -92,7 +92,7 @@ static void sCollideBodyVsBodyPerLeaf(const Body &inBody1, const Body &inBody2, 
 				if (leaf1.mBounds.Overlaps(leaf2.mBounds))
 				{
 					LeafCollector collector;
-					CollisionDispatch::sCollideShapeVsShape(leaf1.mShape, leaf2.mShape, leaf1.mScale, leaf2.mScale, leaf1.mCenterOfMassTransform, leaf2.mCenterOfMassTransform, leaf1.mSubShapeIDCreator, leaf2.mSubShapeIDCreator, ioCollideShapeSettings, collector);
+					CollisionDispatch::sCollideShapeVsShape(leaf1.mShape, leaf2.mShape, leaf1.mScale, leaf2.mScale, leaf1.mCenterOfMassTransform, leaf2.mCenterOfMassTransform, leaf1.mSubShapeIDCreator, leaf2.mSubShapeIDCreator, ioCollideShapeSettings, collector, inShapeFilter);
 					if (collector.HadHit())
 						ioCollector.AddHit(collector.mHit);
 				}
