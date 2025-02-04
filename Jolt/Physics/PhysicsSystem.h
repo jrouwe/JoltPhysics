@@ -84,7 +84,7 @@ public:
 	/// ioCollideShapeSettings Settings that control the collision detection. Note that the implementation can freely overwrite the shape settings if needed, the caller provides a temporary that will not be used after the function returns.
 	/// ioCollector The collector that will receive the contact points.
 	/// inShapeFilter The shape filter that can be used to exclude shapes from colliding with each other.
-	using SimCollideBodyVsBody = void (*)(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, CollideShapeSettings &ioCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter);
+	using SimCollideBodyVsBody = std::function<void(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, CollideShapeSettings &ioCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)>;
 
 	/// Advanced use only: Set the function that will be used to collide two bodies during simulation.
 	/// This function is expected to eventually call CollideShapeCollector::AddHit all contact points between the shapes of body 1 and 2 in their given transforms.
