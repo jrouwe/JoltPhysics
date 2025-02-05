@@ -10,8 +10,8 @@
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/CollideShapeVsShapePerLeaf.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
-#include <Jolt/Core/STLLocalAllocator.h>
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
@@ -25,6 +25,7 @@ static void sCollideBodyVsBodyPerBody(const Body &inBody1, const Body &inBody2, 
 {
 	if (inBody1.IsSensor() || inBody2.IsSensor())
 	{
+		// A sensor will return max 1 hit per body pair
 		LeafCollector collector;
 		SubShapeIDCreator part1, part2;
 		CollisionDispatch::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, ioCollideShapeSettings, collector);
@@ -43,59 +44,9 @@ static void sCollideBodyVsBodyPerLeaf(const Body &inBody1, const Body &inBody2, 
 {
 	if (inBody1.IsSensor() || inBody2.IsSensor())
 	{
-		// Tracks information we need about a leaf shape
-		struct LeafShape
-		{
-								LeafShape() = default;
-
-								LeafShape(const AABox &inBounds, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Shape *inShape, const SubShapeIDCreator &inSubShapeIDCreator) :
-				mBounds(inBounds),
-				mCenterOfMassTransform(inCenterOfMassTransform),
-				mScale(inScale),
-				mShape(inShape),
-				mSubShapeIDCreator(inSubShapeIDCreator)
-			{
-			}
-
-			AABox				mBounds;
-			Mat44				mCenterOfMassTransform;
-			Vec3				mScale;
-			const Shape *		mShape;
-			SubShapeIDCreator	mSubShapeIDCreator;
-		};
-
-		// A collector that stores the information we need from a leaf shape in an array that is usually on the stack but can fall back to the heap if needed
-		class MyCollector : public TransformedShapeCollector
-		{
-		public:
-			void				AddHit(const TransformedShape &inShape) override
-			{
-				mHits.emplace_back(inShape.GetWorldSpaceBounds(), inShape.GetCenterOfMassTransform().ToMat44(), inShape.GetShapeScale(), inShape.mShape, inShape.mSubShapeIDCreator);
-			}
-
-			Array<LeafShape, STLLocalAllocator<LeafShape, 32>> mHits;
-		};
-
-		// Get bounds of both shapes
-		AABox bounds1 = inBody1.GetShape()->GetWorldSpaceBounds(inCenterOfMassTransform1, Vec3::sOne());
-		AABox bounds2 = inBody2.GetShape()->GetWorldSpaceBounds(inCenterOfMassTransform2, Vec3::sOne());
-
-		// Get leaf shapes that overlap with the bounds of the other shape
+		// A sensor will return 1 hit per leaf shape pair
 		SubShapeIDCreator part1, part2;
-		MyCollector leaf_shapes1, leaf_shapes2;
-		inBody1.GetShape()->CollectTransformedShapes(bounds2, inCenterOfMassTransform1.GetTranslation(), inCenterOfMassTransform1.GetQuaternion(), Vec3::sOne(), part1, leaf_shapes1, inShapeFilter);
-		inBody2.GetShape()->CollectTransformedShapes(bounds1, inCenterOfMassTransform2.GetTranslation(), inCenterOfMassTransform2.GetQuaternion(), Vec3::sOne(), part2, leaf_shapes2, inShapeFilter);
-
-		// Now test each leaf shape against each other leaf
-		for (const LeafShape &leaf1 : leaf_shapes1.mHits)
-			for (const LeafShape &leaf2 : leaf_shapes2.mHits)
-				if (leaf1.mBounds.Overlaps(leaf2.mBounds))
-				{
-					LeafCollector collector;
-					CollisionDispatch::sCollideShapeVsShape(leaf1.mShape, leaf2.mShape, leaf1.mScale, leaf2.mScale, leaf1.mCenterOfMassTransform, leaf2.mCenterOfMassTransform, leaf1.mSubShapeIDCreator, leaf2.mSubShapeIDCreator, ioCollideShapeSettings, collector, inShapeFilter);
-					if (collector.HadHit())
-						ioCollector.AddHit(collector.mHit);
-				}
+		CollideShapeVsShapePerLeaf<LeafCollector>(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, ioCollideShapeSettings, ioCollector, inShapeFilter);
 	}
 	else
 	{
