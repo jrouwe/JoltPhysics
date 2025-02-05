@@ -88,8 +88,8 @@ public:
 
 	/// Advanced use only: Set the function that will be used to collide two bodies during simulation.
 	/// This function is expected to eventually call CollideShapeCollector::AddHit all contact points between the shapes of body 1 and 2 in their given transforms.
-	void						SetSimCollideBodyVsBody(SimCollideBodyVsBody inBodyVsBody)	{ mSimCollideBodyVsBody = inBodyVsBody; }
-	SimCollideBodyVsBody		GetSimCollideBodyVsBody() const								{ return mSimCollideBodyVsBody; }
+	void						SetSimCollideBodyVsBody(const SimCollideBodyVsBody &inBodyVsBody) { mSimCollideBodyVsBody = inBodyVsBody; }
+	const SimCollideBodyVsBody &GetSimCollideBodyVsBody() const								{ return mSimCollideBodyVsBody; }
 
 	/// Advanced use only: Default function that is used to collide two bodies during simulation.
 	static void					sDefaultSimCollideBodyVsBody(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, CollideShapeSettings &ioCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter);
