@@ -7,7 +7,11 @@
 #include "Layers.h"
 #include "LoggingContactListener.h"
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/CollideShapeVsShapePerLeaf.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 
 TEST_SUITE("SensorTests")
 {
@@ -649,5 +653,112 @@ TEST_SUITE("SensorTests")
 		CHECK(listener.Contains(EType::Remove, static1.GetID(), sensor_id));
 		CHECK(listener.Contains(EType::Remove, static2.GetID(), sensor_id));
 		listener.Clear();
+	}
+
+	static void sCollideBodyVsBodyAll(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, CollideShapeSettings &ioCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
+	{
+		// Override the back face mode so we get hits with all triangles
+		ioCollideShapeSettings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+		PhysicsSystem::sDefaultSimCollideBodyVsBody(inBody1, inBody2, inCenterOfMassTransform1, inCenterOfMassTransform2, ioCollideShapeSettings, ioCollector, inShapeFilter);
+	}
+
+	static void sCollideBodyVsBodyPerBody(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, CollideShapeSettings &ioCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
+	{
+		// Max 1 hit per body pair
+		AnyHitCollisionCollector<CollideShapeCollector> collector;
+		SubShapeIDCreator part1, part2;
+		CollisionDispatch::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, ioCollideShapeSettings, collector);
+		if (collector.HadHit())
+			ioCollector.AddHit(collector.mHit);
+	}
+
+	static void sCollideBodyVsBodyPerLeaf(const Body &inBody1, const Body &inBody2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, CollideShapeSettings &ioCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
+	{
+		// Max 1 hit per leaf shape pair
+		SubShapeIDCreator part1, part2;
+		CollideShapeVsShapePerLeaf<AnyHitCollisionCollector<CollideShapeCollector>>(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, ioCollideShapeSettings, ioCollector, inShapeFilter);
+	}
+
+	TEST_CASE("TestSimCollideBodyVsBody")
+	{
+		// Create pyramid with flat top
+		MeshShapeSettings pyramid;
+		pyramid.mTriangleVertices = { Float3(1, 0, 1), Float3(1, 0, -1), Float3(-1, 0, -1), Float3(-1, 0, 1), Float3(0.1f, 1, 0.1f), Float3(0.1f, 1, -0.1f), Float3(-0.1f, 1, -0.1f), Float3(-0.1f, 1, 0.1f) };
+		pyramid.mIndexedTriangles = { IndexedTriangle(0, 1, 4), IndexedTriangle(4, 1, 5), IndexedTriangle(1, 2, 5), IndexedTriangle(2, 6, 5), IndexedTriangle(2, 3, 6), IndexedTriangle(3, 7, 6), IndexedTriangle(3, 0, 7), IndexedTriangle(0, 4, 7), IndexedTriangle(4, 5, 6), IndexedTriangle(4, 6, 7) };
+		pyramid.SetEmbedded();
+
+		// Create floor of many pyramids
+		StaticCompoundShapeSettings compound;
+		for (int x = -10; x <= 10; ++x)
+			for (int z = -10; z <= 10; ++z)
+				compound.AddShape(Vec3(x * 2.0f, 0, z * 2.0f), Quat::sIdentity(), &pyramid);
+		compound.SetEmbedded();
+
+		for (int type = 0; type < 3; ++type)
+		{
+			PhysicsTestContext c;
+
+			// Register listener
+			LoggingContactListener listener;
+			c.GetSystem()->SetContactListener(&listener);
+
+			// Create floor
+			BodyID floor_id = c.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(&compound, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+			// A kinematic sensor that also detects static bodies
+			// Note that the size has been picked so that it is slightly smaller than 11 x 11 pyramids and incorporates all triangles in those pyramids
+			BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(10.99f)), RVec3(0, 5, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING); // Put in a layer that collides with static
+			sensor_settings.mIsSensor = true;
+			sensor_settings.mCollideKinematicVsNonDynamic = true;
+			sensor_settings.mUseManifoldReduction = false;
+			BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::Activate);
+
+			// Select the body vs body collision function
+			switch (type)
+			{
+			case 0:
+				c.GetSystem()->SetSimCollideBodyVsBody(sCollideBodyVsBodyAll);
+				break;
+
+			case 1:
+				c.GetSystem()->SetSimCollideBodyVsBody(sCollideBodyVsBodyPerLeaf);
+				break;
+
+			case 2:
+				c.GetSystem()->SetSimCollideBodyVsBody(sCollideBodyVsBodyPerBody);
+				break;
+			}
+
+			// Trigger collision callbacks
+			c.SimulateSingleStep();
+
+			// Count the number of hits that were detected
+			size_t count = 0;
+			for (size_t i = 0; i < listener.GetEntryCount(); ++i)
+			{
+				const LoggingContactListener::LogEntry &entry = listener.GetEntry(i);
+				if (entry.mType == EType::Add && entry.mBody1 == floor_id && entry.mBody2 == sensor_id)
+					++count;
+			}
+
+			// Check that we received the number of hits that we expected
+			switch (type)
+			{
+			case 0:
+				// All hits
+				CHECK(count == 11 * 11 * pyramid.mIndexedTriangles.size());
+				break;
+
+			case 1:
+				// Only 1 per sub shape
+				CHECK(count == 11 * 11);
+				break;
+
+			case 2:
+				// Only 1 per body pair
+				CHECK(count == 1);
+				break;
+			}
+		}
 	}
 }
