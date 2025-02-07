@@ -389,3 +389,41 @@ jobs:
     - name: Test CharacterVirtual
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
       run: node PerformanceTest.js -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
+
+  emscripten64:
+    runs-on: ubuntu-latest
+    name: Emscripten WASM64 Determinism Check
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    - name: Setup emsdk
+      uses: mymindstorm/setup-emsdk@v14
+      with:
+        version: ${{env.EMSCRIPTEN_VERSION}}
+    - name: Verify emsdk
+      run: emcc -v
+    - name: Setup Node.js 23.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 23.x
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_emscripten.sh Distribution -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DJPH_USE_WASM64=ON
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)      
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node --experimental-wasm-memory64 UnitTests.js
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node --experimental-wasm-memory64 PerformanceTest.js -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node --experimental-wasm-memory64 PerformanceTest.js -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+    - name: Test Pyramid
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node --experimental-wasm-memory64 PerformanceTest.js -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+    - name: Test CharacterVirtual
+      working-directory: ${{github.workspace}}/Build/WASM_Distribution
+      run: node --experimental-wasm-memory64 PerformanceTest.js -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
