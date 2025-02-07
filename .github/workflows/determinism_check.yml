@@ -5,7 +5,8 @@ env:
   RAGDOLL_HASH: '0xdf768b4736057c87'
   PYRAMID_HASH: '0x2e2dda8c1f4eb906'
   CHARACTER_VIRTUAL_HASH: '0x4ec98831ce0590ff'
-  EMSCRIPTEN_VERSION: 3.1.73
+  EMSCRIPTEN_VERSION: 4.0.2
+  NODE_VERSION: 23.x
   UBUNTU_CLANG_VERSION: clang++-18
   UBUNTU_GCC_VERSION: g++-14
   UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-14
@@ -354,7 +355,7 @@ jobs:
 
   emscripten:
     runs-on: ubuntu-latest
-    name: Emscripten Determinism Check
+    name: Emscripten WASM32 Determinism Check
 
     steps:
     - name: Checkout Code
@@ -365,10 +366,10 @@ jobs:
         version: ${{env.EMSCRIPTEN_VERSION}}
     - name: Verify emsdk
       run: emcc -v
-    - name: Setup Node.js 18.x
+    - name: Setup Node.js ${{env.NODE_VERSION}}
       uses: actions/setup-node@v4
       with:
-        node-version: 18.x
+        node-version: ${{env.NODE_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_emscripten.sh Distribution -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -403,10 +404,10 @@ jobs:
         version: ${{env.EMSCRIPTEN_VERSION}}
     - name: Verify emsdk
       run: emcc -v
-    - name: Setup Node.js 23.x
+    - name: Setup Node.js ${{env.NODE_VERSION}}
       uses: actions/setup-node@v4
       with:
-        node-version: 23.x
+        node-version: ${{env.NODE_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_emscripten.sh Distribution -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DJPH_USE_WASM64=ON

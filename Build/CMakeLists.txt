@@ -65,7 +65,8 @@ option(USE_FMADD "Enable FMADD" ON)
 # See: https://caniuse.com/?search=WebAssembly%20SIMD (Safari got support in March 2023 and was the last major browser to get support).
 option(USE_WASM_SIMD "Enable SIMD for WASM" OFF)
 
-# Enable 64 bit WASM instead of the default 32 bit WASM. Note that this is currently not supported everywhere.
+# Enable 64 bit WASM instead of the default 32 bit WASM. Note that this currently requires special commandline flags in browsers and nodejs to enable.
+# E.g. use 'node --experimental-wasm-memory64 UnitTests.js' to run the unit tests in nodejs in 64 bit.
 option(JPH_USE_WASM64 "Enable 64 bit WASM" OFF)
 
 # Enable all warnings
