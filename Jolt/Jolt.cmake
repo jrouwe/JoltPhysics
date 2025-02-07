@@ -641,6 +641,10 @@ else()
 			# Note that this does not require the browser to actually support SSE 4.2 it merely means that it can translate those instructions to WASM SIMD instructions
 			target_compile_options(Jolt PUBLIC -msimd128 -msse4.2)
 		endif()
+		if (JPH_USE_WASM64)
+			target_compile_options(Jolt PUBLIC -sMEMORY64)
+			target_link_options(Jolt PUBLIC -sMEMORY64)
+		endif()		
 	elseif ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i386")
 		# x86 and x86_64
 		# On 32-bit builds we need to default to using SSE instructions, the x87 FPU instructions have higher intermediate precision
