@@ -15,6 +15,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added an example of a body that's both a sensor and a rigid body in `ContactListenerTest`.
 * Added binary serialization to `SkeletalAnimation`.
 * Added support for RISC-V, LoongArch and PowerPC (Little Endian) CPUs.
+* Added support for WASM64.
 * Added the ability to add a sub shape at a specified index in a `MutableCompoundShape` rather than at the end.
 * The Samples and JoltViewer can run on Linux using Vulkan. Make sure to install the Vulkan SDK before compiling (see: `Build/ubuntu24_install_vulkan_sdk.sh`).
 * The Samples and JoltViewer can run on macOS using Metal.
