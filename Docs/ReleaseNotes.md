@@ -38,6 +38,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * VehicleConstraint would override `Body::SetAllowSleeping` every frame, making it impossible for client code to configure a vehicle that cannot go to sleep.
 * Fixed `CharacterVirtual::Contact::mIsSensorB` not being persisted in SaveState.
 * Fixed `CharacterVirtual::Contact::mHadContact` not being true for collisions with sensors. They will still be marked as mWasDiscarded to prevent any further interaction.
+* Fixed Character::SetShape failing to switch when standing inside a sensor / Character::PostSimulation finding a sensor as ground collision.
 * Fixed numerical inaccuracy in penetration depth calculation when `CollideShapeSettings::mMaxSeparationDistance` was set to a really high value (e.g. 1000).
 * Bugfix in `Semaphore::Acquire` for non-windows platform. The count was updated before waiting, meaning that the counter would become -(number of waiting threads) and the semaphore would not wake up until at least the same amount of releases was done. In practice this meant that the main thread had to do the last (number of threads) jobs, slowing down the simulation a bit.
 * An empty `MutableCompoundShape` now returns the same local bounding box as `EmptyShape` (a point at (0, 0, 0)). This prevents floating point overflow exceptions.

@@ -75,8 +75,18 @@ void Character::CheckCollision(RMat44Arg inCenterOfMassTransform, Vec3Arg inMove
 	// Create query object layer filter
 	DefaultObjectLayerFilter object_layer_filter = mSystem->GetDefaultLayerFilter(mLayer);
 
-	// Ignore my own body
-	IgnoreSingleBodyFilter body_filter(mBodyID);
+	// Ignore sensors and my own body
+	class CharacterBodyFilter : public IgnoreSingleBodyFilter
+	{
+	public:
+		using			IgnoreSingleBodyFilter::IgnoreSingleBodyFilter;
+
+		virtual bool	ShouldCollideLocked(const Body &inBody) const override
+		{
+			return !inBody.IsSensor();
+		}
+	};
+	CharacterBodyFilter body_filter(mBodyID);
 
 	// Settings for collide shape
 	CollideShapeSettings settings;
