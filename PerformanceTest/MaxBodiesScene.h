@@ -51,7 +51,7 @@ public:
 			for (uint y = 0; y < num_per_axis && body_ids.size() < num_bodies; ++y)
 				for (uint z = 0; z < num_per_axis && body_ids.size() < num_bodies; ++z)
 				{
-					bcs.mPosition = RVec3(x, y, z);
+					bcs.mPosition = RVec3(Real(x), Real(y), Real(z));
 					body_ids.push_back(bi.CreateBody(bcs)->GetID());
 				}
 
