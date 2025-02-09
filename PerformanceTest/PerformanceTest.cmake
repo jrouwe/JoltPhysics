@@ -12,6 +12,7 @@ set(PERFORMANCE_TEST_SRC_FILES
 	${PERFORMANCE_TEST_ROOT}/CharacterVirtualScene.h
 	${PERFORMANCE_TEST_ROOT}/LargeMeshScene.h
 	${PERFORMANCE_TEST_ROOT}/Layers.h
+	${PERFORMANCE_TEST_ROOT}/MaxBodiesScene.h
 )
 
 # Group source files

@@ -46,6 +46,7 @@ JPH_SUPPRESS_WARNINGS
 #include "PyramidScene.h"
 #include "LargeMeshScene.h"
 #include "CharacterVirtualScene.h"
+#include "MaxBodiesScene.h"
 
 // Time step for physics
 constexpr float cDeltaTime = 1.0f / 60.0f;
@@ -119,6 +120,8 @@ int main(int argc, char** argv)
 				scene = unique_ptr<PerformanceTestScene>(new LargeMeshScene);
 			else if (strcmp(arg + 3, "CharacterVirtual") == 0)
 				scene = unique_ptr<PerformanceTestScene>(new CharacterVirtualScene);
+			else if (strcmp(arg + 3, "MaxBodies") == 0)
+				scene = unique_ptr<MaxBodiesScene>(new MaxBodiesScene);
 			else
 			{
 				Trace("Invalid scene");
@@ -216,7 +219,7 @@ int main(int argc, char** argv)
 	RegisterTypes();
 
 	// Create temp allocator
-	TempAllocatorImpl temp_allocator(32 * 1024 * 1024);
+	TempAllocatorImpl temp_allocator(scene->GetTempAllocatorSizeMB() * 1024 * 1024);
 
 	// Show used instruction sets
 	Trace(GetConfigurationString());
@@ -306,7 +309,7 @@ int main(int argc, char** argv)
 
 				// Create physics system
 				PhysicsSystem physics_system;
-				physics_system.Init(10240, 0, 65536, 20480, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
+				physics_system.Init(scene->GetMaxBodies(), 0, 65536, 20480, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
 
 				// Start test scene
 				scene->StartTest(physics_system, motion_quality);

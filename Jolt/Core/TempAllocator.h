@@ -59,7 +59,7 @@ public:
 			uint new_top = mTop + AlignUp(inSize, JPH_RVECTOR_ALIGNMENT);
 			if (new_top > mSize)
 			{
-				Trace("TempAllocator: Out of memory");
+				Trace("TempAllocator: Out of memory trying to allocate %u bytes", inSize);
 				std::abort();
 			}
 			void *address = mBase + mTop;
