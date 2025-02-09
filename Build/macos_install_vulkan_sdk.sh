@@ -9,5 +9,5 @@ VULKAN_TEMP=/tmp/vulkan_sdk_install
 mkdir ${VULKAN_TEMP}
 curl -L -o ${VULKAN_TEMP}/vulkan_sdk.dmg https://sdk.lunarg.com/sdk/download/latest/mac/vulkan_sdk.dmg?Human=true
 unzip ${VULKAN_TEMP}/vulkan_sdk.dmg -d ${VULKAN_TEMP}
-${VULKAN_TEMP}/InstallVulkan.app/Contents/MacOS/InstallVulkan --root $1 --accept-licenses --default-answer --confirm-command install
+${VULKAN_TEMP}/InstallVulkan*.app/Contents/MacOS/InstallVulkan* --root $1 --accept-licenses --default-answer --confirm-command install
 rm -rf ${VULKAN_TEMP}
