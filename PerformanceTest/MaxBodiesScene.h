@@ -21,12 +21,12 @@ public:
 		return "MaxBodies";
 	}
 
-	virtual uint			GetTempAllocatorSizeMB() const
+	virtual uint			GetTempAllocatorSizeMB() const override
 	{
 		return 256;
 	}
 
-	virtual uint			GetMaxBodies() const
+	virtual uint			GetMaxBodies() const override
 	{
 		return BodyID::cMaxBodyIndex + 1;
 	}
