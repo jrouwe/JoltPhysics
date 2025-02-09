@@ -20,13 +20,14 @@ void RenderInstancesDX12::Clear()
 
 void RenderInstancesDX12::CreateBuffer(int inNumInstances, int inInstanceSize)
 {
-	if (mInstanceBuffer == nullptr || mInstanceBufferSize < inNumInstances * inInstanceSize)
+	uint new_size = uint(inNumInstances) * inInstanceSize;
+	if (mInstanceBuffer == nullptr || mInstanceBufferSize < new_size)
 	{
 		// Delete the old buffer
 		Clear();
 
 		// Calculate size
-		mInstanceBufferSize = inNumInstances * inInstanceSize;
+		mInstanceBufferSize = new_size;
 
 		// Create buffer
 		mInstanceBuffer = mRenderer->CreateD3DResourceOnUploadHeap(mInstanceBufferSize);
