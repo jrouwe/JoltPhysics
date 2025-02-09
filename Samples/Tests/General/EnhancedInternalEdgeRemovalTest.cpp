@@ -93,7 +93,7 @@ void EnhancedInternalEdgeRemovalTest::Initialize()
 			}
 
 		MeshShapeSettings mesh_settings(triangles);
-		mesh_settings.mActiveEdgeCosThresholdAngle = FLT_MAX; // Turn off regular active edge determination so that we only rely on the mEnhancedInternalEdgeRemoval flag
+		mesh_settings.mActiveEdgeCosThresholdAngle = -1.0f; // Turn off regular active edge determination so that we only rely on the mEnhancedInternalEdgeRemoval flag
 		mesh_settings.SetEmbedded();
 		mBodyInterface->CreateAndAddBody(BodyCreationSettings(&mesh_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
@@ -185,6 +185,38 @@ void EnhancedInternalEdgeRemovalTest::Initialize()
 		BodyCreationSettings compound_bcs(&compound, RVec3(2, 5, 70), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		compound_bcs.mEnhancedInternalEdgeRemoval = true;
 		mBodyInterface->CreateAndAddBody(compound_bcs, EActivation::Activate);
+	}
+
+	// Create a super dense grid of triangles
+	{
+		constexpr float size = 0.25f;
+		TriangleList triangles;
+		for (int x = -100; x < 100; ++x)
+			for (int z = -5; z < 5; ++z)
+			{
+				float x1 = size * x;
+				float z1 = size * z;
+				float x2 = x1 + size;
+				float z2 = z1 + size;
+
+				Float3 v1 = Float3(x1, 0, z1);
+				Float3 v2 = Float3(x2, 0, z1);
+				Float3 v3 = Float3(x1, 0, z2);
+				Float3 v4 = Float3(x2, 0, z2);
+
+				triangles.push_back(Triangle(v1, v3, v4));
+				triangles.push_back(Triangle(v1, v4, v2));
+			}
+
+		MeshShapeSettings mesh_settings(triangles);
+		mesh_settings.mActiveEdgeCosThresholdAngle = -1.0f; // Turn off regular active edge determination so that we only rely on the mEnhancedInternalEdgeRemoval flag
+		mesh_settings.SetEmbedded();
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(&mesh_settings, RVec3(0, 0, 80), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+		BodyCreationSettings box_bcs(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(-24, 0.9_r, 80), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		box_bcs.mLinearVelocity = Vec3(20, 0, 0);
+		box_bcs.mEnhancedInternalEdgeRemoval = true;
+		mBodyInterface->CreateAndAddBody(box_bcs, EActivation::Activate);
 	}
 }
 
