@@ -23,12 +23,22 @@ public:
 
 	virtual uint			GetTempAllocatorSizeMB() const override
 	{
-		return 256;
+		return 8192;
 	}
 
 	virtual uint			GetMaxBodies() const override
 	{
-		return BodyID::cMaxBodyIndex + 1;
+		return PhysicsSystem::cMaxBodiesLimit;
+	}
+
+	virtual uint			GetMaxBodyPairs() const override
+	{
+		return PhysicsSystem::cMaxBodyPairsLimit;
+	}
+
+	virtual uint			GetMaxContactConstraints() const
+	{
+		return PhysicsSystem::cMaxContactConstraintsLimit;
 	}
 
 	virtual void			StartTest(PhysicsSystem &inPhysicsSystem, EMotionQuality inMotionQuality) override
@@ -42,17 +52,23 @@ public:
 		inPhysicsSystem.SetPhysicsSettings(settings);
 
 		// Create the bodies
-		uint num_bodies = GetMaxBodies();
+		uint num_bodies = inPhysicsSystem.GetMaxBodies();
+		uint num_constraints = 0;
 		BodyIDVector body_ids;
 		body_ids.reserve(num_bodies);
 		uint num_per_axis = uint(pow(float(num_bodies), 1.0f / 3.0f)) + 1;
 		BodyCreationSettings bcs(new BoxShape(Vec3::sReplicate(0.5f)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-		for (uint x = 0; x < num_per_axis && body_ids.size() < num_bodies; ++x)
+		for (uint z = 0; z < num_per_axis && body_ids.size() < num_bodies; ++z)
 			for (uint y = 0; y < num_per_axis && body_ids.size() < num_bodies; ++y)
-				for (uint z = 0; z < num_per_axis && body_ids.size() < num_bodies; ++z)
+				for (uint x = 0; x < num_per_axis && body_ids.size() < num_bodies; ++x)
 				{
-					bcs.mPosition = RVec3(Real(x), Real(y), Real(z));
+					// When we reach the limit of contact constraints, start placing the boxes further apart so they don't collide
+					bcs.mPosition = RVec3(num_constraints < PhysicsSystem::cMaxContactConstraintsLimit? Real(x) : 2.0_r * x, 2.0_r * y, 2.0_r * z);
 					body_ids.push_back(bi.CreateBody(bcs)->GetID());
+
+					// From the 2nd box onwards in a row, we will get a contact constraint
+					if (x > 0)
+						++num_constraints;
 				}
 
 		// Add the bodies to the simulation

@@ -219,7 +219,7 @@ int main(int argc, char** argv)
 	RegisterTypes();
 
 	// Create temp allocator
-	TempAllocatorImpl temp_allocator(scene->GetTempAllocatorSizeMB() * 1024 * 1024);
+	TempAllocatorImpl temp_allocator(uint64(scene->GetTempAllocatorSizeMB()) * 1024 * 1024);
 
 	// Show used instruction sets
 	Trace(GetConfigurationString());
@@ -309,7 +309,7 @@ int main(int argc, char** argv)
 
 				// Create physics system
 				PhysicsSystem physics_system;
-				physics_system.Init(scene->GetMaxBodies(), 0, 65536, 20480, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
+				physics_system.Init(scene->GetMaxBodies(), 0, scene->GetMaxBodyPairs(), scene->GetMaxContactConstraints(), broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
 
 				// Start test scene
 				scene->StartTest(physics_system, motion_quality);
