@@ -44,6 +44,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * An empty `MutableCompoundShape` now returns the same local bounding box as `EmptyShape` (a point at (0, 0, 0)). This prevents floating point overflow exceptions.
 * Fixed a bug in ManifoldBetweenTwoFaces that led to incorrect `ContactManifold::mRelativeContactPointsOn2` when the contact normal and the face normal were not roughly parallel. Also it led to possibly jitter in the simulation in that case.
 * Fixed InternalEdgeRemovingCollector not working when colliding with a very dense triangle grid because it ran out of internal space. Now falling back to memory allocations when this happens to avoid ghost collisions.
+* Fixed running out of stack space when simulating a really high number of active rigid bodies.
 
 ## v5.2.0
 

@@ -32,6 +32,6 @@ private:
 	RendererDX12 *			mRenderer;
 
 	ComPtr<ID3D12Resource>	mInstanceBuffer;
-	int						mInstanceBufferSize = 0;
+	uint					mInstanceBufferSize = 0;
 	int						mInstanceSize = 0;
 };
