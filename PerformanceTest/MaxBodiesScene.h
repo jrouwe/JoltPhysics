@@ -36,7 +36,7 @@ public:
 		return PhysicsSystem::cMaxBodyPairsLimit;
 	}
 
-	virtual uint			GetMaxContactConstraints() const
+	virtual uint			GetMaxContactConstraints() const override
 	{
 		return PhysicsSystem::cMaxContactConstraintsLimit;
 	}
