@@ -218,9 +218,6 @@ int main(int argc, char** argv)
 	// Register all Jolt physics types
 	RegisterTypes();
 
-	// Create temp allocator
-	TempAllocatorImpl temp_allocator(uint64(scene->GetTempAllocatorSizeMB()) * 1024 * 1024);
-
 	// Show used instruction sets
 	Trace(GetConfigurationString());
 
@@ -230,6 +227,9 @@ int main(int argc, char** argv)
 
 	// Output scene we're running
 	Trace("Running scene: %s", scene->GetName());
+
+	// Create temp allocator
+	TempAllocatorImpl temp_allocator(uint64(scene->GetTempAllocatorSizeMB()) * 1024 * 1024);
 
 	// Find the asset path
 	bool found = false;
