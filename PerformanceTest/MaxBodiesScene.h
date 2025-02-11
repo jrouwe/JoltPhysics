@@ -57,7 +57,10 @@ public:
 		BodyIDVector body_ids;
 		body_ids.reserve(num_bodies);
 		uint num_per_axis = uint(pow(float(num_bodies), 1.0f / 3.0f)) + 1;
-		BodyCreationSettings bcs(new BoxShape(Vec3::sReplicate(0.5f)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		Vec3 half_extent = Vec3::sReplicate(0.5f);
+		BodyCreationSettings bcs(new BoxShape(half_extent), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		bcs.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
+		bcs.mMassPropertiesOverride.SetMassAndInertiaOfSolidBox(2.0f * half_extent, 1000.0f);
 		for (uint z = 0; z < num_per_axis && body_ids.size() < num_bodies; ++z)
 			for (uint y = 0; y < num_per_axis && body_ids.size() < num_bodies; ++y)
 				for (uint x = 0; x < num_per_axis && body_ids.size() < num_bodies; ++x)
