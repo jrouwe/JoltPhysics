@@ -15,7 +15,7 @@ public:
 	virtual const char *	GetName() const = 0;
 
 	// Get the number of MB that the temp allocator should preallocate
-	virtual uint			GetTempAllocatorSizeMB() const						{ return 32; }
+	virtual size_t			GetTempAllocatorSizeMB() const						{ return 32; }
 
 	// Get the max number of bodies to support in the physics system
 	virtual uint			GetMaxBodies() const								{ return 10240; }

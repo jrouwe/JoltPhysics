@@ -21,7 +21,7 @@ public:
 		return "MaxBodies";
 	}
 
-	virtual uint			GetTempAllocatorSizeMB() const override
+	virtual size_t			GetTempAllocatorSizeMB() const override
 	{
 		return 8192;
 	}

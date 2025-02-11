@@ -229,7 +229,7 @@ int main(int argc, char** argv)
 	Trace("Running scene: %s", scene->GetName());
 
 	// Create temp allocator
-	TempAllocatorImpl temp_allocator(uint64(scene->GetTempAllocatorSizeMB()) * 1024 * 1024);
+	TempAllocatorImpl temp_allocator(scene->GetTempAllocatorSizeMB() * 1024 * 1024);
 
 	// Find the asset path
 	bool found = false;
