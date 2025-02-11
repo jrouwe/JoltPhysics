@@ -26,6 +26,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added overridable `CollisionCollector::OnBodyEnd` that is called after all hits for a body have been processed when collecting hits through `NarrowPhaseQuery`.
 * Added `ClosestHitPerBodyCollisionCollector` which will report the closest / deepest hit per body that the collision query collides with.
 * Added `PhysicsSystem::SetSimCollideBodyVsBody`. This allows overriding the collision detection between two bodies. It can be used to only store the 1st hit for sensor collisions. This makes sensors cheaper if you only need to know if there is an overlap or not. An example can be found in `SimCollideBodyVsBodyTest`.
+* Added the following constants on PhysicsSystem: cMaxBodiesLimit, cMaxBodyPairsLimit and cMaxContactConstraintsLimit. These constants are the max allowable values for PhysicsSystem::Init. Exceeding these will trigger an assert and the system will clamp the values.
 
 ### Bug fixes
 
@@ -45,6 +46,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed a bug in ManifoldBetweenTwoFaces that led to incorrect `ContactManifold::mRelativeContactPointsOn2` when the contact normal and the face normal were not roughly parallel. Also it led to possibly jitter in the simulation in that case.
 * Fixed InternalEdgeRemovingCollector not working when colliding with a very dense triangle grid because it ran out of internal space. Now falling back to memory allocations when this happens to avoid ghost collisions.
 * Fixed running out of stack space when simulating a really high number of active rigid bodies.
+* Moved the 'broad phase bit' to the highest bit in BodyID to avoid running out of NodeIDs in BroadPhaseQuadTree when calling PhysicsSystem::OptimizeBroadPhase on a tree with a very high body count.
+* TempAllocatorImpl uses 64 bit integers internally to allow for a higher max contact constraint count.
 
 ## v5.2.0
 

@@ -18,6 +18,7 @@
 #include <Jolt/Core/QuickSort.h>
 #include <Jolt/Core/RTTI.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #ifdef JPH_PLATFORM_WINDOWS
 	#include <vulkan/vulkan_win32.h>
 	#include <Window/ApplicationWindowWin.h>
@@ -28,6 +29,7 @@
 	#include <vulkan/vulkan_metal.h>
 	#include <Window/ApplicationWindowMacOS.h>
 #endif
+JPH_SUPPRESS_WARNINGS_STD_END
 
 #ifdef JPH_DEBUG
 
@@ -774,10 +776,10 @@ void RendererVK::DestroySwapChain()
 		vkDestroyImageView(mDevice, view, nullptr);
 	mSwapChainImageViews.clear();
 
-	if (mSwapChain != nullptr)
+	if (mSwapChain != VK_NULL_HANDLE)
 	{
 		vkDestroySwapchainKHR(mDevice, mSwapChain, nullptr);
-		mSwapChain = nullptr;
+		mSwapChain = VK_NULL_HANDLE;
 	}
 }
 
@@ -795,7 +797,7 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	Renderer::BeginFrame(inCamera, inWorldScale);
 
 	// If we have no swap chain, bail out
-	if (mSwapChain == nullptr)
+	if (mSwapChain == VK_NULL_HANDLE)
 		return;
 
 	// Update frame index
@@ -810,7 +812,7 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 		vkDeviceWaitIdle(mDevice);
 		DestroySwapChain();
 		CreateSwapChain(mPhysicalDevice);
-		if (mSwapChain == nullptr)
+		if (mSwapChain == VK_NULL_HANDLE)
 			return;
 		result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mFrameIndex], VK_NULL_HANDLE, &mImageIndex);
 		mSubOptimalSwapChain = false;
@@ -906,7 +908,7 @@ void RendererVK::EndFrame()
 	JPH_PROFILE_FUNCTION();
 
 	// If we have no swap chain, bail out
-	if (mSwapChain == nullptr)
+	if (mSwapChain == VK_NULL_HANDLE)
 	{
 		Renderer::EndFrame();
 		return;

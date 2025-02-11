@@ -77,13 +77,15 @@ PhysicsSystem::~PhysicsSystem()
 
 void PhysicsSystem::Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const BroadPhaseLayerInterface &inBroadPhaseLayerInterface, const ObjectVsBroadPhaseLayerFilter &inObjectVsBroadPhaseLayerFilter, const ObjectLayerPairFilter &inObjectLayerPairFilter)
 {
-	JPH_ASSERT(inMaxBodies <= BodyID::cMaxBodyIndex + 1, "Cannot support this many bodies");
+	// Clamp max bodies
+	uint max_bodies = min(inMaxBodies, cMaxBodiesLimit);
+	JPH_ASSERT(max_bodies == inMaxBodies, "Cannot support this many bodies!");
 
 	mObjectVsBroadPhaseLayerFilter = &inObjectVsBroadPhaseLayerFilter;
 	mObjectLayerPairFilter = &inObjectLayerPairFilter;
 
 	// Initialize body manager
-	mBodyManager.Init(inMaxBodies, inNumBodyMutexes, inBroadPhaseLayerInterface);
+	mBodyManager.Init(max_bodies, inNumBodyMutexes, inBroadPhaseLayerInterface);
 
 	// Create broadphase
 	mBroadPhase = new BROAD_PHASE();
@@ -93,7 +95,7 @@ void PhysicsSystem::Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBody
 	mContactManager.Init(inMaxBodyPairs, inMaxContactConstraints);
 
 	// Init islands builder
-	mIslandBuilder.Init(inMaxBodies);
+	mIslandBuilder.Init(max_bodies);
 
 	// Initialize body interface
 	mBodyInterfaceLocking.Init(mBodyLockInterfaceLocking, mBodyManager, *mBroadPhase);

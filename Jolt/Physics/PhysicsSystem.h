@@ -35,6 +35,15 @@ public:
 								PhysicsSystem()												: mContactManager(mPhysicsSettings) JPH_IF_ENABLE_ASSERTS(, mConstraintManager(&mBodyManager)) { }
 								~PhysicsSystem();
 
+	/// The maximum value that can be passed to Init for inMaxBodies.
+	static constexpr uint		cMaxBodiesLimit = BodyID::cMaxBodyIndex + 1;
+
+	/// The maximum value that can be passed to Init for inMaxBodyPairs. Note you should really use a lower value, using this value will cost a lot of memory!
+	static constexpr uint		cMaxBodyPairsLimit = ContactConstraintManager::cMaxBodyPairsLimit;
+
+	/// The maximum value that can be passed to Init for inMaxContactConstraints. Note you should really use a lower value, using this value will cost a lot of memory!
+	static constexpr uint		cMaxContactConstraintsLimit = ContactConstraintManager::cMaxContactConstraintsLimit;
+
 	/// Initialize the system.
 	/// @param inMaxBodies Maximum number of bodies to support.
 	/// @param inNumBodyMutexes Number of body mutexes to use. Should be a power of 2 in the range [1, 64], use 0 to auto detect.
