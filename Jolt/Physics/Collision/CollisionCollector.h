@@ -69,7 +69,8 @@ public:
 	/// When running a query through the NarrowPhaseQuery class, this will be called after all AddHit calls have been made for a particular body.
 	virtual void			OnBodyEnd()										{ /* Does nothing by default */ }
 
-	/// Set by the collision detection functions to the current TransformedShape that we're colliding against before calling the AddHit function
+	/// Set by the collision detection functions to the current TransformedShape that we're colliding against before calling the AddHit function.
+	/// Note: Only valid during AddHit! For performance reasons, the pointer is not reset after leaving AddHit so the context may point to freed memory.
 	void					SetContext(const TransformedShape *inContext)	{ mContext = inContext; }
 	const TransformedShape *GetContext() const								{ return mContext; }
 
