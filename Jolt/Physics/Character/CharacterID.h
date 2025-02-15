@@ -22,12 +22,13 @@ public:
 	{
 	}
 
-	/// Construct from index and sequence number combined in a single uint32 (use with care!)
+	/// Construct with specific value, make sure you don't use the same value twice!
 	explicit				CharacterID(uint32 inID) :
 		mID(inID)
 	{
 	}
 
+	/// Get the numeric value of the ID
 	inline uint32			GetValue() const
 	{
 		return mID;
