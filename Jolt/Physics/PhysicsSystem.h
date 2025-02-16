@@ -38,10 +38,14 @@ public:
 	/// The maximum value that can be passed to Init for inMaxBodies.
 	static constexpr uint		cMaxBodiesLimit = BodyID::cMaxBodyIndex + 1;
 
-	/// The maximum value that can be passed to Init for inMaxBodyPairs. Note you should really use a lower value, using this value will cost a lot of memory!
+	/// The maximum value that can be passed to Init for inMaxBodyPairs.
+	/// Note you should really use a lower value, using this value will cost a lot of memory!
+	/// On a 32 bit platform, you'll run out of memory way before you reach this limit.
 	static constexpr uint		cMaxBodyPairsLimit = ContactConstraintManager::cMaxBodyPairsLimit;
 
-	/// The maximum value that can be passed to Init for inMaxContactConstraints. Note you should really use a lower value, using this value will cost a lot of memory!
+	/// The maximum value that can be passed to Init for inMaxContactConstraints.
+	/// Note you should really use a lower value, using this value will cost a lot of memory!
+	/// On a 32 bit platform, you'll run out of memory way before you reach this limit.
 	static constexpr uint		cMaxContactConstraintsLimit = ContactConstraintManager::cMaxContactConstraintsLimit;
 
 	/// Initialize the system.

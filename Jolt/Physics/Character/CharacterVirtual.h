@@ -215,7 +215,7 @@ public:
 	virtual								~CharacterVirtual() override;
 
 	/// The ID of this character
-	CharacterID							GetID() const											{ return mID; }
+	inline const CharacterID &			GetID() const											{ return mID; }
 
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
