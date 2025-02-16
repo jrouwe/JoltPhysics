@@ -80,7 +80,8 @@ VehicleConstraint::VehicleConstraint(Body &inVehicleBody, const VehicleConstrain
 	mBody(&inVehicleBody),
 	mForward(inSettings.mForward),
 	mUp(inSettings.mUp),
-	mWorldUp(inSettings.mUp)
+	mWorldUp(inSettings.mUp),
+	mAntiRollBars(inSettings.mAntiRollBars)
 {
 	// Check sanity of incoming settings
 	JPH_ASSERT(inSettings.mUp.IsNormalized());
@@ -89,15 +90,6 @@ VehicleConstraint::VehicleConstraint(Body &inVehicleBody, const VehicleConstrain
 
 	// Store max pitch/roll angle
 	SetMaxPitchRollAngle(inSettings.mMaxPitchRollAngle);
-
-	// Copy anti-rollbar settings
-	mAntiRollBars.resize(inSettings.mAntiRollBars.size());
-	for (uint i = 0; i < mAntiRollBars.size(); ++i)
-	{
-		const VehicleAntiRollBar &r = inSettings.mAntiRollBars[i];
-		mAntiRollBars[i] = r;
-		JPH_ASSERT(r.mStiffness >= 0.0f);
-	}
 
 	// Construct our controller class
 	mController = inSettings.mController->ConstructController(*this);
@@ -283,6 +275,8 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 	// Calculate anti-rollbar impulses
 	for (const VehicleAntiRollBar &r : mAntiRollBars)
 	{
+		JPH_ASSERT(r.mStiffness >= 0.0f);
+
 		Wheel *lw = mWheels[r.mLeftWheel];
 		Wheel *rw = mWheels[r.mRightWheel];
 
