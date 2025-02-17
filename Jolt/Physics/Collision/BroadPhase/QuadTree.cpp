@@ -1477,14 +1477,17 @@ void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &in
 	JPH_ASSERT(inNodeIndex != cInvalidNodeIndex);
 
 	// To avoid call overhead, create a stack in place
+	JPH_SUPPRESS_WARNING_PUSH
+	JPH_CLANG_SUPPRESS_WARNING("-Wunused-member-function") // The default constructor of StackEntry is unused when using Jolt's Array class but not when using std::vector
 	struct StackEntry
 	{
 						StackEntry() = default;
-						StackEntry(uint32 inNodeIndex, uint32 inParentNodeIndex) : mNodeIndex(inNodeIndex), mParentNodeIndex(inParentNodeIndex) { }
+		inline			StackEntry(uint32 inNodeIndex, uint32 inParentNodeIndex) : mNodeIndex(inNodeIndex), mParentNodeIndex(inParentNodeIndex) { }
 
 		uint32			mNodeIndex;
 		uint32			mParentNodeIndex;
 	};
+	JPH_SUPPRESS_WARNING_POP
 	Array<StackEntry, STLLocalAllocator<StackEntry, cStackSize>> stack;
 	stack.reserve(cStackSize);
 	stack.emplace_back(inNodeIndex, cInvalidNodeIndex);
