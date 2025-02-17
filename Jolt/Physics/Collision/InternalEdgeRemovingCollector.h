@@ -79,6 +79,9 @@ public:
 	explicit				InternalEdgeRemovingCollector(CollideShapeCollector &inChainedCollector) :
 		mChainedCollector(inChainedCollector)
 	{
+		// Initialize arrays to full capacity to avoid needless reallocation calls
+		mVoidedFeatures.reserve(cMaxLocalVoidedFeatures);
+		mDelayedResults.reserve(cMaxLocalDelayedResults);
 	}
 
 	// See: CollideShapeCollector::Reset

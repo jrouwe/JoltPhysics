@@ -49,16 +49,23 @@ void CollideShapeVsShapePerLeaf(const Shape *inShape1, const Shape *inShape2, Ve
 		SubShapeIDCreator	mSubShapeIDCreator;
 	};
 
+	constexpr uint cMaxLocalLeafShapes = 32;
+
 	// A collector that stores the information we need from a leaf shape in an array that is usually on the stack but can fall back to the heap if needed
 	class MyCollector : public TransformedShapeCollector
 	{
 	public:
+							MyCollector()
+		{
+			mHits.reserve(cMaxLocalLeafShapes);
+		}
+
 		void				AddHit(const TransformedShape &inShape) override
 		{
 			mHits.emplace_back(inShape.GetWorldSpaceBounds(), inShape.GetCenterOfMassTransform().ToMat44(), inShape.GetShapeScale(), inShape.mShape, inShape.mSubShapeIDCreator);
 		}
 
-		Array<LeafShape, STLLocalAllocator<LeafShape, 32>> mHits;
+		Array<LeafShape, STLLocalAllocator<LeafShape, cMaxLocalLeafShapes>> mHits;
 	};
 
 	// Get bounds of both shapes
