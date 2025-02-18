@@ -261,7 +261,7 @@ public:
 
 private:
 	/// Constants
-	static const uint32			cInvalidNodeIndex = 0xffffffff;		///< Value used to indicate node index is invalid
+	static constexpr uint32		cInvalidNodeIndex = 0xffffffff;		///< Value used to indicate node index is invalid
 	static const AABox			cInvalidBounds;						///< Invalid bounding box using cLargeFloat
 
 	/// We alternate between two trees in order to let collision queries complete in parallel to adding/removing objects to the tree

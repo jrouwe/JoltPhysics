@@ -15,6 +15,7 @@
 #include <Jolt/Geometry/AABox4.h>
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Geometry/OrientedBox.h>
+#include <Jolt/Core/STLLocalAllocator.h>
 
 #ifdef JPH_DUMP_BROADPHASE_TREE
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
@@ -160,16 +161,17 @@ QuadTree::~QuadTree()
 
 	// Collect all bodies
 	Allocator::Batch free_batch;
-	NodeID node_stack[cStackSize];
-	node_stack[0] = root_node.GetNodeID();
-	JPH_ASSERT(node_stack[0].IsValid());
-	if (node_stack[0].IsNode())
+	Array<NodeID, STLLocalAllocator<NodeID, cStackSize>> node_stack;
+	node_stack.reserve(cStackSize);
+	node_stack.push_back(root_node.GetNodeID());
+	JPH_ASSERT(node_stack.front().IsValid());
+	if (node_stack.front().IsNode())
 	{
-		int top = 0;
 		do
 		{
 			// Process node
-			NodeID node_id = node_stack[top];
+			NodeID node_id = node_stack.back();
+			node_stack.pop_back();
 			JPH_ASSERT(!node_id.IsBody());
 			uint32 node_idx = node_id.GetNodeIndex();
 			const Node &node = mAllocator->Get(node_idx);
@@ -177,17 +179,12 @@ QuadTree::~QuadTree()
 			// Recurse and get all child nodes
 			for (NodeID child_node_id : node.mChildNodeID)
 				if (child_node_id.IsValid() && child_node_id.IsNode())
-				{
-					JPH_ASSERT(top < cStackSize);
-					node_stack[top] = child_node_id;
-					top++;
-				}
+					node_stack.push_back(child_node_id);
 
 			// Mark node to be freed
 			mAllocator->AddObjectToBatch(free_batch, node_idx);
-			--top;
 		}
-		while (top >= 0);
+		while (!node_stack.empty());
 	}
 
 	// Now free all nodes
@@ -1480,22 +1477,28 @@ void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &in
 	JPH_ASSERT(inNodeIndex != cInvalidNodeIndex);
 
 	// To avoid call overhead, create a stack in place
+	JPH_SUPPRESS_WARNING_PUSH
+	JPH_CLANG_SUPPRESS_WARNING("-Wunused-member-function") // The default constructor of StackEntry is unused when using Jolt's Array class but not when using std::vector
 	struct StackEntry
 	{
+						StackEntry() = default;
+		inline			StackEntry(uint32 inNodeIndex, uint32 inParentNodeIndex) : mNodeIndex(inNodeIndex), mParentNodeIndex(inParentNodeIndex) { }
+
 		uint32			mNodeIndex;
 		uint32			mParentNodeIndex;
 	};
-	StackEntry stack[cStackSize];
-	stack[0].mNodeIndex = inNodeIndex;
-	stack[0].mParentNodeIndex = cInvalidNodeIndex;
-	int top = 0;
+	JPH_SUPPRESS_WARNING_POP
+	Array<StackEntry, STLLocalAllocator<StackEntry, cStackSize>> stack;
+	stack.reserve(cStackSize);
+	stack.emplace_back(inNodeIndex, cInvalidNodeIndex);
 
 	uint32 num_bodies = 0;
 
 	do
 	{
 		// Copy entry from the stack
-		StackEntry cur_stack = stack[top];
+		StackEntry cur_stack = stack.back();
+		stack.pop_back();
 
 		// Validate parent
 		const Node &node = mAllocator->Get(cur_stack.mNodeIndex);
@@ -1514,10 +1517,7 @@ void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &in
 				{
 					// Child is a node, recurse
 					uint32 child_idx = child_node_id.GetNodeIndex();
-					JPH_ASSERT(top < cStackSize);
-					StackEntry &new_entry = stack[top++];
-					new_entry.mNodeIndex = child_idx;
-					new_entry.mParentNodeIndex = cur_stack.mNodeIndex;
+					stack.emplace_back(child_idx, cur_stack.mNodeIndex);
 
 					// Validate that the bounding box is bigger or equal to the bounds in the tree
 					// Bounding box could also be invalid if all children of our child were removed
@@ -1549,9 +1549,8 @@ void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &in
 				}
 			}
 		}
-		--top;
 	}
-	while (top >= 0);
+	while (!stack.empty());
 
 	// Check that the amount of bodies in the tree matches our counter
 	JPH_ASSERT(num_bodies == inNumExpectedBodies);
@@ -1573,14 +1572,14 @@ void QuadTree::DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) cons
 	f << "digraph {\n";
 
 	// Iterate the entire tree
-	NodeID node_stack[cStackSize];
-	node_stack[0] = inRoot;
-	JPH_ASSERT(node_stack[0].IsValid());
-	int top = 0;
+	Array<NodeID, STLLocalAllocator<NodeID, cStackSize>> node_stack;
+	node_stack.push_back(inRoot);
+	JPH_ASSERT(inRoot.IsValid());
 	do
 	{
 		// Check if node is a body
-		NodeID node_id = node_stack[top];
+		NodeID node_id = node_stack.back();
+		node_stack.pop_back();
 		if (node_id.IsBody())
 		{
 			// Output body
@@ -1605,9 +1604,7 @@ void QuadTree::DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) cons
 			for (NodeID child_node_id : node.mChildNodeID)
 				if (child_node_id.IsValid())
 				{
-					JPH_ASSERT(top < cStackSize);
-					node_stack[top] = child_node_id;
-					top++;
+					node_stack.push_back(child_node_id);
 
 					// Output link
 					f << "node" << node_str << " -> ";
@@ -1618,9 +1615,8 @@ void QuadTree::DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) cons
 					f << "\n";
 				}
 		}
-		--top;
 	}
-	while (top >= 0);
+	while (!node_stack.empty());
 
 	// Finish DOT file
 	f << "}\n";
