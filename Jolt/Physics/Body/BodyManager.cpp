@@ -1146,9 +1146,7 @@ void BodyManager::ValidateActiveBodyBounds()
 		for (BodyID *id = mActiveBodies[type], *id_end = mActiveBodies[type] + mNumActiveBodies[type].load(memory_order_relaxed); id < id_end; ++id)
 		{
 			const Body *body = mBodies[id->GetIndex()];
-			AABox cached = body->GetWorldSpaceBounds();
-			AABox calculated = body->GetShape()->GetWorldSpaceBounds(body->GetCenterOfMassTransform(), Vec3::sOne());
-			JPH_ASSERT(cached == calculated);
+			body->ValidateCachedBounds();
 		}
 }
 #endif // JPH_DEBUG
