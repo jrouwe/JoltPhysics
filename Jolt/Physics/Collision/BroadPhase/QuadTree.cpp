@@ -196,6 +196,30 @@ uint32 QuadTree::AllocateNode(bool inIsChanged)
 	uint32 index = mAllocator->ConstructObject(inIsChanged);
 	if (index == Allocator::cInvalidObjectIndex)
 	{
+		// If you're running out of nodes, you're most likely adding too many individual bodies to the tree.
+		// Because of the lock free nature of this tree, any individual body is added to the root of the tree.
+		// This means that if you add a lot of bodies individually, you will end up with a very deep tree and you'll be
+		// using a lot more nodes than you would if you added them in batches.
+		// Please look at BodyInterface::AddBodiesPrepare/AddBodiesFinalize.
+		//
+		// If you have created a wrapper around Jolt then a possible solution is to activate a mode during loading
+		// that queues up any bodies that need to be added. When loading is done, insert all of them as a single batch.
+		// This could be implemented as a 'start batching' / 'end batching' call to switch in and out of that mode.
+		// The rest of the code can then just use the regular 'add single body' call on your wrapper and doesn't need to know
+		// if this mode is active or not.
+		//
+		// Calling PhysicsSystem::Update or PhysicsSystem::OptimizeBroadPhase will perform maintenance
+		// on the tree and will make it efficient again. If you're not calling these functions and are adding a lot of bodies
+		// you could still be running out of nodes because the tree is not being maintained. If your application is paused,
+		// consider still calling PhysicsSystem::Update with a delta time of 0 to keep the tree in good shape.
+		//
+		// The system keeps track of a previous and a current tree, this allows for queries to continue using the old tree
+		// while the new tree is being built. If you completely clean the PhysicsSystem and rebuild it from scratch, you may
+		// want to call PhysicsSystem::OptimizeBroadPhase two times after clearing to completely get rid of any lingering nodes.
+		//
+		// The number of nodes that is allocated is related to the max number of bodies that is passed in PhysicsSystem::Init.
+		// For normal situations there are plenty of nodes available. If all else fails, you can increase the number of nodes
+		// by increasing the maximum number of bodies.
 		Trace("QuadTree: Out of nodes!");
 		std::abort();
 	}
