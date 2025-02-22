@@ -388,7 +388,7 @@ public:
 	}
 
 	/// Remove one element from the array
-	void					erase(const_iterator inIter)
+	iterator				erase(const_iterator inIter)
 	{
 		size_type p = size_type(inIter - begin());
 		JPH_ASSERT(p < mSize);
@@ -396,10 +396,11 @@ public:
 		if (p + 1 < mSize)
 			move(mElements + p, mElements + p + 1, mSize - p - 1);
 		--mSize;
+		return const_cast<iterator>(inIter);
 	}
 
 	/// Remove multiple element from the array
-	void					erase(const_iterator inBegin, const_iterator inEnd)
+	iterator				erase(const_iterator inBegin, const_iterator inEnd)
 	{
 		size_type p = size_type(inBegin - begin());
 		size_type n = size_type(inEnd - inBegin);
@@ -408,6 +409,7 @@ public:
 		if (p + n < mSize)
 			move(mElements + p, mElements + p + n, mSize - p - n);
 		mSize -= n;
+		return const_cast<iterator>(inBegin);
 	}
 
 	/// Iterators
