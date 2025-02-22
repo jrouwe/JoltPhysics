@@ -674,4 +674,52 @@ TEST_SUITE("ContactListenerTests")
 										CHECK(body2.GetLinearVelocity() == cInitialVelocity2);
 								}
 	}
+
+	// Test that an update with zero delta time doesn't generate contact callbacks
+	TEST_CASE("TestZeroDeltaTime")
+	{
+		PhysicsTestContext c;
+
+		// Register listener
+		LoggingContactListener listener;
+		c.GetSystem()->SetContactListener(&listener);
+
+		// Create a sphere that intersects with the floor
+		Body &floor = c.CreateFloor();
+		Body &body1 = c.CreateSphere(RVec3::sZero(), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING);
+
+		// Step with zero delta time
+		c.GetSystem()->Update(0.0f, 1, c.GetTempAllocator(), c.GetJobSystem());
+
+		// No callbacks should trigger when delta time is zero
+		CHECK(listener.GetEntryCount() == 0);
+
+		// Simulate for 1 step
+		c.SimulateSingleStep();
+
+		// We expect a validate and a contact point added message
+		CHECK(listener.GetEntryCount() == 2);
+		CHECK(listener.Contains(EType::Validate, floor.GetID(), body1.GetID()));
+		CHECK(listener.Contains(EType::Add, floor.GetID(), body1.GetID()));
+		listener.Clear();
+
+		// Create a 2nd sphere that intersects with the floor
+		Body &body2 = c.CreateSphere(RVec3(4, 0, 0), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING);
+
+		// Step with zero delta time
+		c.GetSystem()->Update(0.0f, 1, c.GetTempAllocator(), c.GetJobSystem());
+
+		// No callbacks should trigger when delta time is zero
+		CHECK(listener.GetEntryCount() == 0);
+
+		// Simulate for 1 step
+		c.SimulateSingleStep();
+
+		// We expect callbacks for both bodies now
+		CHECK(listener.GetEntryCount() == 4);
+		CHECK(listener.Contains(EType::Validate, floor.GetID(), body1.GetID()));
+		CHECK(listener.Contains(EType::Persist, floor.GetID(), body1.GetID()));
+		CHECK(listener.Contains(EType::Validate, floor.GetID(), body2.GetID()));
+		CHECK(listener.Contains(EType::Add, floor.GetID(), body2.GetID()));
+	}
 }

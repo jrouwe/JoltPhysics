@@ -154,8 +154,9 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 		mBroadPhase->UpdateFinalize(update_state);
 		mBroadPhase->UnlockModifications();
 
-		// Call contact removal callbacks from contacts that existed in the previous update
-		mContactManager.FinalizeContactCacheAndCallContactPointRemovedCallbacks(0, 0);
+		// If time has passed, call contact removal callbacks from contacts that existed in the previous update
+		if (inDeltaTime > 0.0f)
+			mContactManager.FinalizeContactCacheAndCallContactPointRemovedCallbacks(0, 0);
 
 		mBodyManager.UnlockAllBodies();
 		return EPhysicsUpdateError::None;

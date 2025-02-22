@@ -49,6 +49,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed running out of stack space when simulating a really high number of active rigid bodies.
 * Moved the 'broad phase bit' to the highest bit in `BodyID` to avoid running out of `NodeID`s in `BroadPhaseQuadTree` when calling `PhysicsSystem::OptimizeBroadPhase` on a tree with a very high body count.
 * `TempAllocatorImpl` uses 64 bit integers internally to allow for a higher max contact constraint count.
+* When inserting lots of bodies without using batching, a broad phase tree of depth > 128 can be created. If the `PhysicsSystem` was destructed in this situation, a stack overflow would cause a crash.
+* When calling `PhysicsSystem::Update` with a delta time of 0, contact remove callbacks were triggered by accident for all existing contacts.
 
 ## v5.2.0
 
