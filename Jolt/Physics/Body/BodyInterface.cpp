@@ -990,6 +990,22 @@ bool BodyInterface::GetUseManifoldReduction(const BodyID &inBodyID) const
 		return true;
 }
 
+void BodyInterface::SetCollisionGroup(const BodyID &inBodyID, const CollisionGroup &inCollisionGroup)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		lock.GetBody().SetCollisionGroup(inCollisionGroup);
+}
+
+const CollisionGroup &BodyInterface::GetCollisionGroup(const BodyID &inBodyID) const
+{
+	BodyLockRead lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		return lock.GetBody().GetCollisionGroup();
+	else
+		return CollisionGroup::sInvalid;
+}
+
 TransformedShape BodyInterface::GetTransformedShape(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
