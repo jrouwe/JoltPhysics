@@ -88,6 +88,18 @@ public:
 		return mDeltaTime / mCollisionSteps;
 	}
 
+	// Get the temporary allocator
+	TempAllocator *		GetTempAllocator() const
+	{
+		return mTempAllocator;
+	}
+
+	// Get the job system
+	JobSystem *			GetJobSystem() const
+	{
+		return mJobSystem;
+	}
+
 #ifdef JPH_DEBUG_RENDERER
 	// Write the debug output to a file to be able to replay it with JoltViewer
 	void				RecordDebugOutput(const char *inFileName);
