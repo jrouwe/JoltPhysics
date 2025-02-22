@@ -47,6 +47,83 @@ public:
 	using const_iterator = const T *;
 	using iterator = T *;
 
+	/// An iterator that traverses the array in reverse order
+	class rev_it
+	{
+	public:
+		/// Constructor
+							rev_it() = default;
+		explicit			rev_it(T *inValue)				: mValue(inValue) { }
+
+		/// Copying
+							rev_it(const rev_it &) = default;
+		rev_it &			operator = (const rev_it &) = default;
+
+		/// Comparison
+		bool				operator == (const rev_it &inRHS) const { return mValue == inRHS.mValue; }
+		bool				operator != (const rev_it &inRHS) const { return mValue != inRHS.mValue; }
+
+		/// Arithmetics
+		rev_it &			operator ++ ()					{ --mValue; return *this; }
+		rev_it				operator ++ (int)				{ return rev_it(mValue--); }
+		rev_it &			operator -- ()					{ ++mValue; return *this; }
+		rev_it				operator -- (int)				{ return rev_it(mValue++); }
+
+		rev_it				operator + (int inValue)		{ return rev_it(mValue - inValue); }
+		rev_it				operator - (int inValue)		{ return rev_it(mValue + inValue); }
+
+		rev_it &			operator += (int inValue)		{ mValue -= inValue; return *this; }
+		rev_it &			operator -= (int inValue)		{ mValue += inValue; return *this; }
+
+		/// Access
+		T &					operator * () const				{ return *mValue; }
+		T &					operator -> () const			{ return *mValue; }
+
+	private:
+		T *					mValue;
+	};
+
+	/// A const iterator that traverses the array in reverse order
+	class crev_it
+	{
+	public:
+		/// Constructor
+							crev_it() = default;
+		explicit			crev_it(const T *inValue)		: mValue(inValue) { }
+
+		/// Copying
+							crev_it(const crev_it &) = default;
+		explicit			crev_it(const rev_it &inValue)	: mValue(inValue.mValue) { }
+		crev_it &			operator = (const crev_it &) = default;
+		crev_it &			operator = (const rev_it &inRHS) { mValue = inRHS.mValue; return *this; }
+
+		/// Comparison
+		bool				operator == (const crev_it &inRHS) const { return mValue == inRHS.mValue; }
+		bool				operator != (const crev_it &inRHS) const { return mValue != inRHS.mValue; }
+
+		/// Arithmetics
+		crev_it &			operator ++ ()					{ --mValue; return *this; }
+		crev_it				operator ++ (int)				{ return crev_it(mValue--); }
+		crev_it &			operator -- ()					{ ++mValue; return *this; }
+		crev_it				operator -- (int)				{ return crev_it(mValue++); }
+
+		crev_it				operator + (int inValue)		{ return crev_it(mValue - inValue); }
+		crev_it				operator - (int inValue)		{ return crev_it(mValue + inValue); }
+
+		crev_it &			operator += (int inValue)		{ mValue -= inValue; return *this; }
+		crev_it &			operator -= (int inValue)		{ mValue += inValue; return *this; }
+
+		/// Access
+		const T &			operator * () const				{ return *mValue; }
+		const T &			operator -> () const			{ return *mValue; }
+
+	private:
+		const T *			mValue;
+	};
+
+	using reverse_iterator = rev_it;
+	using const_reverse_iterator = crev_it;
+
 private:
 	/// Move elements from one location to another
 	inline void				move(pointer inDestination, pointer inSource, size_type inCount)
@@ -423,14 +500,34 @@ public:
 		return mElements + mSize;
 	}
 
+	inline crev_it			rbegin() const
+	{
+		return crev_it(mElements + mSize - 1);
+	}
+
+	inline crev_it			rend() const
+	{
+		return crev_it(mElements - 1);
+	}
+
 	inline const_iterator	cbegin() const
 	{
-		return mElements;
+		return begin();
 	}
 
 	inline const_iterator	cend() const
 	{
-		return mElements + mSize;
+		return end();
+	}
+
+	inline crev_it			crbegin() const
+	{
+		return rbegin();
+	}
+
+	inline crev_it			crend() const
+	{
+		return rend();
 	}
 
 	inline iterator			begin()
@@ -441,6 +538,16 @@ public:
 	inline iterator			end()
 	{
 		return mElements + mSize;
+	}
+
+	inline rev_it			rbegin()
+	{
+		return rev_it(mElements + mSize - 1);
+	}
+
+	inline rev_it			rend()
+	{
+		return rev_it(mElements - 1);
 	}
 
 	inline const T *		data() const
