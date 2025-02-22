@@ -640,4 +640,87 @@ TEST_SUITE("ArrayTest")
 		CHECK(!(arr != arr));
 		CHECK(arr != arr2);
 	}
+
+	TEST_CASE("TestReverseIterator")
+	{
+		Array<int> arr({ 1, 2, 3, 4, 5, 6 });
+		Array<int>::reverse_iterator r = arr.rbegin();
+		CHECK(*r == 6);
+
+		int v = *(++r);
+		CHECK(v == 5);
+		CHECK(*r == 5);
+
+		v = *(--r);
+		CHECK(v == 6);
+		CHECK(*r == 6);
+
+		v = *(r++);
+		CHECK(v == 6);
+		CHECK(*r == 5);
+
+		v = *(r--);
+		CHECK(v == 5);
+		CHECK(*r == 6);
+
+		v = *(r += 2);
+		CHECK(v == 4);
+		CHECK(*r == 4);
+
+		v = *(r -= 2);
+		CHECK(v == 6);
+		CHECK(*r == 6);
+
+		CHECK(r == arr.rbegin());
+		CHECK(r != arr.rend());
+
+		r += 6;
+		CHECK(r == arr.rend());
+
+		CHECK(*(arr.rbegin() + 3) == 3);
+		CHECK(*(arr.rend() - 3) == 3);
+	}
+
+	TEST_CASE("TestConstReverseIterator")
+	{
+		const Array<int> arr({ 1, 2, 3, 4, 5, 6 });
+		Array<int>::const_reverse_iterator r = arr.rbegin();
+		CHECK(*r == 6);
+
+		int v = *(++r);
+		CHECK(v == 5);
+		CHECK(*r == 5);
+
+		v = *(--r);
+		CHECK(v == 6);
+		CHECK(*r == 6);
+
+		v = *(r++);
+		CHECK(v == 6);
+		CHECK(*r == 5);
+
+		v = *(r--);
+		CHECK(v == 5);
+		CHECK(*r == 6);
+
+		v = *(r += 2);
+		CHECK(v == 4);
+		CHECK(*r == 4);
+
+		v = *(r -= 2);
+		CHECK(v == 6);
+		CHECK(*r == 6);
+
+		CHECK(r == arr.rbegin());
+		CHECK(r == arr.crbegin());
+		CHECK(r != arr.rend());
+		CHECK(r != arr.crend());
+
+		r += 6;
+		CHECK(r == arr.rend());
+		CHECK(r == arr.crend());
+
+		CHECK(*(arr.rbegin() + 3) == 3);
+		CHECK(*(arr.rend() - 3) == 3);
+	}
 }
