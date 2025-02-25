@@ -364,6 +364,7 @@
 	JPH_MSVC_SUPPRESS_WARNING(4514) /* 'X' : unreferenced inline function has been removed */	\
 	JPH_MSVC_SUPPRESS_WARNING(4710) /* 'X' : function not inlined */							\
 	JPH_MSVC_SUPPRESS_WARNING(4711) /* function 'X' selected for automatic inline expansion */	\
+	JPH_MSVC_SUPPRESS_WARNING(4714) /* function 'X' marked as __forceinline not inlined */		\
 	JPH_MSVC_SUPPRESS_WARNING(4820) /* 'X': 'Y' bytes padding added after data member 'Z' */	\
 	JPH_MSVC_SUPPRESS_WARNING(4100) /* 'X' : unreferenced formal parameter */					\
 	JPH_MSVC_SUPPRESS_WARNING(4626) /* 'X' : assignment operator was implicitly defined as deleted because a base class assignment operator is inaccessible or deleted */ \
