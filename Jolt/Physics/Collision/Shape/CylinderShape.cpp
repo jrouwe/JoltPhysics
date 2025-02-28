@@ -200,13 +200,13 @@ void CylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg in
 	float scaled_radius = scale_xz * mRadius;
 
 	float x = inDirection.GetX(), y = inDirection.GetY(), z = inDirection.GetZ();
-	float o = sqrt(Square(x) + Square(z));
+	float xz_sq = Square(x) + Square(z);
 
-	// If o / |y| > scaled_radius / scaled_half_height, we're hitting the side
-	if (o * scaled_half_height > scaled_radius * abs(y))
+	// Check which component is bigger
+	if (xz_sq > Square(y))
 	{
 		// Hitting side
-		float f = -scaled_radius / o;
+		float f = -scaled_radius / sqrt(xz_sq);
 		float vx = x * f;
 		float vz = z * f;
 		outVertices.push_back(inCenterOfMassTransform * Vec3(vx, scaled_half_height, vz));

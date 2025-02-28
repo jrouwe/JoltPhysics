@@ -52,6 +52,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * When inserting lots of bodies without using batching, a broad phase tree of depth > 128 can be created. If the `PhysicsSystem` was destructed in this situation, a stack overflow would cause a crash.
 * When calling `PhysicsSystem::Update` with a delta time of 0, contact remove callbacks were triggered by accident for all existing contacts.
 * Fixed 'HingeConstraint' not having limits if `LimitsMin` was set to `-JPH_PI` or `LimitsMax` was set to `JPH_PI`. It should only be turned off if both are.
+* Fixed 'CylinderShape::GetSupportingFace' returning the wrong face. When the height of a cylinder was small compared to its radius, it would sink more into the ground than needed during simulation.
 
 ## v5.2.0
 
