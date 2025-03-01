@@ -136,6 +136,8 @@ void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPoint
 
 void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inMaxContactDistance, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2 JPH_IF_DEBUG_RENDERER(, RVec3Arg inCenterOfMass))
 {
+	JPH_ASSERT(inMaxContactDistance > 0.0f);
+
 #ifdef JPH_DEBUG_RENDERER
 	if (ContactConstraintManager::sDrawContactPoint)
 	{
@@ -195,8 +197,8 @@ void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, V
 				// distance = -|penetration_axis| * (p2 - plane_origin) . plane_normal / penetration_axis . plane_normal
 				float distance = (p2 - plane_origin).Dot(plane_normal) / penetration_axis_dot_plane_normal; // note left out -|penetration_axis| term
 
-				// If the point is behind or less then inMaxContactDistance in front of the plane of face 2, add it as a contact point
-				if (distance <= 0.0f || distance * penetration_axis_len < inMaxContactDistance)
+				// If the point is less than inMaxContactDistance in front of the plane of face 2, add it as a contact point
+				if (distance * penetration_axis_len < inMaxContactDistance)
 				{
 					Vec3 p1 = p2 - distance * inPenetrationAxis;
 					outContactPoints1.push_back(p1);
