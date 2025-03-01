@@ -201,9 +201,10 @@ void CylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg in
 
 	float x = inDirection.GetX(), y = inDirection.GetY(), z = inDirection.GetZ();
 	float xz_sq = Square(x) + Square(z);
+	float y_sq = Square(y);
 
 	// Check which component is bigger
-	if (xz_sq > Square(y))
+	if (xz_sq > y_sq)
 	{
 		// Hitting side
 		float f = -scaled_radius / sqrt(xz_sq);
@@ -215,8 +216,21 @@ void CylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg in
 	else
 	{
 		// Hitting top or bottom
+
+		// When the inDirection is more than 5 degrees from vertical, align the vertices so that 1 of the vertices
+		// points towards inDirection in the XZ plane. This ensures that we always have a vertex towards max penetration depth.
+		Mat44 transform = inCenterOfMassTransform;
+		if (xz_sq > 0.00765427f * y_sq)
+		{
+			Vec4 base_x = Vec4(x, 0, z, 0) / sqrt(xz_sq);
+			Vec4 base_z = base_x.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W>() * Vec4(-1, 0, 1, 0);
+			transform = transform * Mat44(base_x, Vec4(0, 1, 0, 0), base_z, Vec4(0, 0, 0, 1));
+		}
+
+		// Adjust for scale and height
 		Vec3 multiplier = y < 0.0f? Vec3(scaled_radius, scaled_half_height, scaled_radius) : Vec3(-scaled_radius, -scaled_half_height, scaled_radius);
-		Mat44 transform = inCenterOfMassTransform.PreScaled(multiplier);
+		transform = transform.PreScaled(multiplier);
+
 		for (const Vec3 &v : cCylinderTopFace)
 			outVertices.push_back(transform * v);
 	}
