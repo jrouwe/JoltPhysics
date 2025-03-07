@@ -52,6 +52,9 @@ public:
 		return *constraint;
 	}
 
+	// Call the update with zero delta time
+	EPhysicsUpdateError SimulateNoDeltaTime();
+
 	// Simulate only for one delta time step
 	EPhysicsUpdateError	SimulateSingleStep();
 

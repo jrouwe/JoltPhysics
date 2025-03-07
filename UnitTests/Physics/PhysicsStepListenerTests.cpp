@@ -41,25 +41,21 @@ TEST_SUITE("StepListenerTest")
 		for (TestStepListener &l : listeners)
 			c.GetSystem()->AddStepListener(&l);
 
-		// Step the simulation
-		c.SimulateSingleStep();
-
-		// There aren't any active bodies so no listeners should have been called
+		// Stepping without delta time should not trigger step listeners
+		c.SimulateNoDeltaTime();
 		for (TestStepListener &l : listeners)
 			CHECK(l.mCount == 0);
 
-		// Now add an active body
+		// Stepping with delta time should call the step listeners as they can activate bodies
+		c.SimulateSingleStep();
+		for (TestStepListener &l : listeners)
+			CHECK(l.mCount == inCollisionSteps);
+
+		// Adding an active body should have no effect, step listeners should still be called
 		c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne());
 
 		// Step the simulation
 		c.SimulateSingleStep();
-
-		for (TestStepListener &l : listeners)
-			CHECK(l.mCount == inCollisionSteps);
-
-		// Step the simulation
-		c.SimulateSingleStep();
-
 		for (TestStepListener &l : listeners)
 			CHECK(l.mCount == 2 * inCollisionSteps);
 
@@ -91,5 +87,55 @@ TEST_SUITE("StepListenerTest")
 	TEST_CASE("TestStepListener4")
 	{
 		DoTest(4);
+	}
+
+	// Activate a body in a step listener
+	TEST_CASE("TestActivateInStepListener")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 2);
+		c.ZeroGravity();
+
+		// Create a box
+		Body &body = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::DontActivate);
+		body.GetMotionProperties()->SetLinearDamping(0.0f);
+		BodyID body_id = body.GetID();
+
+		static const Vec3 cVelocity(10.0f, 0, 0);
+
+		class MyStepListener : public PhysicsStepListener
+		{
+		public:
+								MyStepListener(const BodyID &inBodyID, BodyInterface &inBodyInterface) : mBodyInterface(inBodyInterface), mBodyID(inBodyID) { }
+
+			virtual void		OnStep(const PhysicsStepListenerContext &inContext) override
+			{
+				if (inContext.mIsFirstStep)
+				{
+					// We activate the body and set a velocity in the first step
+					CHECK(!mBodyInterface.IsActive(mBodyID));
+					mBodyInterface.SetLinearVelocity(mBodyID, cVelocity);
+					CHECK(mBodyInterface.IsActive(mBodyID));
+				}
+				else
+				{
+					// In the second step, the body should already have been activated
+					CHECK(mBodyInterface.IsActive(mBodyID));
+				}
+			}
+
+		private:
+			BodyInterface &		mBodyInterface;
+			BodyID				mBodyID;
+		};
+
+		MyStepListener listener(body_id, c.GetSystem()->GetBodyInterfaceNoLock());
+		c.GetSystem()->AddStepListener(&listener);
+
+		c.SimulateSingleStep();
+
+		BodyInterface &bi = c.GetBodyInterface();
+		CHECK(bi.IsActive(body_id));
+		CHECK(bi.GetLinearVelocity(body_id) == cVelocity);
+		CHECK(bi.GetPosition(body_id) == RVec3(c.GetDeltaTime() * cVelocity));
 	}
 }
