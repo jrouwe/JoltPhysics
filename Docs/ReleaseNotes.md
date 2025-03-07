@@ -53,6 +53,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * When calling `PhysicsSystem::Update` with a delta time of 0, contact remove callbacks were triggered by accident for all existing contacts.
 * Fixed 'HingeConstraint' not having limits if `LimitsMin` was set to `-JPH_PI` or `LimitsMax` was set to `JPH_PI`. It should only be turned off if both are.
 * Fixed 'CylinderShape::GetSupportingFace' returning the wrong face. When the height of a cylinder was small compared to its radius, it would sink more into the ground than needed during simulation.
+* When there were no active bodies, the step listeners weren't called. This meant they couldn't wake up bodies. The step listeners are now only skipped if the physics system is updated with zero delta time.
 
 ## v5.2.0
 

@@ -86,6 +86,15 @@ Body &PhysicsTestContext::CreateSphere(RVec3Arg inPosition, float inRadius, EMot
 	return CreateBody(new SphereShapeSettings(inRadius), inPosition, Quat::sIdentity(), inMotionType, inMotionQuality, inLayer, inActivation);
 }
 
+EPhysicsUpdateError PhysicsTestContext::SimulateNoDeltaTime()
+{
+	EPhysicsUpdateError errors = mSystem->Update(0.0f, mCollisionSteps, mTempAllocator, mJobSystem);
+#ifndef JPH_DISABLE_TEMP_ALLOCATOR
+	JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
+#endif // JPH_DISABLE_TEMP_ALLOCATOR
+	return errors;
+}
+
 EPhysicsUpdateError PhysicsTestContext::SimulateSingleStep()
 {
 	EPhysicsUpdateError errors = mSystem->Update(mDeltaTime, mCollisionSteps, mTempAllocator, mJobSystem);
