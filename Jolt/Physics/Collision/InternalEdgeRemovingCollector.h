@@ -77,6 +77,7 @@ class InternalEdgeRemovingCollector : public CollideShapeCollector
 public:
 	/// Constructor, configures a collector to be called with all the results that do not hit internal edges
 	explicit				InternalEdgeRemovingCollector(CollideShapeCollector &inChainedCollector) :
+		CollideShapeCollector(inChainedCollector),
 		mChainedCollector(inChainedCollector)
 	{
 		// Initialize arrays to full capacity to avoid needless reallocation calls

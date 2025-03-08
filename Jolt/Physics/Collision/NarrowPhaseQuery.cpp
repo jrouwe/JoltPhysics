@@ -29,7 +29,7 @@ bool NarrowPhaseQuery::CastRay(const RRayCast &inRay, RayCastResult &ioHit, cons
 			mBodyLockInterface(inBodyLockInterface),
 			mBodyFilter(inBodyFilter)
 		{
-			UpdateEarlyOutFraction(ioHit.mFraction);
+			ResetEarlyOutFraction(ioHit.mFraction);
 		}
 
 		virtual void		AddHit(const ResultType &inResult) override
