@@ -1,6 +1,6 @@
 # Jolt Physics Samples
 
-This document describes the demos in the Samples application. When you run the samples application the application will initially start paused, press P to unpause it. The menu is accessible through pressing ESC, it has the following options:
+This document describes the demos in the [Samples](https://github.com/jrouwe/JoltPhysics/tree/master/Samples) application. When you run the samples application the application will initially start paused, press P to unpause it. The menu is accessible through pressing ESC, it has the following options:
 
 * Select Test - This allows you to select between the different types of physics tests
 * Test Settings - Some tests will allow extra configuration, if not this setting will be greyed out

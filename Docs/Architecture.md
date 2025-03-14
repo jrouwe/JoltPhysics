@@ -2,7 +2,13 @@
 
 # Architecture of Jolt Physics {#architecture-jolt-physics}
 
-For demos and videos go to the [Samples](Samples.md) section.
+# Getting Started {#getting-started}
+
+To get started, look at the [HelloWorld](https://github.com/jrouwe/JoltPhysics/blob/master/HelloWorld/HelloWorld.cpp) example. A [HelloWorld example using CMake FetchContent](https://github.com/jrouwe/JoltPhysicsHelloWorld) is also available to show how you can integrate Jolt Physics in a CMake project.
+
+Every feature in Jolt has its own sample. [Running the Samples application](Samples.md) and browsing through the [code](https://github.com/jrouwe/JoltPhysics/tree/master/Samples/Tests) is a great way to learn about the library!
+
+The rest of this document describes the concepts used in Jolt in more detail.
 
 # Bodies {#bodies}
 

@@ -106,9 +106,11 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 
 ## Documentation
 
-To learn more about Jolt go to the latest [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/). Documentation for [a specific release is also available](https://jrouwe.github.io/JoltPhysicsDocs/).
-
 To get started, look at the [HelloWorld](HelloWorld/HelloWorld.cpp) example. A [HelloWorld example using CMake FetchContent](https://github.com/jrouwe/JoltPhysicsHelloWorld) is also available to show how you can integrate Jolt Physics in a CMake project.
+
+Every feature in Jolt has its own sample. [Running the Samples application](Docs/Samples.md) and browsing through the [code](https://github.com/jrouwe/JoltPhysics/tree/master/Samples/Tests) is a great way to learn about the library!
+
+To learn more about Jolt go to the latest [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/). Documentation for [a specific release is also available](https://jrouwe.github.io/JoltPhysicsDocs/).
 
 Some algorithms used by Jolt are described in detail in my GDC 2022 talk: Architecting Jolt Physics for 'Horizon Forbidden West' ([slides](https://gdcvault.com/play/1027560/Architecting-Jolt-Physics-for-Horizon), [slides with speaker notes](https://jrouwe.nl/architectingjolt/ArchitectingJoltPhysics_Rouwe_Jorrit_Notes.pdf), [video](https://gdcvault.com/play/1027891/Architecting-Jolt-Physics-for-Horizon)).
 
