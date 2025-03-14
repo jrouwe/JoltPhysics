@@ -7,11 +7,19 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Collision/ContactListener.h>
 
-// Tests the contact listener callbacks
 class ContactListenerTest : public Test, public ContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ContactListenerTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return	"Demonstrates how to listen for contact events.\n"
+				"Leftmost box ignores contacts with the 2nd box and overrides the restitution to 1 for non-persisted contacts.\n"
+				"Rightmost box contains an inner and an outer shape, the outer shape acts as a sensor.\n"
+				"The TTY will output estimated post collision velocities.";
+	}
 
 	// See: Test
 	virtual void			Initialize() override;

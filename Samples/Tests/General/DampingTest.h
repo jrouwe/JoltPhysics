@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test tests various values for linear and angular damping
 class DampingTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, DampingTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Tests various values for linear and angular damping.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test shows how to create a conveyor belt
 class ConveyorBeltTest : public Test, public ContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ConveyorBeltTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Demonstrates how to use a contact listener to implement a conveyor belt.";
+	}
 
 	// See: Test
 	virtual void			Initialize() override;

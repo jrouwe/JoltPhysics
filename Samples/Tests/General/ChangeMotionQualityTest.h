@@ -7,11 +7,17 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Body/Body.h>
 
-// This test will switch a body's motion quality between discrete and linear
 class ChangeMotionQualityTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ChangeMotionQualityTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return	"Switches a body's motion quality from linear to discrete.\n"
+				"After the switch, the high speed body passes through the wall.";
+	}
 
 	// See: Test
 	virtual void	Initialize() override;

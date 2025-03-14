@@ -7,11 +7,16 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Body/Body.h>
 
-// This test tests kinematic objects against a pile of dynamic boxes
 class KinematicTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, KinematicTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Tests kinematic objects against a pile of dynamic boxes.";
+	}
 
 	// See: Test
 	virtual void	Initialize() override;

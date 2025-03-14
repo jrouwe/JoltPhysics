@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test checks if coplanar triangles are properly merged for the simulation in order to avoid collisions with invisible edges.
 class ActiveEdgesTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ActiveEdgesTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Boxes sliding over the ramps should not collide with internal triangle edges of the ramp (aka ghost collisions).";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

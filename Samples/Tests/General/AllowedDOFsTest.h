@@ -6,15 +6,20 @@
 
 #include <Tests/Test.h>
 
-// This test tests all permutations of allowed degrees of freedom (see EAllowedDOFs)
 class AllowedDOFsTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, AllowedDOFsTest)
 
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return	"Shows all permutations of allowed degrees of freedom for a body (see EAllowedDOFs).\n"
+				"The boxes are constrained to the world using a distance constraint, press C to show it.";
+	}
+
 	// See: Test
 	virtual void		Initialize() override;
-	virtual void		PostPhysicsUpdate(float inDeltaTime) override;
 
 private:
 	BodyIDVector		mBodies;

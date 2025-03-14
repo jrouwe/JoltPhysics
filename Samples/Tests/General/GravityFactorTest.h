@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test tests various gravity factors
 class GravityFactorTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, GravityFactorTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Bodies with varying gravity factor.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

@@ -26,6 +26,8 @@ public:
 	virtual void					OnSoftBodyContactAdded(const Body &inSoftBody, const SoftBodyManifold &inManifold) override;
 
 private:
+	void							UpdateLabel();
+
 	void							StartCycle();
 
 	float							mTime = 0.0f;

@@ -7,13 +7,18 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-// Test that contains a sensor that will apply forces to bodies inside the sensor
 class SensorTest : public Test, public ContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SensorTest)
 
 	virtual				~SensorTest() override;
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return	"Different types of sensors. See the description of each sensor.";
+	}
 
 	// Number used to scale the terrain and camera movement to the scene
 	virtual float		GetWorldScale() const override		{ return 0.2f; }

@@ -2,11 +2,16 @@
 
 #include <Tests/Test.h>
 
-/// This test demonstrates how to use the ShapeFilter to filter out shapes during a collision query.
 class ShapeFilterTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ShapeFilterTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Demonstrates how to use a shape filter to filter out shapes during a collision query.";
+	}
 
 	// See: Test
 	virtual void	Initialize() override;

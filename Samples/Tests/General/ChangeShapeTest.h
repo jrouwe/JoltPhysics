@@ -8,11 +8,16 @@
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 
-// This test will make a dynamic body cycle through various shapes
 class ChangeShapeTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ChangeShapeTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Demonstrates how to dynamically update the shape of a body.";
+	}
 
 	// Initialize the test
 	virtual void			Initialize() override;

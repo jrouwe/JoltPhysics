@@ -8,11 +8,17 @@
 #include <Jolt/Physics/Collision/ContactListener.h>
 #include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
 
-/// This test demonstrates how you can use a contact listener and your own material definition to get friction and restitution per triangle or sub shape of a compound shape
 class FrictionPerTriangleTest : public Test, public ContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, FrictionPerTriangleTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return	"Demonstrates how you can use a contact listener and your own material definition to get friction and restitution per triangle or per sub shape of a compound shape.\n"
+				"Friction increases while going down the slope. Box should eventually stop.";
+	}
 
 	// See: Test
 	virtual void	Initialize() override;

@@ -118,6 +118,7 @@ private:
 	const RTTI *			mTestClass = nullptr;										// RTTI information for the test we're currently running
 	Test *					mTest = nullptr;											// The test we're currently running
 	UITextButton *			mTestSettingsButton = nullptr;								// Button that activates the menu that the test uses to configure additional settings
+	int						mShowDescription = 0;										// If > 0, render the description of the test
 
 	// Automatic cycling through tests
 	Array<const RTTI *>		mTestsToRun;												// The list of tests that are still waiting to be run

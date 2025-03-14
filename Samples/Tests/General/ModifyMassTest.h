@@ -7,16 +7,21 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Collision/ContactListener.h>
 
-// Tests modifying mass from a contact listener
 class ModifyMassTest : public Test, public ContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ModifyMassTest)
 
+	// Description of the test
+	virtual const char *		GetDescription() const override
+	{
+		return	"Uses a contact listener to modify the mass of bodies per contacting body pair.\n"
+				"Can be used to e.g. make a dynamic body respond normally to one body and appear to have infinite mass for another.";
+	}
+
 	// See: Test
 	virtual void				Initialize() override;
 	virtual void				PrePhysicsUpdate(const PreUpdateParams &inParams) override;
-	virtual void				PostPhysicsUpdate(float inDeltaTime) override;
 	virtual void				SaveState(StateRecorder &inStream) const override;
 	virtual void				RestoreState(StateRecorder &inStream) override;
 
@@ -33,6 +38,9 @@ private:
 
 	// Reset the bodies to their initial states
 	void						ResetBodies(int inCycle);
+
+	// Update the labels on the bodies
+	void						UpdateLabels();
 
 	float						mTime = 0.0f;
 

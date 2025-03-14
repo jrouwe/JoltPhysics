@@ -6,13 +6,17 @@
 
 #include <Tests/Test.h>
 
-// This test tests a body that activates during the simulation step to check if it does collision detection with any other bodies during that step
-// To do so it uses 3 boxes that all initially collide. The left most box is the only one awake and has a high velocity.
-// The second box should not pass through the third box.
 class ActivateDuringUpdateTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ActivateDuringUpdateTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return	"Three initially colliding boxes where only 1 is awake and has a high velocity.\n"
+				"The 2nd and 3rd box should wake up at the same time and not pass through each other.";
+	}
 
 	// Initialize the test
 	virtual void			Initialize() override;

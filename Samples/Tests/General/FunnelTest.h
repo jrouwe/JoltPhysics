@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test spawns a lot of objects and drops them into a funnel to check for performance / stability issues
 class FunnelTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, FunnelTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Spawns a lot of objects and drops them into a funnel to check for performance / stability issues.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

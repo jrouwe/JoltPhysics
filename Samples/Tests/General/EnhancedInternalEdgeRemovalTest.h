@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-/// Demonstrates the enhanced internal edge removal mode by sliding two shapes over a mesh that has only active edges
 class EnhancedInternalEdgeRemovalTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, EnhancedInternalEdgeRemovalTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Shows bodies using enhanced edge removal vs bodies that don't.";
+	}
 
 	// See: Test
 	virtual void	Initialize() override;

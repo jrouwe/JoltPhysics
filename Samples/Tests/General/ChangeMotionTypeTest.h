@@ -7,11 +7,16 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Body/Body.h>
 
-// This test will switch a body between static, kinematic and dynamic
 class ChangeMotionTypeTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ChangeMotionTypeTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Switches a body's motion type between static, kinematic and dynamic.";
+	}
 
 	// See: Test
 	virtual void	Initialize() override;

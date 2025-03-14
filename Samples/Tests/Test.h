@@ -39,6 +39,9 @@ public:
 	// Set the temp allocator
 	void			SetTempAllocator(TempAllocator *inTempAllocator)			{ mTempAllocator = inTempAllocator; }
 
+	// Description of the test
+	virtual const char *GetDescription() const									{ return nullptr; }
+
 	// Initialize the test
 	virtual void	Initialize()												{ }
 
@@ -107,6 +110,9 @@ public:
 	// Return a string that is displayed in the top left corner of the screen
 	virtual String	GetStatusString() const										{ return String(); }
 
+	// Draw the body labels
+	void			DrawBodyLabels();
+
 protected:
 	// Utility function to create a static floor body
 	Body &			CreateFloor(float inSize = 200.0f);
@@ -118,6 +124,9 @@ protected:
 	Body &			CreateMeshTerrain();
 	Body &			CreateHeightFieldTerrain();
 
+	// Add a label to a body
+	void			SetBodyLabel(const BodyID &inBodyID, const String &inLabel)	{ mBodyLabels[inBodyID] = inLabel; }
+
 	JobSystem *		mJobSystem = nullptr;
 	PhysicsSystem *	mPhysicsSystem = nullptr;
 	BodyInterface *	mBodyInterface = nullptr;
@@ -126,4 +135,7 @@ protected:
 
 private:
 	bool			mNeedsRestart = false;
+
+	using BodyLabels = unordered_map<BodyID, String>;
+	BodyLabels		mBodyLabels;
 };

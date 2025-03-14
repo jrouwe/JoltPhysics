@@ -26,6 +26,19 @@ void ModifyMassTest::ResetBodies(int inCycle)
 	mBodyInterface->SetUserData(mBodies[1], (inCycle << 1) + 1);
 }
 
+void ModifyMassTest::UpdateLabels()
+{
+	for (BodyID id : mBodies)
+	{
+		BodyLockRead body_lock(mPhysicsSystem->GetBodyLockInterface(), id);
+		if (body_lock.Succeeded())
+		{
+			const Body &body = body_lock.GetBody();
+			SetBodyLabel(id, StringFormat("Inv mass scale: %.1f\nVelocity X: %.1f", (double)sGetInvMassScale(body), (double)body.GetLinearVelocity().GetX()));
+		}
+	}
+}
+
 void ModifyMassTest::Initialize()
 {
 	// Floor
@@ -37,6 +50,7 @@ void ModifyMassTest::Initialize()
 	mBodies[0] = mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 	mBodies[1] = mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 	ResetBodies(0);
+	UpdateLabels();
 }
 
 void ModifyMassTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -48,20 +62,8 @@ void ModifyMassTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	int new_cycle = (int)(mTime / cTimeBetweenTests);
 	if (old_cycle != new_cycle)
 		ResetBodies(new_cycle);
-}
 
-void ModifyMassTest::PostPhysicsUpdate(float inDeltaTime)
-{
-	// Draw the mass scale
-	for (BodyID id : mBodies)
-	{
-		BodyLockRead body_lock(mPhysicsSystem->GetBodyLockInterface(), id);
-		if (body_lock.Succeeded())
-		{
-			const Body &body = body_lock.GetBody();
-			DebugRenderer::sInstance->DrawText3D(body.GetPosition(), StringFormat("Inv mass scale: %.1f\nVelocity X: %.1f", (double)sGetInvMassScale(body), (double)body.GetLinearVelocity().GetX()), Color::sWhite);
-		}
-	}
+	UpdateLabels();
 }
 
 float ModifyMassTest::sGetInvMassScale(const Body &inBody)
