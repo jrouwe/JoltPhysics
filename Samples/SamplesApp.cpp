@@ -492,8 +492,7 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 		});
 		mDebugUI->CreateTextButton(main_menu, "Restart Test (R)", [this]() { StartTest(mTestClass); });
 		mDebugUI->CreateTextButton(main_menu, "Run All Tests", [this]() { RunAllTests(); });
-		mNextTestButton = mDebugUI->CreateTextButton(main_menu, "Next Test (N)", [this]() { NextTest(); });
-		mNextTestButton->SetDisabled(true);
+		mDebugUI->CreateTextButton(main_menu, "Next Test (N)", [this]() { NextTest(); });
 		mDebugUI->CreateTextButton(main_menu, "Take Snapshot", [this]() { TakeSnapshot(); });
 		mDebugUI->CreateTextButton(main_menu, "Take And Reload Snapshot", [this]() { TakeAndReloadSnapshot(); });
 		mDebugUI->CreateTextButton(main_menu, "Physics Settings", [this]() {
@@ -682,6 +681,9 @@ SamplesApp::~SamplesApp()
 
 void SamplesApp::StartTest(const RTTI *inRTTI)
 {
+	// Clear anything that is being rendered right now to avoid showing the previous test while initializing the new one
+	ClearDebugRenderer();
+
 	// Pop active menus, we might be in the settings menu for the test which will be dangling after restarting the test
 	mDebugUI->BackToMain();
 
@@ -743,9 +745,18 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 	// Reset the camera to the original position
 	ResetCamera();
 
-	// Start paused
-	Pause(true);
-	SingleStep();
+	if (mIsRunningAllTests)
+	{
+		// Unpause and start the count down
+		Pause(false);
+		mTestTimeLeft = 10.0f;
+	}
+	else
+	{
+		// Start paused
+		Pause(true);
+		SingleStep();
+	}
 
 	// Check if test has settings menu
 	mTestSettingsButton->SetDisabled(!mTest->HasSettingsMenu());
@@ -756,22 +767,42 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 
 void SamplesApp::RunAllTests()
 {
-	mTestsToRun.clear();
-
-	for (const TestCategory &c : sAllCategories)
-		for (uint i = 0; i < c.mNumTests; ++i)
-		{
-			TestNameAndRTTI &t = c.mTests[i];
-			mTestsToRun.push_back(t.mRTTI);
-		}
-
-	NextTest();
+	mIsRunningAllTests = true;
+	StartTest(sAllCategories[0].mTests[0].mRTTI);
 }
 
 bool SamplesApp::NextTest()
 {
-	if (mTestsToRun.empty())
+	// Find the next test to run based on the RTTI of the current test
+	const RTTI *next_test = nullptr;
+	bool cur_test_found = false;
+	for (const TestCategory &c : sAllCategories)
 	{
+		for (uint j = 0; j < c.mNumTests; ++j)
+		{
+			const TestNameAndRTTI &test = c.mTests[j];
+			if (cur_test_found)
+			{
+				// We already found the current test so this test is the next test to run
+				next_test = test.mRTTI;
+				break;
+			}
+			else if (test.mRTTI == mTestClass)
+			{
+				// RTTI matches, the next test we encounter is the next test to run
+				cur_test_found = true;
+			}
+		}
+
+		if (next_test != nullptr)
+			break;
+	}
+
+	if (next_test == nullptr)
+	{
+		mIsRunningAllTests = false;
+		mTestTimeLeft = -1.0f;
+
 		if (mExitAfterRunningTests)
 			return false; // Exit the application now
 		else
@@ -779,21 +810,9 @@ bool SamplesApp::NextTest()
 	}
 	else
 	{
-		// Start the timer for 10 seconds
-		mTestTimeLeft = 10.0f;
-
-		// Take next test
-		const RTTI *rtti = mTestsToRun.front();
-		mTestsToRun.erase(mTestsToRun.begin());
-
-		// Start it
-		StartTest(rtti);
-
-		// Unpause
-		Pause(false);
+		// Start next test
+		StartTest(next_test);
 	}
-
-	mNextTestButton->SetDisabled(mTestsToRun.empty());
 
 	return true;
 }
@@ -2028,6 +2047,10 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 	if (mMaxConcurrentJobs != mJobSystem->GetMaxConcurrency())
 		static_cast<JobSystemThreadPool *>(mJobSystem)->SetNumThreads(mMaxConcurrentJobs - 1);
 
+	// Decrement number of frames to show the description
+	if (inDeltaTime > 0.0f && mShowDescription > 0)
+		--mShowDescription;
+
 	// Restart the test if the test requests this
 	if (mTest->NeedsRestart())
 	{
@@ -2059,9 +2082,8 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 			return true;
 
 		case EKey::N:
-			if (!mTestsToRun.empty())
-				NextTest();
-			break;
+			NextTest();
+			return true;
 
 	#ifdef JPH_DEBUG_RENDERER
 		case EKey::H:
@@ -2520,10 +2542,6 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 		JPH_PROFILE("PostPhysicsUpdate");
 		mTest->PostPhysicsUpdate(delta_time);
 	}
-
-	// Decrement number of frames to show the description
-	if (mShowDescription > 0)
-		--mShowDescription;
 }
 
 void SamplesApp::SaveState(StateRecorderImpl &inStream)
