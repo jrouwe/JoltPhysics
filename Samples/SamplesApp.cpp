@@ -681,6 +681,9 @@ SamplesApp::~SamplesApp()
 
 void SamplesApp::StartTest(const RTTI *inRTTI)
 {
+	// Clear anything that is being rendered right now to avoid showing the previous test while initializing the new one
+	ClearDebugRenderer();
+
 	// Pop active menus, we might be in the settings menu for the test which will be dangling after restarting the test
 	mDebugUI->BackToMain();
 
@@ -2080,7 +2083,7 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 
 		case EKey::N:
 			NextTest();
-			break;
+			return true;
 
 	#ifdef JPH_DEBUG_RENDERER
 		case EKey::H:
