@@ -2044,6 +2044,10 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 	if (mMaxConcurrentJobs != mJobSystem->GetMaxConcurrency())
 		static_cast<JobSystemThreadPool *>(mJobSystem)->SetNumThreads(mMaxConcurrentJobs - 1);
 
+	// Decrement number of frames to show the description
+	if (inDeltaTime > 0.0f && mShowDescription > 0)
+		--mShowDescription;
+
 	// Restart the test if the test requests this
 	if (mTest->NeedsRestart())
 	{
@@ -2535,10 +2539,6 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 		JPH_PROFILE("PostPhysicsUpdate");
 		mTest->PostPhysicsUpdate(delta_time);
 	}
-
-	// Decrement number of frames to show the description
-	if (mShowDescription > 0)
-		--mShowDescription;
 }
 
 void SamplesApp::SaveState(StateRecorderImpl &inStream)
