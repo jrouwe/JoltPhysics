@@ -30,7 +30,7 @@ void RestitutionTest::Initialize()
 		settings.mRestitution = 0.1f * i;
 		settings.mLinearDamping = 0.0f;
 		BodyID id = mBodyInterface->CreateAndAddBody(settings, EActivation::Activate);
-		SetBodyLabel(id, StringFormat("Restitution: %.1f", settings.mRestitution));
+		SetBodyLabel(id, StringFormat("Restitution: %.1f", double(settings.mRestitution)));
 	}
 
 	for (int i = 0; i <= 10; ++i)
@@ -39,6 +39,6 @@ void RestitutionTest::Initialize()
 		settings.mRestitution = 0.1f * i;
 		settings.mLinearDamping = 0.0f;
 		BodyID id = mBodyInterface->CreateAndAddBody(settings, EActivation::Activate);
-		SetBodyLabel(id, StringFormat("Restitution: %.1f", settings.mRestitution));
+		SetBodyLabel(id, StringFormat("Restitution: %.1f", double(settings.mRestitution)));
 	}
 }
