@@ -43,6 +43,10 @@ void CharacterVirtualTest::Initialize()
 	// Install contact listener for all characters
 	for (CharacterVirtual *character : mCharacterVsCharacterCollision.mCharacters)
 		character->SetListener(this);
+
+	// Draw labels on ramp blocks
+	for (size_t i = 0; i < mRampBlocks.size(); ++i)
+		SetBodyLabel(mRampBlocks[i], StringFormat("PushesPlayer: %s\nPushable: %s", (i & 1) != 0? "True" : "False", (i & 2) != 0? "True" : "False"));
 }
 
 void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -107,10 +111,6 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Draw state of character
 	DrawCharacterState(mCharacter, world_transform, velocity);
-
-	// Draw labels on ramp blocks
-	for (size_t i = 0; i < mRampBlocks.size(); ++i)
-		mDebugRenderer->DrawText3D(mBodyInterface->GetPosition(mRampBlocks[i]), StringFormat("PushesPlayer: %s\nPushable: %s", (i & 1) != 0? "True" : "False", (i & 2) != 0? "True" : "False"), Color::sWhite, 0.25f);
 }
 
 void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)

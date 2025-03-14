@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test tests soft bodies with various values for restitution
 class SoftBodyRestitutionTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyRestitutionTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Tests soft bodies with various values for restitution. Note that this has very little effect.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

@@ -7,11 +7,16 @@
 #include <Tests/Vehicle/VehicleTest.h>
 #include <Jolt/Physics/Vehicle/VehicleConstraint.h>
 
-// This test simulates a large amount of vehicles
 class VehicleStressTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, VehicleStressTest)
+
+	// Description of the test
+	virtual const char *			GetDescription() const override
+	{
+		return	"This test simulates a large number of vehicles to test performance.";
+	}
 
 	// Destructor
 	virtual							~VehicleStressTest() override;

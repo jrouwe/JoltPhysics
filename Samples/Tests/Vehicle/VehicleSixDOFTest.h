@@ -7,11 +7,17 @@
 #include <Tests/Vehicle/VehicleTest.h>
 #include <Jolt/Physics/Constraints/SixDOFConstraint.h>
 
-// This test shows how a vehicle could be made with the SixDOF constraint.
 class VehicleSixDOFTest : public VehicleTest
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, VehicleSixDOFTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return	"Shows how a car could be made with a SixDOFConstraint.\n"
+				"Use the arrow keys to drive.";
+	}
 
 	// See: Test
 	virtual void			Initialize() override;

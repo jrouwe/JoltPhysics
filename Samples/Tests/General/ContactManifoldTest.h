@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test spawns objects at an angle of each other to test if the contact manifold is calculated correctly
 class ContactManifoldTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ContactManifoldTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Spawns objects at an angle to test if the contact manifold is calculated correctly.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

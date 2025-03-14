@@ -7,11 +7,16 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Body/Body.h>
 
-// This test shows how to skin a soft body to a skeleton and control the animation.
 class SoftBodySkinnedConstraintTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodySkinnedConstraintTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Shows how to attach a soft body to a skinned mesh and control the animation.";
+	}
 
 	// See: Test
 	virtual void			Initialize() override;

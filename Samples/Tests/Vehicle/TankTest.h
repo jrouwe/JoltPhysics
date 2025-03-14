@@ -8,11 +8,17 @@
 #include <Jolt/Physics/Vehicle/VehicleConstraint.h>
 #include <Jolt/Physics/Constraints/HingeConstraint.h>
 
-// This test shows how a tank could be made with the vehicle constraint.
 class TankTest : public VehicleTest
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, TankTest)
+
+	// Description of the test
+	virtual const char *		GetDescription() const override
+	{
+		return	"Shows how a tank could be made with a vehicle constraint.\n"
+				"Use the arrow keys to drive. Shift to brake. Enter to fire.";
+	}
 
 	// Destructor
 	virtual						~TankTest() override;

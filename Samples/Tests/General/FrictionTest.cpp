@@ -31,6 +31,7 @@ void FrictionTest::Initialize()
 		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(box, RVec3(-50.0f + i * 10.0f, 55.0f, -50.0f), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 		body.SetFriction(0.1f * i);
 		mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
+		SetBodyLabel(body.GetID(), StringFormat("Friction: %.1f", double(body.GetFriction())));
 	}
 
 	for (int i = 0; i <= 10; ++i)
@@ -38,5 +39,6 @@ void FrictionTest::Initialize()
 		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(sphere, RVec3(-50.0f + i * 10.0f, 47.0f, -40.0f), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 		body.SetFriction(0.1f * i);
 		mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
+		SetBodyLabel(body.GetID(), StringFormat("Friction: %.1f", double(body.GetFriction())));
 	}
 }

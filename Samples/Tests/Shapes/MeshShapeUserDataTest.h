@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// Shows how to store per triangle user data in a mesh shape and how to retrieve it
 class MeshShapeUserDataTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, MeshShapeUserDataTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Shows how to store per triangle user data in a mesh shape and how to retrieve it.";
+	}
 
 	// See: Test
 	virtual void	Initialize() override;

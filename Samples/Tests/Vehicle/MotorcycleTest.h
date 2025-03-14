@@ -7,12 +7,17 @@
 #include <Tests/Vehicle/VehicleTest.h>
 #include <Jolt/Physics/Vehicle/VehicleConstraint.h>
 
-// This test shows how a motorcycle could be made with the vehicle constraint.
-/// Note: The motor cycle controller is still in development and may need a lot of tweaks/hacks to work properly!
 class MotorcycleTest : public VehicleTest
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, MotorcycleTest)
+
+	// Description of the test
+	virtual const char *		GetDescription() const override
+	{
+		return	"This test shows how a motorcycle could be made with the vehicle constraint.\n"
+				"Use the arrow keys to drive. Z for hand brake.";
+	}
 
 	// Destructor
 	virtual						~MotorcycleTest() override;

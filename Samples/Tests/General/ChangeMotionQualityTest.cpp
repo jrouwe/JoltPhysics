@@ -40,20 +40,25 @@ void ChangeMotionQualityTest::Initialize()
 	settings.SetShape(new SphereShape(1.0f));
 	settings.mPosition = RVec3(0, 0.5f, 0);
 	settings.mMotionType = EMotionType::Dynamic;
-	settings.mMotionQuality = EMotionQuality::LinearCast;
 	settings.mLinearVelocity = Vec3(-240, 0, -120);
 	settings.mFriction = 0.0f;
 	settings.mRestitution = 1.0f;
 	settings.mObjectLayer = Layers::MOVING;
 	mBody = mBodyInterface->CreateBody(settings);
 	mBodyInterface->AddBody(mBody->GetID(), EActivation::Activate);
+
+	UpdateMotionQuality();
 }
 
 void ChangeMotionQualityTest::UpdateMotionQuality()
 {
+	static EMotionQuality qualities[] = { EMotionQuality::LinearCast, EMotionQuality::Discrete };
+	static const char *labels[] = { "LinearCast", "Discrete" };
+
 	// Calculate desired motion quality
-	EMotionQuality motion_quality = (int(mTime) & 1) == 0? EMotionQuality::LinearCast : EMotionQuality::Discrete;
-	mBodyInterface->SetMotionQuality(mBody->GetID(), motion_quality);
+	int idx = int(mTime) & 1;
+	mBodyInterface->SetMotionQuality(mBody->GetID(), qualities[idx]);
+	SetBodyLabel(mBody->GetID(), labels[idx]);
 }
 
 void ChangeMotionQualityTest::PrePhysicsUpdate(const PreUpdateParams &inParams)

@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test tests various different restitution values
 class RestitutionTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, RestitutionTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Bodies with varying restitutions.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

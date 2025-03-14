@@ -7,11 +7,16 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 
-// This is a very basic test that just drops a few objects on the floor
 class SimpleTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SimpleTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Very basic test that just drops a few objects on the floor.";
+	}
 
 	// Destructor
 	virtual				~SimpleTest() override;

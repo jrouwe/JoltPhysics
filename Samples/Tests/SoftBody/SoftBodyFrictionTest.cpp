@@ -31,7 +31,8 @@ void SoftBodyFrictionTest::Initialize()
 	{
 		sphere.mPosition = RVec3(-50.0f + i * 10.0f, 1.0f, 0);
 		sphere.mFriction = 0.1f * i;
-		mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
+		BodyID id = mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
+		SetBodyLabel(id, StringFormat("Friction: %.1f", double(sphere.mFriction)));
 	}
 
 	Ref<SoftBodySharedSettings> cube_settings = SoftBodySharedSettings::sCreateCube(5, 0.5f);
@@ -43,6 +44,7 @@ void SoftBodyFrictionTest::Initialize()
 	{
 		cube.mPosition = RVec3(-50.0f + i * 10.0f, 1.0f, -5.0f);
 		cube.mFriction = 0.1f * i;
-		mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate);
+		BodyID id = mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate);
+		SetBodyLabel(id, StringFormat("Friction: %.1f", double(cube.mFriction)));
 	}
 }

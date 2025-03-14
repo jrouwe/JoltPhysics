@@ -6,13 +6,18 @@
 
 #include <Tests/Test.h>
 
-// Test that overrides the collide body vs body function on the simulation to reduce the number of contact points generated
-// between sensors and other objects in the simulation. This can be useful to improve performance if you don't need to know
-// about all contact points and are only interested in an overlap/no-overlap result.
 class SimCollideBodyVsBodyTest : public Test, public ContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SimCollideBodyVsBodyTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return	"Overrides the collide body vs body function on the simulation to reduce the number of contact points generated between sensors and other objects in the simulation.\n"
+				"This can be useful to improve performance if you don't need to know about all contact points and are only interested in an overlap/no-overlap result.\n"
+				"The static world consists of a single compound shape with many pyramid sub shapes.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

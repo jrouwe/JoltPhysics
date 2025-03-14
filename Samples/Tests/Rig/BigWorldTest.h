@@ -7,11 +7,17 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-// This test tests the performance of a pile of ragdolls on a terrain at various distances from the origin.
 class BigWorldTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, BigWorldTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return	"Tests the stability of a pile of ragdolls on a terrain at various distances from the origin.\n"
+				"Renders far away ragdoll piles at the origin in wireframe.";
+	}
 
 	// Destructor
 	virtual					~BigWorldTest() override;

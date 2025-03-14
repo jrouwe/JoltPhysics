@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This is a test that shows how to create a 2D simulation
 class TwoDFunnelTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, TwoDFunnelTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Shows how to create a 2D simulation.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

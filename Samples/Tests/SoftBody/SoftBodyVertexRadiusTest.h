@@ -7,11 +7,16 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/SoftBody/SoftBodySharedSettings.h>
 
-// This test shows how you can use the vertex radius of a soft body to prevent z-fighting while rendering it
 class SoftBodyVertexRadiusTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyVertexRadiusTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Shows how you can use the vertex radius of a soft body to prevent z-fighting while rendering it.";
+	}
 
 	// See: Test
 	virtual void			Initialize() override;

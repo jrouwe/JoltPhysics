@@ -7,13 +7,18 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 
-// A test that demonstrates how a character may walk around a fast moving/accelerating sci-fi space ship that is equipped with inertial dampeners.
-// Note that this is 'game physics' and not real physics, inertial dampeners only exist in the movies.
-// You can walk off the ship and remain attached to the ship. A proper implementation would detect this and detach the character.
 class CharacterSpaceShipTest : public Test, public CharacterContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterSpaceShipTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return	"Demonstrates how a character may walk around a fast moving/accelerating sci-fi space ship that is equipped with inertial dampeners.\n"
+				"Note that this is 'game physics' and not real physics, inertial dampeners only exist in the movies.\n"
+				"You can walk off the ship and remain attached to the ship. A proper implementation would detect this and detach the character.";
+	}
 
 	// Initialize the test
 	virtual void			Initialize() override;

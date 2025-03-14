@@ -749,6 +749,9 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 
 	// Check if test has settings menu
 	mTestSettingsButton->SetDisabled(!mTest->HasSettingsMenu());
+
+	// We're immediately doing a step, we want to display the description for the first 2 steps
+	mShowDescription = 2;
 }
 
 void SamplesApp::RunAllTests()
@@ -2033,7 +2036,11 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 	}
 
 	// Get the status string
-	mStatusString = mTest->GetStatusString();
+	const char *description = mShowDescription > 0? mTest->GetDescription() : nullptr;
+	if (description != nullptr)
+		mStatusString = String(description) + "\n" + mTest->GetStatusString();
+	else
+		mStatusString = mTest->GetStatusString();
 
 	// Select the next test if automatic testing times out
 	if (!CheckNextTest())
@@ -2319,6 +2326,8 @@ void SamplesApp::DrawPhysics()
 		mDebugRenderer->DrawWireBox(mPhysicsSystem->GetBounds(), Color::sGreen);
 #endif // JPH_DEBUG_RENDERER
 
+	mTest->DrawBodyLabels();
+
 	// This map collects the shapes that we used this frame
 	ShapeToGeometryMap shape_to_geometry;
 
@@ -2511,6 +2520,10 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 		JPH_PROFILE("PostPhysicsUpdate");
 		mTest->PostPhysicsUpdate(delta_time);
 	}
+
+	// Decrement number of frames to show the description
+	if (mShowDescription > 0)
+		--mShowDescription;
 }
 
 void SamplesApp::SaveState(StateRecorderImpl &inStream)

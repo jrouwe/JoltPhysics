@@ -7,12 +7,17 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Body/BodyID.h>
 
-// This test will demonstrates how to use layers to disable collisions between other objects and how to change them on the fly.
-// The bodies will switch between the MOVING layer and the DEBRIS layer (debris only collides with static).
 class ChangeObjectLayerTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ChangeObjectLayerTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return	"Demonstrates how to use layers to disable collisions with other objects and how to change layers on the fly.\n"
+				"The small cubes will switch between the MOVING layer and the DEBRIS layer (debris only collides with the static floor).";
+	}
 
 	// Initialize the test
 	virtual void			Initialize() override;

@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// Simple test that tests various shapes in the water
 class WaterShapeTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, WaterShapeTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Shows buoyancy of various shapes.";
+	}
 
 	// Initialize the test
 	virtual void			Initialize() override;

@@ -42,33 +42,21 @@ void AllowedDOFsTest::Initialize()
 		dcs.mMinDistance = 0.0f;
 		dcs.mMaxDistance = sqrt(3.0f) * 5.0f + 1.0f;
 		mPhysicsSystem->AddConstraint(mBodyInterface->CreateConstraint(&dcs, BodyID(), id));
-	}
-}
 
-void AllowedDOFsTest::PostPhysicsUpdate(float inDeltaTime)
-{
-	// Draw degrees of freedom
-	for (BodyID id : mBodies)
-	{
-		BodyLockRead body_lock(mPhysicsSystem->GetBodyLockInterface(), id);
-		if (body_lock.Succeeded())
-		{
-			const Body &body = body_lock.GetBody();
-			String allowed_dofs_str = "";
-			EAllowedDOFs allowed_dofs = body.GetMotionProperties()->GetAllowedDOFs();
-			if ((allowed_dofs & EAllowedDOFs::TranslationX) == EAllowedDOFs::TranslationX)
-				allowed_dofs_str += "X ";
-			if ((allowed_dofs & EAllowedDOFs::TranslationY) == EAllowedDOFs::TranslationY)
-				allowed_dofs_str += "Y ";
-			if ((allowed_dofs & EAllowedDOFs::TranslationZ) == EAllowedDOFs::TranslationZ)
-				allowed_dofs_str += "Z ";
-			if ((allowed_dofs & EAllowedDOFs::RotationX) == EAllowedDOFs::RotationX)
-				allowed_dofs_str += "RX ";
-			if ((allowed_dofs & EAllowedDOFs::RotationY) == EAllowedDOFs::RotationY)
-				allowed_dofs_str += "RY ";
-			if ((allowed_dofs & EAllowedDOFs::RotationZ) == EAllowedDOFs::RotationZ)
-				allowed_dofs_str += "RZ ";
-			DebugRenderer::sInstance->DrawText3D(body.GetPosition(), allowed_dofs_str, Color::sWhite);
-		}
+		// Draw degrees of freedom
+		String allowed_dofs_str = "";
+		if ((EAllowedDOFs(allowed_dofs) & EAllowedDOFs::TranslationX) == EAllowedDOFs::TranslationX)
+			allowed_dofs_str += "X ";
+		if ((EAllowedDOFs(allowed_dofs) & EAllowedDOFs::TranslationY) == EAllowedDOFs::TranslationY)
+			allowed_dofs_str += "Y ";
+		if ((EAllowedDOFs(allowed_dofs) & EAllowedDOFs::TranslationZ) == EAllowedDOFs::TranslationZ)
+			allowed_dofs_str += "Z ";
+		if ((EAllowedDOFs(allowed_dofs) & EAllowedDOFs::RotationX) == EAllowedDOFs::RotationX)
+			allowed_dofs_str += "RX ";
+		if ((EAllowedDOFs(allowed_dofs) & EAllowedDOFs::RotationY) == EAllowedDOFs::RotationY)
+			allowed_dofs_str += "RY ";
+		if ((EAllowedDOFs(allowed_dofs) & EAllowedDOFs::RotationZ) == EAllowedDOFs::RotationZ)
+			allowed_dofs_str += "RZ ";
+		SetBodyLabel(id, allowed_dofs_str);
 	}
 }

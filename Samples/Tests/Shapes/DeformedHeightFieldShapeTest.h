@@ -7,11 +7,16 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
 
-// This test shows how to deform a height field shape after it has been created
 class DeformedHeightFieldShapeTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, DeformedHeightFieldShapeTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Shows how to deform a height field shape after it has been created.";
+	}
 
 	// Initialize the test
 	virtual void			Initialize() override;

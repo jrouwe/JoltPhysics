@@ -31,10 +31,12 @@ void GyroscopicForceTest::Initialize()
 	bcs.mAngularDamping = 0.0f;
 	bcs.mAngularVelocity = Vec3(10, 1, 0);
 	bcs.mGravityFactor = 0.0f;
-	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+	BodyID id = mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+	SetBodyLabel(id, "Gyroscopic force off");
 
 	// One body with gyroscopic force
 	bcs.mPosition += RVec3(10, 0, 0);
 	bcs.mApplyGyroscopicForce = true;
-	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+	id = mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+	SetBodyLabel(id, "Gyroscopic force on");
 }

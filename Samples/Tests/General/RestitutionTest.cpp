@@ -29,7 +29,8 @@ void RestitutionTest::Initialize()
 		BodyCreationSettings settings(sphere, RVec3(-50.0f + i * 10.0f, 20.0f, -20.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		settings.mRestitution = 0.1f * i;
 		settings.mLinearDamping = 0.0f;
-		mBodyInterface->CreateAndAddBody(settings, EActivation::Activate);
+		BodyID id = mBodyInterface->CreateAndAddBody(settings, EActivation::Activate);
+		SetBodyLabel(id, StringFormat("Restitution: %.1f", double(settings.mRestitution)));
 	}
 
 	for (int i = 0; i <= 10; ++i)
@@ -37,6 +38,7 @@ void RestitutionTest::Initialize()
 		BodyCreationSettings settings(box, RVec3(-50.0f + i * 10.0f, 20.0f, 20.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		settings.mRestitution = 0.1f * i;
 		settings.mLinearDamping = 0.0f;
-		mBodyInterface->CreateAndAddBody(settings, EActivation::Activate);
+		BodyID id = mBodyInterface->CreateAndAddBody(settings, EActivation::Activate);
+		SetBodyLabel(id, StringFormat("Restitution: %.1f", double(settings.mRestitution)));
 	}
 }

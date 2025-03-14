@@ -7,11 +7,17 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Constraints/FixedConstraint.h>
 
-// Tests constraint priority system to demonstrate that the order of solving can have an effect on the stiffness of the system
 class ConstraintPriorityTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ConstraintPriorityTest)
+
+	// Description of the test
+	virtual const char *		GetDescription() const override
+	{
+		return	"Tests constraint priority system to demonstrate that the order of solving can have an effect on the simulation.\n"
+				"Solving the root first will make the system stiffer.";
+	}
 
 	// See: Test
 	virtual void				Initialize() override;

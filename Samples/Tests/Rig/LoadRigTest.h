@@ -8,11 +8,16 @@
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 #include <Utils/RagdollLoader.h>
 
-// This test loads a ragdoll from disc and simulates it
 class LoadRigTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, LoadRigTest)
+
+	// Description of the test
+	virtual const char *			GetDescription() const override
+	{
+		return "Loads a ragdoll from disc and simulates it.";
+	}
 
 	// Destructor
 	virtual							~LoadRigTest() override;

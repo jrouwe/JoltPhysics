@@ -37,6 +37,7 @@ void SensorTest::Initialize()
 		BodyCreationSettings sensor_settings(new SphereShape(10.0f), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		mSensorID[StaticAttractor] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::DontActivate);
+		SetBodyLabel(mSensorID[StaticAttractor], "Static sensor that attracts dynamic bodies");
 	}
 
 	{
@@ -44,6 +45,7 @@ void SensorTest::Initialize()
 		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(-10, 5.1f, 0), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		mSensorID[StaticSensor] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::DontActivate);
+		SetBodyLabel(mSensorID[StaticSensor], "Static sensor that detects active dynamic bodies");
 	}
 
 	{
@@ -51,6 +53,7 @@ void SensorTest::Initialize()
 		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(10, 5.1f, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		mSensorID[KinematicSensor] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::Activate);
+		SetBodyLabel(mSensorID[KinematicSensor], "Kinematic sensor that also detects sleeping bodies");
 	}
 
 	{
@@ -59,6 +62,7 @@ void SensorTest::Initialize()
 		sensor_settings.mIsSensor = true;
 		sensor_settings.mCollideKinematicVsNonDynamic = true;
 		mSensorID[SensorDetectingStatic] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::Activate);
+		SetBodyLabel(mSensorID[SensorDetectingStatic], "Kinematic sensor that also detects sleeping and static bodies");
 	}
 
 	// Dynamic bodies

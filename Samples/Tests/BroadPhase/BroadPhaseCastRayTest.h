@@ -6,11 +6,16 @@
 
 #include <Tests/BroadPhase/BroadPhaseTest.h>
 
-// Simple test that casts a ray through the broadphase
 class BroadPhaseCastRayTest : public BroadPhaseTest
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, BroadPhaseCastRayTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Simple test that casts a ray through the broadphase.";
+	}
 
 	// Initialize the test
 	virtual void	Initialize() override;

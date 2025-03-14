@@ -27,5 +27,6 @@ void GravityFactorTest::Initialize()
 		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(box, RVec3(-50.0f + i * 10.0f, 25.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		body.GetMotionProperties()->SetGravityFactor(0.1f * i);
 		mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
+		SetBodyLabel(body.GetID(), StringFormat("Gravity: %.1f", double(body.GetMotionProperties()->GetGravityFactor())));
 	}
 }

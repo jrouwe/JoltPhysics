@@ -7,11 +7,17 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Collision/SimShapeFilter.h>
 
-// This test shows how to use a shape filter during the simulation to disable contacts between certain sub shapes
 class SimShapeFilterTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SimShapeFilterTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return	"Shows how to use a shape filter during the simulation to disable contacts between certain sub shapes.\n"
+				"The rod and sphere of the dynamic bodies only collide with the floor.";
+	}
 
 	// Destructor
 	virtual				~SimShapeFilterTest() override;
