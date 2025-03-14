@@ -7,11 +7,16 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-// This test tests the performance of a pile of ragdolls on a terrain.
 class RigPileTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, RigPileTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Tests the performance of a pile of ragdolls on a terrain.";
+	}
 
 	// Destructor
 	virtual					~RigPileTest() override;

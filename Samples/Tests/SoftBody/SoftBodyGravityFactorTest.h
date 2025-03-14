@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test tests soft bodies with various gravity factor values
 class SoftBodyGravityFactorTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyGravityFactorTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Shows soft bodies with various gravity factor values.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

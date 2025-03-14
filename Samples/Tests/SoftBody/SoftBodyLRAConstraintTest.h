@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test shows the effect of LRA constraints in a soft body which can help reduce stretch of the cloth. The left cloth uses no LRA constraints and the right one does.
 class SoftBodyLRAConstraintTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyLRAConstraintTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Shows the effect of Long Range Attachment (LRA) constraints in a soft body which can help reduce cloth stretching.";
+	}
 
 	// See: Test
 	virtual void			Initialize() override;

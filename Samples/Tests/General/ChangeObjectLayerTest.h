@@ -16,7 +16,7 @@ public:
 	virtual const char *	GetDescription() const override
 	{
 		return	"Demonstrates how to use layers to disable collisions with other objects and how to change layers on the fly.\n"
-				"The small cubes will switch between the MOVING layer and the DEBRIS layer (debris only collides with the static floor).";				
+				"The small cubes will switch between the MOVING layer and the DEBRIS layer (debris only collides with the static floor).";
 	}
 
 	// Initialize the test

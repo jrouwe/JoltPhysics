@@ -28,6 +28,7 @@ void SoftBodyUpdatePositionTest::Initialize()
 			sphere.mPosition = RVec3(update_position * 10.0f, 10.0f, make_rotation_identity * 10.0f);
 			sphere.mUpdatePosition = update_position != 0;
 			sphere.mMakeRotationIdentity = make_rotation_identity != 0;
-			mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
+			BodyID id = mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
+			SetBodyLabel(id, StringFormat("UpdatePosition: %s\nMakeRotationIdentity: %s", update_position != 0? "On" : "Off", make_rotation_identity != 0? "On" : "Off"));
 		}
 }

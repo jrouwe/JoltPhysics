@@ -7,11 +7,16 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Collision/ContactListener.h>
 
-// This test shows how a boat could be constructed.
 class BoatTest : public Test, public ContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, BoatTest)
+
+	// Description of the test
+	virtual const char *		GetDescription() const override
+	{
+		return "Shows how a boat could be constructed and how waves could be simulated.";
+	}
 
 	// If this test implements a contact listener, it should be returned here
 	virtual ContactListener *	GetContactListener() override		{ return this; }

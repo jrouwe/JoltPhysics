@@ -7,11 +7,16 @@
 #include <Tests/BroadPhase/BroadPhaseTest.h>
 #include <random>
 
-// Test that adds/removes objects to/from the broadphase and casts a ray through the boxes to see if the collision results are correct
 class BroadPhaseInsertionTest : public BroadPhaseTest
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, BroadPhaseInsertionTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Test that adds/removes objects to/from the broadphase and casts a ray through the boxes to see if the collision results are correct.";
+	}
 
 	// Initialize the test
 	virtual void			Initialize() override;

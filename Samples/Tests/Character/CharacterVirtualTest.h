@@ -6,11 +6,16 @@
 
 #include <Tests/Character/CharacterBaseTest.h>
 
-// Simple test that test the CharacterVirtual class. Allows the user to move around with the arrow keys and jump with the J button.
 class CharacterVirtualTest : public CharacterBaseTest, public CharacterContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterVirtualTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Shows the CharacterVirtual class. Move around with the arrow keys, Shift for crouch and Ctrl for jump.";
+	}
 
 	// Initialize the test
 	virtual void			Initialize() override;

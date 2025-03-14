@@ -8,11 +8,16 @@
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 #include <Jolt/Physics/PhysicsStepListener.h>
 
-// Demonstrates how to do custom gravity to simulate a character walking on a planet
 class CharacterPlanetTest : public Test, public PhysicsStepListener, public CharacterContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterPlanetTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Demonstrates how to do custom gravity to simulate a character walking on a planet.";
+	}
 
 	// Initialize the test
 	virtual void			Initialize() override;

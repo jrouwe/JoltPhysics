@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test tests soft bodies with kinematic vertices
 class SoftBodyKinematicTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyKinematicTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Shows how to make a soft body vertex kinematic and control it.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

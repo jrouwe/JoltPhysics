@@ -11,11 +11,16 @@
 #include <Utils/RagdollLoader.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-// This test tests a kinematic ragdoll moving towards a wall of boxes
 class KinematicRigTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, KinematicRigTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Tests a kinematic ragdoll moving towards a wall of boxes.";
+	}
 
 	// Destructor
 	virtual					~KinematicRigTest() override;

@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test shows the effect of bend constraints in a soft body.
 class SoftBodyBendConstraintTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyBendConstraintTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Shows the effect of bend constraint type in a soft body.";
+	}
 
 	// See: Test
 	virtual void			Initialize() override;

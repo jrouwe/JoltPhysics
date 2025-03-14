@@ -7,11 +7,16 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-// This test loads a ragdoll from disc, writes it to a binary stream, loads it again and simulates it
 class LoadSaveBinaryRigTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, LoadSaveBinaryRigTest)
+
+	// Description of the test
+	virtual const char *			GetDescription() const override
+	{
+		return "Loads a ragdoll from disc, writes it to a binary stream, loads it again and simulates it.";
+	}
 
 	// Destructor
 	virtual							~LoadSaveBinaryRigTest() override;

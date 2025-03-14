@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test shows how you can update a soft body outside of the main physics simulation step
 class SoftBodyCustomUpdateTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyCustomUpdateTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Shows how you can update a soft body outside of the main physics simulation step.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

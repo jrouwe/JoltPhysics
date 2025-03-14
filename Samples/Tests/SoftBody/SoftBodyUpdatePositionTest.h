@@ -6,13 +6,18 @@
 
 #include <Tests/Test.h>
 
-// This test tests soft bodies with and without 'update position' and 'make rotation identity'
-// If you turn on 'Draw World Transforms' you will see that 2 cubes will stay at their initial position.
-// If you turn on 'Draw Bounding Boxes' then you will see that the cubes that didn't have 'make rotation identity' will have a bigger bounding box.
 class SoftBodyUpdatePositionTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyUpdatePositionTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return	"This test tests soft bodies with and without 'update position' and 'make rotation identity'.\n"
+				"The labels of the bodies that don't update their position will stay in place.\n"
+				"If you turn on 'Draw Bounding Boxes' then you will see that the cubes that with 'make rotation identity' have a smaller bounding box.\n";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

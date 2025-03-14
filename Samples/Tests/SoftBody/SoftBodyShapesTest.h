@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test shows interaction between various collision shapes and soft bodies
 class SoftBodyShapesTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyShapesTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Shows interaction between various collision shapes and soft bodies.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

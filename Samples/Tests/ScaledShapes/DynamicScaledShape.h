@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// Demonstrates how you can scale a shape dynamically while a body is being simulated
 class DynamicScaledShape : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, DynamicScaledShape)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Demonstrates how you can scale a shape dynamically while a body is being simulated.";
+	}
 
 	// See: Test
 	virtual void	Initialize() override;

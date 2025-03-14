@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test tests soft bodies with various values for pressure
 class SoftBodyPressureTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyPressureTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Tests soft bodies with various values for internal pressure.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

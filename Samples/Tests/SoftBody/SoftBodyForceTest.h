@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test shows how to apply a global force to a soft body
 class SoftBodyForceTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyForceTest)
+
+	// Description of the test
+	virtual const char *GetDescription() const override
+	{
+		return "Shows how to apply a global force to a soft body.";
+	}
 
 	// See: Test
 	virtual void		Initialize() override;

@@ -6,11 +6,16 @@
 
 #include <Tests/Test.h>
 
-// This test stresses the soft body system by creating a large number of soft bodies / a soft body with many vertices
 class SoftBodyStressTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyStressTest)
+
+	// Description of the test
+	virtual const char *	GetDescription() const override
+	{
+		return "Stresses the soft body system by creating a large number of soft bodies / a soft body with many vertices.";
+	}
 
 	// See: Test
 	virtual void			Initialize() override;

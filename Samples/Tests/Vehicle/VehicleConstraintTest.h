@@ -7,11 +7,17 @@
 #include <Tests/Vehicle/VehicleTest.h>
 #include <Jolt/Physics/Vehicle/VehicleConstraint.h>
 
-// This test shows how a vehicle could be made with the vehicle constraint.
 class VehicleConstraintTest : public VehicleTest
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, VehicleConstraintTest)
+
+	// Description of the test
+	virtual const char *		GetDescription() const override
+	{
+		return	"Shows how a car could be made with a vehicle constraint.\n"
+				"Use the arrow keys to drive. Z for hand brake.";
+	}
 
 	// Destructor
 	virtual						~VehicleConstraintTest() override;
