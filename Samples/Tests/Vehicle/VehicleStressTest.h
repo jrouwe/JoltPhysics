@@ -15,7 +15,7 @@ public:
 	// Description of the test
 	virtual const char *			GetDescription() const override
 	{
-		return	"This test simulates a large number of vehicles to test performance.";
+		return "This test simulates a large number of vehicles to test performance.";
 	}
 
 	// Destructor

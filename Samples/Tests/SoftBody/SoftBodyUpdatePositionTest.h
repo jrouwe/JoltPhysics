@@ -16,7 +16,7 @@ public:
 	{
 		return	"This test tests soft bodies with and without 'update position' and 'make rotation identity'.\n"
 				"The labels of the bodies that don't update their position will stay in place.\n"
-				"If you turn on 'Draw Bounding Boxes' then you will see that the cubes that with 'make rotation identity' have a smaller bounding box.\n";
+				"If you turn on 'Draw Bounding Boxes' then you will see that the cubes that with 'make rotation identity' have a smaller bounding box.";
 	}
 
 	// See: Test
