@@ -236,6 +236,7 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 	DefaultBroadPhaseLayerFilter broadphase_layer_filter = inSystem.GetDefaultBroadPhaseLayerFilter(layer);
 	DefaultObjectLayerFilter object_layer_filter = inSystem.GetDefaultLayerFilter(layer);
 	inSystem.GetBroadPhaseQuery().CollideAABox(world_bounds, collector, broadphase_layer_filter, object_layer_filter);
+	mNumSensors = uint(mCollidingSensors.size());
 }
 
 void SoftBodyMotionProperties::DetermineCollisionPlanes(uint inVertexStart, uint inNumVertices)
@@ -896,19 +897,18 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCol
 SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineSensorCollisions(SoftBodyUpdateContext &ioContext)
 {
 	// Do a relaxed read to see if there are more sensors to process
-	uint num_sensors = (uint)mCollidingSensors.size();
-	if (ioContext.mNextSensorIndex.load(memory_order_relaxed) < num_sensors)
+	if (ioContext.mNextSensorIndex.load(memory_order_relaxed) < mNumSensors)
 	{
 		// Fetch next sensor to process
 		uint sensor_index = ioContext.mNextSensorIndex.fetch_add(1, memory_order_acquire);
-		if (sensor_index < num_sensors)
+		if (sensor_index < mNumSensors)
 		{
 			// Process this sensor
 			DetermineSensorCollisions(mCollidingSensors[sensor_index]);
 
 			// Determine next state
 			uint sensors_processed = ioContext.mNumSensorsProcessed.fetch_add(1, memory_order_acq_rel) + 1;
-			if (sensors_processed >= num_sensors)
+			if (sensors_processed >= mNumSensors)
 				StartFirstIteration(ioContext);
 			return EStatus::DidWork;
 		}
