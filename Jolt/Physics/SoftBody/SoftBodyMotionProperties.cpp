@@ -859,7 +859,7 @@ void SoftBodyMotionProperties::StartNextIteration(const SoftBodyUpdateContext &i
 void SoftBodyMotionProperties::StartFirstIteration(SoftBodyUpdateContext &ioContext)
 {
 	// Start the first iteration
-	JPH_IF_ENABLE_ASSERTS(uint iteration =) ioContext.mNextIteration.fetch_add(1, memory_order_release);
+	JPH_IF_ENABLE_ASSERTS(uint iteration =) ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
 	JPH_ASSERT(iteration == 0);
 	StartNextIteration(ioContext);
 	ioContext.mState.store(SoftBodyUpdateContext::EState::ApplyConstraints, memory_order_release);
@@ -974,7 +974,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyConstra
 
 				ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 
-				uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_acquire);
+				uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
 				if (iteration < mNumIterations)
 				{
 					// Start a new iteration
