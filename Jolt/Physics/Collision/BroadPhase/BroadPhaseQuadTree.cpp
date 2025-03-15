@@ -155,7 +155,7 @@ BroadPhase::AddState BroadPhaseQuadTree::AddBodiesPrepare(BodyID *ioBodies, int 
 {
 	JPH_PROFILE_FUNCTION();
 
-	JPH_ASSERT(inNumber > 0);
+	JPH_ASSERT(inNumber >= 0);
 
 	const BodyVector &bodies = mBodyManager->GetBodies();
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());
