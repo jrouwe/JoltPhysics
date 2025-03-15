@@ -106,7 +106,7 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 	JPH_PROFILE_FUNCTION();
 
 	// Reset flag prior to collision detection
-	mNeedContactCallback = false;
+	mNeedContactCallback.store(false, memory_order_relaxed);
 
 	struct Collector : public CollideShapeBodyCollector
 	{
@@ -269,7 +269,7 @@ void SoftBodyMotionProperties::DetermineSensorCollisions(CollidingSensor &ioSens
 
 	// We need a contact callback if one of the sensors collided
 	if (ioSensor.mHasContact)
-		mNeedContactCallback = true;
+		mNeedContactCallback.store(true, memory_order_relaxed);
 }
 
 void SoftBodyMotionProperties::ApplyPressure(const SoftBodyUpdateContext &inContext)
@@ -621,7 +621,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 					v.mHasContact = true;
 
 					// We need a contact callback if one of the vertices collided
-					mNeedContactCallback = true;
+					mNeedContactCallback.store(true, memory_order_relaxed);
 
 					// Note that we already calculated the velocity, so this does not affect the velocity (next iteration starts by setting previous position to current position)
 					CollidingShape &cs = mCollidingShapes[v.mCollidingShapeIndex];
@@ -720,7 +720,7 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 	JPH_PROFILE_FUNCTION();
 
 	// Contact callback
-	if (mNeedContactCallback && ioContext.mContactListener != nullptr)
+	if (mNeedContactCallback.load(memory_order_relaxed) && ioContext.mContactListener != nullptr)
 	{
 		// Remove non-colliding sensors from the list
 		for (int i = int(mCollidingSensors.size()) - 1; i >= 0; --i)
@@ -858,7 +858,7 @@ void SoftBodyMotionProperties::StartNextIteration(const SoftBodyUpdateContext &i
 void SoftBodyMotionProperties::StartFirstIteration(SoftBodyUpdateContext &ioContext)
 {
 	// Start the first iteration
-	JPH_IF_ENABLE_ASSERTS(uint iteration =) ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
+	JPH_IF_ENABLE_ASSERTS(uint iteration =) ioContext.mNextIteration.fetch_add(1, memory_order_release);
 	JPH_ASSERT(iteration == 0);
 	StartNextIteration(ioContext);
 	ioContext.mState.store(SoftBodyUpdateContext::EState::ApplyConstraints, memory_order_release);
@@ -877,7 +877,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCol
 			// Process collision planes
 			uint num_vertices_to_process = min(SoftBodyUpdateContext::cVertexCollisionBatch, num_vertices - next_vertex);
 			DetermineCollisionPlanes(next_vertex, num_vertices_to_process);
-			uint vertices_processed = ioContext.mNumCollisionVerticesProcessed.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_release) + num_vertices_to_process;
+			uint vertices_processed = ioContext.mNumCollisionVerticesProcessed.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_acq_rel) + num_vertices_to_process;
 			if (vertices_processed >= num_vertices)
 			{
 				// Determine next state
@@ -907,7 +907,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineSen
 			DetermineSensorCollisions(mCollidingSensors[sensor_index]);
 
 			// Determine next state
-			uint sensors_processed = ioContext.mNumSensorsProcessed.fetch_add(1, memory_order_release) + 1;
+			uint sensors_processed = ioContext.mNumSensorsProcessed.fetch_add(1, memory_order_acq_rel) + 1;
 			if (sensors_processed >= num_sensors)
 				StartFirstIteration(ioContext);
 			return EStatus::DidWork;
@@ -961,7 +961,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyConstra
 				ProcessGroup(ioContext, next_group);
 
 				// Increment total number of groups processed
-				num_groups_processed = ioContext.mNumConstraintGroupsProcessed.fetch_add(1, memory_order_relaxed) + 1;
+				num_groups_processed = ioContext.mNumConstraintGroupsProcessed.fetch_add(1, memory_order_acq_rel) + 1;
 			}
 
 			if (num_groups_processed >= num_groups)
@@ -974,14 +974,14 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyConstra
 
 				ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 
-				uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
+				uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_acquire);
 				if (iteration < mNumIterations)
 				{
 					// Start a new iteration
 					StartNextIteration(ioContext);
 
 					// Reset group logic
-					ioContext.mNumConstraintGroupsProcessed.store(0, memory_order_relaxed);
+					ioContext.mNumConstraintGroupsProcessed.store(0, memory_order_release);
 					ioContext.mNextConstraintGroup.store(0, memory_order_release);
 				}
 				else
@@ -1002,7 +1002,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyConstra
 
 SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
 {
-	switch (ioContext.mState.load(memory_order_relaxed))
+	switch (ioContext.mState.load(memory_order_acquire))
 	{
 	case SoftBodyUpdateContext::EState::DetermineCollisionPlanes:
 		return ParallelDetermineCollisionPlanes(ioContext);
