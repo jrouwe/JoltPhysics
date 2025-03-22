@@ -1,6 +1,6 @@
 // Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2025 Jorrit Rouwe
-// SPDX-License-Identifier: CC0
+// SPDX-License-Identifier: CC0-1.0
 // This file is in the public domain. It serves as an example to start building your own application using Jolt Physics. Feel free to copy paste without attribution!
 
 // The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
