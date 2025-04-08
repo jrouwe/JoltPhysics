@@ -444,8 +444,8 @@ private:
 	// 122 bytes up to here (64-bit mode, single precision, 16-bit ObjectLayer)
 };
 
-static_assert(JPH_CPU_ADDRESS_BITS != 64 || sizeof(Body) == JPH_IF_SINGLE_PRECISION_ELSE(128, 160), "Body size is incorrect");
-static_assert(alignof(Body) == JPH_RVECTOR_ALIGNMENT, "Body should properly align");
+static_assert(JPH_CPU_ADDRESS_BITS != 64 || JPH_RVECTOR_ALIGNMENT < 16 || sizeof(Body) == JPH_IF_SINGLE_PRECISION_ELSE(128, 160), "Body size is incorrect");
+static_assert(alignof(Body) == max(JPH_VECTOR_ALIGNMENT, JPH_RVECTOR_ALIGNMENT), "Body should properly align");
 
 JPH_NAMESPACE_END
 

@@ -229,7 +229,7 @@
 		#define JPH_CPU_ADDRESS_BITS 32
 	#endif
 	#define JPH_VECTOR_ALIGNMENT 16
-	#define JPH_DVECTOR_ALIGNMENT 32
+	#define JPH_DVECTOR_ALIGNMENT 8
 #elif defined(__e2k__)
 	// E2K CPU architecture (MCST Elbrus 2000)
 	#define JPH_CPU_E2K
