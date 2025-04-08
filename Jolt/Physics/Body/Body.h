@@ -33,7 +33,7 @@ class SoftBodyCreationSettings;
 /// The linear velocity is also velocity of the center of mass, to correct for this: \f$VelocityCOM = Velocity - AngularVelocity \times ShapeCOM\f$.
 class
 #ifndef JPH_PLATFORM_DOXYGEN // Doxygen gets confused here
-	JPH_EXPORT_GCC_BUG_WORKAROUND alignas(JPH_RVECTOR_ALIGNMENT)
+	JPH_EXPORT_GCC_BUG_WORKAROUND alignas(max(JPH_VECTOR_ALIGNMENT, JPH_RVECTOR_ALIGNMENT))
 #endif
 	Body : public NonCopyable
 {
