@@ -238,8 +238,9 @@ else()
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-contract=off")
 
 			# emcc complains with: warning: overriding '-ffp-model=precise' option with '-ffp-contract=off' [-Woverriding-option],
+			# clang > 19 also report this as an error,
 			# but this is exactly what we want.
-			if (EMSCRIPTEN)
+			if (EMSCRIPTEN OR CMAKE_CXX_COMPILER_VERSION GREATER 19)
 				set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overriding-option")
 			endif()
 		endif()
