@@ -233,7 +233,8 @@ else()
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-model=precise")
 
 		# On clang 14 and later we can turn off float contraction through a pragma, older versions and deterministic versions need it off always, see Core.h
-		if (CMAKE_CXX_COMPILER_VERSION LESS 14 OR CROSS_PLATFORM_DETERMINISTIC)
+		# clang on LoongArch does not support such pragma, also turn off contraction for it.
+		if (CMAKE_CXX_COMPILER_VERSION LESS 14 OR CROSS_PLATFORM_DETERMINISTIC OR "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "loongarch")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-contract=off")
 
 			# emcc complains with: warning: overriding '-ffp-model=precise' option with '-ffp-contract=off' [-Woverriding-option],
