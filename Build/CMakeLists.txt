@@ -92,6 +92,7 @@ option(PROFILER_IN_DEBUG_AND_RELEASE "Enable the profiler in Debug and Release b
 # Note that enabling this reduces the performance of the library.
 option(PROFILER_IN_DISTRIBUTION "Enable the profiler in all builds" OFF)
 
+# Ability to use the external profiler using CMake config. Defines preprocessor JPH_EXTERNAL_PROFILE.
 # Use external profiler set using ProfileStartMeasurement and ProfileEndMeasurement to profile.
 # Option is available only when profiling is enabled using PROFILER_IN_DEBUG_AND_RELEASE or PROFILER_IN_DISTRIBUTION.
 option(JPH_USE_EXTERNAL_PROFILE "Use external profiler when profiling is enabled" OFF)
