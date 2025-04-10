@@ -577,10 +577,10 @@ endif()
 # Enable the profiler
 if (PROFILER_IN_DISTRIBUTION)
 	target_compile_definitions(Jolt PUBLIC "JPH_PROFILE_ENABLED")
-	target_compile_definitions(Jolt PUBLIC "$<$<BOOL:${JPH_USE_EXTERNAL_PROFILER}>:JPH_EXTERNAL_PROFILE>")
+	target_compile_definitions(Jolt PUBLIC "$<$<BOOL:${JPH_USE_EXTERNAL_PROFILE}>:JPH_EXTERNAL_PROFILE>")
 elseif (PROFILER_IN_DEBUG_AND_RELEASE)
 	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug,Release,ReleaseASAN,ReleaseUBSAN,ReleaseTSAN>:JPH_PROFILE_ENABLED>")
-	target_compile_definitions(Jolt PUBLIC "$<$<BOOL:${JPH_USE_EXTERNAL_PROFILER}>:JPH_EXTERNAL_PROFILE>")
+	target_compile_definitions(Jolt PUBLIC "$<$<BOOL:${JPH_USE_EXTERNAL_PROFILE}>:JPH_EXTERNAL_PROFILE>")
 endif()
 
 # Compile the ObjectStream class and RTTI attribute information

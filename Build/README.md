@@ -25,7 +25,7 @@ There are a number of user configurable defines that turn on/off certain feature
 	<ul>
 		<li>JPH_SHARED_LIBRARY - Use the Jolt library as a shared library. Use JPH_BUILD_SHARED_LIBRARY to build Jolt as a shared library.</li>
 		<li>JPH_PROFILE_ENABLED - Turns on the internal profiler.</li>
-		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h). Use JPH_USE_EXTERNAL_PROFILER when profiler is enabled to use external profiler.</li>
+		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h). Use JPH_USE_EXTERNAL_PROFILE when profiler is enabled to use external profiler.</li>
 		<li>JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.</li>
 		<li>JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.</li>
 		<li>JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.</li>
