@@ -232,11 +232,16 @@ else()
 		if (CMAKE_CXX_COMPILER_VERSION LESS 14 OR CROSS_PLATFORM_DETERMINISTIC)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-contract=off")
 
-			# emcc complains with: warning: overriding '-ffp-model=precise' option with '-ffp-contract=off' [-Woverriding-option],
+			# emcc and clang 20+ complain with: warning: overriding '-ffp-model=precise' option with '-ffp-contract=off' [-Woverriding-option],
 			# but this is exactly what we want.
-			if (EMSCRIPTEN)
+			# Clang 20 documentation:
+			# "If ... your command line option specifies -ffp-model and later on the command line selects a floating point option that has
+			#  the effect of negating part of the ffp-model that has been selected, then the compiler will issue a diagnostic warning
+			#  that the override has occurred."
+			if (EMSCRIPTEN OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "20.0.0"))
 				set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overriding-option")
 			endif()
+
 		endif()
 
 		# Cross compiler flags
