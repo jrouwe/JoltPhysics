@@ -242,10 +242,8 @@ else()
 		if (CMAKE_CXX_COMPILER_VERSION LESS 14 OR CROSS_PLATFORM_DETERMINISTIC OR "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "loongarch")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-contract=off")
 
-			# emcc complains with: warning: overriding '-ffp-model=precise' option with '-ffp-contract=off' [-Woverriding-option],
-			# clang > 19 also report this as an error,
-			# but this is exactly what we want.
-			if (EMSCRIPTEN OR CMAKE_CXX_COMPILER_VERSION GREATER 19)
+			# Clang 20 and later complain with: overriding '-ffp-model=precise' option with '-ffp-contract=off' [-Woverriding-option], but this is exactly what we want.
+			if (CMAKE_CXX_COMPILER_VERSION GREATER 19)
 				set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overriding-option")
 			endif()
 		endif()
