@@ -568,7 +568,7 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 		float denom = length * (v0.mInvMass + v1.mInvMass + e->mCompliance * inv_dt_sq);
 		if (denom < 1.0e-12f)
 			continue;
-		Vec3 correction = delta * (length - e->mRestLength) / denom;
+		Vec3 correction = delta * (length - e->mRestLength * mEdgeRestLengthMultiplier) / denom;
 		v0.mPosition = x0 + v0.mInvMass * correction;
 		v1.mPosition = x1 - v1.mInvMass * correction;
 	}
