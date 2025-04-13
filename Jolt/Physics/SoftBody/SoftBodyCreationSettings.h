@@ -65,6 +65,7 @@ public:
 	float				mFriction = 0.2f;					///< Friction coefficient when colliding
 	float				mPressure = 0.0f;					///< n * R * T, amount of substance * ideal gas constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 	float				mGravityFactor = 1.0f;				///< Value to multiply gravity with for this body
+	float				mEdgeRestLengthMultiplier = 1.0f;	///< Multiplier applied to Edge::mRestLength to allow shrinking of the edge constraints
 	bool				mUpdatePosition = true;				///< Update the position of the body while simulating (set to false for something that is attached to the static world)
 	bool				mMakeRotationIdentity = true;		///< Bake specified mRotation in the vertices and set the body rotation to identity (simulation is slightly more accurate if the rotation of a soft body is kept to identity)
 	bool				mAllowSleeping = true;				///< If this body can go to sleep or not
