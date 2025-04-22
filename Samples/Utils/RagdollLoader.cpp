@@ -70,6 +70,7 @@ RagdollSettings *RagdollLoader::sLoad(const char *inFileName, EMotionType inMoti
 					settings->mLimitsMin = -original->mNormalHalfConeAngle;
 					settings->mLimitsMax = original->mNormalHalfConeAngle;
 					settings->mMaxFrictionTorque = original->mMaxFrictionTorque;
+					settings->mMotorSettings = original->mSwingMotorSettings;
 					p.mToParent = settings;
 					break;
 				}
@@ -83,6 +84,7 @@ RagdollSettings *RagdollLoader::sLoad(const char *inFileName, EMotionType inMoti
 					settings->mLimitsMin = -1.0f;
 					settings->mLimitsMax = 1.0f;
 					settings->mMaxFrictionForce = original->mMaxFrictionTorque;
+					settings->mMotorSettings = original->mSwingMotorSettings;
 					p.mToParent = settings;
 					break;
 				}
