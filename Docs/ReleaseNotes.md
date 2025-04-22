@@ -2,6 +2,19 @@
 
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
+## Unreleased Changes
+
+### New functionality
+
+* Added ability to drive hinge constraints with `Ragdoll::DriveToPoseUsingMotors`. This also adds `HingeConstraint::SetTargetOrientationBS` which sets the target angle in body space.
+* Added `JPH_USE_EXTERNAL_PROFILE` cmake option that allows overriding the behavior of the profile macros.
+
+### Bug Fixes
+
+* Fixed compiling in double precision and fixed issues with floating point contraction that caused unit test failures on LoongArch architecture.
+* Added an epsilon to the `CastRay` / `CastShape` early out condition to avoid dividing by a very small number and overflowing to INF. This can cause a float overflow exception.
+* Fixed Samples requiring Vulkan extension `VK_EXT_device_address_binding_report` without checking if it is available.
+
 ## v5.3.0
 
 ### New functionality
