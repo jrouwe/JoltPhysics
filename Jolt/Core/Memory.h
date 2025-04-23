@@ -30,9 +30,8 @@ JPH_EXPORT void RegisterDefaultAllocator();
 // 32-bit MinGW g++ doesn't call the correct overload for the new operator when a type is 16 bytes aligned.
 // It uses the non-aligned version, which on 32 bit platforms usually returns an 8 byte aligned block.
 // We therefore default to 16 byte aligned allocations when the regular new operator is used.
-// When compiling with clang++, malloc returns 16 byte aligned blocks, so we don't need to do this.
 // See: https://github.com/godotengine/godot/issues/105455#issuecomment-2824311547
-#if defined(JPH_COMPILER_GCC) && defined(JPH_COMPILER_MINGW) && JPH_CPU_ADDRESS_BITS == 32
+#if defined(JPH_COMPILER_MINGW) && JPH_CPU_ADDRESS_BITS == 32
 	#define JPH_INTERNAL_DEFAULT_ALLOCATE(size) JPH::AlignedAllocate(size, 16)
 	#define JPH_INTERNAL_DEFAULT_FREE(pointer) JPH::AlignedFree(pointer)
 #else
