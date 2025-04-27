@@ -355,6 +355,10 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 	float half_dt = 0.5f * dt;
 	for (RodState &r : mRodStates)
 	{
+		// Damping
+		r.mAngularVelocity *= linear_damping;
+
+		// Integrate
 		r.mPreviousRotation = r.mRotation;
 		r.mRotation += half_dt * Quat(Vec4(r.mAngularVelocity, 0)) * r.mRotation;
 		r.mRotation = r.mRotation.Normalized();

@@ -925,6 +925,23 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			});
 	}
 
+	// Bilateral interleaving, see figure 4 of "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
+	// TODO: Assign rod constraints to update groups
+	QuickSort(mRodConstraints.begin(), mRodConstraints.end(), [](const RodConstraint &inLHS, const RodConstraint &inRHS)
+	{
+		// TODO: Use connectivity to sort the rods
+		return min(inLHS.mRods[0], inLHS.mRods[1]) < min(inRHS.mRods[0], inRHS.mRods[1]);
+	});
+	outResults.mRodConstraintRemap.reserve(mRodConstraints.size());
+	for (uint i = 0, s = uint(mRodConstraints.size()); i < s; ++i)
+		outResults.mRodConstraintRemap.push_back(i);
+	for (uint i = 1, s = uint(mRodConstraints.size()) / 2; i < s; i += 2)
+	{
+		uint j = uint(mRodConstraints.size()) - 1 - i;
+		std::swap(mRodConstraints[i], mRodConstraints[j]);
+		std::swap(outResults.mRodConstraintRemap[i], outResults.mRodConstraintRemap[j]);
+	}
+
 	// Temporary store constraints as we reorder them
 	Array<Edge> temp_edges;
 	temp_edges.swap(mEdgeConstraints);

@@ -84,6 +84,7 @@ public:
 		Array<uint>		mDihedralBendRemap;							///< Maps old dihedral bend index to new dihedral bend index
 		Array<uint>		mVolumeRemap;								///< Maps old volume constraint index to new volume constraint index
 		Array<uint>		mSkinnedRemap;								///< Maps old skinned constraint index to new skinned constraint index
+		Array<uint>		mRodConstraintRemap;						///< Maps old rod constraint index to new rod constraint index
 	};
 
 	/// Optimize the soft body settings for simulation. This will reorder constraints so they can be executed in parallel.
