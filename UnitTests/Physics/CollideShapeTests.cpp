@@ -536,4 +536,25 @@ TEST_SUITE("CollideShapeTests")
 				}
 			}
 	}
+
+	TEST_CASE("TestCollideTriangleVsTriangle")
+	{
+		constexpr float cPenetration = 0.01f;
+
+		// A triangle centered around the origin in the XZ plane
+		RefConst<Shape> t1 = new TriangleShape(Vec3(-1, 0, 1), Vec3(1, 0, 1), Vec3(0, 0, -1));
+
+		// A triangle in the XY plane with its tip just pointing in the origin
+		RefConst<Shape> t2 = new TriangleShape(Vec3(-1, 1, 0), Vec3(1, 1, 0), Vec3(0, -cPenetration, 0));
+
+		CollideShapeSettings collide_settings;
+		ClosestHitCollisionCollector<CollideShapeCollector> collector;
+		CollisionDispatch::sCollideShapeVsShape(t1, t2, Vec3::sOne(), Vec3::sOne(), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
+
+		CHECK(collector.HadHit());
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3::sZero());
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn2, Vec3(0, -cPenetration, 0));
+		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, cPenetration);
+		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationAxis.Normalized(), Vec3(0, 1, 0));
+	}
 }
