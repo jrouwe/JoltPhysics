@@ -362,27 +362,29 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyCustomUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyLRAConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyBendConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodySkinnedConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyCosseratRodConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodySensorTest)
 
 static TestNameAndRTTI sSoftBodyTests[] =
 {
-	{ "Soft Body vs Shapes",			JPH_RTTI(SoftBodyShapesTest) },
-	{ "Soft Body vs Fast Moving",		JPH_RTTI(SoftBodyVsFastMovingTest) },
-	{ "Soft Body Friction",				JPH_RTTI(SoftBodyFrictionTest) },
-	{ "Soft Body Restitution",			JPH_RTTI(SoftBodyRestitutionTest) },
-	{ "Soft Body Pressure",				JPH_RTTI(SoftBodyPressureTest) },
-	{ "Soft Body Gravity Factor",		JPH_RTTI(SoftBodyGravityFactorTest) },
-	{ "Soft Body Force",				JPH_RTTI(SoftBodyForceTest) },
-	{ "Soft Body Kinematic",			JPH_RTTI(SoftBodyKinematicTest) },
-	{ "Soft Body Update Position",		JPH_RTTI(SoftBodyUpdatePositionTest) },
-	{ "Soft Body Stress Test",			JPH_RTTI(SoftBodyStressTest) },
-	{ "Soft Body Vertex Radius Test",	JPH_RTTI(SoftBodyVertexRadiusTest) },
-	{ "Soft Body Contact Listener",		JPH_RTTI(SoftBodyContactListenerTest) },
-	{ "Soft Body Custom Update",		JPH_RTTI(SoftBodyCustomUpdateTest) },
-	{ "Soft Body LRA Constraint",		JPH_RTTI(SoftBodyLRAConstraintTest) },
-	{ "Soft Body Bend Constraint",		JPH_RTTI(SoftBodyBendConstraintTest) },
-	{ "Soft Body Skinned Constraint",	JPH_RTTI(SoftBodySkinnedConstraintTest) },
-	{ "Soft Body vs Sensor",			JPH_RTTI(SoftBodySensorTest) }
+	{ "Soft Body vs Shapes",				JPH_RTTI(SoftBodyShapesTest) },
+	{ "Soft Body vs Fast Moving",			JPH_RTTI(SoftBodyVsFastMovingTest) },
+	{ "Soft Body Friction",					JPH_RTTI(SoftBodyFrictionTest) },
+	{ "Soft Body Restitution",				JPH_RTTI(SoftBodyRestitutionTest) },
+	{ "Soft Body Pressure",					JPH_RTTI(SoftBodyPressureTest) },
+	{ "Soft Body Gravity Factor",			JPH_RTTI(SoftBodyGravityFactorTest) },
+	{ "Soft Body Force",					JPH_RTTI(SoftBodyForceTest) },
+	{ "Soft Body Kinematic",				JPH_RTTI(SoftBodyKinematicTest) },
+	{ "Soft Body Update Position",			JPH_RTTI(SoftBodyUpdatePositionTest) },
+	{ "Soft Body Stress Test",				JPH_RTTI(SoftBodyStressTest) },
+	{ "Soft Body Vertex Radius Test",		JPH_RTTI(SoftBodyVertexRadiusTest) },
+	{ "Soft Body Contact Listener",			JPH_RTTI(SoftBodyContactListenerTest) },
+	{ "Soft Body Custom Update",			JPH_RTTI(SoftBodyCustomUpdateTest) },
+	{ "Soft Body LRA Constraint",			JPH_RTTI(SoftBodyLRAConstraintTest) },
+	{ "Soft Body Bend Constraint",			JPH_RTTI(SoftBodyBendConstraintTest) },
+	{ "Soft Body Skinned Constraint",		JPH_RTTI(SoftBodySkinnedConstraintTest) },
+	{ "Soft Body Cosserat Rod Constraint",	JPH_RTTI(SoftBodyCosseratRodConstraintTest) },
+	{ "Soft Body vs Sensor",				JPH_RTTI(SoftBodySensorTest) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)

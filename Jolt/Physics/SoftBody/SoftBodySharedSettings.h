@@ -59,6 +59,9 @@ public:
 	/// Calculate the initial lengths of all springs of the edges of this soft body (if you use CreateConstraint, this is already done)
 	void				CalculateEdgeLengths();
 
+	/// Calculate the properties of the rods
+	void				CalculateRodProperties();
+
 	/// Calculate the max lengths for the long range attachment constraints based on Euclidean distance (if you use CreateConstraints, this is already done)
 	/// @param inMaxDistanceMultiplier Multiplier for the max distance of the LRA constraint, e.g. 1.01 means the max distance is 1% longer than the calculated distance in the rest pose.
 	void				CalculateLRALengths(float inMaxDistanceMultiplier = 1.0f);
@@ -162,6 +165,37 @@ public:
 		uint32			mVertex[2];									///< Indices of the vertices that form the edge
 		float			mRestLength = 1.0f;							///< Rest length of the spring
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
+	};
+
+	/// A discrete Cosserat rod. Connects two particles with a rigid rod that has fixed length and inertia.
+	/// Based on "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
+	/// See: https://www.researchgate.net/publication/325597548_Position_and_Orientation_Based_Cosserat_Rods
+	struct JPH_EXPORT Rod
+	{
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Rod)
+
+		/// Constructor
+						Rod() = default;
+						Rod(uint32 inVertex1, uint32 inVertex2) : mVertex { inVertex1, inVertex2 } { }
+
+		/// Return the lowest vertex index of this constraint
+		uint32			GetMinVertexIndex() const					{ return min(mVertex[0], mVertex[1]); }
+
+		uint32			mVertex[2];									///< Indices of the vertices that form the rod
+		float			mLength = 1.0f;								///< Fixed length of the rod
+		Quat			mBishop	= Quat::sIdentity();				///< The Bishop frame of the rod (the rotation of the rod in its rest pose so that it has zero twist towards adjacent rods)
+	};
+
+	/// A constraint that connects 2 Cosserat rods and limits bend, twist and shear between the rods.
+	struct JPH_EXPORT RodConstraint
+	{
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, RodConstraint)
+
+		/// Constructor
+						RodConstraint() = default;
+						RodConstraint(uint32 inRod1, uint32 inRod2) : mRods { inRod1, inRod2 } { }
+
+		uint32			mRods[2];									///< Indices of rods that are constrained
 	};
 
 	/**
@@ -302,11 +336,13 @@ public:
 	Array<Vertex>		mVertices;									///< The list of vertices or particles of the body
 	Array<Face>			mFaces;										///< The list of faces of the body
 	Array<Edge>			mEdgeConstraints;							///< The list of edges or springs of the body
+	Array<Rod>			mRods;										///< The list of rods that are used to connect two vertices
 	Array<DihedralBend>	mDihedralBendConstraints;					///< The list of dihedral bend constraints of the body
 	Array<Volume>		mVolumeConstraints;							///< The list of volume constraints of the body that keep the volume of tetrahedra in the soft body constant
 	Array<Skinned>		mSkinnedConstraints;						///< The list of vertices that are constrained to a skinned vertex
 	Array<InvBind>		mInvBindMatrices;							///< The list of inverse bind matrices for skinning vertices
 	Array<LRA>			mLRAConstraints;							///< The list of long range attachment constraints
+	Array<RodConstraint>mRodConstraints;							///< The list of rod constraints that connect two rods and limit the bend, twist and shear between them
 	PhysicsMaterialList mMaterials { PhysicsMaterial::sDefault };	///< The materials of the faces of the body, referenced by Face::mMaterialIndex
 	float				mVertexRadius = 0.0f;						///< How big the particles are, can be used to push the vertices a little bit away from the surface of other bodies to prevent z-fighting
 
@@ -331,6 +367,7 @@ private:
 		uint			mDihedralBendEndIndex;						///< The end index of the dihedral bend constraints in this group
 		uint			mVolumeEndIndex;							///< The end index of the volume constraints in this group
 		uint			mSkinnedEndIndex;							///< The end index of the skinned constraints in this group
+		uint			mRodEndIndex;								///< The end index of the rod constraints in this group
 	};
 
 	Array<ClosestKinematic> mClosestKinematic;						///< The closest kinematic vertex to each vertex in mVertices

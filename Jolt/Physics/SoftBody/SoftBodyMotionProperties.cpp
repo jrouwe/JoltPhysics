@@ -78,6 +78,20 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
 	}
 
+	// Initialize rods
+	if (!inSettings.mSettings->mRods.empty())
+	{
+		mRodStates.resize(inSettings.mSettings->mRods.size());
+		Quat rotation_q = rotation.GetQuaternion();
+		for (Array<RodState>::size_type r = 0, s = mRodStates.size(); r < s; ++r)
+		{
+			const SoftBodySharedSettings::Rod &in_rod = inSettings.mSettings->mRods[r];
+			RodState &out_rod = mRodStates[r];
+			out_rod.mPreviousRotation = out_rod.mRotation = rotation_q * in_rod.mBishop;
+			out_rod.mAngularVelocity = Vec3::sZero();
+		}
+	}
+
 	// Allocate space for skinned vertices
 	if (!inSettings.mSettings->mSkinnedConstraints.empty())
 		mSkinState.resize(mVertices.size());
@@ -336,6 +350,15 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 			v.mPreviousPosition = v.mPosition;
 			v.mPosition += v.mVelocity * dt;
 		}
+
+	// Integrate rod orientations
+	float half_dt = 0.5f * dt;
+	for (RodState &r : mRodStates)
+	{
+		r.mPreviousRotation = r.mRotation;
+		r.mRotation += half_dt * Quat(Vec4(r.mAngularVelocity, 0)) * r.mRotation;
+		r.mRotation = r.mRotation.Normalized();
+	}
 }
 
 void SoftBodyMotionProperties::ApplyDihedralBendConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
@@ -574,6 +597,60 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 	}
 }
 
+void SoftBodyMotionProperties::ApplyRodConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
+{
+	for (const RodConstraint *r = mSettings->mRodConstraints.data() + inStartIndex, *r_end = mSettings->mRodConstraints.data() + inEndIndex; r < r_end; ++r)
+	{
+		uint32 rod1_index = r->mRods[0];
+		uint32 rod2_index = r->mRods[1];
+		const Rod &rod1 = mSettings->mRods[rod1_index];
+		const Rod &rod2 = mSettings->mRods[rod2_index];
+		RodState &rod1_state = mRodStates[rod1_index];
+		RodState &rod2_state = mRodStates[rod2_index];
+
+		auto apply_stretch_and_shear = [this](const Rod &inRod, RodState &ioState)
+		{
+			// Get positions
+			Vertex &v0 = mVertices[inRod.mVertex[0]];
+			Vertex &v1 = mVertices[inRod.mVertex[1]];
+			Vec3 x0 = v0.mPosition;
+			Vec3 x1 = v1.mPosition;
+
+			// Apply stretch and shear constraint
+			// Equation 37 from "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
+			Vec3 d3 = ioState.mRotation.RotateAxisZ();
+			float wq = min(v0.mInvMass, v1.mInvMass); // TODO: Determine inertia
+			float l = inRod.mLength;
+			float l_sq = Square(l);
+			float denom = v0.mInvMass + v1.mInvMass + 4.0f * wq * l_sq;
+			Vec3 delta = (x1 - x0 - d3 * l) / denom;
+			v0.mPosition = x0 + v0.mInvMass * delta;
+			v1.mPosition = x1 - v1.mInvMass * delta;
+			ioState.mRotation += wq * l * Quat(Vec4(delta, 0)) * ioState.mRotation * Quat(0, 0, -1, 0);
+			return wq;
+		};
+		float wq = apply_stretch_and_shear(rod1, rod1_state);
+		float wu = apply_stretch_and_shear(rod2, rod2_state);
+
+		// Apply bend and twist constraint
+		// Equation 40 from "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
+		Quat omega = rod1_state.mRotation.Conjugated() * rod2_state.mRotation;
+		Quat omega0 = rod1.mBishop.Conjugated() * rod2.mBishop;
+		Quat omega_min_omega0 = omega - omega0;
+		Quat omega_plus_omega0 = omega + omega0;
+		if (omega_plus_omega0.LengthSq() < omega_min_omega0.LengthSq())
+			omega_min_omega0 = omega_plus_omega0; // The rotation represented by q and -q are the same, we need to take the one that results in the shortest quaternion
+		omega_min_omega0 /= wq + wu;
+		Quat rotation1 = rod1_state.mRotation;
+		rod1_state.mRotation += wq * rod2_state.mRotation * omega_min_omega0;
+		rod2_state.mRotation -= wu * rotation1 * omega_min_omega0;
+
+		// Renormalize
+		rod1_state.mRotation = rod1_state.mRotation.Normalized();
+		rod2_state.mRotation = rod2_state.mRotation.Normalized();
+	}
+}
+
 void SoftBodyMotionProperties::ApplyLRAConstraints(uint inStartIndex, uint inEndIndex)
 {
 	JPH_PROFILE_FUNCTION();
@@ -714,6 +791,11 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 				}
 			}
 		}
+
+	// Calculate the new angular velocity for all rods
+	float two_div_dt = 2.0f / dt;
+	for (RodState &r : mRodStates)
+		r.mAngularVelocity = two_div_dt * (r.mRotation * r.mPreviousRotation.Conjugated()).GetXYZ();
 }
 
 void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
@@ -935,6 +1017,9 @@ void SoftBodyMotionProperties::ProcessGroup(const SoftBodyUpdateContext &ioConte
 
 	// Process edges
 	ApplyEdgeConstraints(ioContext, prev.mEdgeEndIndex, current.mEdgeEndIndex);
+
+	// Process rods
+	ApplyRodConstraints(ioContext, prev.mRodEndIndex, current.mRodEndIndex);
 
 	// Process LRA constraints
 	ApplyLRAConstraints(prev.mLRAEndIndex, current.mLRAEndIndex);
@@ -1190,6 +1275,27 @@ void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RM
 			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, inColor);
 		},
 		Color::sWhite);
+}
+
+void SoftBodyMotionProperties::DrawRods(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+{
+	for (Array<RodState>::size_type i = 0; i < mRodStates.size(); ++i)
+	{
+		const RodState &state = mRodStates[i];
+		const Rod &rod = mSettings->mRods[i];
+
+		RVec3 x0 = inCenterOfMassTransform * mVertices[rod.mVertex[0]].mPosition;
+		RVec3 x1 = inCenterOfMassTransform * mVertices[rod.mVertex[1]].mPosition;
+
+		inRenderer->DrawLine(x0, x1, Color::sWhite);
+
+		RMat44 rod_center = inCenterOfMassTransform;
+		rod_center.SetTranslation(0.5_r * (x0 + x1));
+		inRenderer->DrawArrow(rod_center.GetTranslation(), rod_center.GetTranslation() + 0.1f * rod.mLength * state.mAngularVelocity, Color::sYellow, 0.01f * rod.mLength);
+
+		RMat44 rod_frame = rod_center * RMat44::sRotation(state.mRotation);
+		inRenderer->DrawCoordinateSystem(rod_frame, 0.3f * rod.mLength);
+	}
 }
 
 void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const

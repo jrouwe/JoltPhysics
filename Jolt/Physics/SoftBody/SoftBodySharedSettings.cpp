@@ -36,6 +36,18 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Edge)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Edge, mCompliance)
 }
 
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Rod)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Rod, mVertex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Rod, mLength)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Rod, mBishop)
+}
+
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::RodConstraint)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodConstraint, mRods)
+}
+
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::DihedralBend)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mVertex)
@@ -82,11 +94,13 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mFaces)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRods)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mDihedralBendConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mInvBindMatrices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mLRAConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRodConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
 }
@@ -347,6 +361,86 @@ void SoftBodySharedSettings::CalculateEdgeLengths()
 		e.mRestLength = (Vec3(mVertices[e.mVertex[1]].mPosition) - Vec3(mVertices[e.mVertex[0]].mPosition)).Length();
 		JPH_ASSERT(e.mRestLength > 0.0f);
 	}
+}
+
+void SoftBodySharedSettings::CalculateRodProperties()
+{
+	constexpr uint32 cNotConnected = ~uint32(0);
+
+	// Mark to which rod each rod connects
+	Array<int> connections;
+	connections.resize(mRods.size(), cNotConnected);
+	for (const RodConstraint &c : mRodConstraints)
+		connections[c.mRods[1]] = c.mRods[0];
+
+	// Determine a Bishop frame for all rods that do not connect to another rod
+	for (uint32 i = 0; i < mRods.size(); ++i)
+		if (connections[i] == cNotConnected)
+		{
+			Rod &r = mRods[i];
+			Vec3 tangent = Vec3(mVertices[r.mVertex[1]].mPosition) - Vec3(mVertices[r.mVertex[0]].mPosition);
+			r.mLength = tangent.Length();
+			JPH_ASSERT(r.mLength > 0.0f, "Rods of zero length are not supported!");
+			tangent /= r.mLength;
+			Vec3 normal = tangent.GetNormalizedPerpendicular();
+			Vec3 binormal = tangent.Cross(normal);
+			r.mBishop = Mat44(Vec4(normal, 0), Vec4(binormal, 0), Vec4(tangent, 0), Vec4(0, 0, 0, 1)).GetQuaternion().Normalized();
+		}
+
+	// Now calculate the Bishop frames for all other rods
+	Array<uint32> stack;
+	stack.reserve(mRods.size());
+	for (uint32 i = 0; i < mRods.size(); ++i)
+		if (connections[i] != cNotConnected) // Already calculated?
+		{
+			// Find the first rod that already has its Bishop frame calculated
+			uint32 current = i;
+			for (;;)
+			{
+				uint32 next = connections[current];
+				if (next != cNotConnected)
+					stack.push_back(current);
+				else
+					break;
+				current = next;
+			}
+
+			// Now connect the bishop frame for all connected rods on the stack
+			// This follows the procedure outlined in "Discrete Elastic Rods" - M. Bergou et al.
+			// See: https://www.cs.columbia.edu/cg/pdfs/143-rods.pdf
+			while (!stack.empty())
+			{
+				uint32 r2_idx = stack.back();
+				uint32 r1_idx = connections[r2_idx];
+				Rod &r1 = mRods[r1_idx];
+				Rod &r2 = mRods[r2_idx];
+
+				// Get the normal and tangent of the first rod's Bishop frame (that was already calculated)
+				Mat44 r1_frame = Mat44::sRotation(r1.mBishop);
+				Vec3 tangent1 = r1_frame.GetAxisZ();
+				Vec3 normal1 = r1_frame.GetAxisX();
+
+				// Calculate the Bishop frame for the 2nd rod
+				Vec3 tangent2 = Vec3(mVertices[r2.mVertex[1]].mPosition) - Vec3(mVertices[r2.mVertex[0]].mPosition);
+				r2.mLength = tangent2.Length();
+				JPH_ASSERT(r2.mLength > 0.0f, "Rods of zero length are not supported!");
+				tangent2 /= r2.mLength;
+				Vec3 t1_cross_t2 = tangent1.Cross(tangent2);
+				float sin_angle = t1_cross_t2.Length();
+				Vec3 normal2 = normal1;
+				if (sin_angle > 0.0f)
+				{
+					t1_cross_t2 /= sin_angle;
+					normal2 = Quat::sRotation(t1_cross_t2, ASin(sin_angle)) * normal2;
+				}
+				Vec3 binormal2 = tangent2.Cross(normal2);
+				r2.mBishop = Mat44(Vec4(normal2, 0), Vec4(binormal2, 0), Vec4(tangent2, 0), Vec4(0, 0, 0, 1)).GetQuaternion().Normalized();
+
+				// Mark as processed
+				connections[r2_idx] = cNotConnected;
+				stack.pop_back();
+			}
+		}
 }
 
 void SoftBodySharedSettings::CalculateLRALengths(float inMaxDistanceMultiplier)
@@ -896,7 +990,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 		}
 
 		// Store end indices
-		mUpdateGroups.push_back({ (uint)mEdgeConstraints.size(), (uint)mLRAConstraints.size(), (uint)mDihedralBendConstraints.size(), (uint)mVolumeConstraints.size(), (uint)mSkinnedConstraints.size() });
+		mUpdateGroups.push_back({ (uint)mEdgeConstraints.size(), (uint)mLRAConstraints.size(), (uint)mDihedralBendConstraints.size(), (uint)mVolumeConstraints.size(), (uint)mSkinnedConstraints.size(), (uint)mRodConstraints.size() });
 	}
 
 	// Free closest kinematic buffer
