@@ -241,10 +241,16 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 				const VertexAttributes &a_opposite0 = attr(vopposite0);
 				const VertexAttributes &a_opposite1 = attr(vopposite1);
 
+				// If the opposite vertices happen to be the same vertex then we have 2 triangles back to back and we skip creating shear / bend constraints
+				if (vopposite0 == vopposite1)
+					continue;
+
 				// Faces should be roughly in a plane
 				Vec3 n0 = (Vec3(mVertices[f0.mVertex[2]].mPosition) - Vec3(mVertices[f0.mVertex[0]].mPosition)).Cross(Vec3(mVertices[f0.mVertex[1]].mPosition) - Vec3(mVertices[f0.mVertex[0]].mPosition));
 				Vec3 n1 = (Vec3(mVertices[f1.mVertex[2]].mPosition) - Vec3(mVertices[f1.mVertex[0]].mPosition)).Cross(Vec3(mVertices[f1.mVertex[1]].mPosition) - Vec3(mVertices[f1.mVertex[0]].mPosition));
-				if (Square(n0.Dot(n1)) > sq_cos_tolerance * n0.LengthSq() * n1.LengthSq())
+				float n0_dot_n1 = n0.Dot(n1);
+				if (n0_dot_n1 > 0.0f
+					&& Square(n0_dot_n1) > sq_cos_tolerance * n0.LengthSq() * n1.LengthSq())
 				{
 					// Faces should approximately form a quad
 					Vec3 e0_dir = Vec3(mVertices[vopposite0].mPosition) - Vec3(mVertices[e0.mVertex[0]].mPosition);
