@@ -20,6 +20,7 @@ if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 	add_executable(JoltViewer MACOSX_BUNDLE ${JOLT_VIEWER_SRC_FILES} ${TEST_FRAMEWORK_ASSETS} ${JPH_ICON})
 	set_property(TARGET JoltViewer PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/JoltViewerInfo.plist")
 	set_property(TARGET JoltViewer PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.joltviewer")
+	set_property(TARGET JoltViewer PROPERTY BUILD_RPATH "/usr/local/lib" INSTALL_RPATH "/usr/local/lib") # to find the Vulkan shared lib
 else()
 	add_executable(JoltViewer ${JOLT_VIEWER_SRC_FILES})
 endif()
