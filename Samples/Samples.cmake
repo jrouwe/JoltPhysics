@@ -353,6 +353,7 @@ if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 
 	set_property(TARGET Samples PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/SamplesInfo.plist")
 	set_property(TARGET Samples PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.samples")
+	set_property(TARGET Samples PROPERTY BUILD_RPATH "/usr/local/lib" INSTALL_RPATH "/usr/local/lib") # to find the Vulkan shared lib
 else()
 	add_executable(Samples ${SAMPLES_SRC_FILES})
 endif()
