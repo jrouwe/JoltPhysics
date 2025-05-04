@@ -1295,50 +1295,60 @@ void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RM
 		Color::sWhite);
 }
 
-void SoftBodyMotionProperties::DrawRods(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawRods(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	for (const RodStretchShear &rod : mSettings->mRodStretchShearConstraints)
-	{
-		RVec3 x0 = inCenterOfMassTransform * mVertices[rod.mVertex[0]].mPosition;
-		RVec3 x1 = inCenterOfMassTransform * mVertices[rod.mVertex[1]].mPosition;
-
-		inRenderer->DrawLine(x0, x1, Color::sWhite);
-	}
+	DrawConstraints(inConstraintColor,
+		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
+			return inGroup.mRodStretchShearEndIndex;
+		},
+		[this, inRenderer, &inCenterOfMassTransform](uint inIndex, ColorArg inColor) {
+			const RodStretchShear &r = mSettings->mRodStretchShearConstraints[inIndex];
+			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[r.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[r.mVertex[1]].mPosition, inColor);
+		},
+		Color::sWhite);
 }
 
-void SoftBodyMotionProperties::DrawRodStretchShearConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawRodStretchShearConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	for (Array<RodState>::size_type i = 0; i < mRodStates.size(); ++i)
-	{
-		const RodState &state = mRodStates[i];
-		const RodStretchShear &rod = mSettings->mRodStretchShearConstraints[i];
+	DrawConstraints(inConstraintColor,
+		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
+			return inGroup.mRodBendTwistEndIndex;
+		},
+		[this, inRenderer, &inCenterOfMassTransform](uint inIndex, ColorArg inColor) {
+			const RodState &state = mRodStates[inIndex];
+			const RodStretchShear &rod = mSettings->mRodStretchShearConstraints[inIndex];
 
-		RVec3 x0 = inCenterOfMassTransform * mVertices[rod.mVertex[0]].mPosition;
-		RVec3 x1 = inCenterOfMassTransform * mVertices[rod.mVertex[1]].mPosition;
+			RVec3 x0 = inCenterOfMassTransform * mVertices[rod.mVertex[0]].mPosition;
+			RVec3 x1 = inCenterOfMassTransform * mVertices[rod.mVertex[1]].mPosition;
 
-		RMat44 rod_center = inCenterOfMassTransform;
-		rod_center.SetTranslation(0.5_r * (x0 + x1));
-		inRenderer->DrawArrow(rod_center.GetTranslation(), rod_center.GetTranslation() + 0.1f * rod.mLength * state.mAngularVelocity, Color::sYellow, 0.01f * rod.mLength);
+			RMat44 rod_center = inCenterOfMassTransform;
+			rod_center.SetTranslation(0.5_r * (x0 + x1));
+			inRenderer->DrawArrow(rod_center.GetTranslation(), rod_center.GetTranslation() + 0.1f * rod.mLength * state.mAngularVelocity, inColor, 0.01f * rod.mLength);
 
-		RMat44 rod_frame = rod_center * RMat44::sRotation(state.mRotation);
-		inRenderer->DrawCoordinateSystem(rod_frame, 0.3f * rod.mLength);
-	}
+			RMat44 rod_frame = rod_center * RMat44::sRotation(state.mRotation);
+			inRenderer->DrawCoordinateSystem(rod_frame, 0.3f * rod.mLength);
+		},
+		Color::sYellow);
 }
 
-void SoftBodyMotionProperties::DrawRodBendTwistConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawRodBendTwistConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	for (Array<RodState>::size_type i = 0; i < mSettings->mRodBendTwistConstraints.size(); ++i)
-	{
-		uint r1 = mSettings->mRodBendTwistConstraints[i].mRod[0];
-		uint r2 = mSettings->mRodBendTwistConstraints[i].mRod[1];
-		const RodStretchShear &rod1 = mSettings->mRodStretchShearConstraints[r1];
-		const RodStretchShear &rod2 = mSettings->mRodStretchShearConstraints[r2];
+	DrawConstraints(inConstraintColor,
+		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
+			return inGroup.mRodBendTwistEndIndex;
+		},
+		[this, inRenderer, &inCenterOfMassTransform](uint inIndex, ColorArg inColor) {
+			uint r1 = mSettings->mRodBendTwistConstraints[inIndex].mRod[0];
+			uint r2 = mSettings->mRodBendTwistConstraints[inIndex].mRod[1];
+			const RodStretchShear &rod1 = mSettings->mRodStretchShearConstraints[r1];
+			const RodStretchShear &rod2 = mSettings->mRodStretchShearConstraints[r2];
 
-		RVec3 x0 = inCenterOfMassTransform * (0.5f * (mVertices[rod1.mVertex[0]].mPosition + mVertices[rod1.mVertex[1]].mPosition));
-		RVec3 x1 = inCenterOfMassTransform * (0.5f * (mVertices[rod2.mVertex[0]].mPosition + mVertices[rod2.mVertex[1]].mPosition));
+			RVec3 x0 = inCenterOfMassTransform * (0.5f * (mVertices[rod1.mVertex[0]].mPosition + mVertices[rod1.mVertex[1]].mPosition));
+			RVec3 x1 = inCenterOfMassTransform * (0.5f * (mVertices[rod2.mVertex[0]].mPosition + mVertices[rod2.mVertex[1]].mPosition));
 
-		inRenderer->DrawLine(x0, x1, Color::sGreen);
-	}
+			inRenderer->DrawLine(x0, x1, inColor);
+		},
+		Color::sGreen);
 }
 
 void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const

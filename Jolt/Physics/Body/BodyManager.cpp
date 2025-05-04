@@ -1093,13 +1093,13 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 					mp->DrawEdgeConstraints(inRenderer, com, inDrawSettings.mDrawSoftBodyConstraintColor);
 
 				if (inDrawSettings.mDrawSoftBodyRods)
-					mp->DrawRods(inRenderer, com);
+					mp->DrawRods(inRenderer, com, inDrawSettings.mDrawSoftBodyConstraintColor);
 
 				if (inDrawSettings.mDrawSoftBodyRodStretchShearConstraints)
-					mp->DrawRodStretchShearConstraints(inRenderer, com);
+					mp->DrawRodStretchShearConstraints(inRenderer, com, inDrawSettings.mDrawSoftBodyConstraintColor);
 
 				if (inDrawSettings.mDrawSoftBodyRodBendTwistConstraints)
-					mp->DrawRodBendTwistConstraints(inRenderer, com);
+					mp->DrawRodBendTwistConstraints(inRenderer, com, inDrawSettings.mDrawSoftBodyConstraintColor);
 
 				if (inDrawSettings.mDrawSoftBodyBendConstraints)
 					mp->DrawBendConstraints(inRenderer, com, inDrawSettings.mDrawSoftBodyConstraintColor);
