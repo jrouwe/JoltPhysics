@@ -456,10 +456,7 @@ void SoftBodySharedSettings::CalculateRodProperties()
 
 	// Calculate the initial rotation between the rods
 	for (RodBendTwist &r : mRodBendTwistConstraints)
-	{
-		JPH_ASSERT(mRodStretchShearConstraints[r.mRod[0]].mVertex[1] == mRodStretchShearConstraints[r.mRod[1]].mVertex[0], "Assuming that vertex 2 of rod 1 is the same as vertex 1 of rod 2");
 		r.mOmega0 = (mRodStretchShearConstraints[r.mRod[0]].mBishop.Conjugated() * mRodStretchShearConstraints[r.mRod[1]].mBishop).Normalized();
-	}
 }
 
 void SoftBodySharedSettings::CalculateLRALengths(float inMaxDistanceMultiplier)
