@@ -91,7 +91,7 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 				tree_settings->mRodBendTwistConstraints.push_back(SoftBodySharedSettings::RodBendTwist(branch.mPreviousRod, new_rod));
 
 			// Create sub branches
-			if (branch.mDepth < 8)
+			if (branch.mDepth < 10)
 				for (uint32 i = 0; i < 2; ++i)
 				{
 					// Determine new child direction

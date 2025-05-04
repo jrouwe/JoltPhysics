@@ -81,11 +81,11 @@ public:
 	public:
 		Array<uint>		mEdgeRemap;									///< Maps old edge index to new edge index
 		Array<uint>		mLRARemap;									///< Maps old LRA index to new LRA index
+		Array<uint>		mRodStretchShearConstraintRemap;			///< Maps old rod stretch shear constraint index to new stretch shear rod constraint index
+		Array<uint>		mRodBendTwistConstraintRemap;				///< Maps old rod bend twist constraint index to new bend twist rod constraint index
 		Array<uint>		mDihedralBendRemap;							///< Maps old dihedral bend index to new dihedral bend index
 		Array<uint>		mVolumeRemap;								///< Maps old volume constraint index to new volume constraint index
 		Array<uint>		mSkinnedRemap;								///< Maps old skinned constraint index to new skinned constraint index
-		Array<uint>		mRodStretchShearConstraintRemap;			///< Maps old rod stretch shear constraint index to new stretch shear rod constraint index
-		Array<uint>		mRodBendTwistConstraintRemap;				///< Maps old rod bend twist constraint index to new bend twist rod constraint index
 	};
 
 	/// Optimize the soft body settings for simulation. This will reorder constraints so they can be executed in parallel.
@@ -368,11 +368,11 @@ private:
 	{
 		uint			mEdgeEndIndex;								///< The end index of the edge constraints in this group
 		uint			mLRAEndIndex;								///< The end index of the LRA constraints in this group
+		uint			mRodStretchShearEndIndex;					///< The end index of the rod stretch shear constraints in this group
+		uint			mRodBendTwistEndIndex;						///< The end index of the rod bend twist constraints in this group
 		uint			mDihedralBendEndIndex;						///< The end index of the dihedral bend constraints in this group
 		uint			mVolumeEndIndex;							///< The end index of the volume constraints in this group
 		uint			mSkinnedEndIndex;							///< The end index of the skinned constraints in this group
-		uint			mRodStretchShearEndIndex;					///< The end index of the rod stretch shear constraints in this group
-		uint			mRodBendTwistEndIndex;						///< The end index of the rod bend twist constraints in this group
 	};
 
 	Array<ClosestKinematic> mClosestKinematic;						///< The closest kinematic vertex to each vertex in mVertices
