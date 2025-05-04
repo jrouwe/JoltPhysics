@@ -56,6 +56,6 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 	settings->CalculateRodProperties();
 	settings->Optimize();
 
-	SoftBodyCreationSettings helix(settings, RVec3(0, 10, 0), Quat::sIdentity(), Layers::MOVING);
+	SoftBodyCreationSettings helix(settings, RVec3(0, 15, 0), Quat::sIdentity(), Layers::MOVING);
 	mBodyInterface->CreateAndAddSoftBody(helix, EActivation::Activate);
 }

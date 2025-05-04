@@ -632,7 +632,7 @@ void SoftBodyMotionProperties::ApplyRodConstraints(const SoftBodyUpdateContext &
 			v1.mPosition = x1 - v1.mInvMass * delta;
 			// q * e3_bar = q * (0, 0, -1, 0) = [-qy, qx, -qw, qz]
 			Quat q_e3_bar(UVec4::sXor(ioState.mRotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>().ReinterpretAsInt(), UVec4(0x80000000u, 0, 0x80000000u, 0)).ReinterpretAsFloat());
-			ioState.mRotation += wq * l * Quat(Vec4(delta, 0)) * q_e3_bar;
+			ioState.mRotation += (2.0f * wq * l) * Quat(Vec4(delta, 0)) * q_e3_bar;
 			return wq;
 		};
 		float wq = apply_stretch_and_shear(rod1, rod1_state);
