@@ -6,6 +6,7 @@
 
 #include <Tests/SoftBody/SoftBodyCosseratRodConstraintTest.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Utils/SoftBodyCreator.h>
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
@@ -34,7 +35,7 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 			SoftBodySharedSettings::Vertex v;
 			float alpha = cNumCycles * 2.0f * JPH_PI * fraction;
 			v.mPosition = Float3(cRadius * Sin(alpha), 0.5f * (1.0f - fraction * cHeight), cRadius * Cos(alpha));
-			v.mInvMass = i == 0? 0.0f : 1.0f;
+			v.mInvMass = i == 0? 0.0f : 1.0e-2f;
 			helix_settings->mVertices.push_back(v);
 
 			if (i > 0)
@@ -48,7 +49,7 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 		helix_settings->Optimize();
 
 		SoftBodyCreationSettings helix(helix_settings, RVec3(0, 10, 0), Quat::sIdentity(), Layers::MOVING);
-		mBodyInterface->CreateAndAddSoftBody(helix, EActivation::Activate);
+		mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(helix, EActivation::Activate));
 	}
 
 	// Create a tree with a static root
@@ -79,7 +80,7 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 			// Create vertex
 			SoftBodySharedSettings::Vertex &previous_vertex = tree_settings->mVertices[branch.mPreviousVertex];
 			(Vec3(previous_vertex.mPosition) + branch.mDirection).StoreFloat3(&v.mPosition);
-			v.mInvMass = branch.mDepth > 0? 2.0f * previous_vertex.mInvMass : 10.0f;
+			v.mInvMass = branch.mDepth > 0? 2.0f * previous_vertex.mInvMass : 1.0e-3f;
 			uint32 new_vertex = uint32(tree_settings->mVertices.size());
 			tree_settings->mVertices.push_back(v);
 
@@ -106,6 +107,28 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 		tree_settings->Optimize();
 
 		SoftBodyCreationSettings tree(tree_settings, RVec3(10, 0, 0), Quat::sIdentity(), Layers::MOVING);
-		mBodyInterface->CreateAndAddSoftBody(tree, EActivation::Activate);
+		mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(tree, EActivation::Activate));
+	}
+}
+
+void SoftBodyCosseratRodConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	// Draw the soft body rods
+	for (BodyID id : mSoftBodies)
+	{
+		BodyLockRead lock(mPhysicsSystem->GetBodyLockInterface(), id);
+		if (lock.Succeeded())
+		{
+			const Body &body = lock.GetBody();
+			const SoftBodyMotionProperties *mp = static_cast<const SoftBodyMotionProperties *>(body.GetMotionProperties());
+			RMat44 com = body.GetCenterOfMassTransform();
+
+			for (const SoftBodySharedSettings::RodStretchShear &r : mp->GetSettings()->mRodStretchShearConstraints)
+			{
+				RVec3 x0 = com * mp->GetVertex(r.mVertex[0]).mPosition;
+				RVec3 x1 = com * mp->GetVertex(r.mVertex[1]).mPosition;
+				mDebugRenderer->DrawLine(x0, x1, Color::sWhite);
+			}
+		}
 	}
 }

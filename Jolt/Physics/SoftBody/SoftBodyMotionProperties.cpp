@@ -1297,6 +1297,17 @@ void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RM
 
 void SoftBodyMotionProperties::DrawRods(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
+	for (const RodStretchShear &rod : mSettings->mRodStretchShearConstraints)
+	{
+		RVec3 x0 = inCenterOfMassTransform * mVertices[rod.mVertex[0]].mPosition;
+		RVec3 x1 = inCenterOfMassTransform * mVertices[rod.mVertex[1]].mPosition;
+
+		inRenderer->DrawLine(x0, x1, Color::sWhite);
+	}
+}
+
+void SoftBodyMotionProperties::DrawRodStretchShearConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+{
 	for (Array<RodState>::size_type i = 0; i < mRodStates.size(); ++i)
 	{
 		const RodState &state = mRodStates[i];
@@ -1305,14 +1316,28 @@ void SoftBodyMotionProperties::DrawRods(DebugRenderer *inRenderer, RMat44Arg inC
 		RVec3 x0 = inCenterOfMassTransform * mVertices[rod.mVertex[0]].mPosition;
 		RVec3 x1 = inCenterOfMassTransform * mVertices[rod.mVertex[1]].mPosition;
 
-		inRenderer->DrawLine(x0, x1, Color::sWhite);
-
 		RMat44 rod_center = inCenterOfMassTransform;
 		rod_center.SetTranslation(0.5_r * (x0 + x1));
 		inRenderer->DrawArrow(rod_center.GetTranslation(), rod_center.GetTranslation() + 0.1f * rod.mLength * state.mAngularVelocity, Color::sYellow, 0.01f * rod.mLength);
 
 		RMat44 rod_frame = rod_center * RMat44::sRotation(state.mRotation);
 		inRenderer->DrawCoordinateSystem(rod_frame, 0.3f * rod.mLength);
+	}
+}
+
+void SoftBodyMotionProperties::DrawRodBendTwistConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+{
+	for (Array<RodState>::size_type i = 0; i < mSettings->mRodBendTwistConstraints.size(); ++i)
+	{
+		uint r1 = mSettings->mRodBendTwistConstraints[i].mRod[0];
+		uint r2 = mSettings->mRodBendTwistConstraints[i].mRod[1];
+		const RodStretchShear &rod1 = mSettings->mRodStretchShearConstraints[r1];
+		const RodStretchShear &rod2 = mSettings->mRodStretchShearConstraints[r2];
+
+		RVec3 x0 = inCenterOfMassTransform * (0.5f * (mVertices[rod1.mVertex[0]].mPosition + mVertices[rod1.mVertex[1]].mPosition));
+		RVec3 x1 = inCenterOfMassTransform * (0.5f * (mVertices[rod2.mVertex[0]].mPosition + mVertices[rod2.mVertex[1]].mPosition));
+
+		inRenderer->DrawLine(x0, x1, Color::sGreen);
 	}
 }
 

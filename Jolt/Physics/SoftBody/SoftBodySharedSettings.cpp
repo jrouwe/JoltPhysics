@@ -581,6 +581,36 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 	mSkinnedConstraintNormals.shrink_to_fit();
 }
 
+// Bilateral interleaving, see figure 4 of "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
+template <class A, class R, typename Pred>
+static void sBidirectionalInterleave(A &ioArray, R &ioRemap, const Pred &inPred)
+{
+	uint size = uint(ioArray.size());
+
+	// Order the constraints according to the predicate
+	Array<uint> order;
+	order.resize(size);
+	for (uint i = 0; i < size; ++i)
+		order[i] = i;
+	QuickSort(order.begin(), order.end(), inPred);
+
+	// Interleave
+	for (uint i = 1, s = size / 2; i < s; i += 2)
+		std::swap(order[i], order[size - 1 - i]);
+
+	// Build remap table
+	ioRemap.resize(size);
+	for (uint i = 0; i < size; ++i)
+		ioRemap[order[i]] = i;
+
+	// Fill the array
+	A temp;
+	temp.swap(ioArray);
+	ioArray.resize(size);
+	for (uint i = 0; i < size; ++i)
+		ioArray[i] = temp[order[i]];
+}
+
 void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 {
 	// Clear any previous results
@@ -942,38 +972,16 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			});
 	}
 
-	// Bilateral interleaving, see figure 4 of "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
 	// TODO: Assign rod stretch shear constraints to update groups
-	QuickSort(mRodStretchShearConstraints.begin(), mRodStretchShearConstraints.end(), [](const RodStretchShear &inLHS, const RodStretchShear &inRHS)
+	// TODO: Use connectivity to sort the rods
+	sBidirectionalInterleave(mRodBendTwistConstraints, outResults.mRodBendTwistConstraintRemap, [this](uint inLHS, uint inRHS)
 	{
-		// TODO: Use connectivity to sort the rods
-		return inLHS.GetMinVertexIndex() < inRHS.GetMinVertexIndex();
+		return min(mRodBendTwistConstraints[inLHS].mRod[0], mRodBendTwistConstraints[inLHS].mRod[1]) < min(mRodBendTwistConstraints[inRHS].mRod[0], mRodBendTwistConstraints[inRHS].mRod[1]);
 	});
-	outResults.mRodStretchShearConstraintRemap.reserve(mRodStretchShearConstraints.size());
-	for (uint i = 0, s = uint(mRodStretchShearConstraints.size()); i < s; ++i)
-		outResults.mRodStretchShearConstraintRemap.push_back(i);
-	for (uint i = 1, s = uint(mRodStretchShearConstraints.size()) / 2; i < s; i += 2)
+	sBidirectionalInterleave(mRodStretchShearConstraints, outResults.mRodStretchShearConstraintRemap, [this](uint inLHS, uint inRHS)
 	{
-		uint j = uint(mRodStretchShearConstraints.size()) - 1 - i;
-		std::swap(mRodStretchShearConstraints[i], mRodStretchShearConstraints[j]);
-		std::swap(outResults.mRodStretchShearConstraintRemap[i], outResults.mRodStretchShearConstraintRemap[j]);
-	}
-
-	// TODO: Assign rod bend twist constraints to update groups
-	QuickSort(mRodBendTwistConstraints.begin(), mRodBendTwistConstraints.end(), [](const RodBendTwist &inLHS, const RodBendTwist &inRHS)
-	{
-		// TODO: Use connectivity to sort the rods
-		return min(inLHS.mRod[0], inLHS.mRod[1]) < min(inRHS.mRod[0], inRHS.mRod[1]);
+		return mRodStretchShearConstraints[inLHS].GetMinVertexIndex() < mRodStretchShearConstraints[inRHS].GetMinVertexIndex();
 	});
-	outResults.mRodBendTwistConstraintRemap.reserve(mRodBendTwistConstraints.size());
-	for (uint i = 0, s = uint(mRodBendTwistConstraints.size()); i < s; ++i)
-		outResults.mRodBendTwistConstraintRemap.push_back(i);
-	for (uint i = 1, s = uint(mRodBendTwistConstraints.size()) / 2; i < s; i += 2)
-	{
-		uint j = uint(mRodBendTwistConstraints.size()) - 1 - i;
-		std::swap(mRodBendTwistConstraints[i], mRodBendTwistConstraints[j]);
-		std::swap(outResults.mRodBendTwistConstraintRemap[i], outResults.mRodBendTwistConstraintRemap[j]);
-	}
 
 	// Remap bend twist indices
 	for (RodBendTwist &r : mRodBendTwistConstraints)
