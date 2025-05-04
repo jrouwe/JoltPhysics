@@ -19,10 +19,10 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 {
 	CreateFloor();
 
-	constexpr float cRadius = 1.0f;
-	constexpr int cNumVertices = 256;
-	constexpr float cHeight = 2.0f;
-	constexpr float cNumCycles = 4;
+	constexpr float cRadius = 0.5f;
+	constexpr int cNumVertices = 128;
+	constexpr float cHeight = 5.0f;
+	constexpr float cNumCycles = 10;
 
 	// Create a helix
 	Ref<SoftBodySharedSettings> settings = new SoftBodySharedSettings;
@@ -56,6 +56,6 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 	settings->CalculateRodProperties();
 	settings->Optimize();
 
-	SoftBodyCreationSettings helix(settings, RVec3(0, 15, 0), Quat::sIdentity(), Layers::MOVING);
+	SoftBodyCreationSettings helix(settings, RVec3(0, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), Layers::MOVING);
 	mBodyInterface->CreateAndAddSoftBody(helix, EActivation::Activate);
 }

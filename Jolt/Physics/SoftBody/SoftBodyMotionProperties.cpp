@@ -612,6 +612,8 @@ void SoftBodyMotionProperties::ApplyRodConstraints(const SoftBodyUpdateContext &
 		RodState &rod1_state = mRodStates[rod1_index];
 		RodState &rod2_state = mRodStates[rod2_index];
 
+		constexpr float epsilon = 1.0e-6f;
+
 		auto apply_stretch_and_shear = [this](const Rod &inRod, RodState &ioState)
 		{
 			// Get positions
@@ -626,7 +628,7 @@ void SoftBodyMotionProperties::ApplyRodConstraints(const SoftBodyUpdateContext &
 			float wq = min(v0.mInvMass, v1.mInvMass); // TODO: Determine inertia
 			float l = inRod.mLength;
 			float l_sq = Square(l);
-			float denom = v0.mInvMass + v1.mInvMass + 4.0f * wq * l_sq;
+			float denom = v0.mInvMass + v1.mInvMass + 4.0f * wq * l_sq + epsilon;
 			Vec3 delta = (x1 - x0 - d3 * l) / denom;
 			v0.mPosition = x0 + v0.mInvMass * delta;
 			v1.mPosition = x1 - v1.mInvMass * delta;
@@ -646,7 +648,8 @@ void SoftBodyMotionProperties::ApplyRodConstraints(const SoftBodyUpdateContext &
 		Quat omega_plus_omega0 = omega + omega0;
 		if (omega_plus_omega0.LengthSq() < omega_min_omega0.LengthSq())
 			omega_min_omega0 = omega_plus_omega0; // The rotation represented by q and -q are the same, we need to take the one that results in the shortest quaternion
-		omega_min_omega0 /= wq + wu;
+		omega_min_omega0 /= wq + wu + epsilon;
+		omega_min_omega0.SetW(0.0f); // Scalar part needs to be zero because the real part of the Darboux vector doesn't vanish, see text between eq. 39 and 40.
 		Quat rotation1 = rod1_state.mRotation;
 		rod1_state.mRotation += wq * rod2_state.mRotation * omega_min_omega0;
 		rod2_state.mRotation -= wu * rotation1 * omega_min_omega0;
