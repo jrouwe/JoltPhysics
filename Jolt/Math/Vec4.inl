@@ -364,6 +364,11 @@ bool Vec4::IsClose(Vec4Arg inV2, float inMaxDistSq) const
 	return (inV2 - *this).LengthSq() <= inMaxDistSq;
 }
 
+bool Vec4::IsNearZero(float inMaxDistSq) const
+{
+	return LengthSq() <= inMaxDistSq;
+}
+
 bool Vec4::IsNormalized(float inTolerance) const
 {
 	return abs(LengthSq() - 1.0f) <= inTolerance;
