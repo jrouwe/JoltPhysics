@@ -19,33 +19,93 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 {
 	CreateFloor();
 
-	constexpr float cRadius = 0.5f;
-	constexpr int cNumVertices = 128;
-	constexpr float cHeight = 5.0f;
-	constexpr float cNumCycles = 10;
-
-	// Create a helix
-	Ref<SoftBodySharedSettings> settings = new SoftBodySharedSettings;
-	for (int i = 0; i < cNumVertices; ++i)
+	// Create a hanging helix
 	{
-		float fraction = float(i) / (cNumVertices - 1);
+		constexpr float cRadius = 0.5f;
+		constexpr int cNumVertices = 128;
+		constexpr float cHeight = 5.0f;
+		constexpr float cNumCycles = 10;
 
-		SoftBodySharedSettings::Vertex v;
-		float alpha = cNumCycles * 2.0f * JPH_PI * fraction;
-		v.mPosition = Float3(cRadius * Sin(alpha), 0.5f * (1.0f - fraction * cHeight), cRadius * Cos(alpha));
-		v.mInvMass = i == 0? 0.0f : 1.0f;
-		settings->mVertices.push_back(v);
+		Ref<SoftBodySharedSettings> helix_settings = new SoftBodySharedSettings;
+		for (int i = 0; i < cNumVertices; ++i)
+		{
+			float fraction = float(i) / (cNumVertices - 1);
 
-		if (i > 0)
-			settings->mRodStretchShearConstraints.push_back(SoftBodySharedSettings::RodStretchShear(i - 1, i));
+			SoftBodySharedSettings::Vertex v;
+			float alpha = cNumCycles * 2.0f * JPH_PI * fraction;
+			v.mPosition = Float3(cRadius * Sin(alpha), 0.5f * (1.0f - fraction * cHeight), cRadius * Cos(alpha));
+			v.mInvMass = i == 0? 0.0f : 1.0f;
+			helix_settings->mVertices.push_back(v);
 
-		if (i > 1)
-			settings->mRodBendTwistConstraints.push_back(SoftBodySharedSettings::RodBendTwist(i - 2, i - 1));
+			if (i > 0)
+				helix_settings->mRodStretchShearConstraints.push_back(SoftBodySharedSettings::RodStretchShear(i - 1, i));
+
+			if (i > 1)
+				helix_settings->mRodBendTwistConstraints.push_back(SoftBodySharedSettings::RodBendTwist(i - 2, i - 1));
+		}
+
+		helix_settings->CalculateRodProperties();
+		helix_settings->Optimize();
+
+		SoftBodyCreationSettings helix(helix_settings, RVec3(0, 10, 0), Quat::sIdentity(), Layers::MOVING);
+		mBodyInterface->CreateAndAddSoftBody(helix, EActivation::Activate);
 	}
 
-	settings->CalculateRodProperties();
-	settings->Optimize();
+	// Create a tree with a static root
+	{
+		// Root particle
+		Ref<SoftBodySharedSettings> tree_settings = new SoftBodySharedSettings;
+		SoftBodySharedSettings::Vertex v;
+		v.mPosition = Float3(0, 0, 0);
+		v.mInvMass = 0.0f;
+		tree_settings->mVertices.push_back(v);
 
-	SoftBodyCreationSettings helix(settings, RVec3(0, 10, 0), Quat::sIdentity(), Layers::MOVING);
-	mBodyInterface->CreateAndAddSoftBody(helix, EActivation::Activate);
+		// Create branches
+		struct Branch
+		{
+			uint32	mPreviousVertex;
+			uint32	mPreviousRod;
+			Vec3	mDirection;
+			uint32	mDepth;
+		};
+		Array<Branch> branches;
+		branches.push_back({ 0, uint32(-1), Vec3::sAxisY(), 0 });
+		while (!branches.empty())
+		{
+			// Take the next branch
+			Branch branch = branches.front();
+			branches.erase(branches.begin());
+
+			// Create vertex
+			SoftBodySharedSettings::Vertex &previous_vertex = tree_settings->mVertices[branch.mPreviousVertex];
+			(Vec3(previous_vertex.mPosition) + branch.mDirection).StoreFloat3(&v.mPosition);
+			v.mInvMass = branch.mDepth > 0? 2.0f * previous_vertex.mInvMass : 10.0f;
+			uint32 new_vertex = uint32(tree_settings->mVertices.size());
+			tree_settings->mVertices.push_back(v);
+
+			// Create rod
+			uint32 new_rod = uint32(tree_settings->mRodStretchShearConstraints.size());
+			tree_settings->mRodStretchShearConstraints.push_back(SoftBodySharedSettings::RodStretchShear(branch.mPreviousVertex, new_vertex));
+			if (branch.mPreviousRod != uint32(-1))
+				tree_settings->mRodBendTwistConstraints.push_back(SoftBodySharedSettings::RodBendTwist(branch.mPreviousRod, new_rod));
+
+			// Create sub branches
+			if (branch.mDepth < 8)
+				for (uint32 i = 0; i < 2; ++i)
+				{
+					// Determine new child direction
+					float angle = DegreesToRadians(-15.0f + i * 30.0f);
+					Vec3 new_direction = Quat::sRotation(branch.mDepth & 1? Vec3::sAxisZ() : Vec3::sAxisX(), angle) * branch.mDirection;
+
+					// Create new branch
+					branches.push_back({ new_vertex, new_rod, new_direction, branch.mDepth + 1 });
+				}
+		}
+
+		tree_settings->CalculateRodProperties();
+		tree_settings->Optimize();
+
+		SoftBodyCreationSettings tree(tree_settings, RVec3(10, 0, 0), Quat::sIdentity(), Layers::MOVING);
+		mBodyInterface->CreateAndAddSoftBody(tree, EActivation::Activate);
+	}
 }

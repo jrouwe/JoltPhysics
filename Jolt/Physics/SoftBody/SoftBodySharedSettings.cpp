@@ -376,6 +376,7 @@ void SoftBodySharedSettings::CalculateRodProperties()
 	constexpr uint32 cNotConnected = ~uint32(0);
 
 	// Mark to which rod each rod connects
+	// TODO: This algorithm fails if multiple rods have outgoing links to the same rod
 	Array<uint32> connections;
 	connections.resize(mRodStretchShearConstraints.size(), cNotConnected);
 	for (const RodBendTwist &c : mRodBendTwistConstraints)
