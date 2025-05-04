@@ -96,12 +96,12 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mFaces)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeConstraints)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRodStretchShearConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mDihedralBendConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mInvBindMatrices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mLRAConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRodStretchShearConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRodBendTwistConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
@@ -1086,7 +1086,7 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mVertexRadius);
 	inStream.Write(mUpdateGroups);
 
-	// Can't write mRods directly because the class contains padding
+	// Can't write mRodStretchShearConstraints directly because the class contains padding
 	inStream.Write(mRodStretchShearConstraints, [](const RodStretchShear &inElement, StreamOut &inS) {
 		inS.Write(inElement.mVertex);
 		inS.Write(inElement.mLength);
@@ -1117,7 +1117,6 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);
 	inStream.Read(mLRAConstraints);
-	inStream.Read(mRodBendTwistConstraints);
 	inStream.Read(mVertexRadius);
 	inStream.Read(mUpdateGroups);
 
