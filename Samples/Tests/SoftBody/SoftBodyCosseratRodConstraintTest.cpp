@@ -37,25 +37,15 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 		settings->mVertices.push_back(v);
 
 		if (i > 0)
-		{
-			SoftBodySharedSettings::Rod r;
-			r.mVertex[0] = i - 1;
-			r.mVertex[1] = i;
-			settings->mRods.push_back(r);
-		}
+			settings->mRodStretchShearConstraints.push_back(SoftBodySharedSettings::RodStretchShear(i - 1, i));
 
 		if (i > 1)
-		{
-			SoftBodySharedSettings::RodConstraint r;
-			r.mRods[0] = i - 2;
-			r.mRods[1] = i - 1;
-			settings->mRodConstraints.push_back(r);
-		}
+			settings->mRodBendTwistConstraints.push_back(SoftBodySharedSettings::RodBendTwist(i - 2, i - 1));
 	}
 
 	settings->CalculateRodProperties();
 	settings->Optimize();
 
-	SoftBodyCreationSettings helix(settings, RVec3(0, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), Layers::MOVING);
+	SoftBodyCreationSettings helix(settings, RVec3(0, 10, 0), Quat::sIdentity(), Layers::MOVING);
 	mBodyInterface->CreateAndAddSoftBody(helix, EActivation::Activate);
 }

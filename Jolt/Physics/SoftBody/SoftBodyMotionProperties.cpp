@@ -79,13 +79,13 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 	}
 
 	// Initialize rods
-	if (!inSettings.mSettings->mRods.empty())
+	if (!inSettings.mSettings->mRodStretchShearConstraints.empty())
 	{
-		mRodStates.resize(inSettings.mSettings->mRods.size());
+		mRodStates.resize(inSettings.mSettings->mRodStretchShearConstraints.size());
 		Quat rotation_q = rotation.GetQuaternion();
 		for (Array<RodState>::size_type r = 0, s = mRodStates.size(); r < s; ++r)
 		{
-			const SoftBodySharedSettings::Rod &in_rod = inSettings.mSettings->mRods[r];
+			const SoftBodySharedSettings::RodStretchShear &in_rod = inSettings.mSettings->mRodStretchShearConstraints[r];
 			RodState &out_rod = mRodStates[r];
 			out_rod.mPreviousRotation = out_rod.mRotation = rotation_q * in_rod.mBishop;
 			out_rod.mAngularVelocity = Vec3::sZero();
@@ -601,58 +601,66 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 	}
 }
 
-void SoftBodyMotionProperties::ApplyRodConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
+void SoftBodyMotionProperties::ApplyRodStretchShearConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
 {
-	for (const RodConstraint *r = mSettings->mRodConstraints.data() + inStartIndex, *r_end = mSettings->mRodConstraints.data() + inEndIndex; r < r_end; ++r)
+	constexpr float epsilon = 1.0e-6f; // Prevents division by zero and softens the constraint
+
+	// Convert arrays to pointers to avoid bounds checks in the inner loop
+	const Array<RodStretchShear> &rods = mSettings->mRodStretchShearConstraints;
+
+	for (uint i = inStartIndex; i < inEndIndex; ++i)
 	{
-		uint32 rod1_index = r->mRods[0];
-		uint32 rod2_index = r->mRods[1];
-		const Rod &rod1 = mSettings->mRods[rod1_index];
-		const Rod &rod2 = mSettings->mRods[rod2_index];
+		const RodStretchShear &rod = rods[i];
+		RodState &rod_state = mRodStates[i];
+
+		// Get positions
+		Vertex &v0 = mVertices[rod.mVertex[0]];
+		Vertex &v1 = mVertices[rod.mVertex[1]];
+		Vec3 x0 = v0.mPosition;
+		Vec3 x1 = v1.mPosition;
+
+		// Apply stretch and shear constraint
+		// Equation 37 from "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
+		Vec3 d3 = rod_state.mRotation.RotateAxisZ();
+		float l_sq = Square(rod.mLength);
+		float denom = v0.mInvMass + v1.mInvMass + 4.0f * rod.mInvMass * l_sq + epsilon;
+		Vec3 delta = (x1 - x0 - d3 * rod.mLength) / denom;
+		v0.mPosition = x0 + v0.mInvMass * delta;
+		v1.mPosition = x1 - v1.mInvMass * delta;
+		// q * e3_bar = q * (0, 0, -1, 0) = [-qy, qx, -qw, qz]
+		Quat q_e3_bar(UVec4::sXor(rod_state.mRotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>().ReinterpretAsInt(), UVec4(0x80000000u, 0, 0x80000000u, 0)).ReinterpretAsFloat());
+		rod_state.mRotation += (2.0f * rod.mInvMass * rod.mLength) * Quat(Vec4(delta, 0)) * q_e3_bar;
+
+		// Renormalize
+		rod_state.mRotation = rod_state.mRotation.Normalized();
+	}
+}
+
+void SoftBodyMotionProperties::ApplyRodBendTwistConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
+{
+	constexpr float epsilon = 1.0e-6f; // Prevents division by zero and softens the constraint
+
+	for (const RodBendTwist *r = mSettings->mRodBendTwistConstraints.data() + inStartIndex, *r_end = mSettings->mRodBendTwistConstraints.data() + inEndIndex; r < r_end; ++r)
+	{
+		uint32 rod1_index = r->mRod[0];
+		uint32 rod2_index = r->mRod[1];
+		const RodStretchShear &rod1 = mSettings->mRodStretchShearConstraints[rod1_index];
+		const RodStretchShear &rod2 = mSettings->mRodStretchShearConstraints[rod2_index];
 		RodState &rod1_state = mRodStates[rod1_index];
 		RodState &rod2_state = mRodStates[rod2_index];
-
-		constexpr float epsilon = 1.0e-6f;
-
-		auto apply_stretch_and_shear = [this](const Rod &inRod, RodState &ioState)
-		{
-			// Get positions
-			Vertex &v0 = mVertices[inRod.mVertex[0]];
-			Vertex &v1 = mVertices[inRod.mVertex[1]];
-			Vec3 x0 = v0.mPosition;
-			Vec3 x1 = v1.mPosition;
-
-			// Apply stretch and shear constraint
-			// Equation 37 from "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
-			Vec3 d3 = ioState.mRotation.RotateAxisZ();
-			float wq = min(v0.mInvMass, v1.mInvMass); // TODO: Determine inertia
-			float l = inRod.mLength;
-			float l_sq = Square(l);
-			float denom = v0.mInvMass + v1.mInvMass + 4.0f * wq * l_sq + epsilon;
-			Vec3 delta = (x1 - x0 - d3 * l) / denom;
-			v0.mPosition = x0 + v0.mInvMass * delta;
-			v1.mPosition = x1 - v1.mInvMass * delta;
-			// q * e3_bar = q * (0, 0, -1, 0) = [-qy, qx, -qw, qz]
-			Quat q_e3_bar(UVec4::sXor(ioState.mRotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>().ReinterpretAsInt(), UVec4(0x80000000u, 0, 0x80000000u, 0)).ReinterpretAsFloat());
-			ioState.mRotation += (2.0f * wq * l) * Quat(Vec4(delta, 0)) * q_e3_bar;
-			return wq;
-		};
-		float wq = apply_stretch_and_shear(rod1, rod1_state);
-		float wu = apply_stretch_and_shear(rod2, rod2_state);
 
 		// Apply bend and twist constraint
 		// Equation 40 from "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
 		Quat omega = rod1_state.mRotation.Conjugated() * rod2_state.mRotation;
-		Quat omega0 = rod1.mBishop.Conjugated() * rod2.mBishop;
-		Quat omega_min_omega0 = omega - omega0;
-		Quat omega_plus_omega0 = omega + omega0;
+		Quat omega_min_omega0 = omega - r->mOmega0;
+		Quat omega_plus_omega0 = omega + r->mOmega0;
 		if (omega_plus_omega0.LengthSq() < omega_min_omega0.LengthSq())
 			omega_min_omega0 = omega_plus_omega0; // The rotation represented by q and -q are the same, we need to take the one that results in the shortest quaternion
-		omega_min_omega0 /= wq + wu + epsilon;
+		omega_min_omega0 /= rod1.mInvMass + rod2.mInvMass + epsilon;
 		omega_min_omega0.SetW(0.0f); // Scalar part needs to be zero because the real part of the Darboux vector doesn't vanish, see text between eq. 39 and 40.
-		Quat rotation1 = rod1_state.mRotation;
-		rod1_state.mRotation += wq * rod2_state.mRotation * omega_min_omega0;
-		rod2_state.mRotation -= wu * rotation1 * omega_min_omega0;
+		Quat rotation1 = rod1_state.mRotation; // Temporarily store since we're overwriting it in the next line
+		rod1_state.mRotation += rod1.mInvMass * rod2_state.mRotation * omega_min_omega0;
+		rod2_state.mRotation -= rod2.mInvMass * rotation1 * omega_min_omega0;
 
 		// Renormalize
 		rod1_state.mRotation = rod1_state.mRotation.Normalized();
@@ -1011,7 +1019,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineSen
 void SoftBodyMotionProperties::ProcessGroup(const SoftBodyUpdateContext &ioContext, uint inGroupIndex)
 {
 	// Determine start and end
-	SoftBodySharedSettings::UpdateGroup start { 0, 0, 0, 0, 0, 0 };
+	SoftBodySharedSettings::UpdateGroup start { 0, 0, 0, 0, 0, 0, 0 };
 	const SoftBodySharedSettings::UpdateGroup &prev = inGroupIndex > 0? mSettings->mUpdateGroups[inGroupIndex - 1] : start;
 	const SoftBodySharedSettings::UpdateGroup &current = mSettings->mUpdateGroups[inGroupIndex];
 
@@ -1028,7 +1036,8 @@ void SoftBodyMotionProperties::ProcessGroup(const SoftBodyUpdateContext &ioConte
 	ApplyEdgeConstraints(ioContext, prev.mEdgeEndIndex, current.mEdgeEndIndex);
 
 	// Process rods
-	ApplyRodConstraints(ioContext, prev.mRodEndIndex, current.mRodEndIndex);
+	ApplyRodStretchShearConstraints(ioContext, prev.mRodStretchShearEndIndex, current.mRodStretchShearEndIndex);
+	ApplyRodBendTwistConstraints(ioContext, prev.mRodBendTwistEndIndex, current.mRodBendTwistEndIndex);
 
 	// Process LRA constraints
 	ApplyLRAConstraints(prev.mLRAEndIndex, current.mLRAEndIndex);
@@ -1291,7 +1300,7 @@ void SoftBodyMotionProperties::DrawRods(DebugRenderer *inRenderer, RMat44Arg inC
 	for (Array<RodState>::size_type i = 0; i < mRodStates.size(); ++i)
 	{
 		const RodState &state = mRodStates[i];
-		const Rod &rod = mSettings->mRods[i];
+		const RodStretchShear &rod = mSettings->mRodStretchShearConstraints[i];
 
 		RVec3 x0 = inCenterOfMassTransform * mVertices[rod.mVertex[0]].mPosition;
 		RVec3 x1 = inCenterOfMassTransform * mVertices[rod.mVertex[1]].mPosition;

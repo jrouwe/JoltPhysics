@@ -36,16 +36,18 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Edge)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Edge, mCompliance)
 }
 
-JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Rod)
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::RodStretchShear)
 {
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Rod, mVertex)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Rod, mLength)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Rod, mBishop)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodStretchShear, mVertex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodStretchShear, mLength)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodStretchShear, mInvMass)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodStretchShear, mBishop)
 }
 
-JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::RodConstraint)
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::RodBendTwist)
 {
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodConstraint, mRods)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodBendTwist, mRod)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodBendTwist, mOmega0)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::DihedralBend)
@@ -94,13 +96,13 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mFaces)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeConstraints)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRods)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRodStretchShearConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mDihedralBendConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mInvBindMatrices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mLRAConstraints)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRodConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRodBendTwistConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
 }
@@ -375,15 +377,15 @@ void SoftBodySharedSettings::CalculateRodProperties()
 
 	// Mark to which rod each rod connects
 	Array<uint32> connections;
-	connections.resize(mRods.size(), cNotConnected);
-	for (const RodConstraint &c : mRodConstraints)
-		connections[c.mRods[1]] = c.mRods[0];
+	connections.resize(mRodStretchShearConstraints.size(), cNotConnected);
+	for (const RodBendTwist &c : mRodBendTwistConstraints)
+		connections[c.mRod[1]] = c.mRod[0];
 
 	// Determine a Bishop frame for all rods that do not connect to another rod
-	for (uint32 i = 0; i < mRods.size(); ++i)
+	for (uint32 i = 0; i < mRodStretchShearConstraints.size(); ++i)
 		if (connections[i] == cNotConnected)
 		{
-			Rod &r = mRods[i];
+			RodStretchShear &r = mRodStretchShearConstraints[i];
 			Vec3 tangent = Vec3(mVertices[r.mVertex[1]].mPosition) - Vec3(mVertices[r.mVertex[0]].mPosition);
 			r.mLength = tangent.Length();
 			JPH_ASSERT(r.mLength > 0.0f, "Rods of zero length are not supported!");
@@ -395,8 +397,8 @@ void SoftBodySharedSettings::CalculateRodProperties()
 
 	// Now calculate the Bishop frames for all other rods
 	Array<uint32> stack;
-	stack.reserve(mRods.size());
-	for (uint32 i = 0; i < mRods.size(); ++i)
+	stack.reserve(mRodStretchShearConstraints.size());
+	for (uint32 i = 0; i < mRodStretchShearConstraints.size(); ++i)
 		if (connections[i] != cNotConnected) // Already calculated?
 		{
 			// Find the first rod that already has its Bishop frame calculated
@@ -418,8 +420,8 @@ void SoftBodySharedSettings::CalculateRodProperties()
 			{
 				uint32 r2_idx = stack.back();
 				uint32 r1_idx = connections[r2_idx];
-				Rod &r1 = mRods[r1_idx];
-				Rod &r2 = mRods[r2_idx];
+				RodStretchShear &r1 = mRodStretchShearConstraints[r1_idx];
+				RodStretchShear &r2 = mRodStretchShearConstraints[r2_idx];
 
 				// Get the normal and tangent of the first rod's Bishop frame (that was already calculated)
 				Mat44 r1_frame = Mat44::sRotation(r1.mBishop);
@@ -447,6 +449,17 @@ void SoftBodySharedSettings::CalculateRodProperties()
 				stack.pop_back();
 			}
 		}
+
+	// Calculate inverse mass for all rods by taking the minimum inverse mass (aka the heaviest vertex) of both vertices
+	for (RodStretchShear &r : mRodStretchShearConstraints)
+		r.mInvMass = min(mVertices[r.mVertex[0]].mInvMass, mVertices[r.mVertex[1]].mInvMass);
+
+	// Calculate the initial rotation between the rods
+	for (RodBendTwist &r : mRodBendTwistConstraints)
+	{
+		JPH_ASSERT(mRodStretchShearConstraints[r.mRod[0]].mVertex[1] == mRodStretchShearConstraints[r.mRod[1]].mVertex[0], "Assuming that vertex 2 of rod 1 is the same as vertex 1 of rod 2");
+		r.mOmega0 = (mRodStretchShearConstraints[r.mRod[0]].mBishop.Conjugated() * mRodStretchShearConstraints[r.mRod[1]].mBishop).Normalized();
+	}
 }
 
 void SoftBodySharedSettings::CalculateLRALengths(float inMaxDistanceMultiplier)
@@ -932,21 +945,42 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	}
 
 	// Bilateral interleaving, see figure 4 of "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
-	// TODO: Assign rod constraints to update groups
-	QuickSort(mRodConstraints.begin(), mRodConstraints.end(), [](const RodConstraint &inLHS, const RodConstraint &inRHS)
+	// TODO: Assign rod stretch shear constraints to update groups
+	QuickSort(mRodStretchShearConstraints.begin(), mRodStretchShearConstraints.end(), [](const RodStretchShear &inLHS, const RodStretchShear &inRHS)
 	{
 		// TODO: Use connectivity to sort the rods
-		return min(inLHS.mRods[0], inLHS.mRods[1]) < min(inRHS.mRods[0], inRHS.mRods[1]);
+		return inLHS.GetMinVertexIndex() < inRHS.GetMinVertexIndex();
 	});
-	outResults.mRodConstraintRemap.reserve(mRodConstraints.size());
-	for (uint i = 0, s = uint(mRodConstraints.size()); i < s; ++i)
-		outResults.mRodConstraintRemap.push_back(i);
-	for (uint i = 1, s = uint(mRodConstraints.size()) / 2; i < s; i += 2)
+	outResults.mRodStretchShearConstraintRemap.reserve(mRodStretchShearConstraints.size());
+	for (uint i = 0, s = uint(mRodStretchShearConstraints.size()); i < s; ++i)
+		outResults.mRodStretchShearConstraintRemap.push_back(i);
+	for (uint i = 1, s = uint(mRodStretchShearConstraints.size()) / 2; i < s; i += 2)
 	{
-		uint j = uint(mRodConstraints.size()) - 1 - i;
-		std::swap(mRodConstraints[i], mRodConstraints[j]);
-		std::swap(outResults.mRodConstraintRemap[i], outResults.mRodConstraintRemap[j]);
+		uint j = uint(mRodStretchShearConstraints.size()) - 1 - i;
+		std::swap(mRodStretchShearConstraints[i], mRodStretchShearConstraints[j]);
+		std::swap(outResults.mRodStretchShearConstraintRemap[i], outResults.mRodStretchShearConstraintRemap[j]);
 	}
+
+	// TODO: Assign rod bend twist constraints to update groups
+	QuickSort(mRodBendTwistConstraints.begin(), mRodBendTwistConstraints.end(), [](const RodBendTwist &inLHS, const RodBendTwist &inRHS)
+	{
+		// TODO: Use connectivity to sort the rods
+		return min(inLHS.mRod[0], inLHS.mRod[1]) < min(inRHS.mRod[0], inRHS.mRod[1]);
+	});
+	outResults.mRodBendTwistConstraintRemap.reserve(mRodBendTwistConstraints.size());
+	for (uint i = 0, s = uint(mRodBendTwistConstraints.size()); i < s; ++i)
+		outResults.mRodBendTwistConstraintRemap.push_back(i);
+	for (uint i = 1, s = uint(mRodBendTwistConstraints.size()) / 2; i < s; i += 2)
+	{
+		uint j = uint(mRodBendTwistConstraints.size()) - 1 - i;
+		std::swap(mRodBendTwistConstraints[i], mRodBendTwistConstraints[j]);
+		std::swap(outResults.mRodBendTwistConstraintRemap[i], outResults.mRodBendTwistConstraintRemap[j]);
+	}
+
+	// Remap bend twist indices
+	for (RodBendTwist &r : mRodBendTwistConstraints)
+		for (int i = 0; i < 2; ++i)
+			r.mRod[i] = outResults.mRodStretchShearConstraintRemap[r.mRod[i]];
 
 	// Temporary store constraints as we reorder them
 	Array<Edge> temp_edges;
@@ -1013,7 +1047,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 		}
 
 		// Store end indices
-		mUpdateGroups.push_back({ (uint)mEdgeConstraints.size(), (uint)mLRAConstraints.size(), (uint)mDihedralBendConstraints.size(), (uint)mVolumeConstraints.size(), (uint)mSkinnedConstraints.size(), (uint)mRodConstraints.size() });
+		mUpdateGroups.push_back({ (uint)mEdgeConstraints.size(), (uint)mLRAConstraints.size(), (uint)mDihedralBendConstraints.size(), (uint)mVolumeConstraints.size(), (uint)mSkinnedConstraints.size(), (uint)mRodStretchShearConstraints.size(), (uint)mRodBendTwistConstraints.size() });
 	}
 
 	// Free closest kinematic buffer
@@ -1049,15 +1083,21 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mSkinnedConstraints);
 	inStream.Write(mSkinnedConstraintNormals);
 	inStream.Write(mLRAConstraints);
-	inStream.Write(mRodConstraints);
 	inStream.Write(mVertexRadius);
 	inStream.Write(mUpdateGroups);
 
 	// Can't write mRods directly because the class contains padding
-	inStream.Write(mRods, [](const Rod &inElement, StreamOut &inS) {
+	inStream.Write(mRodStretchShearConstraints, [](const RodStretchShear &inElement, StreamOut &inS) {
 		inS.Write(inElement.mVertex);
 		inS.Write(inElement.mLength);
+		inS.Write(inElement.mInvMass);
 		inS.Write(inElement.mBishop);
+	});
+
+	// Can't write mRodBendTwistConstraints directly because the class contains padding
+	inStream.Write(mRodBendTwistConstraints, [](const RodBendTwist &inElement, StreamOut &inS) {
+		inS.Write(inElement.mRod);
+		inS.Write(inElement.mOmega0);
 	});
 
 	// Can't write mInvBindMatrices directly because the class contains padding
@@ -1077,14 +1117,20 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);
 	inStream.Read(mLRAConstraints);
-	inStream.Read(mRodConstraints);
+	inStream.Read(mRodBendTwistConstraints);
 	inStream.Read(mVertexRadius);
 	inStream.Read(mUpdateGroups);
 
-	inStream.Read(mRods, [](StreamIn &inS, Rod &outElement) {
+	inStream.Read(mRodStretchShearConstraints, [](StreamIn &inS, RodStretchShear &outElement) {
 		inS.Read(outElement.mVertex);
 		inS.Read(outElement.mLength);
+		inS.Read(outElement.mInvMass);
 		inS.Read(outElement.mBishop);
+	});
+
+	inStream.Read(mRodBendTwistConstraints, [](StreamIn &inS, RodBendTwist &outElement) {
+		inS.Read(outElement.mRod);
+		inS.Read(outElement.mOmega0);
 	});
 
 	inStream.Read(mInvBindMatrices, [](StreamIn &inS, InvBind &outElement) {

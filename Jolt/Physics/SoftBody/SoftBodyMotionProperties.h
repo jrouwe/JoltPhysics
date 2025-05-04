@@ -36,8 +36,8 @@ class JPH_EXPORT SoftBodyMotionProperties : public MotionProperties
 public:
 	using Vertex = SoftBodyVertex;
 	using Edge = SoftBodySharedSettings::Edge;
-	using Rod = SoftBodySharedSettings::Rod;
-	using RodConstraint = SoftBodySharedSettings::RodConstraint;
+	using RodStretchShear = SoftBodySharedSettings::RodStretchShear;
+	using RodBendTwist = SoftBodySharedSettings::RodBendTwist;
 	using Face = SoftBodySharedSettings::Face;
 	using DihedralBend = SoftBodySharedSettings::DihedralBend;
 	using Volume = SoftBodySharedSettings::Volume;
@@ -252,7 +252,8 @@ private:
 	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
 
 	/// Enforce all rod constraints
-	void								ApplyRodConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
+	void								ApplyRodStretchShearConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
+	void								ApplyRodBendTwistConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
 
 	/// Enforce all LRA constraints
 	void								ApplyLRAConstraints(uint inStartIndex, uint inEndIndex);
