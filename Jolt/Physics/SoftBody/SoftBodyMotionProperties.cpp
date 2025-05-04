@@ -603,6 +603,8 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 
 void SoftBodyMotionProperties::ApplyRodStretchShearConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
 {
+	JPH_PROFILE_FUNCTION();
+
 	constexpr float epsilon = 1.0e-6f; // Prevents division by zero and softens the constraint
 
 	// Convert arrays to pointers to avoid bounds checks in the inner loop
@@ -638,6 +640,8 @@ void SoftBodyMotionProperties::ApplyRodStretchShearConstraints(const SoftBodyUpd
 
 void SoftBodyMotionProperties::ApplyRodBendTwistConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
 {
+	JPH_PROFILE_FUNCTION();
+
 	constexpr float epsilon = 1.0e-6f; // Prevents division by zero and softens the constraint
 
 	for (const RodBendTwist *r = mSettings->mRodBendTwistConstraints.data() + inStartIndex, *r_end = mSettings->mRodBendTwistConstraints.data() + inEndIndex; r < r_end; ++r)

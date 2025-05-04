@@ -623,7 +623,12 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	for (const RodStretchShear &c : mRodStretchShearConstraints)
 		add_connection(c.mVertex[0], c.mVertex[1]);
 	for (const RodBendTwist &c : mRodBendTwistConstraints)
-		add_connection(mRodStretchShearConstraints[c.mRod[0]].mVertex[1], mRodStretchShearConstraints[c.mRod[0]].mVertex[0]); // No need to connect all vertices since mRodStretchShearConstraints will connect the rest
+	{
+		add_connection(mRodStretchShearConstraints[c.mRod[0]].mVertex[0], mRodStretchShearConstraints[c.mRod[1]].mVertex[0]);
+		add_connection(mRodStretchShearConstraints[c.mRod[0]].mVertex[1], mRodStretchShearConstraints[c.mRod[1]].mVertex[0]);
+		add_connection(mRodStretchShearConstraints[c.mRod[0]].mVertex[0], mRodStretchShearConstraints[c.mRod[1]].mVertex[1]);
+		add_connection(mRodStretchShearConstraints[c.mRod[0]].mVertex[1], mRodStretchShearConstraints[c.mRod[1]].mVertex[1]);
+	}
 	for (const DihedralBend &c : mDihedralBendConstraints)
 	{
 		add_connection(c.mVertex[0], c.mVertex[1]);
@@ -818,10 +823,12 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	}
 	for (const RodBendTwist &r : mRodBendTwistConstraints)
 	{
-		int g1 = group_idx[mRodStretchShearConstraints[r.mRod[0]].mVertex[1]];
-		int g2 = group_idx[mRodStretchShearConstraints[r.mRod[1]].mVertex[0]];
-		JPH_ASSERT(g1 >= 0 && g2 >= 0);
-		if (g1 == g2) // In the same group
+		int g1 = group_idx[mRodStretchShearConstraints[r.mRod[0]].mVertex[0]];
+		int g2 = group_idx[mRodStretchShearConstraints[r.mRod[0]].mVertex[1]];
+		int g3 = group_idx[mRodStretchShearConstraints[r.mRod[1]].mVertex[0]];
+		int g4 = group_idx[mRodStretchShearConstraints[r.mRod[1]].mVertex[1]];
+		JPH_ASSERT(g1 >= 0 && g2 >= 0 && g3 >= 0 && g4 >= 0);
+		if (g1 == g2 && g1 == g3 && g1 == g4) // In the same group
 			groups[g1].mRodBendTwistConstraints.push_back(uint(&r - mRodBendTwistConstraints.data()));
 		else // In different groups -> parallel group
 			groups.back().mRodBendTwistConstraints.push_back(uint(&r - mRodBendTwistConstraints.data()));
@@ -1143,6 +1150,8 @@ Ref<SoftBodySharedSettings> SoftBodySharedSettings::Clone() const
 	clone->mSkinnedConstraintNormals = mSkinnedConstraintNormals;
 	clone->mInvBindMatrices = mInvBindMatrices;
 	clone->mLRAConstraints = mLRAConstraints;
+	clone->mRodStretchShearConstraints = mRodStretchShearConstraints;
+	clone->mRodBendTwistConstraints = mRodBendTwistConstraints;
 	clone->mMaterials = mMaterials;
 	clone->mVertexRadius = mVertexRadius;
 	clone->mUpdateGroups = mUpdateGroups;
