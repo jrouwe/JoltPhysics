@@ -374,7 +374,7 @@ void SoftBodySharedSettings::CalculateRodProperties()
 	constexpr uint32 cNotConnected = ~uint32(0);
 
 	// Mark to which rod each rod connects
-	Array<int> connections;
+	Array<uint32> connections;
 	connections.resize(mRods.size(), cNotConnected);
 	for (const RodConstraint &c : mRodConstraints)
 		connections[c.mRods[1]] = c.mRods[0];

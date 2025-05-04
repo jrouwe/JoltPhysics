@@ -630,7 +630,9 @@ void SoftBodyMotionProperties::ApplyRodConstraints(const SoftBodyUpdateContext &
 			Vec3 delta = (x1 - x0 - d3 * l) / denom;
 			v0.mPosition = x0 + v0.mInvMass * delta;
 			v1.mPosition = x1 - v1.mInvMass * delta;
-			ioState.mRotation += wq * l * Quat(Vec4(delta, 0)) * ioState.mRotation * Quat(0, 0, -1, 0);
+			// q * e3_bar = q * (0, 0, -1, 0) = [-qy, qx, -qw, qz]
+			Quat q_e3_bar(UVec4::sXor(ioState.mRotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>().ReinterpretAsInt(), UVec4(0x80000000u, 0, 0x80000000u, 0)).ReinterpretAsFloat());
+			ioState.mRotation += wq * l * Quat(Vec4(delta, 0)) * q_e3_bar;
 			return wq;
 		};
 		float wq = apply_stretch_and_shear(rod1, rod1_state);
@@ -1006,7 +1008,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineSen
 void SoftBodyMotionProperties::ProcessGroup(const SoftBodyUpdateContext &ioContext, uint inGroupIndex)
 {
 	// Determine start and end
-	SoftBodySharedSettings::UpdateGroup start { 0, 0, 0, 0, 0 };
+	SoftBodySharedSettings::UpdateGroup start { 0, 0, 0, 0, 0, 0 };
 	const SoftBodySharedSettings::UpdateGroup &prev = inGroupIndex > 0? mSettings->mUpdateGroups[inGroupIndex - 1] : start;
 	const SoftBodySharedSettings::UpdateGroup &current = mSettings->mUpdateGroups[inGroupIndex];
 
