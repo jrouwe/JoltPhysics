@@ -41,12 +41,14 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::RodStretchShear)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodStretchShear, mVertex)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodStretchShear, mLength)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodStretchShear, mInvMass)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodStretchShear, mCompliance)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodStretchShear, mBishop)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::RodBendTwist)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodBendTwist, mRod)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodBendTwist, mCompliance)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::RodBendTwist, mOmega0)
 }
 
@@ -378,54 +380,55 @@ void SoftBodySharedSettings::CalculateEdgeLengths()
 
 void SoftBodySharedSettings::CalculateRodProperties()
 {
-	constexpr uint32 cNotConnected = ~uint32(0);
-
-	// Mark to which rod each rod connects
-	// TODO: This algorithm fails if multiple rods have outgoing links to the same rod
-	Array<uint32> connections;
-	connections.resize(mRodStretchShearConstraints.size(), cNotConnected);
+	// Mark connections through bend twist constraints
+	Array<Array<uint32>> connections;
+	connections.resize(mRodStretchShearConstraints.size());
 	for (const RodBendTwist &c : mRodBendTwistConstraints)
-		connections[c.mRod[1]] = c.mRod[0];
+	{
+		connections[c.mRod[1]].push_back(c.mRod[0]);
+		connections[c.mRod[0]].push_back(c.mRod[1]);
+	}
 
-	// Determine a Bishop frame for all rods that do not connect to another rod
-	for (uint32 i = 0; i < mRodStretchShearConstraints.size(); ++i)
-		if (connections[i] == cNotConnected)
-		{
-			RodStretchShear &r = mRodStretchShearConstraints[i];
-			Vec3 tangent = Vec3(mVertices[r.mVertex[1]].mPosition) - Vec3(mVertices[r.mVertex[0]].mPosition);
-			r.mLength = tangent.Length();
-			JPH_ASSERT(r.mLength > 0.0f, "Rods of zero length are not supported!");
-			tangent /= r.mLength;
-			Vec3 normal = tangent.GetNormalizedPerpendicular();
-			Vec3 binormal = tangent.Cross(normal);
-			r.mBishop = Mat44(Vec4(normal, 0), Vec4(binormal, 0), Vec4(tangent, 0), Vec4(0, 0, 0, 1)).GetQuaternion().Normalized();
-		}
-
-	// Now calculate the Bishop frames for all other rods
-	Array<uint32> stack;
+	// Now calculate the Bishop frames for all rods
+	struct Entry
+	{
+		uint32	mFrom;	// Rod we're coming from
+		uint32	mTo;	// Rod we're going to
+	};
+	Array<Entry> stack;
 	stack.reserve(mRodStretchShearConstraints.size());
-	for (uint32 i = 0; i < mRodStretchShearConstraints.size(); ++i)
-		if (connections[i] != cNotConnected) // Already calculated?
+	for (uint32 r0_idx = 0; r0_idx < mRodStretchShearConstraints.size(); ++r0_idx)
+	{
+		RodStretchShear &r0 = mRodStretchShearConstraints[r0_idx];
+
+		// Do not calculate a 2nd time
+		if (r0.mBishop == Quat::sZero())
 		{
-			// Find the first rod that already has its Bishop frame calculated
-			uint32 current = i;
-			for (;;)
+			// Calculate the frame for this rod
 			{
-				uint32 next = connections[current];
-				if (next != cNotConnected)
-					stack.push_back(current);
-				else
-					break;
-				current = next;
+				Vec3 tangent = Vec3(mVertices[r0.mVertex[1]].mPosition) - Vec3(mVertices[r0.mVertex[0]].mPosition);
+				r0.mLength = tangent.Length();
+				JPH_ASSERT(r0.mLength > 0.0f, "Rods of zero length are not supported!");
+				tangent /= r0.mLength;
+				Vec3 normal = tangent.GetNormalizedPerpendicular();
+				Vec3 binormal = tangent.Cross(normal);
+				r0.mBishop = Mat44(Vec4(normal, 0), Vec4(binormal, 0), Vec4(tangent, 0), Vec4(0, 0, 0, 1)).GetQuaternion().Normalized();
 			}
+
+			// Add connected rods to the stack if they haven't been calculated yet
+			for (uint32 r1_idx : connections[r0_idx])
+				if (mRodStretchShearConstraints[r1_idx].mBishop == Quat::sZero())
+					stack.push_back({ r0_idx, r1_idx });
 
 			// Now connect the bishop frame for all connected rods on the stack
 			// This follows the procedure outlined in "Discrete Elastic Rods" - M. Bergou et al.
 			// See: https://www.cs.columbia.edu/cg/pdfs/143-rods.pdf
 			while (!stack.empty())
 			{
-				uint32 r2_idx = stack.back();
-				uint32 r1_idx = connections[r2_idx];
+				uint32 r1_idx = stack.back().mFrom;
+				uint32 r2_idx = stack.back().mTo;
+				stack.pop_back();
+
 				RodStretchShear &r1 = mRodStretchShearConstraints[r1_idx];
 				RodStretchShear &r2 = mRodStretchShearConstraints[r2_idx];
 
@@ -450,11 +453,13 @@ void SoftBodySharedSettings::CalculateRodProperties()
 				Vec3 binormal2 = tangent2.Cross(normal2);
 				r2.mBishop = Mat44(Vec4(normal2, 0), Vec4(binormal2, 0), Vec4(tangent2, 0), Vec4(0, 0, 0, 1)).GetQuaternion().Normalized();
 
-				// Mark as processed
-				connections[r2_idx] = cNotConnected;
-				stack.pop_back();
+				// Add connected rods to the stack if they haven't been calculated yet
+				for (uint32 r3_idx : connections[r2_idx])
+					if (mRodStretchShearConstraints[r3_idx].mBishop == Quat::sZero())
+						stack.push_back({ r2_idx, r3_idx });
 			}
 		}
+	}
 
 	// Calculate inverse mass for all rods by taking the minimum inverse mass (aka the heaviest vertex) of both vertices
 	for (RodStretchShear &r : mRodStretchShearConstraints)
@@ -1176,12 +1181,14 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 		inS.Write(inElement.mVertex);
 		inS.Write(inElement.mLength);
 		inS.Write(inElement.mInvMass);
+		inS.Write(inElement.mCompliance);
 		inS.Write(inElement.mBishop);
 	});
 
 	// Can't write mRodBendTwistConstraints directly because the class contains padding
 	inStream.Write(mRodBendTwistConstraints, [](const RodBendTwist &inElement, StreamOut &inS) {
 		inS.Write(inElement.mRod);
+		inS.Write(inElement.mCompliance);
 		inS.Write(inElement.mOmega0);
 	});
 
@@ -1209,11 +1216,13 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 		inS.Read(outElement.mVertex);
 		inS.Read(outElement.mLength);
 		inS.Read(outElement.mInvMass);
+		inS.Read(outElement.mCompliance);
 		inS.Read(outElement.mBishop);
 	});
 
 	inStream.Read(mRodBendTwistConstraints, [](StreamIn &inS, RodBendTwist &outElement) {
 		inS.Read(outElement.mRod);
+		inS.Read(outElement.mCompliance);
 		inS.Read(outElement.mOmega0);
 	});
 
