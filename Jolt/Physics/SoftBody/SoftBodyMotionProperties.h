@@ -216,9 +216,12 @@ private:
 	// Information about the current state of a rod.
 	struct RodState
 	{
-		Quat							mPreviousRotation;							///< Previous rotation of the rod, relative to center of mass transform
 		Quat							mRotation;									///< Rotation of the rod, relative to center of mass transform
-		Vec3							mAngularVelocity;							///< Angular velocity of the rod, relative to center of mass transform
+		union
+		{
+			Vec3						mAngularVelocity;							///< Angular velocity of the rod, relative to center of mass transform, valid only outside of the simulation.
+			Quat						mPreviousRotationInternal;					///< Internal use only. Previous rotation of the rod, relative to center of mass transform, valid only during the simulation.
+		};
 	};
 
 	// Information about the state of all skinned vertices

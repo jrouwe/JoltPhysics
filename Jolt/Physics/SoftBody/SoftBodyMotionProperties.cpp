@@ -87,7 +87,7 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 		{
 			const SoftBodySharedSettings::RodStretchShear &in_rod = inSettings.mSettings->mRodStretchShearConstraints[r];
 			RodState &out_rod = mRodStates[r];
-			out_rod.mPreviousRotation = out_rod.mRotation = rotation_q * in_rod.mBishop;
+			out_rod.mRotation = rotation_q * in_rod.mBishop;
 			out_rod.mAngularVelocity = Vec3::sZero();
 		}
 	}
@@ -332,6 +332,7 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 	Vec3 sub_step_gravity = inContext.mGravity * dt;
 	Vec3 sub_step_impulse = GetAccumulatedForce() * dt / max(float(mVertices.size()), 1.0f);
 	for (Vertex &v : mVertices)
+	{
 		if (v.mInvMass > 0.0f)
 		{
 			// Gravity
@@ -339,17 +340,12 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 
 			// Damping
 			v.mVelocity *= linear_damping;
-
-			// Integrate
-			v.mPreviousPosition = v.mPosition;
-			v.mPosition += v.mVelocity * dt;
 		}
-		else
-		{
-			// Integrate
-			v.mPreviousPosition = v.mPosition;
-			v.mPosition += v.mVelocity * dt;
-		}
+		
+		// Integrate
+		v.mPreviousPosition = v.mPosition;
+		v.mPosition += v.mVelocity * dt;
+	}
 
 	// Integrate rod orientations
 	float half_dt = 0.5f * dt;
@@ -359,8 +355,9 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		r.mAngularVelocity *= linear_damping;
 
 		// Integrate
-		r.mPreviousRotation = r.mRotation;
-		r.mRotation += half_dt * Quat(Vec4(r.mAngularVelocity, 0)) * r.mRotation;
+		Quat delta_rotation = half_dt * Quat(Vec4(r.mAngularVelocity, 0)) * r.mRotation;
+		r.mPreviousRotationInternal = r.mRotation; // Overwrites mAngularVelocity
+		r.mRotation += delta_rotation;
 		r.mRotation = r.mRotation.Normalized();
 	}
 }
@@ -816,7 +813,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 	// Calculate the new angular velocity for all rods
 	float two_div_dt = 2.0f / dt;
 	for (RodState &r : mRodStates)
-		r.mAngularVelocity = two_div_dt * (r.mRotation * r.mPreviousRotation.Conjugated()).GetXYZ();
+		r.mAngularVelocity = two_div_dt * (r.mRotation * r.mPreviousRotationInternal.Conjugated()).GetXYZ(); // Overwrites mPreviousRotationInternal
 }
 
 void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
@@ -1442,9 +1439,14 @@ void SoftBodyMotionProperties::SaveState(StateRecorder &inStream) const
 
 	for (const Vertex &v : mVertices)
 	{
-		inStream.Write(v.mPreviousPosition);
 		inStream.Write(v.mPosition);
 		inStream.Write(v.mVelocity);
+	}
+
+	for (const RodState &r : mRodStates)
+	{
+		inStream.Write(r.mRotation);
+		inStream.Write(r.mAngularVelocity);
 	}
 
 	for (const SkinState &s : mSkinState)
@@ -1466,9 +1468,14 @@ void SoftBodyMotionProperties::RestoreState(StateRecorder &inStream)
 
 	for (Vertex &v : mVertices)
 	{
-		inStream.Read(v.mPreviousPosition);
 		inStream.Read(v.mPosition);
 		inStream.Read(v.mVelocity);
+	}
+
+	for (RodState &r : mRodStates)
+	{
+		inStream.Read(r.mRotation);
+		inStream.Read(r.mAngularVelocity);
 	}
 
 	for (SkinState &s : mSkinState)
