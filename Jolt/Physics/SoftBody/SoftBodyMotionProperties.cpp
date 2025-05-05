@@ -343,8 +343,9 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		}
 
 		// Integrate
-		v.mPreviousPosition = v.mPosition;
-		v.mPosition += v.mVelocity * dt;
+		Vec3 position = v.mPosition;
+		v.mPreviousPosition = position;
+		v.mPosition = position + v.mVelocity * dt;
 	}
 
 	// Integrate rod orientations
@@ -355,10 +356,10 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		r.mAngularVelocity *= linear_damping;
 
 		// Integrate
-		Quat delta_rotation = half_dt * Quat(Vec4(r.mAngularVelocity, 0)) * r.mRotation;
-		r.mPreviousRotationInternal = r.mRotation; // Overwrites mAngularVelocity
-		r.mRotation += delta_rotation;
-		r.mRotation = r.mRotation.Normalized();
+		Quat rotation = r.mRotation;
+		Quat delta_rotation = half_dt * Quat(Vec4(r.mAngularVelocity, 0)) * rotation;
+		r.mPreviousRotationInternal = rotation; // Overwrites mAngularVelocity
+		r.mRotation = (rotation + delta_rotation).Normalized();
 	}
 }
 
