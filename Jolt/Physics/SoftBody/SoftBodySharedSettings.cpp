@@ -441,6 +441,12 @@ void SoftBodySharedSettings::CalculateRodProperties()
 
 				// Calculate the Bishop frame for the 2nd rod
 				Vec3 tangent2 = Vec3(mVertices[r2.mVertex[1]].mPosition) - Vec3(mVertices[r2.mVertex[0]].mPosition);
+				if (tangent1.Dot(tangent2) < 0.0f)
+				{
+					// Edge is oriented in the opposite direction of the previous edge, flip it
+					std::swap(r2.mVertex[0], r2.mVertex[1]);
+					tangent2 = -tangent2;
+				}
 				r2.mLength = tangent2.Length();
 				JPH_ASSERT(r2.mLength > 0.0f, "Rods of zero length are not supported!");
 				tangent2 /= r2.mLength;
