@@ -604,35 +604,31 @@ void SoftBodyMotionProperties::ApplyRodStretchShearConstraints(const SoftBodyUpd
 
 	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
-	// Convert arrays to pointers to avoid bounds checks in the inner loop
-	const Array<RodStretchShear> &rods = mSettings->mRodStretchShearConstraints;
-
-	for (uint i = inStartIndex; i < inEndIndex; ++i)
+	RodState *rod_state = mRodStates.data() + inStartIndex;
+	for (const RodStretchShear *r = mSettings->mRodStretchShearConstraints.data() + inStartIndex, *r_end = mSettings->mRodStretchShearConstraints.data() + inEndIndex; r < r_end; ++r, ++rod_state)
 	{
-		const RodStretchShear &rod = rods[i];
-		RodState &rod_state = mRodStates[i];
-
 		// Get positions
-		Vertex &v0 = mVertices[rod.mVertex[0]];
-		Vertex &v1 = mVertices[rod.mVertex[1]];
-		Vec3 x0 = v0.mPosition;
-		Vec3 x1 = v1.mPosition;
+		Vertex &v0 = mVertices[r->mVertex[0]];
+		Vertex &v1 = mVertices[r->mVertex[1]];
 
 		// Apply stretch and shear constraint
 		// Equation 37 from "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
-		float denom = v0.mInvMass + v1.mInvMass + 4.0f * rod.mInvMass * Square(rod.mLength) + rod.mCompliance * inv_dt_sq;
+		float denom = v0.mInvMass + v1.mInvMass + 4.0f * r->mInvMass * Square(r->mLength) + r->mCompliance * inv_dt_sq;
 		if (denom < 1.0e-12f)
 			continue;
-		Vec3 d3 = rod_state.mRotation.RotateAxisZ();
-		Vec3 delta = (x1 - x0 - d3 * rod.mLength) / denom;
+		Vec3 x0 = v0.mPosition;
+		Vec3 x1 = v1.mPosition;
+		Quat rotation = rod_state->mRotation;
+		Vec3 d3 = rotation.RotateAxisZ();
+		Vec3 delta = (x1 - x0 - d3 * r->mLength) / denom;
 		v0.mPosition = x0 + v0.mInvMass * delta;
 		v1.mPosition = x1 - v1.mInvMass * delta;
 		// q * e3_bar = q * (0, 0, -1, 0) = [-qy, qx, -qw, qz]
-		Quat q_e3_bar(UVec4::sXor(rod_state.mRotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>().ReinterpretAsInt(), UVec4(0x80000000u, 0, 0x80000000u, 0)).ReinterpretAsFloat());
-		rod_state.mRotation += (2.0f * rod.mInvMass * rod.mLength) * Quat(Vec4(delta, 0)) * q_e3_bar;
+		Quat q_e3_bar(UVec4::sXor(rotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>().ReinterpretAsInt(), UVec4(0x80000000u, 0, 0x80000000u, 0)).ReinterpretAsFloat());
+		rotation += (2.0f * r->mInvMass * r->mLength) * Quat(Vec4(delta, 0)) * q_e3_bar;
 
 		// Renormalize
-		rod_state.mRotation = rod_state.mRotation.Normalized();
+		rod_state->mRotation = rotation.Normalized();
 	}
 }
 
@@ -642,12 +638,14 @@ void SoftBodyMotionProperties::ApplyRodBendTwistConstraints(const SoftBodyUpdate
 
 	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
+	const Array<RodStretchShear> &rods = mSettings->mRodStretchShearConstraints;
+
 	for (const RodBendTwist *r = mSettings->mRodBendTwistConstraints.data() + inStartIndex, *r_end = mSettings->mRodBendTwistConstraints.data() + inEndIndex; r < r_end; ++r)
 	{
 		uint32 rod1_index = r->mRod[0];
 		uint32 rod2_index = r->mRod[1];
-		const RodStretchShear &rod1 = mSettings->mRodStretchShearConstraints[rod1_index];
-		const RodStretchShear &rod2 = mSettings->mRodStretchShearConstraints[rod2_index];
+		const RodStretchShear &rod1 = rods[rod1_index];
+		const RodStretchShear &rod2 = rods[rod2_index];
 		RodState &rod1_state = mRodStates[rod1_index];
 		RodState &rod2_state = mRodStates[rod2_index];
 
@@ -656,20 +654,23 @@ void SoftBodyMotionProperties::ApplyRodBendTwistConstraints(const SoftBodyUpdate
 		float denom = rod1.mInvMass + rod2.mInvMass + r->mCompliance * inv_dt_sq;
 		if (denom < 1.0e-12f)
 			continue;
-		Quat omega = rod1_state.mRotation.Conjugated() * rod2_state.mRotation;
-		Vec4 omega_min_omega0 = (omega - r->mOmega0).GetXYZW();
-		Vec4 omega_plus_omega0 = (omega + r->mOmega0).GetXYZW();
+		Quat rotation1 = rod1_state.mRotation;
+		Quat rotation2 = rod2_state.mRotation;
+		Quat omega = rotation1.Conjugated() * rotation2;
+		Quat omega0 = r->mOmega0;
+		Vec4 omega_min_omega0 = (omega - omega0).GetXYZW();
+		Vec4 omega_plus_omega0 = (omega + omega0).GetXYZW();
 		// Take the shortest of the two rotations
 		Quat delta_omega(Vec4::sSelect(omega_min_omega0, omega_plus_omega0, Vec4::sLess(omega_plus_omega0.DotV(omega_plus_omega0), omega_min_omega0.DotV(omega_min_omega0))));
 		delta_omega /= denom;
 		delta_omega.SetW(0.0f); // Scalar part needs to be zero because the real part of the Darboux vector doesn't vanish, see text between eq. 39 and 40.
-		Quat delta_rod2 = rod2.mInvMass * rod1_state.mRotation * delta_omega;
-		rod1_state.mRotation += rod1.mInvMass * rod2_state.mRotation * delta_omega;
-		rod2_state.mRotation -= delta_rod2;
+		Quat delta_rod2 = rod2.mInvMass * rotation1 * delta_omega;
+		rotation1 += rod1.mInvMass * rotation2 * delta_omega;
+		rotation2 -= delta_rod2;
 
 		// Renormalize
-		rod1_state.mRotation = rod1_state.mRotation.Normalized();
-		rod2_state.mRotation = rod2_state.mRotation.Normalized();
+		rod1_state.mRotation = rotation1.Normalized();
+		rod2_state.mRotation = rotation2.Normalized();
 	}
 }
 
