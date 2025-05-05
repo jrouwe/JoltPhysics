@@ -341,7 +341,7 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 			// Damping
 			v.mVelocity *= linear_damping;
 		}
-		
+
 		// Integrate
 		v.mPreviousPosition = v.mPosition;
 		v.mPosition += v.mVelocity * dt;
