@@ -1315,7 +1315,7 @@ void SoftBodyMotionProperties::DrawRods(DebugRenderer *inRenderer, RMat44Arg inC
 		Color::sWhite);
 }
 
-void SoftBodyMotionProperties::DrawRodStretchShearConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
+void SoftBodyMotionProperties::DrawRodStates(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
 	DrawConstraints(inConstraintColor,
 		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
@@ -1330,12 +1330,12 @@ void SoftBodyMotionProperties::DrawRodStretchShearConstraints(DebugRenderer *inR
 
 			RMat44 rod_center = inCenterOfMassTransform;
 			rod_center.SetTranslation(0.5_r * (x0 + x1));
-			inRenderer->DrawArrow(rod_center.GetTranslation(), rod_center.GetTranslation() + 0.1f * rod.mLength * state.mAngularVelocity, inColor, 0.01f * rod.mLength);
+			inRenderer->DrawArrow(rod_center.GetTranslation(), rod_center.GetTranslation() + state.mAngularVelocity, inColor, 0.01f * rod.mLength);
 
 			RMat44 rod_frame = rod_center * RMat44::sRotation(state.mRotation);
 			inRenderer->DrawCoordinateSystem(rod_frame, 0.3f * rod.mLength);
 		},
-		Color::sYellow);
+		Color::sOrange);
 }
 
 void SoftBodyMotionProperties::DrawRodBendTwistConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const

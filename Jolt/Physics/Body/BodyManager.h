@@ -249,7 +249,7 @@ public:
 		bool						mDrawSoftBodySkinConstraints = false;			///< Draw the skin constraints of soft bodies
 		bool						mDrawSoftBodyLRAConstraints = false;			///< Draw the LRA constraints of soft bodies
 		bool						mDrawSoftBodyRods = false;						///< Draw the rods of soft bodies
-		bool						mDrawSoftBodyRodStretchShearConstraints = false;///< Draw the rod shear stretch constraints of soft bodies
+		bool						mDrawSoftBodyRodStates = false;					///< Draw the rod states (orientation and angular velocity) of soft bodies
 		bool						mDrawSoftBodyRodBendTwistConstraints = false;	///< Draw the rod bend twist constraints of soft bodies
 		bool						mDrawSoftBodyPredictedBounds = false;			///< Draw the predicted bounds of soft bodies
 		ESoftBodyConstraintColor	mDrawSoftBodyConstraintColor = ESoftBodyConstraintColor::ConstraintType; ///< Coloring scheme to use for soft body constraints
