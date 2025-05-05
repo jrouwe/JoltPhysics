@@ -12,6 +12,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### Bug Fixes
 
+* The remap tables in SoftBodySharedSettings::OptimizationResults mapped from new to old index instead of from old to new as was documented. The maps now behave as documented.
 * Fixed infinite recursion when colliding a `TriangleShape` vs a `TriangleShape`.
 * 32-bit MinGW g++ doesn't call the correct overload for the new operator when a type is 16 bytes aligned. This could cause unaligned read access violations.
 * Fixed compiling in double precision and fixed issues with floating point contraction that caused unit test failures on LoongArch architecture.
