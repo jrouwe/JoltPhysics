@@ -123,15 +123,15 @@ void SoftBodyBendConstraintTest::Initialize()
 
 	{
 		// Create sphere with Cosserat rod constraints
-		constexpr uint cNumTheta = 10;
-		constexpr uint cNumPhi = 20;
+		uint cNumTheta = 10;
+		uint cNumPhi = 20;
 		Ref<SoftBodySharedSettings> sphere_settings = SoftBodyCreator::CreateSphere(1.0f, cNumTheta, cNumPhi, SoftBodySharedSettings::EBendType::None);
 
 		// Get rid of created edges, we're replacing them with rods
 		sphere_settings->mEdgeConstraints.clear();
 
 		// Copy of SoftBodyCreator::CreateSphere: Function to get the vertex index of a point on the sphere
-		auto vertex_index = [](uint inTheta, uint inPhi) -> uint
+		auto vertex_index = [cNumTheta, cNumPhi](uint inTheta, uint inPhi) -> uint
 		{
 			if (inTheta == 0)
 				return 0;
