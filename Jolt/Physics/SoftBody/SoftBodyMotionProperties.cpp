@@ -1344,8 +1344,8 @@ void SoftBodyMotionProperties::DrawRodBendTwistConstraints(DebugRenderer *inRend
 			const RodStretchShear &rod1 = mSettings->mRodStretchShearConstraints[r1];
 			const RodStretchShear &rod2 = mSettings->mRodStretchShearConstraints[r2];
 
-			RVec3 x0 = inCenterOfMassTransform * (0.5f * (mVertices[rod1.mVertex[0]].mPosition + mVertices[rod1.mVertex[1]].mPosition));
-			RVec3 x1 = inCenterOfMassTransform * (0.5f * (mVertices[rod2.mVertex[0]].mPosition + mVertices[rod2.mVertex[1]].mPosition));
+			RVec3 x0 = inCenterOfMassTransform * (0.4f * mVertices[rod1.mVertex[0]].mPosition + 0.6f * mVertices[rod1.mVertex[1]].mPosition);
+			RVec3 x1 = inCenterOfMassTransform * (0.6f * mVertices[rod2.mVertex[0]].mPosition + 0.4f * mVertices[rod2.mVertex[1]].mPosition);
 
 			inRenderer->DrawLine(x0, x1, inColor);
 		},
