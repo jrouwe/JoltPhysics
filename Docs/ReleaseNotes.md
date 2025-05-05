@@ -6,13 +6,14 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### New functionality
 
-* Added Cosserat rods to soft bodies. This is an edge with an orientation that can be used to orient geometry, e.g. a plant leaf. See the new SoftBodyCosseratRodConstraintTest demo.
+* Added Cosserat rods to soft bodies. This is a stick constraint with an orientation that can be used to attach geometry. Can be used e.g. to simulate vegetation in a cheap way. See the new `SoftBodyCosseratRodConstraintTest` demo.
 * Added ability to drive hinge constraints with `Ragdoll::DriveToPoseUsingMotors`. This also adds `HingeConstraint::SetTargetOrientationBS` which sets the target angle in body space.
 * Added `JPH_USE_EXTERNAL_PROFILE` cmake option that allows overriding the behavior of the profile macros.
 
 ### Bug Fixes
 
-* The remap tables in SoftBodySharedSettings::OptimizationResults mapped from new to old index instead of from old to new as was documented. The maps now behave as documented.
+* The remap tables in `SoftBodySharedSettings::OptimizationResults`` mapped from new to old index instead of from old to new as was documented. The maps now behave as documented.
+* Fixed an issue where soft body bend constraints could be created with identical vertices. This led to an assert triggering.
 * Fixed infinite recursion when colliding a `TriangleShape` vs a `TriangleShape`.
 * 32-bit MinGW g++ doesn't call the correct overload for the new operator when a type is 16 bytes aligned. This could cause unaligned read access violations.
 * Fixed compiling in double precision and fixed issues with floating point contraction that caused unit test failures on LoongArch architecture.
