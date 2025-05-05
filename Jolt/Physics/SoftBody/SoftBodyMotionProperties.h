@@ -60,6 +60,10 @@ public:
 	const Vertex &						GetVertex(uint inIndex) const				{ return mVertices[inIndex]; }
 	Vertex &							GetVertex(uint inIndex)						{ return mVertices[inIndex]; }
 
+	/// Access to the state of rods
+	Quat								GetRodRotation(uint inIndex) const			{ return mRodStates[inIndex].mRotation; }
+	Vec3								GetRodAngularVelocity(uint inIndex) const	{ return mRodStates[inIndex].mAngularVelocity; }
+
 	/// Get the materials of the soft body
 	const PhysicsMaterialList &			GetMaterials() const						{ return mSettings->mMaterials; }
 

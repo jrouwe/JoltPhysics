@@ -602,7 +602,7 @@ void SoftBodyMotionProperties::ApplyRodStretchShearConstraints(const SoftBodyUpd
 {
 	JPH_PROFILE_FUNCTION();
 
-	constexpr float epsilon = 1.0e-6f; // Prevents division by zero and softens the constraint
+	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
 	// Convert arrays to pointers to avoid bounds checks in the inner loop
 	const Array<RodStretchShear> &rods = mSettings->mRodStretchShearConstraints;
@@ -620,9 +620,10 @@ void SoftBodyMotionProperties::ApplyRodStretchShearConstraints(const SoftBodyUpd
 
 		// Apply stretch and shear constraint
 		// Equation 37 from "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
+		float denom = v0.mInvMass + v1.mInvMass + 4.0f * rod.mInvMass * Square(rod.mLength) + rod.mCompliance * inv_dt_sq;
+		if (denom < 1.0e-12f)
+			continue;
 		Vec3 d3 = rod_state.mRotation.RotateAxisZ();
-		float l_sq = Square(rod.mLength);
-		float denom = v0.mInvMass + v1.mInvMass + 4.0f * rod.mInvMass * l_sq + epsilon;
 		Vec3 delta = (x1 - x0 - d3 * rod.mLength) / denom;
 		v0.mPosition = x0 + v0.mInvMass * delta;
 		v1.mPosition = x1 - v1.mInvMass * delta;
@@ -639,7 +640,7 @@ void SoftBodyMotionProperties::ApplyRodBendTwistConstraints(const SoftBodyUpdate
 {
 	JPH_PROFILE_FUNCTION();
 
-	constexpr float epsilon = 1.0e-6f; // Prevents division by zero and softens the constraint
+	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
 	for (const RodBendTwist *r = mSettings->mRodBendTwistConstraints.data() + inStartIndex, *r_end = mSettings->mRodBendTwistConstraints.data() + inEndIndex; r < r_end; ++r)
 	{
@@ -652,16 +653,19 @@ void SoftBodyMotionProperties::ApplyRodBendTwistConstraints(const SoftBodyUpdate
 
 		// Apply bend and twist constraint
 		// Equation 40 from "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
+		float denom = rod1.mInvMass + rod2.mInvMass + r->mCompliance * inv_dt_sq;
+		if (denom < 1.0e-12f)
+			continue;
 		Quat omega = rod1_state.mRotation.Conjugated() * rod2_state.mRotation;
-		Quat omega_min_omega0 = omega - r->mOmega0;
-		Quat omega_plus_omega0 = omega + r->mOmega0;
-		if (omega_plus_omega0.LengthSq() < omega_min_omega0.LengthSq())
-			omega_min_omega0 = omega_plus_omega0; // The rotation represented by q and -q are the same, we need to take the one that results in the shortest quaternion
-		omega_min_omega0 /= rod1.mInvMass + rod2.mInvMass + epsilon;
-		omega_min_omega0.SetW(0.0f); // Scalar part needs to be zero because the real part of the Darboux vector doesn't vanish, see text between eq. 39 and 40.
-		Quat rotation1 = rod1_state.mRotation; // Temporarily store since we're overwriting it in the next line
-		rod1_state.mRotation += rod1.mInvMass * rod2_state.mRotation * omega_min_omega0;
-		rod2_state.mRotation -= rod2.mInvMass * rotation1 * omega_min_omega0;
+		Vec4 omega_min_omega0 = (omega - r->mOmega0).GetXYZW();
+		Vec4 omega_plus_omega0 = (omega + r->mOmega0).GetXYZW();
+		// Take the shortest of the two rotations
+		Quat delta_omega(Vec4::sSelect(omega_min_omega0, omega_plus_omega0, Vec4::sLess(omega_plus_omega0.DotV(omega_plus_omega0), omega_min_omega0.DotV(omega_min_omega0))));
+		delta_omega /= denom;
+		delta_omega.SetW(0.0f); // Scalar part needs to be zero because the real part of the Darboux vector doesn't vanish, see text between eq. 39 and 40.
+		Quat delta_rod2 = rod2.mInvMass * rod1_state.mRotation * delta_omega;
+		rod1_state.mRotation += rod1.mInvMass * rod2_state.mRotation * delta_omega;
+		rod2_state.mRotation -= delta_rod2;
 
 		// Renormalize
 		rod1_state.mRotation = rod1_state.mRotation.Normalized();

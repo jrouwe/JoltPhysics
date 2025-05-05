@@ -302,6 +302,10 @@ public:
 	};
 
 	/// A discrete Cosserat rod connects two particles with a rigid rod that has fixed length and inertia.
+	/// A rod can be used instead of an Edge to constraint two vertices. The orientation of the rod can be
+	/// used to orient geometry attached to the rod (e.g. a plant leaf). Note that each rod needs to be constrained
+	/// by at least one RodBendTwist constraint in order to constrain the rotation of the rod. If you don't do
+	/// this then the orientation is likely to rotate around the rod axis with constant velocity.
 	/// Based on "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
 	/// See: https://www.researchgate.net/publication/325597548_Position_and_Orientation_Based_Cosserat_Rods
 	struct JPH_EXPORT RodStretchShear
@@ -310,7 +314,7 @@ public:
 
 		/// Constructor
 						RodStretchShear() = default;
-						RodStretchShear(uint32 inVertex1, uint32 inVertex2) : mVertex { inVertex1, inVertex2 } { }
+						RodStretchShear(uint32 inVertex1, uint32 inVertex2, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2 }, mCompliance(inCompliance) { }
 
 		/// Return the lowest vertex index of this constraint
 		uint32			GetMinVertexIndex() const					{ return min(mVertex[0], mVertex[1]); }
@@ -318,6 +322,7 @@ public:
 		uint32			mVertex[2];									///< Indices of the vertices that form the rod
 		float			mLength = 1.0f;								///< Fixed length of the rod, calculated in CalculateRodProperties
 		float			mInvMass = 1.0f;							///< Inverse of the mass of the rod (0 for static rods), calculated in CalculateRodProperties but can be overridden afterwards
+		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the rod
 		Quat			mBishop	= Quat::sIdentity();				///< The Bishop frame of the rod (the rotation of the rod in its rest pose so that it has zero twist towards adjacent rods)
 	};
 
@@ -328,9 +333,10 @@ public:
 
 		/// Constructor
 						RodBendTwist() = default;
-						RodBendTwist(uint32 inRod1, uint32 inRod2) : mRod { inRod1, inRod2 } { }
+						RodBendTwist(uint32 inRod1, uint32 inRod2, float inCompliance = 0.0f) : mRod { inRod1, inRod2 }, mCompliance(inCompliance) { }
 
 		uint32			mRod[2];									///< Indices of rods that are constrained (index in mRodStretchShearConstraints)
+		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the rod
 		Quat			mOmega0 = Quat::sIdentity();				///< The initial rotation between the rods: rod1.mBishop.Conjugated() * rod2.mBishop, calculated in CalculateRodProperties
 	};
 

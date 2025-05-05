@@ -68,7 +68,8 @@ void SoftBodyBendConstraintTest::Initialize()
 		};
 
 		// Create bend twist constraints
-		auto get_rod = [&constraints = cloth_settings->mRodStretchShearConstraints, vertex_index](uint inX1, uint inZ1, uint inX2, uint inZ2)
+		constexpr float cCompliance = 1.0e-5f;
+		auto get_rod = [&constraints = cloth_settings->mRodStretchShearConstraints, vertex_index, cCompliance](uint inX1, uint inZ1, uint inX2, uint inZ2)
 		{
 			uint32 v0 = vertex_index(inX1, inZ1);
 			uint32 v1 = vertex_index(inX2, inZ2);
@@ -78,20 +79,20 @@ void SoftBodyBendConstraintTest::Initialize()
 				if (constraints[i].mVertex[0] == v0 && constraints[i].mVertex[1] == v1)
 					return i;
 
-			constraints.emplace_back(v0, v1);
+			constraints.emplace_back(v0, v1, cCompliance);
 			return constraints.size() - 1;
 		};
 		for (uint z = 1; z < cNumVerticesZ - 1; ++z)
 			for (uint x = 0; x < cNumVerticesX - 1; ++x)
 			{
 				if (z > 1 && x < cNumVerticesX - 2)
-					cloth_settings->mRodBendTwistConstraints.emplace_back(get_rod(x, z, x + 1, z), get_rod(x + 1, z, x + 2, z));
+					cloth_settings->mRodBendTwistConstraints.emplace_back(get_rod(x, z, x + 1, z), get_rod(x + 1, z, x + 2, z), cCompliance);
 				if (z < cNumVerticesZ - 2)
-					cloth_settings->mRodBendTwistConstraints.emplace_back(get_rod(x, z, x, z + 1), get_rod(x, z + 1, x, z + 2));
+					cloth_settings->mRodBendTwistConstraints.emplace_back(get_rod(x, z, x, z + 1), get_rod(x, z + 1, x, z + 2), cCompliance);
 				if (x < cNumVerticesX - 2 && z < cNumVerticesZ - 2)
 				{
-					cloth_settings->mRodBendTwistConstraints.emplace_back(get_rod(x, z, x + 1, z + 1), get_rod(x + 1, z + 1, x + 2, z + 2));
-					cloth_settings->mRodBendTwistConstraints.emplace_back(get_rod(x + 2, z, x + 1, z + 1), get_rod(x + 1, z + 1, x, z + 2));
+					cloth_settings->mRodBendTwistConstraints.emplace_back(get_rod(x, z, x + 1, z + 1), get_rod(x + 1, z + 1, x + 2, z + 2), cCompliance);
+					cloth_settings->mRodBendTwistConstraints.emplace_back(get_rod(x + 2, z, x + 1, z + 1), get_rod(x + 1, z + 1, x, z + 2), cCompliance);
 				}
 			}
 		cloth_settings->CalculateRodProperties();
