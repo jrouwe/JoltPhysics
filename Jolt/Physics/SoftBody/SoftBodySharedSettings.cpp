@@ -431,7 +431,7 @@ void SoftBodySharedSettings::CalculateRodProperties()
 				uint32 r2_idx = stack.back().mTo;
 				stack.pop_back();
 
-				RodStretchShear &r1 = mRodStretchShearConstraints[r1_idx];
+				const RodStretchShear &r1 = mRodStretchShearConstraints[r1_idx];
 				RodStretchShear &r2 = mRodStretchShearConstraints[r2_idx];
 
 				// Get the normal and tangent of the first rod's Bishop frame (that was already calculated)
