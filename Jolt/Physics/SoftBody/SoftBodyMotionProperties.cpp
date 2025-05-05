@@ -1313,7 +1313,7 @@ void SoftBodyMotionProperties::DrawRodStretchShearConstraints(DebugRenderer *inR
 {
 	DrawConstraints(inConstraintColor,
 		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
-			return inGroup.mRodBendTwistEndIndex;
+			return inGroup.mRodStretchShearEndIndex;
 		},
 		[this, inRenderer, &inCenterOfMassTransform](uint inIndex, ColorArg inColor) {
 			const RodState &state = mRodStates[inIndex];
