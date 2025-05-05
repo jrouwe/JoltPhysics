@@ -60,6 +60,7 @@ public:
 	void				CalculateEdgeLengths();
 
 	/// Calculate the properties of the rods
+	/// Note that this can swap mVertex of the RodStretchShear constraints if two rods are connected through a RodBendTwist constraint but point in opposite directions.
 	void				CalculateRodProperties();
 
 	/// Calculate the max lengths for the long range attachment constraints based on Euclidean distance (if you use CreateConstraints, this is already done)
