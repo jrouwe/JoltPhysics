@@ -55,7 +55,7 @@ void SoftBodyBendConstraintTest::Initialize()
 	{
 		random.seed(1234);
 
-		// Cloth with Cosserat rod bend constraints
+		// Cloth with Cosserat rod constraints
 		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, perturbation, SoftBodySharedSettings::EBendType::None);
 
 		// Get rid of created edges, we're replacing them with rods
@@ -118,6 +118,68 @@ void SoftBodyBendConstraintTest::Initialize()
 	{
 		// Create sphere with dihedral bend constraints
 		SoftBodyCreationSettings sphere(SoftBodyCreator::CreateSphere(1.0f, 10, 20, SoftBodySharedSettings::EBendType::Dihedral), RVec3(5.0f, 5.0f, 10.0f), Quat::sIdentity(), Layers::MOVING);
+		mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
+	}
+
+	{
+		// Create sphere with Cosserat rod constraints
+		constexpr uint cNumTheta = 10;
+		constexpr uint cNumPhi = 20;
+		Ref<SoftBodySharedSettings> sphere_settings = SoftBodyCreator::CreateSphere(1.0f, cNumTheta, cNumPhi, SoftBodySharedSettings::EBendType::None);
+
+		// Get rid of created edges, we're replacing them with rods
+		sphere_settings->mEdgeConstraints.clear();
+
+		// Copy of SoftBodyCreator::CreateSphere: Function to get the vertex index of a point on the sphere
+		auto vertex_index = [](uint inTheta, uint inPhi) -> uint
+		{
+			if (inTheta == 0)
+				return 0;
+			else if (inTheta == cNumTheta - 1)
+				return 1;
+			else
+				return 2 + (inTheta - 1) * cNumPhi + inPhi % cNumPhi;
+		};
+
+		// Create bend twist constraints
+		constexpr float cCompliance = 1.0e-4f;
+		auto get_rod = [&constraints = sphere_settings->mRodStretchShearConstraints, vertex_index, cCompliance](uint inTheta1, uint inPhi1, uint inTheta2, uint inPhi2)
+		{
+			uint32 v0 = vertex_index(inTheta1, inPhi1);
+			uint32 v1 = vertex_index(inTheta2, inPhi2);
+			JPH_ASSERT(v0 != v1);
+
+			for (size_t i = 0; i < constraints.size(); ++i)
+				if ((constraints[i].mVertex[0] == v0 && constraints[i].mVertex[1] == v1)
+					|| (constraints[i].mVertex[0] == v1 && constraints[i].mVertex[1] == v0))
+					return i;
+
+			constraints.emplace_back(v0, v1, cCompliance);
+			return constraints.size() - 1;
+		};
+
+		// Rings along the side
+		for (uint phi = 0; phi < cNumPhi; ++phi)
+			for (uint theta = 0; theta < cNumTheta - 1; ++theta)
+			{
+				if (theta < cNumTheta - 2)
+					sphere_settings->mRodBendTwistConstraints.emplace_back(get_rod(theta, phi, theta + 1, phi), get_rod(theta + 1, phi, theta + 2, phi), cCompliance);
+				if (theta > 0 && phi < cNumPhi - 1)
+					sphere_settings->mRodBendTwistConstraints.emplace_back(get_rod(theta, phi, theta, phi + 1), get_rod(theta, phi + 1, theta, (phi + 2) % cNumPhi), cCompliance);
+			}
+
+		// Close the caps
+		for (uint phi1 = 0, phi2 = cNumPhi / 2; phi1 < cNumPhi / 2; ++phi1, phi2 = (phi2 + 1) % cNumPhi)
+		{
+			sphere_settings->mRodBendTwistConstraints.emplace_back(get_rod(0, phi1, 1, phi1), get_rod(0, phi2, 1, phi2), cCompliance);
+			sphere_settings->mRodBendTwistConstraints.emplace_back(get_rod(cNumTheta - 2, phi1, cNumTheta - 1, phi1), get_rod(cNumTheta - 2, phi2, cNumTheta - 1, phi2), cCompliance);
+		}
+
+		sphere_settings->CalculateRodProperties();
+
+		// Optimize the settings
+		sphere_settings->Optimize();
+		SoftBodyCreationSettings sphere(sphere_settings, RVec3(10.0f, 5.0f, 10.0f), Quat::sIdentity(), Layers::MOVING);
 		mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
 	}
 }
