@@ -373,6 +373,7 @@ void SoftBodySharedSettings::CalculateEdgeLengths()
 {
 	for (Edge &e : mEdgeConstraints)
 	{
+		JPH_ASSERT(e.mVertex[0] != e.mVertex[1], "Edges need to connect 2 different vertices");
 		e.mRestLength = (Vec3(mVertices[e.mVertex[1]].mPosition) - Vec3(mVertices[e.mVertex[0]].mPosition)).Length();
 		JPH_ASSERT(e.mRestLength > 0.0f);
 	}
@@ -385,6 +386,7 @@ void SoftBodySharedSettings::CalculateRodProperties()
 	connections.resize(mRodStretchShearConstraints.size());
 	for (const RodBendTwist &c : mRodBendTwistConstraints)
 	{
+		JPH_ASSERT(c.mRod[0] != c.mRod[1], "A bend twist constraint needs to be attached to different rods");
 		connections[c.mRod[1]].push_back(c.mRod[0]);
 		connections[c.mRod[0]].push_back(c.mRod[1]);
 	}
@@ -463,7 +465,10 @@ void SoftBodySharedSettings::CalculateRodProperties()
 
 	// Calculate inverse mass for all rods by taking the minimum inverse mass (aka the heaviest vertex) of both vertices
 	for (RodStretchShear &r : mRodStretchShearConstraints)
+	{
+		JPH_ASSERT(r.mVertex[0] != r.mVertex[1], "A rod stretch shear constraint requires two different vertices");
 		r.mInvMass = min(mVertices[r.mVertex[0]].mInvMass, mVertices[r.mVertex[1]].mInvMass);
+	}
 
 	// Calculate the initial rotation between the rods
 	for (RodBendTwist &r : mRodBendTwistConstraints)
@@ -474,6 +479,7 @@ void SoftBodySharedSettings::CalculateLRALengths(float inMaxDistanceMultiplier)
 {
 	for (LRA &l : mLRAConstraints)
 	{
+		JPH_ASSERT(l.mVertex[0] != l.mVertex[1], "LRA constraints need to connect 2 different vertices");
 		l.mMaxDistance = inMaxDistanceMultiplier * (Vec3(mVertices[l.mVertex[1]].mPosition) - Vec3(mVertices[l.mVertex[0]].mPosition)).Length();
 		JPH_ASSERT(l.mMaxDistance > 0.0f);
 	}
@@ -483,6 +489,10 @@ void SoftBodySharedSettings::CalculateBendConstraintConstants()
 {
 	for (DihedralBend &b : mDihedralBendConstraints)
 	{
+		JPH_ASSERT(b.mVertex[0] != b.mVertex[1] && b.mVertex[0] != b.mVertex[2] && b.mVertex[0] != b.mVertex[3]
+			&& b.mVertex[1] != b.mVertex[2] && b.mVertex[1] != b.mVertex[3]
+			&& b.mVertex[2] != b.mVertex[3], "Bend constraints need 4 different vertices");
+
 		// Get positions
 		Vec3 x0 = Vec3(mVertices[b.mVertex[0]].mPosition);
 		Vec3 x1 = Vec3(mVertices[b.mVertex[1]].mPosition);
@@ -522,6 +532,10 @@ void SoftBodySharedSettings::CalculateVolumeConstraintVolumes()
 {
 	for (Volume &v : mVolumeConstraints)
 	{
+		JPH_ASSERT(v.mVertex[0] != v.mVertex[1] && v.mVertex[0] != v.mVertex[2] && v.mVertex[0] != v.mVertex[3]
+			&& v.mVertex[1] != v.mVertex[2] && v.mVertex[1] != v.mVertex[3]
+			&& v.mVertex[2] != v.mVertex[3], "Volume constraints need 4 different vertices");
+
 		Vec3 x1(mVertices[v.mVertex[0]].mPosition);
 		Vec3 x2(mVertices[v.mVertex[1]].mPosition);
 		Vec3 x3(mVertices[v.mVertex[2]].mPosition);
