@@ -56,49 +56,23 @@ void SoftBodyBendConstraintTest::Initialize()
 		random.seed(1234);
 
 		// Cloth with Cosserat rod bend constraints
+		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, perturbation, SoftBodySharedSettings::EBendType::None);
 
-		// Copy of SoftBodyCreator::CreateCloth with modifications to create rods instead of edges
-		const float cOffsetX = -0.5f * cVertexSpacing * (cNumVerticesX - 1);
-		const float cOffsetZ = -0.5f * cVertexSpacing * (cNumVerticesZ - 1);
+		// Get rid of created edges, we're replacing them with rods
+		cloth_settings->mEdgeConstraints.clear();
 
-		// Create settings
-		SoftBodySharedSettings *cloth_settings = new SoftBodySharedSettings;
-		for (uint z = 0; z < cNumVerticesZ; ++z)
-			for (uint x = 0; x < cNumVerticesX; ++x)
-			{
-				SoftBodySharedSettings::Vertex v;
-				Vec3 position = perturbation(x, z) + Vec3(cOffsetX + x * cVertexSpacing, 0.0f, cOffsetZ + z * cVertexSpacing);
-				position.StoreFloat3(&v.mPosition);
-				v.mInvMass = inv_mass(x, z);
-				cloth_settings->mVertices.push_back(v);
-			}
-
-		// Function to get the vertex index of a point on the cloth
+		// Copy of SoftBodyCreator::CreateCloth: Function to get the vertex index of a point on the cloth
 		auto vertex_index = [](uint inX, uint inY)
 		{
 			return inX + inY * cNumVerticesX;
 		};
-
-		// Create faces
-		for (uint z = 0; z < cNumVerticesZ - 1; ++z)
-			for (uint x = 0; x < cNumVerticesX - 1; ++x)
-			{
-				SoftBodySharedSettings::Face f;
-				f.mVertex[0] = vertex_index(x, z);
-				f.mVertex[1] = vertex_index(x, z + 1);
-				f.mVertex[2] = vertex_index(x + 1, z + 1);
-				cloth_settings->AddFace(f);
-
-				f.mVertex[1] = vertex_index(x + 1, z + 1);
-				f.mVertex[2] = vertex_index(x + 1, z);
-				cloth_settings->AddFace(f);
-			}
 
 		// Create bend twist constraints
 		auto get_rod = [&constraints = cloth_settings->mRodStretchShearConstraints, vertex_index](uint inX1, uint inZ1, uint inX2, uint inZ2)
 		{
 			uint32 v0 = vertex_index(inX1, inZ1);
 			uint32 v1 = vertex_index(inX2, inZ2);
+			JPH_ASSERT(v0 < v1);
 
 			for (size_t i = 0; i < constraints.size(); ++i)
 				if (constraints[i].mVertex[0] == v0 && constraints[i].mVertex[1] == v1)
@@ -120,7 +94,6 @@ void SoftBodyBendConstraintTest::Initialize()
 					cloth_settings->mRodBendTwistConstraints.emplace_back(get_rod(x + 2, z, x + 1, z + 1), get_rod(x + 1, z + 1, x, z + 2));
 				}
 			}
-
 		cloth_settings->CalculateRodProperties();
 
 		// Optimize the settings
