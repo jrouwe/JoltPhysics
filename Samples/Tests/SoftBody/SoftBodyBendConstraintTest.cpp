@@ -75,12 +75,12 @@ void SoftBodyBendConstraintTest::Initialize()
 			uint32 v1 = vertex_index(inX2, inZ2);
 			JPH_ASSERT(v0 < v1);
 
-			for (size_t i = 0; i < constraints.size(); ++i)
+			for (uint i = 0; i < uint(constraints.size()); ++i)
 				if (constraints[i].mVertex[0] == v0 && constraints[i].mVertex[1] == v1)
 					return i;
 
 			constraints.emplace_back(v0, v1, cCompliance);
-			return constraints.size() - 1;
+			return uint(constraints.size() - 1);
 		};
 		for (uint z = 1; z < cNumVerticesZ - 1; ++z)
 			for (uint x = 0; x < cNumVerticesX - 1; ++x)
@@ -149,13 +149,13 @@ void SoftBodyBendConstraintTest::Initialize()
 			uint32 v1 = vertex_index(inTheta2, inPhi2);
 			JPH_ASSERT(v0 != v1);
 
-			for (size_t i = 0; i < constraints.size(); ++i)
+			for (uint i = 0; i < uint(constraints.size()); ++i)
 				if ((constraints[i].mVertex[0] == v0 && constraints[i].mVertex[1] == v1)
 					|| (constraints[i].mVertex[0] == v1 && constraints[i].mVertex[1] == v0))
 					return i;
 
 			constraints.emplace_back(v0, v1, cCompliance);
-			return constraints.size() - 1;
+			return uint(constraints.size() - 1);
 		};
 
 		// Rings along the side
