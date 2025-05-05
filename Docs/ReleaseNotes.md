@@ -6,6 +6,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### New functionality
 
+* Added Cosserat rods to soft bodies. This is an edge with an orientation that can be used to orient geometry, e.g. a plant leaf. See the new SoftBodyCosseratRodConstraintTest demo.
 * Added ability to drive hinge constraints with `Ragdoll::DriveToPoseUsingMotors`. This also adds `HingeConstraint::SetTargetOrientationBS` which sets the target angle in body space.
 * Added `JPH_USE_EXTERNAL_PROFILE` cmake option that allows overriding the behavior of the profile macros.
 
