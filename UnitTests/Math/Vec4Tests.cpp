@@ -140,6 +140,9 @@ TEST_SUITE("Vec4Tests")
 
 		CHECK(Vec4(1.001f, 0, 0, 0).IsNormalized(1.0e-2f));
 		CHECK(!Vec4(0, 1.001f, 0, 0).IsNormalized(1.0e-4f));
+
+		CHECK(Vec4(-1.0e-7f, 1.0e-7f, 1.0e-8f, -1.0e-8f).IsNearZero());
+		CHECK(!Vec4(-1.0e-7f, 1.0e-7f, -1.0e-5f, 1.0e-5f).IsNearZero());
 	}
 
 	TEST_CASE("TestVec4Operators")

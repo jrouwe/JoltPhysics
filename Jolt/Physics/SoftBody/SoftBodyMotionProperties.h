@@ -36,6 +36,8 @@ class JPH_EXPORT SoftBodyMotionProperties : public MotionProperties
 public:
 	using Vertex = SoftBodyVertex;
 	using Edge = SoftBodySharedSettings::Edge;
+	using RodStretchShear = SoftBodySharedSettings::RodStretchShear;
+	using RodBendTwist = SoftBodySharedSettings::RodBendTwist;
 	using Face = SoftBodySharedSettings::Face;
 	using DihedralBend = SoftBodySharedSettings::DihedralBend;
 	using Volume = SoftBodySharedSettings::Volume;
@@ -57,6 +59,10 @@ public:
 	/// Access an individual vertex
 	const Vertex &						GetVertex(uint inIndex) const				{ return mVertices[inIndex]; }
 	Vertex &							GetVertex(uint inIndex)						{ return mVertices[inIndex]; }
+
+	/// Access to the state of rods
+	Quat								GetRodRotation(uint inIndex) const			{ return mRodStates[inIndex].mRotation; }
+	Vec3								GetRodAngularVelocity(uint inIndex) const	{ return mRodStates[inIndex].mAngularVelocity; }
 
 	/// Get the materials of the soft body
 	const PhysicsMaterialList &			GetMaterials() const						{ return mSettings->mMaterials; }
@@ -101,6 +107,9 @@ public:
 	void								DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawVertexVelocities(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
+	void								DrawRods(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
+	void								DrawRodStates(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
+	void								DrawRodBendTwistConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
 	void								DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
 	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
 	void								DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
@@ -208,6 +217,17 @@ private:
 		bool							mHasContact;								///< If the sensor collided with the soft body
 	};
 
+	// Information about the current state of a rod.
+	struct RodState
+	{
+		Quat							mRotation;									///< Rotation of the rod, relative to center of mass transform
+		union
+		{
+			Vec3						mAngularVelocity;							///< Angular velocity of the rod, relative to center of mass transform, valid only outside of the simulation.
+			Quat						mPreviousRotationInternal;					///< Internal use only. Previous rotation of the rod, relative to center of mass transform, valid only during the simulation.
+		};
+	};
+
 	// Information about the state of all skinned vertices
 	struct SkinState
 	{
@@ -239,6 +259,10 @@ private:
 
 	/// Enforce all edge constraints
 	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
+
+	/// Enforce all rod constraints
+	void								ApplyRodStretchShearConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
+	void								ApplyRodBendTwistConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
 
 	/// Enforce all LRA constraints
 	void								ApplyLRAConstraints(uint inStartIndex, uint inEndIndex);
@@ -280,6 +304,7 @@ private:
 
 	RefConst<SoftBodySharedSettings>	mSettings;									///< Configuration of the particles and constraints
 	Array<Vertex>						mVertices;									///< Current state of all vertices in the simulation
+	Array<RodState>						mRodStates;									///< Current state of all rods in the simulation
 	Array<CollidingShape>				mCollidingShapes;							///< List of colliding shapes retrieved during the last update
 	Array<CollidingSensor>				mCollidingSensors;							///< List of colliding sensors retrieved during the last update
 	Array<SkinState>					mSkinState;									///< List of skinned positions (1-on-1 with mVertices but only those that are used by the skinning constraints are filled in)

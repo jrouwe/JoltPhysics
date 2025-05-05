@@ -78,6 +78,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 * Soft body simulation (e.g. a soft ball or piece of cloth).
 	* Edge constraints.
 	* Dihedral bend constraints.
+	* Cosserat rod constraints (an edge with an orientation that can be used to orient geometry, e.g. a plant leaf).
 	* Tetrahedron volume constraints.
 	* Long range attachment constraints (also called tethers).
 	* Limiting the simulation to stay within a certain range of a skinned vertex.

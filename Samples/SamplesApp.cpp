@@ -362,27 +362,29 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyCustomUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyLRAConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyBendConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodySkinnedConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyCosseratRodConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodySensorTest)
 
 static TestNameAndRTTI sSoftBodyTests[] =
 {
-	{ "Soft Body vs Shapes",			JPH_RTTI(SoftBodyShapesTest) },
-	{ "Soft Body vs Fast Moving",		JPH_RTTI(SoftBodyVsFastMovingTest) },
-	{ "Soft Body Friction",				JPH_RTTI(SoftBodyFrictionTest) },
-	{ "Soft Body Restitution",			JPH_RTTI(SoftBodyRestitutionTest) },
-	{ "Soft Body Pressure",				JPH_RTTI(SoftBodyPressureTest) },
-	{ "Soft Body Gravity Factor",		JPH_RTTI(SoftBodyGravityFactorTest) },
-	{ "Soft Body Force",				JPH_RTTI(SoftBodyForceTest) },
-	{ "Soft Body Kinematic",			JPH_RTTI(SoftBodyKinematicTest) },
-	{ "Soft Body Update Position",		JPH_RTTI(SoftBodyUpdatePositionTest) },
-	{ "Soft Body Stress Test",			JPH_RTTI(SoftBodyStressTest) },
-	{ "Soft Body Vertex Radius Test",	JPH_RTTI(SoftBodyVertexRadiusTest) },
-	{ "Soft Body Contact Listener",		JPH_RTTI(SoftBodyContactListenerTest) },
-	{ "Soft Body Custom Update",		JPH_RTTI(SoftBodyCustomUpdateTest) },
-	{ "Soft Body LRA Constraint",		JPH_RTTI(SoftBodyLRAConstraintTest) },
-	{ "Soft Body Bend Constraint",		JPH_RTTI(SoftBodyBendConstraintTest) },
-	{ "Soft Body Skinned Constraint",	JPH_RTTI(SoftBodySkinnedConstraintTest) },
-	{ "Soft Body vs Sensor",			JPH_RTTI(SoftBodySensorTest) }
+	{ "Soft Body vs Shapes",				JPH_RTTI(SoftBodyShapesTest) },
+	{ "Soft Body vs Fast Moving",			JPH_RTTI(SoftBodyVsFastMovingTest) },
+	{ "Soft Body Friction",					JPH_RTTI(SoftBodyFrictionTest) },
+	{ "Soft Body Restitution",				JPH_RTTI(SoftBodyRestitutionTest) },
+	{ "Soft Body Pressure",					JPH_RTTI(SoftBodyPressureTest) },
+	{ "Soft Body Gravity Factor",			JPH_RTTI(SoftBodyGravityFactorTest) },
+	{ "Soft Body Force",					JPH_RTTI(SoftBodyForceTest) },
+	{ "Soft Body Kinematic",				JPH_RTTI(SoftBodyKinematicTest) },
+	{ "Soft Body Update Position",			JPH_RTTI(SoftBodyUpdatePositionTest) },
+	{ "Soft Body Stress Test",				JPH_RTTI(SoftBodyStressTest) },
+	{ "Soft Body Vertex Radius Test",		JPH_RTTI(SoftBodyVertexRadiusTest) },
+	{ "Soft Body Contact Listener",			JPH_RTTI(SoftBodyContactListenerTest) },
+	{ "Soft Body Custom Update",			JPH_RTTI(SoftBodyCustomUpdateTest) },
+	{ "Soft Body LRA Constraint",			JPH_RTTI(SoftBodyLRAConstraintTest) },
+	{ "Soft Body Bend Constraint",			JPH_RTTI(SoftBodyBendConstraintTest) },
+	{ "Soft Body Skinned Constraint",		JPH_RTTI(SoftBodySkinnedConstraintTest) },
+	{ "Soft Body Cosserat Rod Constraint",	JPH_RTTI(SoftBodyCosseratRodConstraintTest) },
+	{ "Soft Body vs Sensor",				JPH_RTTI(SoftBodySensorTest) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
@@ -558,18 +560,29 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Mesh Shape Triangle Outlines", MeshShape::sDrawTriangleOutlines, [](UICheckBox::EState inState) { MeshShape::sDrawTriangleOutlines = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Height Field Shape Triangle Outlines", HeightFieldShape::sDrawTriangleOutlines, [](UICheckBox::EState inState) { HeightFieldShape::sDrawTriangleOutlines = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Submerged Volumes", Shape::sDrawSubmergedVolumes, [](UICheckBox::EState inState) { Shape::sDrawSubmergedVolumes = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Constraints", CharacterVirtual::sDrawConstraints, [](UICheckBox::EState inState) { CharacterVirtual::sDrawConstraints = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Walk Stairs", CharacterVirtual::sDrawWalkStairs, [](UICheckBox::EState inState) { CharacterVirtual::sDrawWalkStairs = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Stick To Floor", CharacterVirtual::sDrawStickToFloor, [](UICheckBox::EState inState) { CharacterVirtual::sDrawStickToFloor = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Vertices", mBodyDrawSettings.mDrawSoftBodyVertices, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVertices = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Vertex Velocities", mBodyDrawSettings.mDrawSoftBodyVertexVelocities, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVertexVelocities = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Edge Constraints", mBodyDrawSettings.mDrawSoftBodyEdgeConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyEdgeConstraints = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Bend Constraints", mBodyDrawSettings.mDrawSoftBodyBendConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyBendConstraints = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Volume Constraints", mBodyDrawSettings.mDrawSoftBodyVolumeConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVolumeConstraints = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Skin Constraints", mBodyDrawSettings.mDrawSoftBodySkinConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodySkinConstraints = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body LRA Constraints", mBodyDrawSettings.mDrawSoftBodyLRAConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyLRAConstraints = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Predicted Bounds", mBodyDrawSettings.mDrawSoftBodyPredictedBounds, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyPredictedBounds = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateComboBox(drawing_options, "Draw Soft Body Constraint Color", { "Constraint Type", "Constraint Group", "Constraint Order" }, (int)mBodyDrawSettings.mDrawSoftBodyConstraintColor, [this](int inItem) { mBodyDrawSettings.mDrawSoftBodyConstraintColor = (ESoftBodyConstraintColor)inItem; });
+			mDebugUI->CreateTextButton(drawing_options, "Draw Character Virtual", [this](){
+				UIElement *draw_character = mDebugUI->CreateMenu();
+				mDebugUI->CreateCheckBox(draw_character, "Draw Character Virtual Constraints", CharacterVirtual::sDrawConstraints, [](UICheckBox::EState inState) { CharacterVirtual::sDrawConstraints = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_character, "Draw Character Virtual Walk Stairs", CharacterVirtual::sDrawWalkStairs, [](UICheckBox::EState inState) { CharacterVirtual::sDrawWalkStairs = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_character, "Draw Character Virtual Stick To Floor", CharacterVirtual::sDrawStickToFloor, [](UICheckBox::EState inState) { CharacterVirtual::sDrawStickToFloor = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->ShowMenu(draw_character);
+			});
+			mDebugUI->CreateTextButton(drawing_options, "Draw Soft Body", [this](){
+				UIElement *draw_soft_body = mDebugUI->CreateMenu();
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Vertices", mBodyDrawSettings.mDrawSoftBodyVertices, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVertices = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Vertex Velocities", mBodyDrawSettings.mDrawSoftBodyVertexVelocities, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVertexVelocities = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Edge Constraints", mBodyDrawSettings.mDrawSoftBodyEdgeConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyEdgeConstraints = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Bend Constraints", mBodyDrawSettings.mDrawSoftBodyBendConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyBendConstraints = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Volume Constraints", mBodyDrawSettings.mDrawSoftBodyVolumeConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVolumeConstraints = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Skin Constraints", mBodyDrawSettings.mDrawSoftBodySkinConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodySkinConstraints = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw LRA Constraints", mBodyDrawSettings.mDrawSoftBodyLRAConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyLRAConstraints = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Rods", mBodyDrawSettings.mDrawSoftBodyRods, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyRods = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Rod States", mBodyDrawSettings.mDrawSoftBodyRodStates, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyRodStates = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Rod Bend Twist Constraints", mBodyDrawSettings.mDrawSoftBodyRodBendTwistConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyRodBendTwistConstraints = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_soft_body, "Draw Predicted Bounds", mBodyDrawSettings.mDrawSoftBodyPredictedBounds, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyPredictedBounds = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateComboBox(draw_soft_body, "Draw Constraint Color", { "Constraint Type", "Constraint Group", "Constraint Order" }, (int)mBodyDrawSettings.mDrawSoftBodyConstraintColor, [this](int inItem) { mBodyDrawSettings.mDrawSoftBodyConstraintColor = (ESoftBodyConstraintColor)inItem; });
+				mDebugUI->ShowMenu(draw_soft_body);
+			});
 			mDebugUI->ShowMenu(drawing_options);
 		});
 	#endif // JPH_DEBUG_RENDERER
