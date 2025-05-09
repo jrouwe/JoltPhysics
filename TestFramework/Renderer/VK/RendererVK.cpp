@@ -79,11 +79,6 @@ RendererVK::~RendererVK()
 	for (VkFence fence : mInFlightFences)
 		vkDestroyFence(mDevice, fence, nullptr);
 
-	for (VkSemaphore semaphore : mRenderFinishedSemaphores) 
-		vkDestroySemaphore(mDevice, semaphore, nullptr);
-	for (VkSemaphore semaphore : mImageAvailableSemaphores) 
-		vkDestroySemaphore(mDevice, semaphore, nullptr);
-
 	vkDestroyCommandPool(mDevice, mCommandPool, nullptr);
 
 	vkDestroyPipelineLayout(mDevice, mPipelineLayout, nullptr);
@@ -376,14 +371,6 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	for (uint32 i = 0; i < cFrameCount; ++i)
 		FatalErrorIfFailed(vkAllocateCommandBuffers(mDevice, &command_buffer_info, &mCommandBuffers[i]));
 
-	VkSemaphoreCreateInfo semaphore_info = {};
-	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	for (uint32 i = 0; i < cFrameCount; ++i)
-	{
-		FatalErrorIfFailed(vkCreateSemaphore(mDevice, &semaphore_info, nullptr, &mImageAvailableSemaphores[i]));
-		FatalErrorIfFailed(vkCreateSemaphore(mDevice, &semaphore_info, nullptr, &mRenderFinishedSemaphores[i]));
-	}
-
 	VkFenceCreateInfo fence_info = {};
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
@@ -670,13 +657,14 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 		mSwapChainExtent = { uint32(mWindow->GetWindowWidth()), uint32(mWindow->GetWindowHeight()) };
 	mSwapChainExtent.width = Clamp(mSwapChainExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
 	mSwapChainExtent.height = Clamp(mSwapChainExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+	Trace("VK: Create swap chain %ux%u", mSwapChainExtent.width, mSwapChainExtent.height);
 
 	// Early out if our window has been minimized
 	if (mSwapChainExtent.width == 0 || mSwapChainExtent.height == 0)
 		return;
 
 	// Create the swap chain
-	uint32 desired_image_count = max(min(capabilities.minImageCount + 1, capabilities.maxImageCount), capabilities.minImageCount);
+	uint32 desired_image_count = max(min(cFrameCount, capabilities.maxImageCount), capabilities.minImageCount);
 	VkSwapchainCreateInfoKHR swapchain_create_info = {};
 	swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchain_create_info.surface = mSurface;
@@ -756,16 +744,40 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 		frame_buffer_info.layers = 1;
 		FatalErrorIfFailed(vkCreateFramebuffer(mDevice, &frame_buffer_info, nullptr, &mSwapChainFramebuffers[i]));
 	}
+
+	// Allocate space to remember the image available semaphores
+	mImageAvailableSemaphores.resize(image_count, VK_NULL_HANDLE);
+
+	// Allocate the render finished semaphores
+	mRenderFinishedSemaphores.resize(image_count, VK_NULL_HANDLE);
+	for (uint32 i = 0; i < image_count; ++i)
+		mRenderFinishedSemaphores[i] = AllocateSemaphore();
 }
 
 void RendererVK::DestroySwapChain()
 {
+	// Destroy semaphores
+	for (VkSemaphore semaphore : mImageAvailableSemaphores) 
+		vkDestroySemaphore(mDevice, semaphore, nullptr);
+	mImageAvailableSemaphores.clear();
+
+	for (VkSemaphore semaphore : mRenderFinishedSemaphores) 
+		vkDestroySemaphore(mDevice, semaphore, nullptr);
+	mRenderFinishedSemaphores.clear();
+
+	for (VkSemaphore semaphore : mAvailableSemaphores) 
+		vkDestroySemaphore(mDevice, semaphore, nullptr);
+	mAvailableSemaphores.clear();
+
 	// Destroy depth buffer
 	if (mDepthImageView != VK_NULL_HANDLE)
 	{
 		vkDestroyImageView(mDevice, mDepthImageView, nullptr);
+		mDepthImageView = VK_NULL_HANDLE;
 
 		DestroyImage(mDepthImage, mDepthImageMemory);
+		mDepthImage = VK_NULL_HANDLE;
+		mDepthImageMemory = VK_NULL_HANDLE;
 	}
 
 	for (VkFramebuffer frame_buffer : mSwapChainFramebuffers)
@@ -775,6 +787,8 @@ void RendererVK::DestroySwapChain()
 	for (VkImageView view : mSwapChainImageViews)
 		vkDestroyImageView(mDevice, view, nullptr);
 	mSwapChainImageViews.clear();
+
+	mSwapChainImages.clear();
 
 	if (mSwapChain != VK_NULL_HANDLE)
 	{
@@ -790,7 +804,32 @@ void RendererVK::OnWindowResize()
 	CreateSwapChain(mPhysicalDevice);
 }
 
-void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
+VkSemaphore RendererVK::AllocateSemaphore()
+{
+	VkSemaphore semaphore;
+
+	if (mAvailableSemaphores.empty())
+	{
+		VkSemaphoreCreateInfo semaphore_info = {};
+		semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		FatalErrorIfFailed(vkCreateSemaphore(mDevice, &semaphore_info, nullptr, &semaphore));
+	}
+	else
+	{
+		semaphore = mAvailableSemaphores.back();
+		mAvailableSemaphores.pop_back();
+	}
+
+	return semaphore;
+}
+
+void RendererVK::FreeSemaphore(VkSemaphore inSemaphore)
+{
+	if (inSemaphore != VK_NULL_HANDLE)
+		mAvailableSemaphores.push_back(inSemaphore);
+}
+
+bool RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -798,7 +837,10 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// If we have no swap chain, bail out
 	if (mSwapChain == VK_NULL_HANDLE)
-		return;
+	{
+		Renderer::EndFrame();
+		return false;
+	}
 
 	// Update frame index
 	mFrameIndex = (mFrameIndex + 1) % cFrameCount;
@@ -806,15 +848,20 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	// Wait for this frame to complete
 	vkWaitForFences(mDevice, 1, &mInFlightFences[mFrameIndex], VK_TRUE, UINT64_MAX);
 
-	VkResult result = mSubOptimalSwapChain? VK_ERROR_OUT_OF_DATE_KHR : vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mFrameIndex], VK_NULL_HANDLE, &mImageIndex);
+	VkSemaphore semaphore = AllocateSemaphore();
+	VkResult result = mSubOptimalSwapChain? VK_ERROR_OUT_OF_DATE_KHR : vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, semaphore, VK_NULL_HANDLE, &mImageIndex);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
 		vkDeviceWaitIdle(mDevice);
 		DestroySwapChain();
 		CreateSwapChain(mPhysicalDevice);
 		if (mSwapChain == VK_NULL_HANDLE)
-			return;
-		result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mFrameIndex], VK_NULL_HANDLE, &mImageIndex);
+		{
+			FreeSemaphore(semaphore);
+			Renderer::EndFrame();
+			return false;
+		}
+		result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, semaphore, VK_NULL_HANDLE, &mImageIndex);
 		mSubOptimalSwapChain = false;
 	}
 	else if (result == VK_SUBOPTIMAL_KHR)
@@ -824,6 +871,10 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 		result = VK_SUCCESS;
 	}
 	FatalErrorIfFailed(result);
+
+	// The previous semaphore is now no longer in use, associate the new semaphore with the image
+	FreeSemaphore(mImageAvailableSemaphores[mImageIndex]);
+	mImageAvailableSemaphores[mImageIndex] = semaphore;
 
 	// Free buffers that weren't used this frame
 	for (BufferCache::value_type &vt : mBufferCache)
@@ -876,6 +927,8 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Switch to 3d projection mode
 	SetProjectionMode();
+
+	return true;
 }
 
 void RendererVK::EndShadowPass()
@@ -907,20 +960,13 @@ void RendererVK::EndFrame()
 {
 	JPH_PROFILE_FUNCTION();
 
-	// If we have no swap chain, bail out
-	if (mSwapChain == VK_NULL_HANDLE)
-	{
-		Renderer::EndFrame();
-		return;
-	}
-
 	VkCommandBuffer command_buffer = GetCommandBuffer();
 	vkCmdEndRenderPass(command_buffer);
 
 	FatalErrorIfFailed(vkEndCommandBuffer(command_buffer));
 
-	VkSemaphore wait_semaphores[] = { mImageAvailableSemaphores[mFrameIndex] };
-	VkSemaphore signal_semaphores[] = { mRenderFinishedSemaphores[mFrameIndex] };
+	VkSemaphore wait_semaphores[] = { mImageAvailableSemaphores[mImageIndex] };
+	VkSemaphore signal_semaphores[] = { mRenderFinishedSemaphores[mImageIndex] };
 	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	VkSubmitInfo submit_info = {};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

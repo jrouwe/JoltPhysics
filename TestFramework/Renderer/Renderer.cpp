@@ -27,7 +27,7 @@ static Mat44 sPerspectiveInfiniteReverseZ(float inFovY, float inAspect, float in
 	return Mat44(Vec4(width, 0.0f, 0.0f, 0.0f), Vec4(0.0f, inYSign * height, 0.0f, 0.0f), Vec4(0.0f, 0.0f, 0.0f, -1.0f), Vec4(0.0f, 0.0f, inNear, 0.0f));
 }
 
-void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
+bool Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 {
 	// Mark that we're in the frame
 	JPH_ASSERT(!mInFrame);
@@ -77,6 +77,8 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	// Set constants for pixel shader
 	mPSBuffer.mCameraPos = Vec4(cam_pos, 0);
 	mPSBuffer.mLightPos = Vec4(light_pos, 0);
+
+	return true;
 }
 
 void Renderer::EndFrame()

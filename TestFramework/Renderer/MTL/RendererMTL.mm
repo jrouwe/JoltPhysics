@@ -52,7 +52,7 @@ void RendererMTL::Initialize(ApplicationWindow *inWindow)
 	mCommandQueue = [device newCommandQueue];
 }
 
-void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
+bool RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -78,6 +78,8 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Start with projection mode
 	SetProjectionMode();
+
+	return true;
 }
 
 void RendererMTL::EndShadowPass()

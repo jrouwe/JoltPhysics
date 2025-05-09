@@ -363,7 +363,7 @@ void RendererDX12::OnWindowResize()
 	CreateDepthBuffer();
 }
 
-void RendererDX12::BeginFrame(const CameraState &inCamera, float inWorldScale)
+bool RendererDX12::BeginFrame(const CameraState &inCamera, float inWorldScale)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -420,6 +420,8 @@ void RendererDX12::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Start drawing the shadow pass
 	mShadowMap->SetAsRenderTarget(true);
+
+	return true;
 }
 
 void RendererDX12::EndShadowPass()

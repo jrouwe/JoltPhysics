@@ -20,7 +20,7 @@ public:
 
 	// See: Renderer
 	virtual void					Initialize(ApplicationWindow *inWindow) override;
-	virtual void					BeginFrame(const CameraState &inCamera, float inWorldScale) override;
+	virtual bool					BeginFrame(const CameraState &inCamera, float inWorldScale) override;
 	virtual void					EndShadowPass() override;
 	virtual void					EndFrame() override;
 	virtual void					SetProjectionMode() override;
@@ -64,6 +64,8 @@ private:
 	void							CreateSwapChain(VkPhysicalDevice inDevice);
 	void							DestroySwapChain();
 	void							UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight);
+	VkSemaphore						AllocateSemaphore();
+	void							FreeSemaphore(VkSemaphore inSemaphore);
 
 	VkInstance						mInstance = VK_NULL_HANDLE;
 #ifdef JPH_DEBUG
@@ -101,8 +103,9 @@ private:
 	uint32							mImageIndex = 0;
 	VkCommandPool					mCommandPool = VK_NULL_HANDLE;
 	VkCommandBuffer					mCommandBuffers[cFrameCount];
-	VkSemaphore						mImageAvailableSemaphores[cFrameCount];
-	VkSemaphore						mRenderFinishedSemaphores[cFrameCount];
+	Array<VkSemaphore>				mAvailableSemaphores;
+	Array<VkSemaphore>				mImageAvailableSemaphores;
+	Array<VkSemaphore>				mRenderFinishedSemaphores;
 	VkFence							mInFlightFences[cFrameCount];
 	Ref<TextureVK>					mShadowMap;
 	unique_ptr<ConstantBufferVK>	mVertexShaderConstantBufferProjection[cFrameCount];
