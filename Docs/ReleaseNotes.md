@@ -19,6 +19,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed compiling in double precision and fixed issues with floating point contraction that caused unit test failures on LoongArch architecture.
 * Added an epsilon to the `CastRay` / `CastShape` early out condition to avoid dividing by a very small number and overflowing to INF. This can cause a float overflow exception.
 * Fixed Samples requiring Vulkan extension `VK_EXT_device_address_binding_report` without checking if it is available.
+* Fixed Vulkan warning in Samples: VkSemaphore is being signaled by VkQueue but it may still be in use by VkSwapchainKHR.
 
 ## v5.3.0
 
