@@ -1,4 +1,4 @@
-// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
+f// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2025 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -78,6 +78,8 @@ void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Start with projection mode
 	SetProjectionMode();
+
+	return true;
 }
 
 void RendererMTL::EndShadowPass()

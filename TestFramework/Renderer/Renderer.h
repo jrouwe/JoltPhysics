@@ -39,7 +39,7 @@ public:
 	virtual void					Initialize(ApplicationWindow *inWindow);
 
 	/// Start / end drawing a frame
-	virtual void					BeginFrame(const CameraState &inCamera, float inWorldScale);
+	virtual bool					BeginFrame(const CameraState &inCamera, float inWorldScale);
 	virtual void					EndShadowPass() = 0;
 	virtual void					EndFrame();
 

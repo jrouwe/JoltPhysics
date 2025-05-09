@@ -788,6 +788,8 @@ void RendererVK::DestroySwapChain()
 		vkDestroyImageView(mDevice, view, nullptr);
 	mSwapChainImageViews.clear();
 
+	mSwapChainImages.clear();
+
 	if (mSwapChain != VK_NULL_HANDLE)
 	{
 		vkDestroySwapchainKHR(mDevice, mSwapChain, nullptr);
@@ -827,7 +829,7 @@ void RendererVK::FreeSemaphore(VkSemaphore inSemaphore)
 		mAvailableSemaphores.push_back(inSemaphore);
 }
 
-void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
+bool RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -835,7 +837,10 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// If we have no swap chain, bail out
 	if (mSwapChain == VK_NULL_HANDLE)
-		return;
+	{
+		Renderer::EndFrame();
+		return false;
+	}
 
 	// Update frame index
 	mFrameIndex = (mFrameIndex + 1) % cFrameCount;
@@ -853,7 +858,8 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 		if (mSwapChain == VK_NULL_HANDLE)
 		{
 			FreeSemaphore(semaphore);
-			return;
+			Renderer::EndFrame();
+			return false;
 		}
 		result = vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, semaphore, VK_NULL_HANDLE, &mImageIndex);
 		mSubOptimalSwapChain = false;
@@ -921,6 +927,8 @@ void RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Switch to 3d projection mode
 	SetProjectionMode();
+
+	return true;
 }
 
 void RendererVK::EndShadowPass()
@@ -951,13 +959,6 @@ void RendererVK::EndShadowPass()
 void RendererVK::EndFrame()
 {
 	JPH_PROFILE_FUNCTION();
-
-	// If we have no swap chain, bail out
-	if (mSwapChain == VK_NULL_HANDLE)
-	{
-		Renderer::EndFrame();
-		return;
-	}
 
 	VkCommandBuffer command_buffer = GetCommandBuffer();
 	vkCmdEndRenderPass(command_buffer);

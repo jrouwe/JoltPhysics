@@ -271,7 +271,8 @@ bool Application::RenderFrame()
 		UpdateCamera(clock_delta_time);
 
 	// Start rendering
-	mRenderer->BeginFrame(mWorldCamera, GetWorldScale());
+	if (!mRenderer->BeginFrame(mWorldCamera, GetWorldScale()))
+		return true;
 
 	// Draw from light
 	static_cast<DebugRendererImp *>(mDebugRenderer)->DrawShadowPass();
