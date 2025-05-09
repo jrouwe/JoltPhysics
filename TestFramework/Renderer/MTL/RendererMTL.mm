@@ -52,7 +52,7 @@ void RendererMTL::Initialize(ApplicationWindow *inWindow)
 	mCommandQueue = [device newCommandQueue];
 }
 
-void RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
+bool RendererMTL::BeginFrame(const CameraState &inCamera, float inWorldScale)
 {
 	JPH_PROFILE_FUNCTION();
 
