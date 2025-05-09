@@ -12,8 +12,8 @@ void TraceImpl(const char *inFMT, ...)
 	// Format the message
 	va_list list;
 	va_start(list, inFMT);
-	char buffer[1024];
-	vsnprintf(buffer, sizeof(buffer), inFMT, list);
+	char buffer[2048];
+	vsnprintf(buffer, sizeof(buffer) - 1 /* leave space for newline char */, inFMT, list);
 	va_end(list);
 
 #ifdef JPH_PLATFORM_WINDOWS
