@@ -80,10 +80,10 @@ public:
 	const Frustum &					GetLightFrustum() const				{ JPH_ASSERT(mInFrame); return mLightFrustum; }
 
 	/// How many frames our pipeline is
-	static const uint				cFrameCount = 2;
+	inline static const uint		cFrameCount = 2;
 
 	/// Size of the shadow map will be cShadowMapSize x cShadowMapSize pixels
-	static const uint				cShadowMapSize = 4096;
+	inline static const uint		cShadowMapSize = 4096;
 
 	/// Which frame is currently rendering (to keep track of which buffers are free to overwrite)
 	uint							GetCurrentFrameIndex() const		{ JPH_ASSERT(mInFrame); return mFrameIndex; }
