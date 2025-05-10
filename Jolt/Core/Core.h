@@ -437,6 +437,11 @@
 #define JPH_SUPPRESS_WARNINGS_STD_END															\
 	JPH_SUPPRESS_WARNING_POP
 
+// MSVC STL requires _HAS_EXCEPTIONS=0 if exceptions are turned off
+#if defined(JPH_COMPILER_MSVC) && (!defined(__cpp_exceptions) || !__cpp_exceptions) && !defined(_HAS_EXCEPTIONS)
+	#define _HAS_EXCEPTIONS 0
+#endif
+
 // Standard C++ includes
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <float.h>
