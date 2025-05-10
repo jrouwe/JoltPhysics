@@ -511,8 +511,9 @@ else()
 	target_precompile_headers(Jolt PRIVATE "$<$<NOT:$<CONFIG:ReleaseCoverage>>:${JOLT_PHYSICS_ROOT}/Jolt.h>")
 endif()
 
-if (NOT CPP_EXCEPTIONS_ENABLED)
+if (NOT CPP_EXCEPTIONS_ENABLED AND NOT WITH_UNREAL_ENGINE)
 	# Disable use of exceptions in MSVC's STL
+	# We do not do this when using Unreal Engine because it conflicts with UE build settings
 	target_compile_definitions(Jolt PUBLIC $<$<BOOL:${MSVC}>:_HAS_EXCEPTIONS=0>)
 endif()
 

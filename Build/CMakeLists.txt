@@ -109,6 +109,10 @@ option(ENABLE_OBJECT_STREAM "Compile the ObjectStream class and RTTI attribute i
 # Enable installation
 option(ENABLE_INSTALL "Generate installation target"  ON)
 
+# Enable Unreal Engine integration
+# Primarily stops us from redefining _HAS_EXCEPTIONS which causes conflicts when building with Unreal
+option(WITH_UNREAL_ENGINE "Enable Unreal Engine integration" OFF)
+
 include(CMakeDependentOption)
 
 # Ability to toggle between the static and DLL versions of the MSVC runtime library
