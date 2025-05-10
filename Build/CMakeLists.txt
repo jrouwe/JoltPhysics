@@ -111,7 +111,7 @@ option(ENABLE_INSTALL "Generate installation target"  ON)
 
 # Enable Unreal Engine integration
 # Primarily stops us from redefining _HAS_EXCEPTIONS which causes conflicts when building with Unreal
-option(WITH_UNREAL_ENGINE "Enable Unreal Engine integration" OFF)
+option(JPH_WITH_UNREAL_ENGINE "Enable Unreal Engine integration" OFF)
 
 include(CMakeDependentOption)
 
