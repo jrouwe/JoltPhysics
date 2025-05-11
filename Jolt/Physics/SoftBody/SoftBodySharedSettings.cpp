@@ -154,6 +154,7 @@ void SoftBodySharedSettings::CalculateClosestKinematic()
 		if (mVertices[v].mInvMass == 0.0f)
 		{
 			mClosestKinematic[v].mVertex = v;
+			mClosestKinematic[v].mHops = 0;
 			mClosestKinematic[v].mDistance = 0.0f;
 			to_visit.push_back({ v, 0.0f });
 			BinaryHeapPush(to_visit.begin(), to_visit.end(), std::less<Open> { });
@@ -179,6 +180,7 @@ void SoftBodySharedSettings::CalculateClosestKinematic()
 			{
 				// Remember new closest vertex
 				mClosestKinematic[v].mVertex = mClosestKinematic[current.mVertex].mVertex;
+				mClosestKinematic[v].mHops = mClosestKinematic[current.mVertex].mHops + 1;
 				mClosestKinematic[v].mDistance = new_distance;
 				to_visit.push_back({ v, new_distance });
 				BinaryHeapPush(to_visit.begin(), to_visit.end(), std::less<Open> { });
@@ -953,9 +955,15 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 				if (d1 != d2)
 					return d1 < d2;
 
+				// Then sort on the rod that connects to the smallest kinematic vertex
+				uint32 m1 = min(mClosestKinematic[r1.mVertex[0]].mVertex, mClosestKinematic[r1.mVertex[1]].mVertex);
+				uint32 m2 = min(mClosestKinematic[r2.mVertex[0]].mVertex, mClosestKinematic[r2.mVertex[1]].mVertex);
+				if (m1 != m2)
+					return m1 < m2;
+
 				// Order the rods so that the ones with the smallest index go first (hoping to get better cache locality when we process the rods).
-				uint32 m1 = r1.GetMinVertexIndex();
-				uint32 m2 = r2.GetMinVertexIndex();
+				m1 = r1.GetMinVertexIndex();
+				m2 = r2.GetMinVertexIndex();
 				if (m1 != m2)
 					return m1 < m2;
 
@@ -973,19 +981,32 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 				const RodStretchShear &b2_r1 = mRodStretchShearConstraints[b2.mRod[0]];
 				const RodStretchShear &b2_r2 = mRodStretchShearConstraints[b2.mRod[1]];
 
-				// First sort so that the rod with the smallest distance to a kinematic vertex comes first
-				float d1 = min(
-							min(mClosestKinematic[b1_r1.mVertex[0]].mDistance, mClosestKinematic[b1_r1.mVertex[1]].mDistance),
-							min(mClosestKinematic[b1_r2.mVertex[0]].mDistance, mClosestKinematic[b1_r2.mVertex[1]].mDistance));
-				float d2 = min(
-							min(mClosestKinematic[b2_r1.mVertex[0]].mDistance, mClosestKinematic[b2_r1.mVertex[1]].mDistance),
-							min(mClosestKinematic[b2_r2.mVertex[0]].mDistance, mClosestKinematic[b2_r2.mVertex[1]].mDistance));
-				if (d1 != d2)
-					return d1 < d2;
+				// First sort so that the rod with the smallest number of hops to a kinematic vertex comes first.
+				// Note that we don't use distance because of the bilateral interleaving below.
+				uint32 m1 = min(
+							min(mClosestKinematic[b1_r1.mVertex[0]].mHops, mClosestKinematic[b1_r1.mVertex[1]].mHops),
+							min(mClosestKinematic[b1_r2.mVertex[0]].mHops, mClosestKinematic[b1_r2.mVertex[1]].mHops));
+				uint32 m2 = min(
+							min(mClosestKinematic[b2_r1.mVertex[0]].mHops, mClosestKinematic[b2_r1.mVertex[1]].mHops),
+							min(mClosestKinematic[b2_r2.mVertex[0]].mHops, mClosestKinematic[b2_r2.mVertex[1]].mHops));
+				if (m1 != m2)
+					return m1 < m2;
 
-				// Order the rods so that the ones with the smallest index go first
-				uint32 m1 = min(b1_r1.GetMinVertexIndex(), b1_r2.GetMinVertexIndex());
-				uint32 m2 = min(b2_r1.GetMinVertexIndex(), b2_r2.GetMinVertexIndex());
+				// Then sort on the rod that connects to the kinematic vertex with lowest index.
+				// This ensures that we consistently order the rods that are attached to other kinematic constraints.
+				// Again, this helps bilateral interleaving below.
+				m1 = min(
+							min(mClosestKinematic[b1_r1.mVertex[0]].mVertex, mClosestKinematic[b1_r1.mVertex[1]].mVertex),
+							min(mClosestKinematic[b1_r2.mVertex[0]].mVertex, mClosestKinematic[b1_r2.mVertex[1]].mVertex));
+				m2 = min(
+							min(mClosestKinematic[b2_r1.mVertex[0]].mVertex, mClosestKinematic[b2_r1.mVertex[1]].mVertex),
+							min(mClosestKinematic[b2_r2.mVertex[0]].mVertex, mClosestKinematic[b2_r2.mVertex[1]].mVertex));
+				if (m1 != m2)
+					return m1 < m2;
+
+				// Finally order so that the smallest vertex index goes first
+				m1 = min(b1_r1.GetMinVertexIndex(), b1_r2.GetMinVertexIndex());
+				m2 = min(b2_r1.GetMinVertexIndex(), b2_r2.GetMinVertexIndex());
 				if (m1 != m2)
 					return m1 < m2;
 
@@ -1013,7 +1034,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			if (d1 != d2)
 				return d1 < d2;
 
-			// Order constraints so that the ones with the smallest index go first
+			// Finally order so that the smallest vertex index goes first
 			uint32 m1 = b1.GetMinVertexIndex();
 			uint32 m2 = b2.GetMinVertexIndex();
 			if (m1 != m2)
