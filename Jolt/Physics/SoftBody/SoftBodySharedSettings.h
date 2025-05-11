@@ -367,6 +367,7 @@ private:
 	struct ClosestKinematic
 	{
 		uint32			mVertex = 0xffffffff;						///< Vertex index of closest kinematic vertex
+		uint32			mHops = 0xffffffff;							///< Number of hops to the closest kinematic vertex
 		float			mDistance = FLT_MAX;						///< Distance to the closest kinematic vertex
 	};
 

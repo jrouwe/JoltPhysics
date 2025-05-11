@@ -109,6 +109,58 @@ void SoftBodyCosseratRodConstraintTest::Initialize()
 		SoftBodyCreationSettings tree(tree_settings, RVec3(10, 0, 0), Quat::sIdentity(), Layers::MOVING);
 		mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(tree, EActivation::Activate));
 	}
+
+	// Create a weed like structure
+	{
+		// Root particle
+		Ref<SoftBodySharedSettings> weed_settings = new SoftBodySharedSettings;
+
+		constexpr int cNumVertices = 64;
+		constexpr int cNumStrands = 50;
+
+		default_random_engine random;
+		uniform_real_distribution<float> radius_distribution(0, 1.0f);
+		uniform_real_distribution<float> phase_distribution(0, 2.0f * JPH_PI);
+
+		for (int strand = 0; strand < cNumStrands; ++strand)
+		{
+			// Place at a random location
+			float radius = radius_distribution(random);
+			float theta = phase_distribution(random);
+			Vec3 root_pos = Vec3(radius * Sin(theta), 0, radius * Cos(theta));
+
+			// Randomize the phase of the wave
+			float phase1 = phase_distribution(random);
+			float phase2 = phase_distribution(random);
+
+			uint32 first_vertex = uint32(weed_settings->mVertices.size());
+			for (int i = 0; i < cNumVertices; ++i)
+			{
+				// Generate a wavy pattern
+				float amplitude = 0.1f * Sin(phase1 + i * 2.0f * JPH_PI / 8);
+				Vec3 pos = root_pos + Vec3(Sin(phase2) * amplitude, 0.1f * i, Cos(phase2) * amplitude);
+
+				SoftBodySharedSettings::Vertex v;
+				pos.StoreFloat3(&v.mPosition);
+				v.mInvMass = i == 0? 0.0f : 0.1f;
+				weed_settings->mVertices.push_back(v);
+			}
+
+			uint32 first_rod = uint32(weed_settings->mRodStretchShearConstraints.size());
+			for (int i = 0; i < cNumVertices - 1; ++i)
+				weed_settings->mRodStretchShearConstraints.push_back(SoftBodySharedSettings::RodStretchShear(first_vertex + i, first_vertex + i + 1));
+
+			for (int i = 0; i < cNumVertices - 2; ++i)
+				weed_settings->mRodBendTwistConstraints.push_back(SoftBodySharedSettings::RodBendTwist(first_rod + i, first_rod + i + 1));
+		}
+
+		weed_settings->CalculateRodProperties();
+		weed_settings->Optimize();
+
+		SoftBodyCreationSettings weed(weed_settings, RVec3(20, 0, 0), Quat::sIdentity(), Layers::MOVING);
+		weed.mGravityFactor = 0.8f;
+		mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(weed, EActivation::Activate));
+	}
 }
 
 void SoftBodyCosseratRodConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
