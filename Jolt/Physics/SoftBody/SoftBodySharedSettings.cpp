@@ -455,7 +455,7 @@ void SoftBodySharedSettings::CalculateRodProperties()
 				Vec3 t1_cross_t2 = tangent1.Cross(tangent2);
 				float sin_angle = t1_cross_t2.Length();
 				Vec3 normal2 = normal1;
-				if (sin_angle > 0.0f)
+				if (sin_angle > 1.0e-6f)
 				{
 					t1_cross_t2 /= sin_angle;
 					normal2 = Quat::sRotation(t1_cross_t2, ASin(sin_angle)) * normal2;
