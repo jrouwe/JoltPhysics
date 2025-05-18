@@ -649,6 +649,8 @@ Some caveats:
 
 * The same source code must be used to compile the library on all platforms.
 * The source code must be compiled with the same defines, e.g. you can't have one platform using JPH_DOUBLE_PRECISION and another not.
+* Broadphase queries (BroadPhaseQuery) are NOT determinisitic because the broad phase can be modified from multiple threads. As bodies are modified, their bounding boxes get widened until the next maintenance update. This may be several calls to PhysicsSystem::Update later. If you want to do a broadphase query determinisically then create a custom CollisionCollector that in its AddHit function repeats the query against the actual bounding box of the body (Body::GetWorldSpaceBounds) and accept only hits that collide with this bounding box. Also ensure that you order the results consistently.
+* Narrowphase queries (NarrowPhaseQuery) will return consistent results, but the order in which the results are received can change. This is again due the fact that the broadphase can be modified from multiple threads.
 
 It is quite difficult to verify cross platform determinism, so this feature is less tested than other features. With every build, the following architectures are verified to produce the same results:
 
