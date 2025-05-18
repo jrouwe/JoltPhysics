@@ -631,6 +631,25 @@ Keep in mind that:
 
 Because of the minimal use of doubles, the simulation runs 5-10% slower in double precision mode compared to float precision mode.
 
+# Space Simulations {#space-simulations}
+
+There are a number of things that make Jolt not immediately suitable for space simulations:
+
+* The broadphase uses floats internally so will become less accurate at large distances from the origin. This limits its efficiency.
+* Jolt stores velocities in floats, so the large velocities that are common in space will become inaccurate. This will especially be visible if you create an object with constraints (e.g. a ragdoll) and make it move at high speeds. The relative velocities between the bodies will be too low for a float to represent accurately, which means that the constraints will not be solved properly.
+* Rotations (Quat) are tracked in floats. If you intend to rotate a planet and expect objects on the surface of the planet to stay on the surface, you'll run into accuracy issues. For this reason it is not possible to rotate a RVec3 by a Quat.
+
+It is possible to work around this limitations to create a space simulation with Jolt as [X4 Foundations](https://store.steampowered.com/app/392160/X4_Foundations/) has demonstrated.
+
+First of all, everything mentioned in the @ref big-worlds section is applicable.
+
+Secondly, split the universe into multiple PhysicsSystems and keep objects in each PhysicsSystem close to the origin and with low velocities. E.g.:
+* A ship that is traveling near light speed can happen in a PhysicsSystem that is traveling at near light speed. The ship would be near static in this PhysicsSystem so that any constrained parts move at low velocities. Note that Jolt will be unaware of the speed of the PhysicsSystem.
+* A planet exists in its own PhysicsSystem where it is static. Rotation of the planet around its axis or around its sun is not modeled in Jolt but applied as an additional matrix transform when rendering the world. This has the advantage that the objects on the planet are completely static so that there is no constant overhead of updating the transforms of bodies.
+* Consider representing objects at different scales in different ways. E.g. a ship can be simplified to a simple shape when flying through an asteroid field, this means it can move at much higher speeds while still providing reasonably accurate collision than when it consists of multiple bodies connected with constraints.
+
+The consequence of this approach is that objects may need to be moved between PhysicsSystems as e.g. a ship enters the atmosphere of a planet. You can use Body::GetBodyCreationSettings to get the settings of a Body and create it in the other world in the normal way. For Constraints there is Constraint::GetConstraintSettings.
+
 # Deterministic Simulation {#deterministic-simulation}
 
 The physics simulation is deterministic provided that:
@@ -649,7 +668,7 @@ Some caveats:
 
 * The same source code must be used to compile the library on all platforms.
 * The source code must be compiled with the same defines, e.g. you can't have one platform using JPH_DOUBLE_PRECISION and another not.
-* Broadphase queries (BroadPhaseQuery) are NOT determinisitic because the broad phase can be modified from multiple threads. As bodies are modified, their bounding boxes get widened until the next maintenance update. This may be several calls to PhysicsSystem::Update later. If you want to do a broadphase query determinisically then create a custom CollisionCollector that in its AddHit function repeats the query against the actual bounding box of the body (Body::GetWorldSpaceBounds) and accept only hits that collide with this bounding box. Also ensure that you order the results consistently.
+* Broadphase queries (BroadPhaseQuery) are NOT deterministic because the broad phase can be modified from multiple threads. As bodies are modified, their bounding boxes get widened until the next maintenance update. This may be several calls to PhysicsSystem::Update later. If you want to do a broadphase query determinisically then create a custom CollisionCollector that in its AddHit function repeats the query against the actual bounding box of the body (Body::GetWorldSpaceBounds) and accept only hits that collide with this bounding box. Also ensure that you order the results consistently.
 * Narrowphase queries (NarrowPhaseQuery) will return consistent results, but the order in which the results are received can change. This is again due the fact that the broadphase can be modified from multiple threads.
 
 It is quite difficult to verify cross platform determinism, so this feature is less tested than other features. With every build, the following architectures are verified to produce the same results:
