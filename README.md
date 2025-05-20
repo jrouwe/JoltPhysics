@@ -148,7 +148,7 @@ If you're interested in how Jolt scales with multiple CPUs and compares to other
 
 * C [here](https://github.com/amerkoleci/joltc), [here](https://github.com/zig-gamedev/zphysics/tree/main/libs/JoltC) and [here](https://github.com/SecondHalfGames/JoltC/)
 * [C#](https://github.com/amerkoleci/JoltPhysicsSharp)
-* [Java](https://github.com/stephengold/jolt-jni)
+* [Java or Kotlin](https://stephengold.github.io/jolt-jni-docs)
 * [JavaScript](https://github.com/jrouwe/JoltPhysics.js)
 * [Rust](https://github.com/SecondHalfGames/jolt-rust)
 * [Zig](https://github.com/zig-gamedev/zphysics)
