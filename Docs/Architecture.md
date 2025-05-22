@@ -160,6 +160,7 @@ An example of saving a shape in binary format:
 	JPH::Ref<Shape> sphere = new JPH::SphereShape(1.0f);
 
 	// For this example we'll be saving the shape in a STL string stream, but if you implement StreamOut you don't have to use STL.
+	// Note that this will be storing a binary string of bytes that can contain 0-bytes, it is not an ASCII string!
 	stringstream data;
 	JPH::StreamOutWrapper stream_out(data);
 
