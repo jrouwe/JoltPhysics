@@ -112,6 +112,8 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, AllowedDOFsTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ShapeFilterTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SimShapeFilterTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, GyroscopicForceTest)
+#include <Tests/General/DropSample.h> // Corrected placement for the include
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DropSample)
 #ifdef JPH_OBJECT_STREAM
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveSceneTest)
 #endif // JPH_OBJECT_STREAM
@@ -159,6 +161,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Shape Filter (Collision Detection)",	JPH_RTTI(ShapeFilterTest) },
 	{ "Shape Filter (Simulation)",			JPH_RTTI(SimShapeFilterTest) },
 	{ "Gyroscopic Force",					JPH_RTTI(GyroscopicForceTest) },
+	{ "Drop Sample",						JPH_RTTI(DropSample) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DistanceConstraintTest)
