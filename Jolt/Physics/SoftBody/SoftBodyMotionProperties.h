@@ -93,6 +93,10 @@ public:
 	float								GetSkinnedMaxDistanceMultiplier() const		{ return mSkinnedMaxDistanceMultiplier; }
 	void								SetSkinnedMaxDistanceMultiplier(float inSkinnedMaxDistanceMultiplier) { mSkinnedMaxDistanceMultiplier = inSkinnedMaxDistanceMultiplier; }
 
+	/// How big the particles are, can be used to push the vertices a little bit away from the surface of other bodies to prevent z-fighting
+	float								GetVertexRadius() const						{ return mVertexRadius; }
+	void								SetVertexRadius(float inVertexRadius)		{ JPH_ASSERT(mVertexRadius >= 0.0f); mVertexRadius = inVertexRadius; }
+
 	/// Get local bounding box
 	const AABox &						GetLocalBounds() const						{ return mLocalBounds; }
 
@@ -314,6 +318,7 @@ private:
 	uint								mNumSensors;								///< Workaround for TSAN false positive: store mCollidingSensors.size() in a separate variable.
 	float								mPressure;									///< n * R * T, amount of substance * ideal gas constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 	float								mSkinnedMaxDistanceMultiplier = 1.0f;		///< Multiplier applied to Skinned::mMaxDistance to allow tightening or loosening of the skin constraints
+	float								mVertexRadius = 0.0f;						///< How big the particles are, can be used to push the vertices a little bit away from the surface of other bodies to prevent z-fighting
 	bool								mUpdatePosition;							///< Update the position of the body while simulating (set to false for something that is attached to the static world)
 	atomic<bool>						mNeedContactCallback = false;				///< True if the soft body has collided with anything in the last update
 	bool								mEnableSkinConstraints = true;				///< If skin constraints are enabled

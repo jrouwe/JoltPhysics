@@ -106,7 +106,6 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRodStretchShearConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mRodBendTwistConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mMaterials)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
 }
 
 void SoftBodySharedSettings::CalculateClosestKinematic()
@@ -1199,7 +1198,6 @@ Ref<SoftBodySharedSettings> SoftBodySharedSettings::Clone() const
 	clone->mRodStretchShearConstraints = mRodStretchShearConstraints;
 	clone->mRodBendTwistConstraints = mRodBendTwistConstraints;
 	clone->mMaterials = mMaterials;
-	clone->mVertexRadius = mVertexRadius;
 	clone->mUpdateGroups = mUpdateGroups;
 	return clone;
 }
@@ -1214,7 +1212,6 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mSkinnedConstraints);
 	inStream.Write(mSkinnedConstraintNormals);
 	inStream.Write(mLRAConstraints);
-	inStream.Write(mVertexRadius);
 	inStream.Write(mUpdateGroups);
 
 	// Can't write mRodStretchShearConstraints directly because the class contains padding
@@ -1250,7 +1247,6 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);
 	inStream.Read(mLRAConstraints);
-	inStream.Read(mVertexRadius);
 	inStream.Read(mUpdateGroups);
 
 	inStream.Read(mRodStretchShearConstraints, [](StreamIn &inS, RodStretchShear &outElement) {
