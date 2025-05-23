@@ -415,6 +415,7 @@ SoftBodyCreationSettings Body::GetSoftBodyCreationSettings() const
 	result.mGravityFactor = mp->GetGravityFactor();
 	result.mPressure = mp->GetPressure();
 	result.mUpdatePosition = mp->GetUpdatePosition();
+	result.mVertexRadius = mp->GetVertexRadius();
 	result.mSettings = mp->GetSettings();
 
 	return result;

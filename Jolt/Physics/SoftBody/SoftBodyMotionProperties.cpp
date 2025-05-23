@@ -63,6 +63,7 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 	mNumIterations = inSettings.mNumIterations;
 	mPressure = inSettings.mPressure;
 	mUpdatePosition = inSettings.mUpdatePosition;
+	SetVertexRadius(inSettings.mVertexRadius);
 
 	// Initialize vertices
 	mVertices.resize(inSettings.mSettings->mVertices.size());
@@ -236,7 +237,7 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 	// Calculate local bounding box
 	AABox local_bounds = mLocalBounds;
 	local_bounds.Encapsulate(mLocalPredictedBounds);
-	local_bounds.ExpandBy(Vec3::sReplicate(mSettings->mVertexRadius));
+	local_bounds.ExpandBy(Vec3::sReplicate(mVertexRadius));
 
 	// Calculate world space bounding box
 	AABox world_bounds = local_bounds.Transformed(inContext.mCenterOfMassTransform);
@@ -702,7 +703,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 
 	float dt = inContext.mSubStepDeltaTime;
 	float restitution_threshold = -2.0f * inContext.mGravity.Length() * dt;
-	float vertex_radius = mSettings->mVertexRadius;
+	float vertex_radius = mVertexRadius;
 	for (Vertex &v : mVertices)
 		if (v.mInvMass > 0.0f)
 		{
