@@ -34,5 +34,5 @@ void SoftBodyVertexRadiusTest::Initialize()
 
 void SoftBodyVertexRadiusTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateSlider(inSubMenu, "Vertex Radius", sVertexRadius, 0.0f, 0.5f, 0.01f, [this](float inValue) { sVertexRadius = inValue; });
+	inUI->CreateSlider(inSubMenu, "Vertex Radius", sVertexRadius, 0.0f, 0.5f, 0.01f, [](float inValue) { sVertexRadius = inValue; });
 }
