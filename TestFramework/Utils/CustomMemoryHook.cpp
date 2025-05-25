@@ -136,4 +136,4 @@ DisableCustomMemoryHook::~DisableCustomMemoryHook()
 {
 }
 
-#endif // _DEBUG && !JPH_DISABLE_CUSTOM_ALLOCATOR && !JPH_COMPILER_MINGW
+#endif // JPH_CUSTOM_MEMORY_HOOK_ENABLED
