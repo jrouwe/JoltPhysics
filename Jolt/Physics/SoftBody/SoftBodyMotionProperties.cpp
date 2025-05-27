@@ -63,6 +63,7 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 	mNumIterations = inSettings.mNumIterations;
 	mPressure = inSettings.mPressure;
 	mUpdatePosition = inSettings.mUpdatePosition;
+	mFacesDoubleSided = inSettings.mFacesDoubleSided;
 	SetVertexRadius(inSettings.mVertexRadius);
 
 	// Initialize vertices

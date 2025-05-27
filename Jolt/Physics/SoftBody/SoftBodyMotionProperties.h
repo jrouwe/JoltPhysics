@@ -85,6 +85,10 @@ public:
 	bool								GetUpdatePosition() const					{ return mUpdatePosition; }
 	void								SetUpdatePosition(bool inUpdatePosition)	{ mUpdatePosition = inUpdatePosition; }
 
+	/// If the faces in this soft body should be treated as double sided for the purpose of collision detection (ray cast / collide shape / cast shape)
+	bool								GetFacesDoubleSided() const					{ return mFacesDoubleSided; }
+	void								SetFacesDoubleSided(bool inDoubleSided)		{ mFacesDoubleSided = inDoubleSided; }
+
 	/// Global setting to turn on/off skin constraints
 	bool								GetEnableSkinConstraints() const			{ return mEnableSkinConstraints; }
 	void								SetEnableSkinConstraints(bool inEnableSkinConstraints) { mEnableSkinConstraints = inEnableSkinConstraints; }
@@ -320,6 +324,7 @@ private:
 	float								mSkinnedMaxDistanceMultiplier = 1.0f;		///< Multiplier applied to Skinned::mMaxDistance to allow tightening or loosening of the skin constraints
 	float								mVertexRadius = 0.0f;						///< How big the particles are, can be used to push the vertices a little bit away from the surface of other bodies to prevent z-fighting
 	bool								mUpdatePosition;							///< Update the position of the body while simulating (set to false for something that is attached to the static world)
+	bool								mFacesDoubleSided;							///< If the faces in this soft body should be treated as double sided for the purpose of collision detection (ray cast / collide shape / cast shape)
 	atomic<bool>						mNeedContactCallback = false;				///< True if the soft body has collided with anything in the last update
 	bool								mEnableSkinConstraints = true;				///< If skin constraints are enabled
 	bool								mSkinStatePreviousPositionValid = false;	///< True if the skinning was updated in the last update so that the previous position of the skin state is valid
