@@ -31,6 +31,8 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheeledVehicleControllerSettings)
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettingsWV)
 {
+	JPH_ADD_BASE_CLASS(WheelSettingsWV, WheelSettings)
+
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mInertia)
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mAngularDamping)
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mMaxSteerAngle)

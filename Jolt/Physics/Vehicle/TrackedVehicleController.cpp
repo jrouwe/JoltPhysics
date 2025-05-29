@@ -26,6 +26,8 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TrackedVehicleControllerSettings)
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettingsTV)
 {
+	JPH_ADD_BASE_CLASS(WheelSettingsTV, WheelSettings)
+
 	JPH_ADD_ATTRIBUTE(WheelSettingsTV, mLongitudinalFriction)
 	JPH_ADD_ATTRIBUTE(WheelSettingsTV, mLateralFriction)
 }
