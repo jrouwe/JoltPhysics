@@ -32,12 +32,16 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettingsTV)
 
 void WheelSettingsTV::SaveBinaryState(StreamOut &inStream) const
 {
+	WheelSettings::SaveBinaryState(inStream);
+
 	inStream.Write(mLongitudinalFriction);
 	inStream.Write(mLateralFriction);
 }
 
 void WheelSettingsTV::RestoreBinaryState(StreamIn &inStream)
 {
+	WheelSettings::RestoreBinaryState(inStream);
+
 	inStream.Read(mLongitudinalFriction);
 	inStream.Read(mLateralFriction);
 }
