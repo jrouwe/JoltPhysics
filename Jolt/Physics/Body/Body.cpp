@@ -416,6 +416,8 @@ SoftBodyCreationSettings Body::GetSoftBodyCreationSettings() const
 	result.mPressure = mp->GetPressure();
 	result.mUpdatePosition = mp->GetUpdatePosition();
 	result.mVertexRadius = mp->GetVertexRadius();
+	result.mAllowSleeping = mp->GetAllowSleeping();
+	result.mFacesDoubleSided = mp->GetFacesDoubleSided();
 	result.mSettings = mp->GetSettings();
 
 	return result;
