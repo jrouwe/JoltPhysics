@@ -31,6 +31,8 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheeledVehicleControllerSettings)
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettingsWV)
 {
+	JPH_ADD_BASE_CLASS(WheelSettingsWV, WheelSettings)
+
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mInertia)
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mAngularDamping)
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mMaxSteerAngle)
@@ -55,6 +57,8 @@ WheelSettingsWV::WheelSettingsWV()
 
 void WheelSettingsWV::SaveBinaryState(StreamOut &inStream) const
 {
+	WheelSettings::SaveBinaryState(inStream);
+
 	inStream.Write(mInertia);
 	inStream.Write(mAngularDamping);
 	inStream.Write(mMaxSteerAngle);
@@ -66,6 +70,8 @@ void WheelSettingsWV::SaveBinaryState(StreamOut &inStream) const
 
 void WheelSettingsWV::RestoreBinaryState(StreamIn &inStream)
 {
+	WheelSettings::RestoreBinaryState(inStream);
+
 	inStream.Read(mInertia);
 	inStream.Read(mAngularDamping);
 	inStream.Read(mMaxSteerAngle);
