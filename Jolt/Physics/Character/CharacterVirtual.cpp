@@ -1888,4 +1888,37 @@ void CharacterVirtual::RestoreState(StateRecorder &inStream)
 		c.RestoreState(inStream);
 }
 
+CharacterVirtualSettings CharacterVirtual::GetCharacterVirtualSettings() const
+{
+	CharacterVirtualSettings settings;
+	settings.mUp = mUp;
+	settings.mSupportingVolume = mSupportingVolume;
+	settings.mMaxSlopeAngle = ACos(mCosMaxSlopeAngle);
+	settings.mEnhancedInternalEdgeRemoval = mEnhancedInternalEdgeRemoval;
+	settings.mShape = mShape;
+	settings.mID = mID;
+	settings.mMass = mMass;
+	settings.mMaxStrength = mMaxStrength;
+	settings.mShapeOffset = mShapeOffset;
+	settings.mBackFaceMode = mBackFaceMode;
+	settings.mPredictiveContactDistance = mPredictiveContactDistance;
+	settings.mMaxCollisionIterations = mMaxCollisionIterations;
+	settings.mMaxConstraintIterations = mMaxConstraintIterations;
+	settings.mMinTimeRemaining = mMinTimeRemaining;
+	settings.mCollisionTolerance = mCollisionTolerance;
+	settings.mCharacterPadding = mCharacterPadding;
+	settings.mMaxNumHits = mMaxNumHits;
+	settings.mHitReductionCosMaxAngle = mHitReductionCosMaxAngle;
+	settings.mPenetrationRecoverySpeed = mPenetrationRecoverySpeed;
+	BodyLockRead lock(mSystem->GetBodyLockInterface(), mInnerBodyID);
+	if (lock.Succeeded())
+	{
+		const Body &body = lock.GetBody();
+		settings.mInnerBodyShape = body.GetShape();
+		settings.mInnerBodyIDOverride = body.GetID();
+		settings.mInnerBodyLayer = body.GetObjectLayer();
+	}
+	return settings;
+}
+
 JPH_NAMESPACE_END
