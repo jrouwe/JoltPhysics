@@ -12,6 +12,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### Bug Fixes
 
+* WheelSettingsTV and WheelSettingsWV were not serializing their base class members.
 * The remap tables in `SoftBodySharedSettings::OptimizationResults`` mapped from new to old index instead of from old to new as was documented. The maps now behave as documented.
 * Fixed an issue where soft body bend constraints could be created with identical vertices. This led to an assert triggering.
 * Fixed infinite recursion when colliding a `TriangleShape` vs a `TriangleShape`.
