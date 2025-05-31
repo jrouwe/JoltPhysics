@@ -359,7 +359,7 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 
 		// Integrate
 		Quat rotation = r.mRotation;
-		Quat delta_rotation = half_dt * Quat(Vec4(r.mAngularVelocity, 0)) * rotation;
+		Quat delta_rotation = half_dt * Quat::sMultiplyImaginary(r.mAngularVelocity, rotation);
 		r.mPreviousRotationInternal = rotation; // Overwrites mAngularVelocity
 		r.mRotation = (rotation + delta_rotation).Normalized();
 	}
@@ -627,8 +627,8 @@ void SoftBodyMotionProperties::ApplyRodStretchShearConstraints(const SoftBodyUpd
 		v0.mPosition = x0 + v0.mInvMass * delta;
 		v1.mPosition = x1 - v1.mInvMass * delta;
 		// q * e3_bar = q * (0, 0, -1, 0) = [-qy, qx, -qw, qz]
-		Quat q_e3_bar(UVec4::sXor(rotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>().ReinterpretAsInt(), UVec4(0x80000000u, 0, 0x80000000u, 0)).ReinterpretAsFloat());
-		rotation += (2.0f * r->mInvMass * r->mLength) * Quat(Vec4(delta, 0)) * q_e3_bar;
+		Quat q_e3_bar(Vec4::sXor(rotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>(), Vec4(-0.0f, 0.0f, -0.0f, 0.0f)));
+		rotation += (2.0f * r->mInvMass * r->mLength) * Quat::sMultiplyImaginary(delta, q_e3_bar);
 
 		// Renormalize
 		rod_state->mRotation = rotation.Normalized();
