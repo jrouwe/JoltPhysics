@@ -486,4 +486,18 @@ TEST_SUITE("QuatTests")
 		Quat v3 = Quat(1, 2, 3, 4).Normalized();
 		CHECK_APPROX_EQUAL(v3.SLERP(-v3, 0.5f), v3);
 	}
+
+	TEST_CASE("TestQuatMultiplyImaginary")
+	{
+		UnitTestRandom random;
+		for (int i = 0; i < 1000; ++i)
+		{
+			Vec3 imaginary = Vec3::sRandom(random);
+			Quat quat = Quat::sRandom(random);
+
+			Quat r1 = Quat::sMultiplyImaginary(imaginary, quat);
+			Quat r2 = Quat(Vec4(imaginary, 0)) * quat;
+			CHECK_APPROX_EQUAL(r1, r2);
+		}
+	}
 }

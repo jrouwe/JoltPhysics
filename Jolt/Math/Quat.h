@@ -159,6 +159,9 @@ public:
 	/// Rotate a vector by this quaternion
 	JPH_INLINE Vec3				operator * (Vec3Arg inValue) const;
 
+	/// Multiply a quaternion with imaginary components and no real component (x, y, z, 0) with a quaternion
+	static JPH_INLINE Quat		sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS);
+
 	/// Rotate a vector by the inverse of this quaternion
 	JPH_INLINE Vec3				InverseRotate(Vec3Arg inValue) const;
 
