@@ -1015,7 +1015,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 		// Bilateral interleaving, see figure 4 of "Position and Orientation Based Cosserat Rods" - Kugelstadt and Schoemer - SIGGRAPH 2016
 		// Keeping the twist constraints sorted often results in an unstable simulation
 		for (Array<uint>::size_type i = 1, s = group.mRodBendTwistConstraints.size(), s2 = s >> 1; i < s2; i += 2)
-			std::swap(group.mRodBendTwistConstraints[i], group.mRodBendTwistConstraints[s - 1 - i]);
+			std::swap(group.mRodBendTwistConstraints[i], group.mRodBendTwistConstraints[s - i]);
 
 		// Sort the dihedral bend constraints
 		QuickSort(group.mDihedralBendConstraints.begin(), group.mDihedralBendConstraints.end(), [this](uint inLHS, uint inRHS)
