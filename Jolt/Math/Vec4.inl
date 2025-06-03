@@ -609,6 +609,50 @@ Vec4 Vec4::SplatW() const
 #endif
 }
 
+Vec3 Vec4::SplatX3() const
+{
+#if defined(JPH_USE_SSE)
+	return _mm_shuffle_ps(mValue, mValue, _MM_SHUFFLE(0, 0, 0, 0));
+#elif defined(JPH_USE_NEON)
+	return vdupq_laneq_f32(mValue, 0);
+#else
+	return Vec3(mF32[0], mF32[0], mF32[0]);
+#endif
+}
+
+Vec3 Vec4::SplatY3() const
+{
+#if defined(JPH_USE_SSE)
+	return _mm_shuffle_ps(mValue, mValue, _MM_SHUFFLE(1, 1, 1, 1));
+#elif defined(JPH_USE_NEON)
+	return vdupq_laneq_f32(mValue, 1);
+#else
+	return Vec3(mF32[1], mF32[1], mF32[1]);
+#endif
+}
+
+Vec3 Vec4::SplatZ3() const
+{
+#if defined(JPH_USE_SSE)
+	return _mm_shuffle_ps(mValue, mValue, _MM_SHUFFLE(2, 2, 2, 2));
+#elif defined(JPH_USE_NEON)
+	return vdupq_laneq_f32(mValue, 2);
+#else
+	return Vec3(mF32[2], mF32[2], mF32[2]);
+#endif
+}
+
+Vec3 Vec4::SplatW3() const
+{
+#if defined(JPH_USE_SSE)
+	return _mm_shuffle_ps(mValue, mValue, _MM_SHUFFLE(3, 3, 3, 3));
+#elif defined(JPH_USE_NEON)
+	return vdupq_laneq_f32(mValue, 3);
+#else
+	return Vec3(mF32[3], mF32[3], mF32[3]);
+#endif
+}
+
 Vec4 Vec4::Abs() const
 {
 #if defined(JPH_USE_AVX512)

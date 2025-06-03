@@ -203,6 +203,18 @@ public:
 	/// Replicate the W component to all components
 	JPH_INLINE Vec4				SplatW() const;
 
+	/// Replicate the X component to all components
+	JPH_INLINE Vec3				SplatX3() const;
+
+	/// Replicate the Y component to all components
+	JPH_INLINE Vec3				SplatY3() const;
+
+	/// Replicate the Z component to all components
+	JPH_INLINE Vec3				SplatZ3() const;
+
+	/// Replicate the W component to all components
+	JPH_INLINE Vec3				SplatW3() const;
+
 	/// Return the absolute value of each of the components
 	JPH_INLINE Vec4				Abs() const;
 

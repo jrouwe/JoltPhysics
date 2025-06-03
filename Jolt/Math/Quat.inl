@@ -328,15 +328,37 @@ Quat Quat::SLERP(QuatArg inDestination, float inFraction) const
 
 Vec3 Quat::operator * (Vec3Arg inValue) const
 {
-	// Rotating a vector by a quaternion is done by: p' = q * p * q^-1 (q^-1 = conjugated(q) for a unit quaternion)
+	// Rotating a vector by a quaternion is done by: p' = q * (p, 0) * q^-1 (q^-1 = conjugated(q) for a unit quaternion)
+	// Using Rodrigues formula: https://en.m.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula
+	// This is equivalent to: p' = p + 2 * (q.w * q.xyz x p + q.xyz x (q.xyz x p))
+	//
+	// This is:
+	//
+	// Vec3 xyz = GetXYZ();
+	// Vec3 q_cross_p = xyz.Cross(inValue);
+	// Vec3 q_cross_q_cross_p = xyz.Cross(q_cross_p);
+	// Vec3 v = mValue.SplatW3() * q_cross_p + q_cross_q_cross_p;
+	// return inValue + (v + v);
+	//
+	// But we can write out the cross products in a more efficient way:
 	JPH_ASSERT(IsNormalized());
-	return Vec3((*this * Quat::sMultiplyImaginary(inValue, Conjugated())).mValue);
+	Vec3 xyz = GetXYZ();
+	Vec3 yzx = xyz.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>();
+	Vec3 q_cross_p = (inValue.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>() * xyz - yzx * inValue).Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>();
+	Vec3 q_cross_q_cross_p = (q_cross_p.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>() * xyz - yzx * q_cross_p).Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>();
+	Vec3 v = mValue.SplatW3() * q_cross_p + q_cross_q_cross_p;
+	return inValue + (v + v);
 }
 
 Vec3 Quat::InverseRotate(Vec3Arg inValue) const
 {
 	JPH_ASSERT(IsNormalized());
-	return Vec3((Conjugated() * Quat::sMultiplyImaginary(inValue, *this)).mValue);
+	Vec3 xyz = GetXYZ(); // Needs to be negated, but we do this in the equations below
+	Vec3 yzx = xyz.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>();
+	Vec3 q_cross_p = (yzx * inValue - inValue.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>() * xyz).Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>();
+	Vec3 q_cross_q_cross_p = (yzx * q_cross_p - q_cross_p.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>() * xyz).Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>();
+	Vec3 v = mValue.SplatW3() * q_cross_p + q_cross_q_cross_p;
+	return inValue + (v + v);
 }
 
 Vec3 Quat::RotateAxisX() const

@@ -131,6 +131,9 @@ TEST_SUITE("QuatTests")
 			Vec3 r1 = m1 * rv;
 			Vec3 r2 = q1 * rv;
 			CHECK_APPROX_EQUAL(r1, r2, 1.0e-5f);
+
+			Vec3 r3 = q1.InverseRotate(r2);
+			CHECK_APPROX_EQUAL(r3, rv, 1.0e-5f);
 		}
 	}
 
