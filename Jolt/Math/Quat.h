@@ -178,7 +178,7 @@ public:
 	JPH_INLINE float			Dot(QuatArg inRHS) const										{ return mValue.Dot(inRHS.mValue); }
 
 	/// The conjugate [w, -x, -y, -z] is the same as the inverse for unit quaternions
-	JPH_INLINE Quat				Conjugated() const												{ return Quat(Vec4::sXor(mValue, UVec4(0x80000000, 0x80000000, 0x80000000, 0).ReinterpretAsFloat())); }
+	JPH_INLINE Quat				Conjugated() const												{ return Quat(mValue.FlipSign<-1, -1, -1, 1>()); }
 
 	/// Get inverse quaternion
 	JPH_INLINE Quat				Inversed() const												{ return Conjugated() / Length(); }
@@ -187,7 +187,7 @@ public:
 	JPH_INLINE Quat				EnsureWPositive() const											{ return Quat(Vec4::sXor(mValue, Vec4::sAnd(mValue.SplatW(), UVec4::sReplicate(0x80000000).ReinterpretAsFloat()))); }
 
 	/// Get a quaternion that is perpendicular to this quaternion
-	JPH_INLINE Quat				GetPerpendicular() const										{ return Quat(Vec4(1, -1, 1, -1) * mValue.Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>()); }
+	JPH_INLINE Quat				GetPerpendicular() const										{ return Quat(mValue.Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>().FlipSign<1, -1, 1, -1>()); }
 
 	/// Get rotation angle around inAxis (uses Swing Twist Decomposition to get the twist quaternion and uses q(axis, angle) = [cos(angle / 2), axis * sin(angle / 2)])
 	JPH_INLINE float			GetRotationAngle(Vec3Arg inAxis) const							{ return GetW() == 0.0f? JPH_PI : 2.0f * ATan(GetXYZ().Dot(inAxis) / GetW()); }

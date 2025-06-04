@@ -365,27 +365,24 @@ Vec3 Quat::RotateAxisX() const
 {
 	// This is *this * Vec3::sAxisX() written out:
 	JPH_ASSERT(IsNormalized());
-	float x = GetX(), y = GetY(), z = GetZ(), w = GetW();
-	float tx = 2.0f * x, tw = 2.0f * w;
-	return Vec3(tx * x + tw * w - 1.0f, tx * y + z * tw, tx * z - y * tw);
+	Vec4 t = mValue + mValue;
+	return Vec3(t.SplatX() * mValue + (t.SplatW() * mValue.Swizzle<SWIZZLE_W, SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>()).FlipSign<1, 1, -1, 1>() - Vec4(1, 0, 0, 0));
 }
 
 Vec3 Quat::RotateAxisY() const
 {
 	// This is *this * Vec3::sAxisY() written out:
 	JPH_ASSERT(IsNormalized());
-	float x = GetX(), y = GetY(), z = GetZ(), w = GetW();
-	float ty = 2.0f * y, tw = 2.0f * w;
-	return Vec3(x * ty - z * tw, tw * w + ty * y - 1.0f, x * tw + ty * z);
+	Vec4 t = mValue + mValue;
+	return Vec3(t.SplatY() * mValue + (t.SplatW() * mValue.Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_X, SWIZZLE_Y>()).FlipSign<-1, 1, 1, 1>() - Vec4(0, 1, 0, 0));
 }
 
 Vec3 Quat::RotateAxisZ() const
 {
 	// This is *this * Vec3::sAxisZ() written out:
 	JPH_ASSERT(IsNormalized());
-	float x = GetX(), y = GetY(), z = GetZ(), w = GetW();
-	float tz = 2.0f * z, tw = 2.0f * w;
-	return Vec3(x * tz + y * tw, y * tz - x * tw, tw * w + tz * z - 1.0f);
+	Vec4 t = mValue + mValue;
+	return Vec3(t.SplatZ() * mValue + (t.SplatW() * mValue.Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>()).FlipSign<1, -1, 1, 1>() - Vec4(0, 0, 1, 0));
 }
 
 void Quat::StoreFloat3(Float3 *outV) const

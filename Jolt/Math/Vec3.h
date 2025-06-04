@@ -271,6 +271,10 @@ public:
 	/// Get vector that contains the sign of each element (returns 1.0f if positive, -1.0f if negative)
 	JPH_INLINE Vec3				GetSign() const;
 
+	/// Flips the signs of the components, e.g. FlipSign<-1, 1, -1>() will flip the signs of the X and Z components
+	template <int X, int Y, int Z>
+	JPH_INLINE Vec3				FlipSign() const;
+
 	/// To String
 	friend ostream &			operator << (ostream &inStream, Vec3Arg inV)
 	{

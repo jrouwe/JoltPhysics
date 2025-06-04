@@ -318,6 +318,14 @@ TEST_SUITE("Vec3Tests")
 		CHECK(Vec3(0, 2.3456f, -7.8912f).GetSign() == Vec3(1, 1, -1));
 	}
 
+	TEST_CASE("TestVec3FlipSign")
+	{
+		Vec3 v(1, 2, 3);
+		CHECK(v.FlipSign<-1, 1, 1>() == Vec3(-1, 2, 3));
+		CHECK(v.FlipSign<1, -1, 1>() == Vec3(1, -2, 3));
+		CHECK(v.FlipSign<1, 1, -1>() == Vec3(1, 2, -3));
+	}
+
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 	TEST_CASE("TestVec3SyncW")
 	{
