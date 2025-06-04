@@ -193,6 +193,11 @@ TEST_SUITE("Vec4Tests")
 		CHECK(v.SplatZ() == Vec4::sReplicate(3));
 		CHECK(v.SplatW() == Vec4::sReplicate(4));
 
+		CHECK(v.SplatX3() == Vec3::sReplicate(1));
+		CHECK(v.SplatY3() == Vec3::sReplicate(2));
+		CHECK(v.SplatZ3() == Vec3::sReplicate(3));
+		CHECK(v.SplatW3() == Vec3::sReplicate(4));
+
 		CHECK(v.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>() == Vec4(1, 1, 1, 1));
 		CHECK(v.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_Y>() == Vec4(1, 1, 1, 2));
 		CHECK(v.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_Z>() == Vec4(1, 1, 1, 3));
