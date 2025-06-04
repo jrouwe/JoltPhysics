@@ -627,7 +627,7 @@ void SoftBodyMotionProperties::ApplyRodStretchShearConstraints(const SoftBodyUpd
 		v0.mPosition = x0 + v0.mInvMass * delta;
 		v1.mPosition = x1 - v1.mInvMass * delta;
 		// q * e3_bar = q * (0, 0, -1, 0) = [-qy, qx, -qw, qz]
-		Quat q_e3_bar(Vec4::sXor(rotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>(), Vec4(-0.0f, 0.0f, -0.0f, 0.0f)));
+		Quat q_e3_bar(rotation.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>().FlipSign<-1, 1, -1, 1>());
 		rotation += (2.0f * r->mInvMass * r->mLength) * Quat::sMultiplyImaginary(delta, q_e3_bar);
 
 		// Renormalize

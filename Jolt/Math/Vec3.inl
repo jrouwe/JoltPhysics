@@ -857,4 +857,13 @@ Vec3 Vec3::GetSign() const
 #endif
 }
 
+template <int X, int Y, int Z>
+JPH_INLINE Vec3 Vec3::FlipSign() const
+{
+	static_assert(X == 1 || X == -1, "X must be 1 or -1");
+	static_assert(Y == 1 || Y == -1, "Y must be 1 or -1");
+	static_assert(Z == 1 || Z == -1, "Z must be 1 or -1");
+	return Vec3::sXor(*this, Vec3(X > 0? 0.0f : -0.0f, Y > 0? 0.0f : -0.0f, Z > 0? 0.0f : -0.0f));
+}
+
 JPH_NAMESPACE_END

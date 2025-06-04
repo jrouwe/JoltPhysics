@@ -756,6 +756,16 @@ Vec4 Vec4::GetSign() const
 #endif
 }
 
+template <int X, int Y, int Z, int W>
+JPH_INLINE Vec4 Vec4::FlipSign() const
+{
+	static_assert(X == 1 || X == -1, "X must be 1 or -1");
+	static_assert(Y == 1 || Y == -1, "Y must be 1 or -1");
+	static_assert(Z == 1 || Z == -1, "Z must be 1 or -1");
+	static_assert(W == 1 || W == -1, "W must be 1 or -1");
+	return Vec4::sXor(*this, Vec4(X > 0? 0.0f : -0.0f, Y > 0? 0.0f : -0.0f, Z > 0? 0.0f : -0.0f, W > 0? 0.0f : -0.0f));
+}
+
 Vec4 Vec4::Normalized() const
 {
 #if defined(JPH_USE_SSE4_1)

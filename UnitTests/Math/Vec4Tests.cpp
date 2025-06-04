@@ -500,6 +500,15 @@ TEST_SUITE("Vec4Tests")
 		CHECK(Vec4(0, 2.3456f, -7.8912f, -1).GetSign() == Vec4(1, 1, -1, -1));
 	}
 
+	TEST_CASE("TestVec4FlipSign")
+	{
+		Vec4 v(1, 2, 3, 4);
+		CHECK(v.FlipSign<-1, 1, 1, 1>() == Vec4(-1, 2, 3, 4));
+		CHECK(v.FlipSign<1, -1, 1, 1>() == Vec4(1, -2, 3, 4));
+		CHECK(v.FlipSign<1, 1, -1, 1>() == Vec4(1, 2, -3, 4));
+		CHECK(v.FlipSign<1, 1, 1, -1>() == Vec4(1, 2, 3, -4));
+	}
+
 	TEST_CASE("TestVec4SignBit")
 	{
 		CHECK(Vec4(2, -3, 4, -5).GetSignBits() == 0b1010);
