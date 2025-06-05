@@ -186,7 +186,7 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 						Array<LeafShape>	mHits;
 					};
 					LeafShapeCollector collector;
-					body.GetShape()->CollectTransformedShapes(mLocalBounds, com.GetTranslation(), com.GetQuaternion(), Vec3::sOne(), SubShapeIDCreator(), collector, mShapeFilter);
+					body.GetShape()->CollectTransformedShapes(mLocalBounds, com.GetTranslation(), com.GetQuaternion(), Vec3::sOne(), SubShapeIDCreator(), collector, mShapeFilter.GetFilter());
 					if (collector.mHits.empty())
 						return;
 
@@ -244,8 +244,7 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 	AABox world_bounds = local_bounds.Transformed(inContext.mCenterOfMassTransform);
 
 	// Create shape filter
-	SimShapeFilterWrapperUnion shape_filter_union(inContext.mSimShapeFilter, inContext.mBody);
-	SimShapeFilterWrapper &shape_filter = shape_filter_union.GetSimShapeFilterWrapper();
+	SimShapeFilterWrapper shape_filter(inContext.mSimShapeFilter, inContext.mBody);
 
 	Collector collector(inContext, inSystem, inBodyLockInterface, local_bounds, shape_filter, mCollidingShapes, mCollidingSensors);
 	ObjectLayer layer = inContext.mBody->GetObjectLayer();
