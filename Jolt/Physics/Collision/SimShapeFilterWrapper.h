@@ -51,7 +51,7 @@ private:
 	const ShapeFilter *		mFinalFilter;
 	const SimShapeFilter *	mFilter;
 	const Body *			mBody1;
-	const Body *			mBody2;
+	const Body *			mBody2 = nullptr;
 	const ShapeFilter		mDefault;
 };
 
