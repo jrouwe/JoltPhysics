@@ -713,7 +713,7 @@ JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetr
 	if constexpr (Type1 == EMotionType::Dynamic)
 	{
 		const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-		inv_i1 = inSettings.mInvInertiaScale1 * mp1->GetInverseInertiaForRotation(inTransformBody1.GetRotation());
+		inv_i1 = inSettings.mInvInertiaScale1 * mp1->GetInverseInertiaForRotation(inTransformBody1);
 	}
 	else
 	{
@@ -724,7 +724,7 @@ JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetr
 	if constexpr (Type2 == EMotionType::Dynamic)
 	{
 		const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
-		inv_i2 = inSettings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inTransformBody2.GetRotation());
+		inv_i2 = inSettings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inTransformBody2);
 	}
 	else
 	{
