@@ -77,11 +77,9 @@ public:
 	/// @param inR2 Local space vector from center of mass to constraint point for body 2
 	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inR1, const Body &inBody2, Vec3Arg inR2)
 	{
-		// Positions where the point constraint acts on (middle point between center of masses) in world space
+		// First position where the point constraint acts on (middle point between center of masses) in world space
 		Quat rotation1 = inBody1.GetRotation();
 		mR1 = rotation1 * inR1;
-		Quat rotation2 = inBody2.GetRotation();
-		mR2 = rotation2 * inR2;
 
 		// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1
 		// Using: I^-1 = R * Ibody^-1 * R^T
@@ -104,6 +102,10 @@ public:
 			summed_inv_mass = 0.0f;
 			inv_effective_mass = Mat44::sZero();
 		}
+
+		// Second point the constraint operates on
+		Quat rotation2 = inBody2.GetRotation();
+		mR2 = rotation2 * inR2;
 
 		if (inBody2.IsDynamic())
 		{
