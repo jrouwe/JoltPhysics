@@ -350,12 +350,8 @@ void SixDOFConstraint::SetTargetOrientationCS(QuatArg inOrientation)
 
 void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
-	// Get body rotations
-	Quat rotation1 = mBody1->GetRotation();
-	Quat rotation2 = mBody2->GetRotation();
-
 	// Quaternion that rotates from body1's constraint space to world space
-	Quat constraint_body1_to_world = rotation1 * mConstraintToBody1;
+	Quat constraint_body1_to_world = mBody1->GetRotation() * mConstraintToBody1;
 
 	// Store world space axis of constraint space
 	Mat44 translation_axis_mat = Mat44::sRotation(constraint_body1_to_world);
