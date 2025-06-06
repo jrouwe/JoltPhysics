@@ -200,9 +200,7 @@ void SwingTwistConstraint::SetTargetOrientationCS(QuatArg inOrientation)
 void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	// Setup point constraint
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	mPointConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, mLocalSpacePosition1, *mBody2, rotation2, mLocalSpacePosition2);
+	mPointConstraintPart.CalculateConstraintProperties(*mBody1, mLocalSpacePosition1, *mBody2, mLocalSpacePosition2);
 
 	// GetRotationInConstraintSpace written out since we reuse the sub expressions
 	Quat constraint_body1_to_world = mBody1->GetRotation() * mConstraintToBody1;
@@ -415,7 +413,7 @@ bool SwingTwistConstraint::SolvePositionConstraint(float inDeltaTime, float inBa
 	impulse |= mSwingTwistConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, q, mConstraintToBody1, mConstraintToBody2, inBaumgarte);
 
 	// Solve position violations
-	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
+	mPointConstraintPart.CalculateConstraintProperties(*mBody1, mLocalSpacePosition1, *mBody2, mLocalSpacePosition2);
 	impulse |= mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
 
 	return impulse;

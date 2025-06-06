@@ -177,7 +177,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 		[[fallthrough]];
 
 	case EPathRotationConstraintType::FullyConstrained:
-		mRotationConstraintPart.CalculateConstraintProperties(*mBody1, transform1.GetRotation(), *mBody2, transform2.GetRotation());
+		mRotationConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2);
 		break;
 	}
 

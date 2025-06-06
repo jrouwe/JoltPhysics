@@ -365,7 +365,7 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 	if (IsTranslationFullyConstrained())
 	{
 		// All translation locked: Setup point constraint
-		mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(rotation1), mLocalSpacePosition1, *mBody2, Mat44::sRotation(rotation2), mLocalSpacePosition2);
+		mPointConstraintPart.CalculateConstraintProperties(*mBody1, mLocalSpacePosition1, *mBody2, mLocalSpacePosition2);
 	}
 	else if (IsTranslationConstrained() || mTranslationMotorActive)
 	{
@@ -444,7 +444,7 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 	if (IsRotationFullyConstrained())
 	{
 		// All rotation locked: Setup rotation constraint
-		mRotationConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), *mBody2, Mat44::sRotation(mBody2->GetRotation()));
+		mRotationConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2);
 	}
 	else if (IsRotationConstrained() || mRotationMotorActive)
 	{
@@ -711,7 +711,7 @@ bool SixDOFConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 		Quat inv_initial_orientation = mConstraintToBody2 * constraint_to_body1.Conjugated();
 
 		// Solve rotation violations
-		mRotationConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), *mBody2, Mat44::sRotation(mBody2->GetRotation()));
+		mRotationConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2);
 		impulse |= mRotationConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inv_initial_orientation, inBaumgarte);
 	}
 	else if (IsRotationConstrained())
@@ -728,7 +728,7 @@ bool SixDOFConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 	{
 		// Translation locked: Solve point constraint
 		Vec3 local_space_position1 = mLocalSpacePosition1 + mConstraintToBody1 * GetTranslationLimitsMin();
-		mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), local_space_position1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
+		mPointConstraintPart.CalculateConstraintProperties(*mBody1, local_space_position1, *mBody2, mLocalSpacePosition2);
 		impulse |= mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
 	}
 	else if (IsTranslationConstrained())

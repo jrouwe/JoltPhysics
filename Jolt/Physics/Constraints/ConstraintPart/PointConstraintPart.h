@@ -73,15 +73,13 @@ public:
 	/// Calculate properties used during the functions below
 	/// @param inBody1 The first body that this constraint is attached to
 	/// @param inBody2 The second body that this constraint is attached to
-	/// @param inRotation1 The 3x3 rotation matrix for body 1 (translation part is ignored)
-	/// @param inRotation2 The 3x3 rotation matrix for body 2 (translation part is ignored)
 	/// @param inR1 Local space vector from center of mass to constraint point for body 1
 	/// @param inR2 Local space vector from center of mass to constraint point for body 2
-	inline void					CalculateConstraintProperties(const Body &inBody1, Mat44Arg inRotation1, Vec3Arg inR1, const Body &inBody2, Mat44Arg inRotation2, Vec3Arg inR2)
+	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inR1, const Body &inBody2, Vec3Arg inR2)
 	{
 		// Positions where the point constraint acts on (middle point between center of masses) in world space
-		mR1 = inRotation1.Multiply3x3(inR1);
-		mR2 = inRotation2.Multiply3x3(inR2);
+		mR1 = inBody1.GetRotation() * inR1;
+		mR2 = inBody2.GetRotation() * inR2;
 
 		// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1
 		// Using: I^-1 = R * Ibody^-1 * R^T
@@ -90,7 +88,7 @@ public:
 		if (inBody1.IsDynamic())
 		{
 			const MotionProperties *mp1 = inBody1.GetMotionProperties();
-			Mat44 inv_i1 = mp1->GetInverseInertiaForRotation(inRotation1);
+			Mat44 inv_i1 = mp1->GetInverseInertiaForRotation(inBody1.GetRotation());
 			summed_inv_mass = mp1->GetInverseMass();
 
 			Mat44 r1x = Mat44::sCrossProduct(mR1);
@@ -108,7 +106,7 @@ public:
 		if (inBody2.IsDynamic())
 		{
 			const MotionProperties *mp2 = inBody2.GetMotionProperties();
-			Mat44 inv_i2 = mp2->GetInverseInertiaForRotation(inRotation2);
+			Mat44 inv_i2 = mp2->GetInverseInertiaForRotation(inBody2.GetRotation());
 			summed_inv_mass += mp2->GetInverseMass();
 
 			Mat44 r2x = Mat44::sCrossProduct(mR2);

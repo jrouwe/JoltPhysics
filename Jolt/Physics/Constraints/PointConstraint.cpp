@@ -89,7 +89,7 @@ void PointConstraint::SetPoint2(EConstraintSpace inSpace, RVec3Arg inPoint2)
 
 void PointConstraint::CalculateConstraintProperties()
 {
-	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
+	mPointConstraintPart.CalculateConstraintProperties(*mBody1, mLocalSpacePosition1, *mBody2, mLocalSpacePosition2);
 }
 
 void PointConstraint::SetupVelocityConstraint(float inDeltaTime)

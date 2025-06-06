@@ -136,11 +136,11 @@ public:
 	}
 
 	/// Calculate properties used during the functions below
-	inline void					CalculateConstraintProperties(const Body &inBody1, Mat44Arg inRotation1, const Body &inBody2, Mat44Arg inRotation2)
+	inline void					CalculateConstraintProperties(const Body &inBody1, const Body &inBody2)
 	{
 		// Calculate properties used during constraint solving
-		mInvI1 = inBody1.IsDynamic()? inBody1.GetMotionProperties()->GetInverseInertiaForRotation(inRotation1) : Mat44::sZero();
-		mInvI2 = inBody2.IsDynamic()? inBody2.GetMotionProperties()->GetInverseInertiaForRotation(inRotation2) : Mat44::sZero();
+		mInvI1 = inBody1.IsDynamic()? inBody1.GetMotionProperties()->GetInverseInertiaForRotation(inBody1.GetRotation()) : Mat44::sZero();
+		mInvI2 = inBody2.IsDynamic()? inBody2.GetMotionProperties()->GetInverseInertiaForRotation(inBody2.GetRotation()) : Mat44::sZero();
 
 		// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1
 		if (!mEffectiveMass.SetInversed3x3(mInvI1 + mInvI2))

@@ -124,6 +124,7 @@ public:
 	inline Mat44			GetLocalSpaceInverseInertiaUnchecked() const;
 
 	/// Get inverse inertia matrix (\f$I^{-1}\f$) for a given object rotation (translation will be ignored). Zero if object is static or kinematic.
+	inline Mat44			GetInverseInertiaForRotation(QuatArg inRotation) const;
 	inline Mat44			GetInverseInertiaForRotation(Mat44Arg inRotation) const;
 
 	/// Multiply a vector with the inverse world space inertia tensor (\f$I_{world}^{-1}\f$). Zero if object is static or kinematic.

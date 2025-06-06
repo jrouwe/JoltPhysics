@@ -66,6 +66,23 @@ inline Mat44 MotionProperties::GetLocalSpaceInverseInertia() const
 	return GetLocalSpaceInverseInertiaUnchecked();
 }
 
+Mat44 MotionProperties::GetInverseInertiaForRotation(QuatArg inRotation) const
+{
+	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
+
+	Mat44 rotation = Mat44::sRotation(inRotation * mInertiaRotation);
+	Mat44 rotation_mul_scale_transposed(mInvInertiaDiagonal.SplatX() * rotation.GetColumn4(0), mInvInertiaDiagonal.SplatY() * rotation.GetColumn4(1), mInvInertiaDiagonal.SplatZ() * rotation.GetColumn4(2), Vec4(0, 0, 0, 1));
+	Mat44 inverse_inertia = rotation.Multiply3x3RightTransposed(rotation_mul_scale_transposed);
+
+	// We need to mask out both the rows and columns of DOFs that are not allowed
+	Vec4 angular_dofs_mask = GetAngularDOFsMask().ReinterpretAsFloat();
+	inverse_inertia.SetColumn4(0, Vec4::sAnd(inverse_inertia.GetColumn4(0), Vec4::sAnd(angular_dofs_mask, angular_dofs_mask.SplatX())));
+	inverse_inertia.SetColumn4(1, Vec4::sAnd(inverse_inertia.GetColumn4(1), Vec4::sAnd(angular_dofs_mask, angular_dofs_mask.SplatY())));
+	inverse_inertia.SetColumn4(2, Vec4::sAnd(inverse_inertia.GetColumn4(2), Vec4::sAnd(angular_dofs_mask, angular_dofs_mask.SplatZ())));
+
+	return inverse_inertia;
+}
+
 Mat44 MotionProperties::GetInverseInertiaForRotation(Mat44Arg inRotation) const
 {
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);

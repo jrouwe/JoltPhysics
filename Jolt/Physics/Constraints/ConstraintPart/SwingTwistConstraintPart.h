@@ -503,7 +503,7 @@ public:
 		{
 			RotationEulerConstraintPart part;
 			Quat inv_initial_orientation = inConstraintToBody2 * (inConstraintToBody1 * q_swing * q_twist).Conjugated();
-			part.CalculateConstraintProperties(ioBody1, Mat44::sRotation(ioBody1.GetRotation()), ioBody2, Mat44::sRotation(ioBody2.GetRotation()));
+			part.CalculateConstraintProperties(ioBody1, ioBody2);
 			return part.SolvePositionConstraint(ioBody1, ioBody2, inv_initial_orientation, inBaumgarte);
 		}
 

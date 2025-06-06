@@ -261,7 +261,7 @@ void SliderConstraint::SetupVelocityConstraint(float inDeltaTime)
 	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
 	CalculateR1R2U(rotation1, rotation2);
 	CalculatePositionConstraintProperties(rotation1, rotation2);
-	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, *mBody2, rotation2);
+	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2);
 	CalculateSlidingAxisAndPosition(rotation1);
 	CalculatePositionLimitsConstraintProperties(inDeltaTime);
 	CalculateMotorConstraintProperties(inDeltaTime);
@@ -350,7 +350,7 @@ bool SliderConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 	bool pos = mPositionConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mU, mN1, mN2, inBaumgarte);
 
 	// Solve rotation constraint
-	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), *mBody2, Mat44::sRotation(mBody2->GetRotation()));
+	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2);
 	bool rot = mRotationConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mInvInitialOrientation, inBaumgarte);
 
 	// Solve limits along slider axis

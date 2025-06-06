@@ -125,7 +125,7 @@ void ConeConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
 	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	mPointConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, mLocalSpacePosition1, *mBody2, rotation2, mLocalSpacePosition2);
+	mPointConstraintPart.CalculateConstraintProperties(*mBody1, mLocalSpacePosition1, *mBody2, mLocalSpacePosition2);
 	CalculateRotationConstraintProperties(rotation1, rotation2);
 }
 
@@ -155,7 +155,7 @@ bool ConeConstraint::SolveVelocityConstraint(float inDeltaTime)
 
 bool ConeConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
 {
-	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
+	mPointConstraintPart.CalculateConstraintProperties(*mBody1, mLocalSpacePosition1, *mBody2, mLocalSpacePosition2);
 	bool pos = mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
 
 	bool rot = false;
