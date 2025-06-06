@@ -229,10 +229,8 @@ void HingeConstraint::CalculateMotorConstraintProperties(float inDeltaTime)
 void HingeConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	// Cache constraint values that are valid until the bodies move
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
 	mPointConstraintPart.CalculateConstraintProperties(*mBody1, mLocalSpacePosition1, *mBody2, mLocalSpacePosition2);
-	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, rotation1.Multiply3x3(mLocalSpaceHingeAxis1), *mBody2, rotation2, rotation2.Multiply3x3(mLocalSpaceHingeAxis2));
+	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, mBody1->GetRotation() * mLocalSpaceHingeAxis1, *mBody2, mBody2->GetRotation() * mLocalSpaceHingeAxis2);
 	CalculateA1AndTheta();
 	CalculateRotationLimitsConstraintProperties(inDeltaTime);
 	CalculateMotorConstraintProperties(inDeltaTime);
@@ -332,9 +330,7 @@ bool HingeConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgar
 	bool pos = mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
 
 	// Solve rotation constraint
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation()); // Note that previous call to GetRotation() is out of date since the rotation has changed
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, rotation1.Multiply3x3(mLocalSpaceHingeAxis1), *mBody2, rotation2, rotation2.Multiply3x3(mLocalSpaceHingeAxis2));
+	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, mBody1->GetRotation() * mLocalSpaceHingeAxis1, *mBody2, mBody2->GetRotation() * mLocalSpaceHingeAxis2);
 	bool rot = mRotationConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
 
 	// Solve rotation limits

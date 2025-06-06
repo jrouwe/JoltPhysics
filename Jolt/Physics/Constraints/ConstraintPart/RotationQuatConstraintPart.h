@@ -126,14 +126,14 @@ public:
 	}
 
 	/// Calculate properties used during the functions below
-	inline void					CalculateConstraintProperties(const Body &inBody1, Mat44Arg inRotation1, const Body &inBody2, Mat44Arg inRotation2, QuatArg inInvInitialOrientation)
+	inline void					CalculateConstraintProperties(const Body &inBody1, const Body &inBody2, QuatArg inInvInitialOrientation)
 	{
 		// Calculate: JP = 1/2 A ML(q1^*) MR(q2 r0^*) A^T
 		Mat44 jp = (Mat44::sQuatLeftMultiply(0.5f * inBody1.GetRotation().Conjugated()) * Mat44::sQuatRightMultiply(inBody2.GetRotation() * inInvInitialOrientation)).GetRotationSafe();
 
 		// Calculate properties used during constraint solving
-		Mat44 inv_i1 = inBody1.IsDynamic()? inBody1.GetMotionProperties()->GetInverseInertiaForRotation(inRotation1) : Mat44::sZero();
-		Mat44 inv_i2 = inBody2.IsDynamic()? inBody2.GetMotionProperties()->GetInverseInertiaForRotation(inRotation2) : Mat44::sZero();
+		Mat44 inv_i1 = inBody1.IsDynamic()? inBody1.GetMotionProperties()->GetInverseInertiaForRotation(inBody1.GetRotation()) : Mat44::sZero();
+		Mat44 inv_i2 = inBody2.IsDynamic()? inBody2.GetMotionProperties()->GetInverseInertiaForRotation(inBody2.GetRotation()) : Mat44::sZero();
 		mInvI1_JPT = inv_i1.Multiply3x3RightTransposed(jp);
 		mInvI2_JPT = inv_i2.Multiply3x3RightTransposed(jp);
 

@@ -189,31 +189,31 @@ void SliderConstraint::SetLimits(float inLimitsMin, float inLimitsMax)
 	mHasLimits = mLimitsMin != -FLT_MAX || mLimitsMax != FLT_MAX;
 }
 
-void SliderConstraint::CalculateR1R2U(Mat44Arg inRotation1, Mat44Arg inRotation2)
+void SliderConstraint::CalculateR1R2U()
 {
 	// Calculate points relative to body
-	mR1 = inRotation1 * mLocalSpacePosition1;
-	mR2 = inRotation2 * mLocalSpacePosition2;
+	mR1 = mBody1->GetRotation() * mLocalSpacePosition1;
+	mR2 = mBody2->GetRotation() * mLocalSpacePosition2;
 
 	// Calculate X2 + R2 - X1 - R1
 	mU = Vec3(mBody2->GetCenterOfMassPosition() - mBody1->GetCenterOfMassPosition()) + mR2 - mR1;
 }
 
-void SliderConstraint::CalculatePositionConstraintProperties(Mat44Arg inRotation1, Mat44Arg inRotation2)
+void SliderConstraint::CalculatePositionConstraintProperties()
 {
 	// Calculate world space normals
-	mN1 = inRotation1 * mLocalSpaceNormal1;
-	mN2 = inRotation1 * mLocalSpaceNormal2;
+	mN1 = mBody1->GetRotation() * mLocalSpaceNormal1;
+	mN2 = mBody1->GetRotation() * mLocalSpaceNormal2;
 
-	mPositionConstraintPart.CalculateConstraintProperties(*mBody1, inRotation1, mR1 + mU, *mBody2, inRotation2, mR2, mN1, mN2);
+	mPositionConstraintPart.CalculateConstraintProperties(*mBody1, mR1 + mU, *mBody2, mR2, mN1, mN2);
 }
 
-void SliderConstraint::CalculateSlidingAxisAndPosition(Mat44Arg inRotation1)
+void SliderConstraint::CalculateSlidingAxisAndPosition()
 {
 	if (mHasLimits || mMotorState != EMotorState::Off || mMaxFrictionForce > 0.0f)
 	{
 		// Calculate world space slider axis
-		mWorldSpaceSliderAxis = inRotation1 * mLocalSpaceSliderAxis1;
+		mWorldSpaceSliderAxis = mBody1->GetRotation() * mLocalSpaceSliderAxis1;
 
 		// Calculate slide distance along axis
 		mD = mU.Dot(mWorldSpaceSliderAxis);
@@ -257,12 +257,10 @@ void SliderConstraint::CalculateMotorConstraintProperties(float inDeltaTime)
 void SliderConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	// Calculate constraint properties that are constant while bodies don't move
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	CalculateR1R2U(rotation1, rotation2);
-	CalculatePositionConstraintProperties(rotation1, rotation2);
+	CalculateR1R2U();
+	CalculatePositionConstraintProperties();
 	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2);
-	CalculateSlidingAxisAndPosition(rotation1);
+	CalculateSlidingAxisAndPosition();
 	CalculatePositionLimitsConstraintProperties(inDeltaTime);
 	CalculateMotorConstraintProperties(inDeltaTime);
 }
@@ -343,10 +341,8 @@ bool SliderConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 	// Motor operates on velocities only, don't call SolvePositionConstraint
 
 	// Solve position constraint along 2 axis
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	CalculateR1R2U(rotation1, rotation2);
-	CalculatePositionConstraintProperties(rotation1, rotation2);
+	CalculateR1R2U();
+	CalculatePositionConstraintProperties();
 	bool pos = mPositionConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mU, mN1, mN2, inBaumgarte);
 
 	// Solve rotation constraint
@@ -357,10 +353,8 @@ bool SliderConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 	bool limit = false;
 	if (mHasLimits && mLimitsSpringSettings.mFrequency <= 0.0f)
 	{
-		rotation1 = Mat44::sRotation(mBody1->GetRotation());
-		rotation2 = Mat44::sRotation(mBody2->GetRotation());
-		CalculateR1R2U(rotation1, rotation2);
-		CalculateSlidingAxisAndPosition(rotation1);
+		CalculateR1R2U();
+		CalculateSlidingAxisAndPosition();
 		CalculatePositionLimitsConstraintProperties(inDeltaTime);
 		if (mPositionLimitsConstraintPart.IsActive())
 		{
@@ -475,9 +469,8 @@ Ref<ConstraintSettings> SliderConstraint::GetConstraintSettings() const
 	settings->mSliderAxis1 = mLocalSpaceSliderAxis1;
 	settings->mNormalAxis1 = mLocalSpaceNormal1;
 	settings->mPoint2 = RVec3(mLocalSpacePosition2);
-	Mat44 inv_initial_rotation = Mat44::sRotation(mInvInitialOrientation);
-	settings->mSliderAxis2 = inv_initial_rotation.Multiply3x3(mLocalSpaceSliderAxis1);
-	settings->mNormalAxis2 = inv_initial_rotation.Multiply3x3(mLocalSpaceNormal1);
+	settings->mSliderAxis2 = mInvInitialOrientation * mLocalSpaceSliderAxis1;
+	settings->mNormalAxis2 = mInvInitialOrientation * mLocalSpaceNormal1;
 	settings->mLimitsMin = mLimitsMin;
 	settings->mLimitsMax = mLimitsMax;
 	settings->mLimitsSpringSettings = mLimitsSpringSettings;

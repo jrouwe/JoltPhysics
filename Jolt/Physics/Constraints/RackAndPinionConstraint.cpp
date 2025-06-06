@@ -66,11 +66,11 @@ RackAndPinionConstraint::RackAndPinionConstraint(Body &inBody1, Body &inBody2, c
 	}
 }
 
-void RackAndPinionConstraint::CalculateConstraintProperties(Mat44Arg inRotation1, Mat44Arg inRotation2)
+void RackAndPinionConstraint::CalculateConstraintProperties()
 {
 	// Calculate world space normals
-	mWorldSpaceHingeAxis = inRotation1 * mLocalSpaceHingeAxis;
-	mWorldSpaceSliderAxis = inRotation2 * mLocalSpaceSliderAxis;
+	mWorldSpaceHingeAxis = mBody1->GetRotation() * mLocalSpaceHingeAxis;
+	mWorldSpaceSliderAxis = mBody2->GetRotation() * mLocalSpaceSliderAxis;
 
 	mRackAndPinionConstraintPart.CalculateConstraintProperties(*mBody1, mWorldSpaceHingeAxis, *mBody2, mWorldSpaceSliderAxis, mRatio);
 }
@@ -78,9 +78,7 @@ void RackAndPinionConstraint::CalculateConstraintProperties(Mat44Arg inRotation1
 void RackAndPinionConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	// Calculate constraint properties that are constant while bodies don't move
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	CalculateConstraintProperties(rotation1, rotation2);
+	CalculateConstraintProperties();
 }
 
 void RackAndPinionConstraint::ResetWarmStart()
@@ -130,9 +128,7 @@ bool RackAndPinionConstraint::SolvePositionConstraint(float inDeltaTime, float i
 	if (error == 0.0f)
 		return false;
 
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	CalculateConstraintProperties(rotation1, rotation2);
+	CalculateConstraintProperties();
 	return mRackAndPinionConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, error, inBaumgarte);
 }
 

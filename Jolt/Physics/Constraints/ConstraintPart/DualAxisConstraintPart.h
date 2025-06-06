@@ -99,7 +99,7 @@ private:
 public:
 	/// Calculate properties used during the functions below
 	/// All input vectors are in world space
-	inline void					CalculateConstraintProperties(const Body &inBody1, Mat44Arg inRotation1, Vec3Arg inR1PlusU, const Body &inBody2, Mat44Arg inRotation2, Vec3Arg inR2, Vec3Arg inN1, Vec3Arg inN2)
+	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inN1, Vec3Arg inN2)
 	{
 		JPH_ASSERT(inN1.IsNormalized(1.0e-5f));
 		JPH_ASSERT(inN2.IsNormalized(1.0e-5f));
@@ -115,7 +115,7 @@ public:
 		if (inBody1.IsDynamic())
 		{
 			const MotionProperties *mp1 = inBody1.GetMotionProperties();
-			Mat44 inv_i1 = mp1->GetInverseInertiaForRotation(inRotation1);
+			Mat44 inv_i1 = mp1->GetInverseInertiaForRotation(inBody1.GetRotation());
 			mInvI1_R1PlusUxN1 = inv_i1.Multiply3x3(mR1PlusUxN1);
 			mInvI1_R1PlusUxN2 = inv_i1.Multiply3x3(mR1PlusUxN2);
 
@@ -135,7 +135,7 @@ public:
 		if (inBody2.IsDynamic())
 		{
 			const MotionProperties *mp2 = inBody2.GetMotionProperties();
-			Mat44 inv_i2 = mp2->GetInverseInertiaForRotation(inRotation2);
+			Mat44 inv_i2 = mp2->GetInverseInertiaForRotation(inBody2.GetRotation());
 			mInvI2_R2xN1 = inv_i2.Multiply3x3(mR2xN1);
 			mInvI2_R2xN2 = inv_i2.Multiply3x3(mR2xN2);
 

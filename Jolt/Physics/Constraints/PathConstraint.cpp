@@ -141,7 +141,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 	mPathTangent = path_to_world_1.Multiply3x3(path_tangent);
 
 	// Prepare constraint part for position constraint to slide along the path
-	mPositionConstraintPart.CalculateConstraintProperties(*mBody1, transform1.GetRotation(), mR1 + mU, *mBody2, transform2.GetRotation(), mR2, mPathNormal, mPathBinormal);
+	mPositionConstraintPart.CalculateConstraintProperties(*mBody1, mR1 + mU, *mBody2, mR2, mPathNormal, mPathBinormal);
 
 	// Check if closest point is on the boundary of the path and if so apply limit
 	if (!mPath->IsLooping() && (mPathFraction <= 0.0f || mPathFraction >= mPath->GetPathMaxFraction()))
@@ -157,15 +157,15 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 		break;
 
 	case EPathRotationConstraintType::ConstrainAroundTangent:
-		mHingeConstraintPart.CalculateConstraintProperties(*mBody1, transform1.GetRotation(), mPathTangent, *mBody2, transform2.GetRotation(), path_to_world_2.GetAxisX());
+		mHingeConstraintPart.CalculateConstraintProperties(*mBody1, mPathTangent, *mBody2, path_to_world_2.GetAxisX());
 		break;
 
 	case EPathRotationConstraintType::ConstrainAroundNormal:
-		mHingeConstraintPart.CalculateConstraintProperties(*mBody1, transform1.GetRotation(), mPathNormal, *mBody2, transform2.GetRotation(), path_to_world_2.GetAxisZ());
+		mHingeConstraintPart.CalculateConstraintProperties(*mBody1, mPathNormal, *mBody2, path_to_world_2.GetAxisZ());
 		break;
 
 	case EPathRotationConstraintType::ConstrainAroundBinormal:
-		mHingeConstraintPart.CalculateConstraintProperties(*mBody1, transform1.GetRotation(), mPathBinormal, *mBody2, transform2.GetRotation(), path_to_world_2.GetAxisY());
+		mHingeConstraintPart.CalculateConstraintProperties(*mBody1, mPathBinormal, *mBody2, path_to_world_2.GetAxisY());
 		break;
 
 	case EPathRotationConstraintType::ConstrainToPath:

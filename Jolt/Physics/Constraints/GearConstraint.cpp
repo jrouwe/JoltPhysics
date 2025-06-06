@@ -65,11 +65,11 @@ GearConstraint::GearConstraint(Body &inBody1, Body &inBody2, const GearConstrain
 	}
 }
 
-void GearConstraint::CalculateConstraintProperties(Mat44Arg inRotation1, Mat44Arg inRotation2)
+void GearConstraint::CalculateConstraintProperties()
 {
 	// Calculate world space normals
-	mWorldSpaceHingeAxis1 = inRotation1 * mLocalSpaceHingeAxis1;
-	mWorldSpaceHingeAxis2 = inRotation2 * mLocalSpaceHingeAxis2;
+	mWorldSpaceHingeAxis1 = mBody1->GetRotation() * mLocalSpaceHingeAxis1;
+	mWorldSpaceHingeAxis2 = mBody2->GetRotation() * mLocalSpaceHingeAxis2;
 
 	mGearConstraintPart.CalculateConstraintProperties(*mBody1, mWorldSpaceHingeAxis1, *mBody2, mWorldSpaceHingeAxis2, mRatio);
 }
@@ -77,9 +77,7 @@ void GearConstraint::CalculateConstraintProperties(Mat44Arg inRotation1, Mat44Ar
 void GearConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	// Calculate constraint properties that are constant while bodies don't move
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	CalculateConstraintProperties(rotation1, rotation2);
+	CalculateConstraintProperties();
 }
 
 void GearConstraint::ResetWarmStart()
@@ -129,9 +127,7 @@ bool GearConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgart
 	if (error == 0.0f)
 		return false;
 
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	CalculateConstraintProperties(rotation1, rotation2);
+	CalculateConstraintProperties();
 	return mGearConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, error, inBaumgarte);
 }
 

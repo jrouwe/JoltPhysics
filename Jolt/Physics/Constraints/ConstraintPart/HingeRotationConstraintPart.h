@@ -73,7 +73,7 @@ private:
 
 public:
 	/// Calculate properties used during the functions below
-	inline void					CalculateConstraintProperties(const Body &inBody1, Mat44Arg inRotation1, Vec3Arg inWorldSpaceHingeAxis1, const Body &inBody2, Mat44Arg inRotation2, Vec3Arg inWorldSpaceHingeAxis2)
+	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inWorldSpaceHingeAxis1, const Body &inBody2, Vec3Arg inWorldSpaceHingeAxis2)
 	{
 		JPH_ASSERT(inWorldSpaceHingeAxis1.IsNormalized(1.0e-5f));
 		JPH_ASSERT(inWorldSpaceHingeAxis2.IsNormalized(1.0e-5f));
@@ -99,8 +99,8 @@ public:
 		mC2 = a2.Cross(mB2);
 
 		// Calculate properties used during constraint solving
-		mInvI1 = inBody1.IsDynamic()? inBody1.GetMotionProperties()->GetInverseInertiaForRotation(inRotation1) : Mat44::sZero();
-		mInvI2 = inBody2.IsDynamic()? inBody2.GetMotionProperties()->GetInverseInertiaForRotation(inRotation2) : Mat44::sZero();
+		mInvI1 = inBody1.IsDynamic()? inBody1.GetMotionProperties()->GetInverseInertiaForRotation(inBody1.GetRotation()) : Mat44::sZero();
+		mInvI2 = inBody2.IsDynamic()? inBody2.GetMotionProperties()->GetInverseInertiaForRotation(inBody2.GetRotation()) : Mat44::sZero();
 		mB2xA1 = mB2.Cross(mA1);
 		mC2xA1 = mC2.Cross(mA1);
 

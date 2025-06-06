@@ -130,9 +130,9 @@ public:
 
 private:
 	// Internal helper function to calculate the values below
-	void						CalculateR1R2U(Mat44Arg inRotation1, Mat44Arg inRotation2);
-	void						CalculateSlidingAxisAndPosition(Mat44Arg inRotation1);
-	void						CalculatePositionConstraintProperties(Mat44Arg inRotation1, Mat44Arg inRotation2);
+	void						CalculateR1R2U();
+	void						CalculateSlidingAxisAndPosition();
+	void						CalculatePositionConstraintProperties();
 	void						CalculatePositionLimitsConstraintProperties(float inDeltaTime);
 	void						CalculateMotorConstraintProperties(float inDeltaTime);
 

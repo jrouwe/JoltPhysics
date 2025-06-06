@@ -121,7 +121,7 @@ Mat44 Body::GetInverseInertia() const
 {
 	JPH_ASSERT(IsDynamic());
 
-	return GetMotionProperties()->GetInverseInertiaForRotation(Mat44::sRotation(mRotation));
+	return GetMotionProperties()->GetInverseInertiaForRotation(mRotation);
 }
 
 void Body::AddForce(Vec3Arg inForce, RVec3Arg inPosition)

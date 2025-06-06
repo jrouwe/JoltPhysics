@@ -89,11 +89,10 @@ TransformedShape RotatedTranslatedShape::GetSubShapeTransformedShape(const SubSh
 Vec3 RotatedTranslatedShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
 {
 	// Transform surface position to local space and pass call on
-	Mat44 transform = Mat44::sRotation(mRotation.Conjugated());
-	Vec3 normal = mInnerShape->GetSurfaceNormal(inSubShapeID, transform * inLocalSurfacePosition);
+	Vec3 normal = mInnerShape->GetSurfaceNormal(inSubShapeID, mRotation.InverseRotate(inLocalSurfacePosition));
 
 	// Transform normal to this shape's space
-	return transform.Multiply3x3Transposed(normal);
+	return mRotation * normal;
 }
 
 void RotatedTranslatedShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
@@ -157,8 +156,7 @@ void RotatedTranslatedShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreat
 		return;
 
 	// Transform the point
-	Mat44 transform = Mat44::sRotation(mRotation.Conjugated());
-	mInnerShape->CollidePoint(transform * inPoint, inSubShapeIDCreator, ioCollector, inShapeFilter);
+	mInnerShape->CollidePoint(mRotation.InverseRotate(inPoint), inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
 void RotatedTranslatedShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const CollideSoftBodyVertexIterator &inVertices, uint inNumVertices, int inCollidingShapeIndex) const

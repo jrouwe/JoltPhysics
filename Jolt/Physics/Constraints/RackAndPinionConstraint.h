@@ -86,7 +86,7 @@ public:
 
 private:
 	// Internal helper function to calculate the values below
-	void						CalculateConstraintProperties(Mat44Arg inRotation1, Mat44Arg inRotation2);
+	void						CalculateConstraintProperties();
 
 	// CONFIGURATION PROPERTIES FOLLOW
 
