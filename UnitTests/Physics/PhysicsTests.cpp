@@ -1520,7 +1520,7 @@ TEST_SUITE("PhysicsTests")
 
 		// Add individual bodies in a way that will create an inefficient broad phase and will trigger a warning on query
 		RefConst<Shape> sphere = new SphereShape(1.0f);
-		bi.CreateAndAddBody(BodyCreationSettings(sphere, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate); // Leave this body 
+		bi.CreateAndAddBody(BodyCreationSettings(sphere, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate); // Leave this body
 		for (int repeat = 0; repeat < 10; ++repeat)
 		{
 			// Create cMaxBodies - 1 bodies
