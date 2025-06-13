@@ -19,6 +19,10 @@
 #include <Jolt/Physics/Constraints/PointConstraint.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <cstring>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 TEST_SUITE("PhysicsTests")
 {
 	// Gravity vector
