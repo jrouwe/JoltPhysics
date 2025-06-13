@@ -41,7 +41,7 @@ If you need to add many bodies at the same time then use the batching functions:
 - BodyInterface::AddBodiesAbort - If you've called AddBodiesPrepare but changed your mind and no longer want to add the bodies to the PhysicsSystem. Useful when streaming in level sections and the player decides to go the other way.
 - BodyInterface::RemoveBodies - Batch remove a lot of bodies from the PhysicsSystem.
 
-Always use the batch adding functions when possible! Adding many bodies, one at a time, results in a really inefficient broadphase and in the worst case can lead to missed collisions (an assert will trigger if this is the case). If you cannot avoid adding many bodies one at a time, use PhysicsSystem::OptimizeBroadPhase to rebuild the tree.
+Always use the batch adding functions when possible! Adding many bodies, one at a time, results in a really inefficient broadphase (a trace will notify when this happens) and in extreme cases may lead to the broadphase running out of internal nodes (std::abort will be called in that case). If you cannot avoid adding many bodies one at a time, use PhysicsSystem::OptimizeBroadPhase to rebuild the tree.
 
 You can call AddBody, RemoveBody, AddBody, RemoveBody to temporarily remove and later reinsert a body into the simulation.
 

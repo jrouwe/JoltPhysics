@@ -14,6 +14,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### Bug Fixes
 
+* QuadTree will now fall back to the heap when running out of stack space during collision queries. Previously this would trigger an assert and some collisions would not be detected.
 * Fixed `BodyInterface::MoveKinematic`, `SetLinearVelocity`, `SetAngularVelocity`, `SetLinearAndAngularVelocity`, `AddLinearVelocity`, `AddLinearAndAngularVelocity`, `SetPositionRotationAndVelocity` and `SetMotionType` when body not added to the physics system yet.
 * Fixed UBSAN false positive error that detected a dirty trick in `SimShapeFilter``.
 * WheelSettingsTV and WheelSettingsWV were not serializing their base class members.
