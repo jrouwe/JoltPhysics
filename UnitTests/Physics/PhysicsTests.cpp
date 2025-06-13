@@ -11,6 +11,10 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 #include <Jolt/Physics/Body/BodyLockMulti.h>
 #include <Jolt/Physics/Constraints/PointConstraint.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
@@ -1493,6 +1497,72 @@ TEST_SUITE("PhysicsTests")
 
 		// Clean up
 		bi.DestroyBody(b2->GetID());
+	}
+
+	static int sStackFullMsgs = 0;
+	static int sOtherMsgs = 0;
+	static void sStackFullTrace(const char *inFMT, ...)
+	{
+		if (std::strstr(inFMT, "Stack full") != nullptr)
+			++sStackFullMsgs;
+		else
+			++sOtherMsgs;
+	}
+
+	TEST_CASE("TestAddSingleBodies")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 1, 0);
+
+		BodyInterface& bi = c.GetBodyInterface();
+		PhysicsSystem &sys = *c.GetSystem();
+
+		const int cMaxBodies = 128;
+
+		// Add individual bodies in a way that will create an inefficient broad phase and will trigger a warning on query
+		RefConst<Shape> sphere = new SphereShape(1.0f);
+		bi.CreateAndAddBody(BodyCreationSettings(sphere, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate); // Leave this body 
+		for (int repeat = 0; repeat < 10; ++repeat)
+		{
+			// Create cMaxBodies - 1 bodies
+			BodyIDVector body_ids;
+			for (int i = 0; i < cMaxBodies - 1; ++i)
+				body_ids.push_back(bi.CreateAndAddBody(BodyCreationSettings(sphere, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate));
+
+			// In all but the last iteration, remove the bodies again
+			if (repeat < 9)
+				for (BodyID id : body_ids)
+				{
+					bi.DeactivateBody(id);
+					bi.RemoveBody(id);
+					bi.DestroyBody(id);
+				}
+		}
+
+		// Override the trace function to count how many times we get a "Stack full" message
+		TraceFunction old_trace = Trace;
+		sStackFullMsgs = 0;
+		Trace = sStackFullTrace;
+
+		// Cast a ray
+		AllHitCollisionCollector<CastRayCollector> ray_collector;
+		sys.GetNarrowPhaseQuery().CastRay(RRayCast(RVec3(-2, 0, 0), Vec3(2, 0, 0)), {}, ray_collector);
+
+		// Find colliding pairs
+		BodyIDVector active_bodies;
+		sys.GetActiveBodies(EBodyType::RigidBody, active_bodies);
+		AllHitCollisionCollector<BodyPairCollector> body_pair_collector;
+		static_cast<const BroadPhase &>(sys.GetBroadPhaseQuery()).FindCollidingPairs(active_bodies.data(), (int)active_bodies.size(), 0.0f, sys.GetObjectVsBroadPhaseLayerFilter(), sys.GetObjectLayerPairFilter(), body_pair_collector);
+
+		// Restore the old trace function
+		Trace = old_trace;
+
+		// Assert that we got a "Stack full" message
+		CHECK(sStackFullMsgs == 1);
+		CHECK(sOtherMsgs == 0);
+
+		// Assert that we hit all bodies
+		CHECK(ray_collector.mHits.size() == cMaxBodies);
+		CHECK(body_pair_collector.mHits.size() == cMaxBodies * (cMaxBodies - 1) / 2);
 	}
 
 	TEST_CASE("TestOutOfContactConstraints")
