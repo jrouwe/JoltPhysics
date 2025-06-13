@@ -10,9 +10,12 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added ability to drive hinge constraints with `Ragdoll::DriveToPoseUsingMotors`. This also adds `HingeConstraint::SetTargetOrientationBS` which sets the target angle in body space.
 * Added `JPH_USE_EXTERNAL_PROFILE` cmake option that allows overriding the behavior of the profile macros.
 * Added `SoftBodyCreationSettings::mFacesDoubleSided` which treats the faces of the soft body as double sided. This can be used to make e.g. flags double sided.
+* Added functions to get the `CharacterSettings` from a `Character` and `CharacterVirtualSettings` from a `CharacterVirtual`.
 
 ### Bug Fixes
 
+* Fixed `BodyInterface::MoveKinematic`, `SetLinearVelocity`, `SetAngularVelocity`, `SetLinearAndAngularVelocity`, `AddLinearVelocity`, `AddLinearAndAngularVelocity`, `SetPositionRotationAndVelocity` and `SetMotionType` when body not added to the physics system yet.
+* Fixed UBSAN false positive error that detected a dirty trick in `SimShapeFilter``.
 * WheelSettingsTV and WheelSettingsWV were not serializing their base class members.
 * The remap tables in `SoftBodySharedSettings::OptimizationResults`` mapped from new to old index instead of from old to new as was documented. The maps now behave as documented.
 * Fixed an issue where soft body bend constraints could be created with identical vertices. This led to an assert triggering.
