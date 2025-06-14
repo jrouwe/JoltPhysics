@@ -221,7 +221,7 @@ public:
 	/// Reciprocal vector (1 / value) for each of the components
 	JPH_INLINE Vec4				Reciprocal() const;
 
-	/// Dot product, returns the dot product in X, Y and Z components
+	/// Dot product, returns the dot product in X, Y, Z and W components
 	JPH_INLINE Vec4				DotV(Vec4Arg inV2) const;
 
 	/// Dot product

@@ -222,11 +222,15 @@ TEST_SUITE("UVec4Tests")
 	{
 		CHECK(UVec4(1, 2, 3, 4) + UVec4(5, 6, 7, 8) == UVec4(6, 8, 10, 12));
 
+		CHECK(UVec4(5, 6, 7, 8) - UVec4(4, 3, 2, 1) == UVec4(1, 3, 5, 7));
+
 		CHECK(UVec4(1, 2, 3, 4) * UVec4(5, 6, 7, 8) == UVec4(1 * 5, 2 * 6, 3 * 7, 4 * 8));
 
 		UVec4 v = UVec4(1, 2, 3, 4);
 		v += UVec4(5, 6, 7, 8);
 		CHECK(v == UVec4(6, 8, 10, 12));
+		v -= UVec4(4, 3, 2, 1);
+		CHECK(v == UVec4(2, 5, 8, 11));
 	}
 
 	TEST_CASE("TestUVec4Swizzle")
@@ -497,6 +501,12 @@ TEST_SUITE("UVec4Tests")
 		CHECK(v.Swizzle<SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_Y>() == UVec4(4, 4, 4, 2));
 		CHECK(v.Swizzle<SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_Z>() == UVec4(4, 4, 4, 3));
 		CHECK(v.Swizzle<SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W>() == UVec4(4, 4, 4, 4));
+	}
+
+	TEST_CASE("TestUVec4Dot")
+	{
+		CHECK(UVec4(1, 2, 3, 4).Dot(UVec4(5, 6, 7, 8)) == 1 * 5 + 2 * 6 + 3 * 7 + 4 * 8);
+		CHECK(UVec4(1, 2, 3, 4).DotV(UVec4(5, 6, 7, 8)) == UVec4::sReplicate(1 * 5 + 2 * 6 + 3 * 7 + 4 * 8));
 	}
 
 	TEST_CASE("TestUVec4Cast")
