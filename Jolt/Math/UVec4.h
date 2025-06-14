@@ -119,13 +119,13 @@ public:
 	JPH_INLINE UVec4			operator * (UVec4Arg inV2) const;
 
 	/// Add two integer vectors (component wise)
-	JPH_INLINE UVec4			operator + (UVec4Arg inV2);
+	JPH_INLINE UVec4			operator + (UVec4Arg inV2) const;
 
 	/// Add two integer vectors (component wise)
 	JPH_INLINE UVec4 &			operator += (UVec4Arg inV2);
 
 	/// Subtract two integer vectors (component wise)
-	JPH_INLINE UVec4			operator - (UVec4Arg inV2);
+	JPH_INLINE UVec4			operator - (UVec4Arg inV2) const;
 
 	/// Subtract two integer vectors (component wise)
 	JPH_INLINE UVec4 &			operator -= (UVec4Arg inV2);

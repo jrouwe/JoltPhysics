@@ -255,7 +255,7 @@ UVec4 UVec4::operator * (UVec4Arg inV2) const
 #endif
 }
 
-UVec4 UVec4::operator + (UVec4Arg inV2)
+UVec4 UVec4::operator + (UVec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_add_epi32(mValue, inV2.mValue);
@@ -282,7 +282,7 @@ UVec4 &UVec4::operator += (UVec4Arg inV2)
 	return *this;
 }
 
-UVec4 UVec4::operator - (UVec4Arg inV2)
+UVec4 UVec4::operator - (UVec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_sub_epi32(mValue, inV2.mValue);
