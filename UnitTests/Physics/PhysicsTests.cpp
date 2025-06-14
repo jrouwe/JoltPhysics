@@ -1545,6 +1545,7 @@ TEST_SUITE("PhysicsTests")
 		// Override the trace function to count how many times we get a "Stack full" message
 		TraceFunction old_trace = Trace;
 		sStackFullMsgs = 0;
+		sOtherMsgs = 0;
 		Trace = sStackFullTrace;
 
 		// Cast a ray
@@ -1560,8 +1561,12 @@ TEST_SUITE("PhysicsTests")
 		// Restore the old trace function
 		Trace = old_trace;
 
-		// Assert that we got a "Stack full" message
+		// Assert that we got a "Stack full" message when asserts are enabled
+	#ifdef JPH_ENABLE_ASSERTS
 		CHECK(sStackFullMsgs == 1);
+	#else
+		CHECK(sStackFullMsgs == 0);
+	#endif
 		CHECK(sOtherMsgs == 0);
 
 		// Assert that we hit all bodies
