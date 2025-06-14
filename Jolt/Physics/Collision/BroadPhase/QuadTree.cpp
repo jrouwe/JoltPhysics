@@ -1184,8 +1184,9 @@ void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCol
 		}
 
 		/// Called when the stack is resized
-		JPH_INLINE void				OnStackResized(size_t inNewStackSize)
+		JPH_INLINE void				OnStackResized([[maybe_unused]] size_t inNewStackSize) const
 		{
+			// Nothing to do
 		}
 
 	private:
@@ -1240,8 +1241,9 @@ void QuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, CollideShapeBodyC
 		}
 
 		/// Called when the stack is resized
-		JPH_INLINE void				OnStackResized(size_t inNewStackSize)
+		JPH_INLINE void				OnStackResized([[maybe_unused]] size_t inNewStackSize) const
 		{
+			// Nothing to do
 		}
 
 private:
@@ -1296,8 +1298,9 @@ void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollec
 		}
 
 		/// Called when the stack is resized
-		JPH_INLINE void				OnStackResized(size_t inNewStackSize)
+		JPH_INLINE void				OnStackResized([[maybe_unused]] size_t inNewStackSize) const
 		{
+			// Nothing to do
 		}
 
 	private:
@@ -1349,8 +1352,9 @@ void QuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyColl
 		}
 
 		/// Called when the stack is resized
-		JPH_INLINE void				OnStackResized(size_t inNewStackSize)
+		JPH_INLINE void				OnStackResized([[maybe_unused]] size_t inNewStackSize) const
 		{
+			// Nothing to do
 		}
 
 	private:
