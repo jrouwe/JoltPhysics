@@ -275,6 +275,12 @@ public:
 	bool						GetUseManifoldReduction(const BodyID &inBodyID) const;
 	///@}
 
+	///@name Sensor
+	///@{
+	void						SetIsSensor(const BodyID &inBodyID, bool inIsSensor);
+	bool						IsSensor(const BodyID &inBodyID) const;
+	///@}
+
 	///@name Collision group
 	///@{
 	void						SetCollisionGroup(const BodyID &inBodyID, const CollisionGroup &inCollisionGroup);

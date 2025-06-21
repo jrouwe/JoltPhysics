@@ -991,6 +991,22 @@ bool BodyInterface::GetUseManifoldReduction(const BodyID &inBodyID) const
 		return true;
 }
 
+void BodyInterface::SetIsSensor(const BodyID &inBodyID, bool inIsSensor)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		lock.GetBody().SetIsSensor(inIsSensor);
+}
+
+bool BodyInterface::IsSensor(const BodyID &inBodyID) const
+{
+	BodyLockRead lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		return lock.GetBody().IsSensor();
+	else
+		return false;
+}
+
 void BodyInterface::SetCollisionGroup(const BodyID &inBodyID, const CollisionGroup &inCollisionGroup)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
