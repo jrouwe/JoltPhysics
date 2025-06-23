@@ -11,14 +11,16 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added `JPH_USE_EXTERNAL_PROFILE` cmake option that allows overriding the behavior of the profile macros.
 * Added `SoftBodyCreationSettings::mFacesDoubleSided` which treats the faces of the soft body as double sided. This can be used to make e.g. flags double sided.
 * Added functions to get the `CharacterSettings` from a `Character` and `CharacterVirtualSettings` from a `CharacterVirtual`.
+* Added `BodyInterface::SetIsSensor`/`IsSensor` functions.
 
 ### Bug Fixes
 
-* QuadTree will now fall back to the heap when running out of stack space during collision queries. Previously this would trigger an assert and some collisions would not be detected.
+* Fixed passing underestimate of penetration depth in `ContactListener::OnContactPersisted` when the contact comes from the contact cache.
+* `QuadTree` will now fall back to the heap when running out of stack space during collision queries. Previously this would trigger an assert and some collisions would not be detected.
 * Fixed `BodyInterface::MoveKinematic`, `SetLinearVelocity`, `SetAngularVelocity`, `SetLinearAndAngularVelocity`, `AddLinearVelocity`, `AddLinearAndAngularVelocity`, `SetPositionRotationAndVelocity` and `SetMotionType` when body not added to the physics system yet.
-* Fixed UBSAN false positive error that detected a dirty trick in `SimShapeFilter``.
+* Fixed UBSAN false positive error that detected a dirty trick in `SimShapeFilter`.
 * WheelSettingsTV and WheelSettingsWV were not serializing their base class members.
-* The remap tables in `SoftBodySharedSettings::OptimizationResults`` mapped from new to old index instead of from old to new as was documented. The maps now behave as documented.
+* The remap tables in `SoftBodySharedSettings::OptimizationResults` mapped from new to old index instead of from old to new as was documented. The maps now behave as documented.
 * Fixed an issue where soft body bend constraints could be created with identical vertices. This led to an assert triggering.
 * Fixed infinite recursion when colliding a `TriangleShape` vs a `TriangleShape`.
 * 32-bit MinGW g++ doesn't call the correct overload for the new operator when a type is 16 bytes aligned. This could cause unaligned read access violations.
