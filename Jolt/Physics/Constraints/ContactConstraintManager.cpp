@@ -923,7 +923,7 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 				const CachedContactPoint &ccp = output_cm->mContactPoints[i];
 				manifold.mRelativeContactPointsOn1[i] = transform_body1.Multiply3x3(Vec3::sLoadFloat3Unsafe(ccp.mPosition1));
 				manifold.mRelativeContactPointsOn2[i] = local_transform_body2 * Vec3::sLoadFloat3Unsafe(ccp.mPosition2);
-				penetration_depth = max(penetration_depth, (manifold.mRelativeContactPointsOn1[0] - manifold.mRelativeContactPointsOn2[0]).Dot(world_space_normal));
+				penetration_depth = max(penetration_depth, (manifold.mRelativeContactPointsOn1[i] - manifold.mRelativeContactPointsOn2[i]).Dot(world_space_normal));
 			}
 			manifold.mPenetrationDepth = penetration_depth; // We don't have the penetration depth anymore, estimate it
 
