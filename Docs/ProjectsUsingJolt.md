@@ -1,6 +1,7 @@
 # Projects Using Jolt
 
 * [Dagor Engine](https://github.com/GaijinEntertainment/DagorEngine) - An open source engine used by [War Thunder](https://warthunder.com/). See [here](https://github.com/GaijinEntertainment/DagorEngine/tree/main/prog/engine/phys/physJolt).
+* [Death Stranding 2: On the Beach](https://www.playstation.com/en-us/games/death-stranding-2-on-the-beach/) - A third person action adventure game set in a post-apocalyptic world ravaged by otherworldly creatures.
 * [ezEngine](https://github.com/ezEngine/ezEngine) - An open source C++ game engine.
 * [GDevelop](https://gdevelop.io/) - An open-source, no-code game engine. See [this](https://blog.blips.fm/articles/gdevelop-55-released-with-enhanced-3d-support) announcement.
 * [Godot Jolt](https://github.com/godot-jolt/godot-jolt) - Godot extension that integrates the Jolt physics engine
