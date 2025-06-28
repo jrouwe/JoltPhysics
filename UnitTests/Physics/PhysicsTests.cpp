@@ -2117,4 +2117,40 @@ TEST_SUITE("PhysicsTests")
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[1]));
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[2]));
 	}
+
+	// This tests that we don't run out of nodes if we keep adding removing bodies when using OptimizeBroadPhase
+	TEST_CASE("TestOptimizeBroadPhase")
+	{
+		constexpr uint cMaxBodies = 128;
+		PhysicsTestContext c(1.0f / 60.0f, 1, 0, cMaxBodies);
+		BodyInterface &bi = c.GetBodyInterface();
+
+		// Create max number of bodies
+		BodyIDVector bodies;
+		BodyCreationSettings bcs(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::MOVING);
+		for (uint i = 0; i < cMaxBodies; ++i)
+		{
+			Body *b = bi.CreateBody(bcs);
+			CHECK(b != nullptr);
+			bodies.push_back(b->GetID());
+		}
+
+		// Repeatedly add and remove bodies
+		for (int i = 0; i < 10; ++i)
+		{
+			BodyInterface::AddState add_state = bi.AddBodiesPrepare(bodies.data(), (int)bodies.size());
+			for (const BodyID &id : bodies)
+				CHECK(!bi.IsAdded(id));
+			bi.AddBodiesFinalize(bodies.data(), (int)bodies.size(), add_state, EActivation::DontActivate);
+			for (const BodyID &id : bodies)
+				CHECK(bi.IsAdded(id));
+
+			bi.RemoveBodies(bodies.data(), (int)bodies.size());
+			for (const BodyID &id : bodies)
+				CHECK(!bi.IsAdded(id));
+
+			// Optimize the broad phase to recycle quad tree nodes
+			c.GetSystem()->OptimizeBroadPhase();
+		}
+	}
 }
