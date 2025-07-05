@@ -391,6 +391,11 @@ void Quat::StoreFloat3(Float3 *outV) const
 	EnsureWPositive().GetXYZ().StoreFloat3(outV);
 }
 
+void Quat::StoreFloat4(Float4 *outV) const
+{
+	mValue.StoreFloat4(outV);
+}
+
 Quat Quat::sLoadFloat3Unsafe(const Float3 &inV)
 {
 	Vec3 v = Vec3::sLoadFloat3Unsafe(inV);
