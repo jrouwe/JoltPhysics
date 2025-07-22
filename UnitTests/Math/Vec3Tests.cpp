@@ -384,4 +384,17 @@ TEST_SUITE("Vec3Tests")
 		Vec3 v(1, 2, 3);
 		CHECK(ConvertToString(v) == "1, 2, 3");
 	}
+
+	TEST_CASE("TestVec3CompressUnitVector")
+	{
+		UnitTestRandom random;
+		for (int i = 0; i < 1000; ++i)
+		{
+			Vec3 v = Vec3::sRandom(random);
+			uint32 compressed = v.CompressUnitVector();
+			Vec3 decompressed = Vec3::sDecompressUnitVector(compressed);
+			float diff = (decompressed - v).Length();
+			CHECK(diff < 1.0e-4f);
+		}
+	}
 }
