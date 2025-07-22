@@ -168,6 +168,11 @@ Vec4 Vec4::sMax(Vec4Arg inV1, Vec4Arg inV2)
 #endif
 }
 
+Vec4 Vec4::sClamp(Vec4Arg inV, Vec4Arg inMin, Vec4Arg inMax)
+{
+	return sMax(sMin(inV, inMax), inMin);
+}
+
 UVec4 Vec4::sEquals(Vec4Arg inV1, Vec4Arg inV2)
 {
 #if defined(JPH_USE_SSE)
@@ -653,6 +658,26 @@ Vec3 Vec4::SplatW3() const
 #endif
 }
 
+int Vec4::GetLowestComponentIndex() const
+{
+	// Get the minimum value in all 4 components
+	Vec4 value = Vec4::sMin(*this, Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>());
+	value = Vec4::sMin(value, value.Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_X, SWIZZLE_Y>());
+
+	// Compare with the original vector to find which component is equal to the minimum value
+	return CountTrailingZeros(Vec4::sEquals(*this, value).GetTrues());
+}
+
+int Vec4::GetHighestComponentIndex() const
+{
+	// Get the maximum value in all 4 components
+	Vec4 value = Vec4::sMax(*this, Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>());
+	value = Vec4::sMax(value, value.Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_X, SWIZZLE_Y>());
+
+	// Compare with the original vector to find which component is equal to the maximum value
+	return CountTrailingZeros(Vec4::sEquals(*this, value).GetTrues());
+}
+
 Vec4 Vec4::Abs() const
 {
 #if defined(JPH_USE_AVX512)
@@ -1040,6 +1065,84 @@ Vec4 Vec4::sATan2(Vec4Arg inY, Vec4Arg inX)
 	atan -= Vec4::sAnd(x_sign.ArithmeticShiftRight<31>().ReinterpretAsFloat(), Vec4::sReplicate(JPH_PI));
 	atan = Vec4::sXor(atan, UVec4::sXor(x_sign, y_sign).ReinterpretAsFloat());
 	return atan;
+}
+
+uint32 Vec4::CompressUnitVector() const
+{
+	constexpr float cOneOverSqrt2 = 0.70710678f;
+	constexpr uint cNumBits = 9;
+	constexpr uint cMask = (1 << cNumBits) - 1;
+
+	// Store sign bit
+	Vec4 v = *this;
+	uint32 max_element = v.Abs().GetHighestComponentIndex();
+	uint32 value = 0;
+	if (v[max_element] < 0.0f)
+	{
+		value = 0x80000000u;
+		v = -v;
+	}
+
+	// Store highest component
+	value |= max_element << 29;
+
+	// Store the other three components in a compressed format
+	UVec4 compressed = Vec4::sClamp((v + Vec4::sReplicate(cOneOverSqrt2)) * (float(cMask) / (2.0f * cOneOverSqrt2)) + Vec4::sReplicate(0.5f), Vec4::sZero(), Vec4::sReplicate(cMask)).ToInt();
+	switch (max_element)
+	{
+	case 0:
+		compressed = compressed.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W, SWIZZLE_UNUSED>();
+		break;
+
+	case 1:
+		compressed = compressed.Swizzle<SWIZZLE_X, SWIZZLE_Z, SWIZZLE_W, SWIZZLE_UNUSED>();
+		break;
+
+	case 2:
+		compressed = compressed.Swizzle<SWIZZLE_X, SWIZZLE_Y, SWIZZLE_W, SWIZZLE_UNUSED>();
+		break;
+	}
+
+	value |= compressed.GetX();
+	value |= compressed.GetY() << cNumBits;
+	value |= compressed.GetZ() << 2 * cNumBits;
+	return value;
+}
+
+Vec4 Vec4::sDecompressUnitVector(uint32 inValue)
+{
+	constexpr float cOneOverSqrt2 = 0.70710678f;
+	constexpr uint cNumBits = 9;
+	constexpr uint cMask = (1u << cNumBits) - 1;
+
+	// Restore three components
+	Vec4 v = Vec4(UVec4(inValue & cMask, (inValue >> cNumBits) & cMask, (inValue >> (2 * cNumBits)) & cMask, 0).ToFloat()) * (2.0f * cOneOverSqrt2 / float(cMask)) - Vec4(cOneOverSqrt2, cOneOverSqrt2, cOneOverSqrt2, 0.0f);
+	JPH_ASSERT(v.GetW() == 0.0f);
+
+	// Restore the highest component
+	v.SetW(sqrt(max(1.0f - v.LengthSq(), 0.0f)));
+
+	// Extract sign
+	if ((inValue & 0x80000000u) != 0)
+		v = -v;
+
+	// Swizzle the components in place
+	switch ((inValue >> 29) & 3)
+	{
+	case 0:
+		v = v.Swizzle<SWIZZLE_W, SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z>();
+		break;
+
+	case 1:
+		v = v.Swizzle<SWIZZLE_X, SWIZZLE_W, SWIZZLE_Y, SWIZZLE_Z>();
+		break;
+
+	case 2:
+		v = v.Swizzle<SWIZZLE_X, SWIZZLE_Y, SWIZZLE_W, SWIZZLE_Z>();
+		break;
+	}
+
+	return v;
 }
 
 JPH_NAMESPACE_END

@@ -248,6 +248,12 @@ public:
 	/// Store as 4 floats
 	JPH_INLINE void				StoreFloat4(Float4 *outV) const;
 
+	/// Compress a unit quaternion to a 32 bit value, precision is around 0.5 degree
+	JPH_INLINE uint32			CompressUnitQuat() const										{ return mValue.CompressUnitVector(); }
+
+	/// Decompress a unit quaternion from a 32 bit value
+	JPH_INLINE static Quat		sDecompressUnitQuat(uint32 inValue)								{ return Quat(Vec4::sDecompressUnitVector(inValue)); }
+
 	/// To String
 	friend ostream &			operator << (ostream &inStream, QuatArg inQ)					{ inStream << inQ.mValue; return inStream; }
 

@@ -503,4 +503,19 @@ TEST_SUITE("QuatTests")
 			CHECK_APPROX_EQUAL(r1, r2);
 		}
 	}
+
+	TEST_CASE("TestQuatCompressUnitQuat")
+	{
+		UnitTestRandom random;
+		for (int i = 0; i < 1000; ++i)
+		{
+			Quat quat = Quat::sRandom(random);
+			uint32 compressed = quat.CompressUnitQuat();
+			Quat decompressed = Quat::sDecompressUnitQuat(compressed);
+			Vec3 axis;
+			float angle;
+			(quat * decompressed.Conjugated()).GetAxisAngle(axis, angle);
+			CHECK(abs(angle) < 0.009f);
+		}
+	}
 }

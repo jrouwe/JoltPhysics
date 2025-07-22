@@ -90,6 +90,8 @@ TEST_SUITE("Vec4Tests")
 	{
 		Vec4 v1(1, 6, 3, 8);
 		Vec4 v2(5, 2, 7, 4);
+		Vec4 v3(5, 7, 2, 4);
+		Vec4 v4(7, 5, 4, 2);
 
 		CHECK(Vec4::sMin(v1, v2) == Vec4(1, 2, 3, 4));
 		CHECK(Vec4::sMax(v1, v2) == Vec4(5, 6, 7, 8));
@@ -98,6 +100,24 @@ TEST_SUITE("Vec4Tests")
 		CHECK(v1.ReduceMax() == 8);
 		CHECK(v2.ReduceMin() == 2);
 		CHECK(v2.ReduceMax() == 7);
+
+		CHECK(v1.GetLowestComponentIndex() == 0);
+		CHECK(v1.GetHighestComponentIndex() == 3);
+		CHECK(v2.GetLowestComponentIndex() == 1);
+		CHECK(v2.GetHighestComponentIndex() == 2);
+		CHECK(v3.GetLowestComponentIndex() == 2);
+		CHECK(v3.GetHighestComponentIndex() == 1);
+		CHECK(v4.GetLowestComponentIndex() == 3);
+		CHECK(v4.GetHighestComponentIndex() == 0);
+	}
+
+	TEST_CASE("TestVec4Clamp")
+	{
+		Vec4 v1(1, 2, 3, 4);
+		Vec4 v2(5, 6, 7, 8);
+		Vec4 v(-1, 3, 9, -11);
+
+		CHECK(Vec4::sClamp(v, v1, v2) == Vec4(1, 3, 7, 4));
 	}
 
 	TEST_CASE("TestVec4Comparisons")
@@ -747,5 +767,19 @@ TEST_SUITE("Vec4Tests")
 	{
 		Vec4 v(1, 2, 3, 4);
 		CHECK(ConvertToString(v) == "1, 2, 3, 4");
+	}
+
+	TEST_CASE("TestVec4CompressUnitVector")
+	{
+		UnitTestRandom random;
+		for (int i = 0; i < 1000; ++i)
+		{
+			std::uniform_real_distribution<float> scale(-1.0f, 1.0f);
+			Vec4 v = Vec4(scale(random), scale(random), scale(random), scale(random)).Normalized();
+			uint32 compressed = v.CompressUnitVector();
+			Vec4 decompressed = Vec4::sDecompressUnitVector(compressed);
+			float diff = (decompressed - v).Length();
+			CHECK(diff < 5.0e-3f);
+		}
 	}
 }

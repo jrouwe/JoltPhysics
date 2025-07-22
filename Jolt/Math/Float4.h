@@ -15,6 +15,7 @@ public:
 				Float4() = default; ///< Intentionally not initialized for performance reasons
 				Float4(const Float4 &inRHS) = default;
 				Float4(float inX, float inY, float inZ, float inW) : x(inX), y(inY), z(inZ), w(inW) { }
+	Float4 &	operator = (const Float4 &inRHS) = default;
 
 	float		operator [] (int inCoordinate) const
 	{
