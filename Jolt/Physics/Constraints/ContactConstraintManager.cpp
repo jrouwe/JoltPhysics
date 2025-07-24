@@ -794,8 +794,6 @@ inline void ContactConstraintManager::CalculateFrictionAndNonPenetrationConstrai
 
 void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outConstraintCreated)
 {
-	JPH_PROFILE_FUNCTION();
-
 	// Start with nothing found and not handled
 	outConstraintCreated = false;
 	outPairHandled = false;
@@ -996,8 +994,6 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 
 ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2)
 {
-	JPH_PROFILE_FUNCTION();
-
 	// Swap bodies so that body 1 id < body 2 id
 	const Body *body1, *body2;
 	if (inBody1.GetID() < inBody2.GetID())
