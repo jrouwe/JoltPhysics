@@ -54,7 +54,13 @@ public:
 	static inline void			sLock(LockType &inMutex JPH_IF_ENABLE_ASSERTS(, PhysicsLockContext inContext, EPhysicsLockTypes inType))
 	{
 		JPH_IF_ENABLE_ASSERTS(sCheckLock(inContext, inType);)
-		inMutex.lock();
+		if (!inMutex.try_lock()) //sleeping against a lock is the most expensive possible operation.
+		{
+			if (!inMutex.try_lock()) //so we spin twice first.
+			{
+				inMutex.lock(); //that might sound random, but actually, most locks are supremely ephemeral.
+			}
+		}
 	}
 
 	template <class LockType>
@@ -68,7 +74,14 @@ public:
 	static inline void			sLockShared(LockType &inMutex JPH_IF_ENABLE_ASSERTS(, PhysicsLockContext inContext, EPhysicsLockTypes inType))
 	{
 		JPH_IF_ENABLE_ASSERTS(sCheckLock(inContext, inType);)
-		inMutex.lock_shared();
+		if (!inMutex.try_lock_shared()) //sleeping against a lock is the most expensive possible operation.
+		{
+			if (!inMutex.try_lock_shared() ) //Again, we spin twice.
+			{
+				inMutex.lock_shared(); //that might sound random, and it is a bit, but actually, most locks are supremely ephemeral.
+				//and sleeping against a lock has a cost measured in milliseconds. it's the worst possible thing you can do.
+			}
+		}
 	}
 
 	template <class LockType>
