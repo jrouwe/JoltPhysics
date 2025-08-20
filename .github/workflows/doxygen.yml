@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
         
     - name: Doxygen Action
       uses: mattnotmitt/doxygen-action@v1.12.0
