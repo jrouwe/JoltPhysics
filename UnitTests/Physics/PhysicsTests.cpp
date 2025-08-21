@@ -81,6 +81,20 @@ TEST_SUITE("PhysicsTests")
 				BodyLockRead lock1(c.GetSystem()->GetBodyLockInterface(), body1_id);
 				CHECK(lock1.Succeeded());
 				CHECK(lock1.SucceededAndIsInBroadPhase());
+
+				// Unlock automatically on going out of scope
+			}
+
+			// Check that we can lock the first box
+			{
+				BodyLockRead lock1(c.GetSystem()->GetBodyLockInterface(), body1_id);
+				CHECK(lock1.Succeeded());
+				CHECK(lock1.SucceededAndIsInBroadPhase());
+
+				// Release the lock early
+				lock1.ReleaseLock();
+				CHECK(!lock1.Succeeded());
+				CHECK(!lock1.SucceededAndIsInBroadPhase());
 			}
 
 			// Remove the first box
@@ -148,6 +162,20 @@ TEST_SUITE("PhysicsTests")
 				BodyLockMultiWrite lock(c.GetSystem()->GetBodyLockInterface(), bodies, 2);
 				CHECK(lock.GetBody(0) == &body1);
 				CHECK(lock.GetBody(1) == &body2);
+
+				// Unlock automatically on going out of scope
+			}
+
+			{
+				// Lock the bodies
+				BodyLockMultiWrite lock(c.GetSystem()->GetBodyLockInterface(), bodies, 2);
+				CHECK(lock.GetNumBodies() == 2);
+				CHECK(lock.GetBody(0) == &body1);
+				CHECK(lock.GetBody(1) == &body2);
+
+				// Release the locks early
+				lock.ReleaseLocks();
+				CHECK(lock.GetNumBodies() == 0);
 			}
 
 			// Destroy body 1
