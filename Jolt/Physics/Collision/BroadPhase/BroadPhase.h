@@ -53,6 +53,13 @@ public:
 	/// Must be called after UpdateFinalize to allow modifications to the broadphase
 	virtual void		UnlockModifications()												{ /* Optionally overridden by implementation */ }
 
+	/// This function checks if there is enough space in the broadphase to add inNumBodiesToAdd bodies.
+	/// If this function returns false, the broadphase has degraded to a point where a call to PhysicsSystem::OptimizeBroadPhase
+	/// is needed to free up space in order to add new bodies to it. When calling PhysicsSystem::Update regularly, this should
+	/// not be needed. But when repeatedly adding and removing lots of bodies without calling PhysicsSystem::Update this may
+	/// be needed.
+	virtual bool		CanAddBodies(uint inNumBodiesToAdd) const							{ return true; }
+
 	/// Handle used during adding bodies to the broadphase
 	using AddState = void *;
 

@@ -115,6 +115,9 @@ public:
 
 	/// Access an object by index.
 	inline const Object &	Get(uint32 inObjectIndex) const			{ return GetStorage(inObjectIndex).mObject; }
+
+	/// Get maximum number of objects that can be allocated
+	inline uint32			GetMaxObjects() const					{ return mPageSize * mNumPages; }
 };
 
 JPH_NAMESPACE_END

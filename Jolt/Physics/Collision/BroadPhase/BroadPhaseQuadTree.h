@@ -27,6 +27,7 @@ public:
 	virtual	UpdateState		UpdatePrepare() override;
 	virtual void			UpdateFinalize(const UpdateState &inUpdateState) override;
 	virtual void			UnlockModifications() override;
+	virtual bool			CanAddBodies(uint inNumBodiesToAdd) const;
 	virtual AddState		AddBodiesPrepare(BodyID *ioBodies, int inNumber) override;
 	virtual void			AddBodiesFinalize(BodyID *ioBodies, int inNumber, AddState inAddState) override;
 	virtual void			AddBodiesAbort(BodyID *ioBodies, int inNumber, AddState inAddState) override;

@@ -2166,6 +2166,8 @@ TEST_SUITE("PhysicsTests")
 		// Repeatedly add and remove bodies
 		for (int i = 0; i < 10; ++i)
 		{
+			CHECK(bi.CanAddBodies((int)bodies.size()));
+
 			BodyInterface::AddState add_state = bi.AddBodiesPrepare(bodies.data(), (int)bodies.size());
 			for (const BodyID &id : bodies)
 				CHECK(!bi.IsAdded(id));
@@ -2176,6 +2178,8 @@ TEST_SUITE("PhysicsTests")
 			bi.RemoveBodies(bodies.data(), (int)bodies.size());
 			for (const BodyID &id : bodies)
 				CHECK(!bi.IsAdded(id));
+
+			CHECK(!bi.CanAddBodies((int)bodies.size()));
 
 			// Optimize the broad phase to recycle quad tree nodes
 			c.GetSystem()->OptimizeBroadPhase();

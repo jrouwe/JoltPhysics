@@ -101,6 +101,13 @@ public:
 	/// Remove body from the physics system. Note that you need to add a body to the physics system before you can remove it.
 	void						RemoveBody(const BodyID &inBodyID);
 
+	/// This function checks if there is enough space in the broadphase to add inNumBodiesToAdd bodies.
+	/// If this function returns false, the broadphase has degraded to a point where a call to PhysicsSystem::OptimizeBroadPhase
+	/// is needed to free up space in order to add new bodies to it. When calling PhysicsSystem::Update regularly, this should
+	/// not be needed. But when repeatedly adding and removing lots of bodies without calling PhysicsSystem::Update this may
+	/// be needed.
+	bool						CanAddBodies(uint inNumBodiesToAdd) const;
+
 	/// Check if a body has been added to the physics system.
 	bool						IsAdded(const BodyID &inBodyID) const;
 

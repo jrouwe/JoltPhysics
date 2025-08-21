@@ -186,12 +186,17 @@ public:
 	/// Check if this tree can get an UpdatePrepare/Finalize() or if it needs a DiscardOldTree() first
 	inline bool					CanBeUpdated() const				{ return mFreeNodeBatch.mNumObjects == 0; }
 
+	/// Returns number of nodes allocated by this tree
+	inline uint32				GetNumAllocatedNodes() const		{ return 2 * max(mRootNode[0].mNumAllocatedNodes.load(memory_order_relaxed), mRootNode[1].mNumAllocatedNodes.load(memory_order_relaxed)); }
+
 	/// Initialization
 	void						Init(Allocator &inAllocator);
 
 	struct UpdateState
 	{
 		NodeID					mRootNodeID;						///< This will be the new root node id
+
+		uint32					mNumAllocatedNodes { 0 };			///< Number of nodes that were allocated during the UpdatePrepare
 	};
 
 	/// Will throw away the previous frame's nodes so that we can start building a new tree in the background
@@ -210,6 +215,7 @@ public:
 	{
 		NodeID					mLeafID = NodeID::sInvalid();
 		AABox					mLeafBounds;
+		uint32					mNumAllocatedNodes { 0 };
 	};
 
 	/// Prepare adding inNumber bodies at ioBodyIDs to the quad tree, returns the state in outState that should be used in AddBodiesFinalize.
@@ -272,6 +278,9 @@ private:
 
 		/// Index of the root node of the tree (this is always a node, never a body id)
 		atomic<uint32>			mIndex { cInvalidNodeIndex };
+
+		/// Number of nodes allocated in this tree
+		atomic<uint32>			mNumAllocatedNodes { 0 };
 	};
 
 	/// Caches location of body inBodyID in the tracker, body can be found in mNodes[inNodeIdx].mChildNodeID[inChildIdx]
@@ -302,7 +311,7 @@ private:
 	inline bool					TryCreateNewRoot(TrackingVector &ioTracking, atomic<uint32> &ioRootNodeIndex, NodeID inLeafID, const AABox &inLeafBounds, int inLeafNumBodies);
 
 	/// Build a tree for ioBodyIDs, returns the NodeID of the root (which will be the ID of a single body if inNumber = 1). All tree levels up to inMaxDepthMarkChanged will be marked as 'changed'.
-	NodeID						BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, uint inMaxDepthMarkChanged, AABox &outBounds);
+	NodeID						BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, uint inMaxDepthMarkChanged, AABox &outBounds, uint32 &ioAllocatedNodes);
 
 	/// Sorts ioNodeIDs spatially into 2 groups. Second groups starts at ioNodeIDs + outMidPoint.
 	/// After the function returns ioNodeIDs and ioNodeCenters will be shuffled
@@ -316,7 +325,7 @@ private:
 #ifdef JPH_DEBUG
 	/// Validate that the tree is consistent.
 	/// Note: This function only works if the tree is not modified while we're traversing it.
-	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;
+	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies, uint32 inNumExpectedNodes) const;
 #endif
 
 #ifdef JPH_DUMP_BROADPHASE_TREE

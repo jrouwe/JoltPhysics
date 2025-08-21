@@ -153,6 +153,11 @@ void BodyInterface::RemoveBody(const BodyID &inBodyID)
 	}
 }
 
+bool BodyInterface::CanAddBodies(uint inNumBodiesToAdd) const
+{
+	return mBroadPhase->CanAddBodies(inNumBodiesToAdd);
+}
+
 bool BodyInterface::IsAdded(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);

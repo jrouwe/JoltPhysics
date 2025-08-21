@@ -155,6 +155,24 @@ void BroadPhaseQuadTree::UnlockModifications()
 	PhysicsLock::sUnlock(mUpdateMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::BroadPhaseUpdate));
 }
 
+bool BroadPhaseQuadTree::CanAddBodies(uint inNumBodiesToAdd) const
+{
+	uint32 allocated_nodes = 0;
+	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
+	{
+		const QuadTree &tree = mLayers[l];
+		allocated_nodes += tree.GetNumAllocatedNodes();
+	}
+
+	// Estimate the amount of nodes we're going to need
+	uint32 num_leaves = (uint32)(inNumBodiesToAdd + 1) / 2; // Assume 50% fill
+	uint32 num_leaves_plus_internal_nodes = num_leaves + (num_leaves + 2) / 3; // = Sum(num_leaves * 4^-i) with i = [0, Inf].
+	allocated_nodes += 2 * num_leaves_plus_internal_nodes; // There are 2 trees
+
+	// Check if we have space
+	return allocated_nodes < mAllocator.GetMaxObjects();
+}
+
 BroadPhase::AddState BroadPhaseQuadTree::AddBodiesPrepare(BodyID *ioBodies, int inNumber)
 {
 	JPH_PROFILE_FUNCTION();
