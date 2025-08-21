@@ -1572,7 +1572,7 @@ void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &in
 	stack.emplace_back(inNodeIndex, cInvalidNodeIndex);
 
 	uint32 num_bodies = 0;
-	uint32 num_nodes = 1; // We're starting with a node
+	uint32 num_nodes = 1; // We're starting with a root node
 
 	do
 	{

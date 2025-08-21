@@ -12,6 +12,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added `SoftBodyCreationSettings::mFacesDoubleSided` which treats the faces of the soft body as double sided. This can be used to make e.g. flags double sided.
 * Added functions to get the `CharacterSettings` from a `Character` and `CharacterVirtualSettings` from a `CharacterVirtual`.
 * Added `BodyInterface::SetIsSensor`/`IsSensor` functions.
+* Added `BodyInterface::CanAddBodies` function that can be used to check if there is enough space left in the broadphase to add N more bodies.
 
 ### Bug Fixes
 
