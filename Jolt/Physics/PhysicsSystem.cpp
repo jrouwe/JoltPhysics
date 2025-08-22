@@ -973,7 +973,11 @@ void PhysicsSystem::sDefaultSimCollideBodyVsBody(const Body &inBody1, const Body
 	{
 		// Collide with enhanced internal edge removal
 		ioCollideShapeSettings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
-		InternalEdgeRemovingCollector::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, ioCollideShapeSettings, ioCollector, inShapeFilter);
+		InternalEdgeRemovingCollector::sCollideShapeVsShape(inBody1.GetShape(), inBody2.GetShape(), Vec3::sOne(), Vec3::sOne(), inCenterOfMassTransform1, inCenterOfMassTransform2, part1, part2, ioCollideShapeSettings, ioCollector, inShapeFilter
+		#ifdef JPH_INTERNAL_EDGE_REMOVING_COLLECTOR_DEBUG
+			, inBody1.GetCenterOfMassPosition() // Query is done relative to the position of body 1
+		#endif // JPH_INTERNAL_EDGE_REMOVING_COLLECTOR_DEBUG
+		);
 	}
 	else
 	{
