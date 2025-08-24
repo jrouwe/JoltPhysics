@@ -775,9 +775,6 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 	// This is the velocity we use for the displacement, if we hit something it will be shortened
 	Vec3 velocity = inVelocity;
 
-	// Keep track of the last velocity that was applied to the character so that we can detect when the velocity reverses
-	Vec3 last_velocity = inVelocity;
-
 	// Start with no displacement
 	outDisplacement = Vec3::sZero();
 	outTimeSimulated = 0.0f;
@@ -1002,9 +999,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 			return;
 
 		// If the constraint has velocity we accept the new velocity, otherwise check that we didn't reverse velocity
-		if (!constraint->mLinearVelocity.IsNearZero(1.0e-8f))
-			last_velocity = constraint->mLinearVelocity;
-		else if (velocity.Dot(last_velocity) < 0.0f)
+		if (constraint->mLinearVelocity.IsNearZero(1.0e-8f) && velocity.Dot(inVelocity) < 0.0f)
 			return;
 	}
 }
