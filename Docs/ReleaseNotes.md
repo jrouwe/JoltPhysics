@@ -30,6 +30,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added an epsilon to the `CastRay` / `CastShape` early out condition to avoid dividing by a very small number and overflowing to INF. This can cause a float overflow exception.
 * Fixed Samples requiring Vulkan extension `VK_EXT_device_address_binding_report` without checking if it is available.
 * Fixed Vulkan warning in Samples: VkSemaphore is being signaled by VkQueue but it may still be in use by VkSwapchainKHR.
+* Fixed incorrect RTTI definition of MotorcycleControllerSettings which led to the members of WheeledVehicleControllerSettings not being serialized.
+* Implemented missing VehicleConstraint::GetConstraintSettings function.
 
 ## v5.3.0
 

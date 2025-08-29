@@ -534,4 +534,14 @@ void TrackedVehicleController::RestoreState(StateRecorder &inStream)
 		t.RestoreState(inStream);
 }
 
+Ref<VehicleControllerSettings> TrackedVehicleController::GetSettings() const
+{
+	TrackedVehicleControllerSettings *settings = new TrackedVehicleControllerSettings;
+	settings->mEngine = static_cast<const VehicleEngineSettings &>(mEngine);
+	settings->mTransmission = static_cast<const VehicleTransmissionSettings &>(mTransmission);
+	for (size_t i = 0; i < std::size(mTracks); ++i)
+		settings->mTracks[i] = static_cast<const VehicleTrackSettings &>(mTracks[i]);
+	return settings;
+}
+
 JPH_NAMESPACE_END
