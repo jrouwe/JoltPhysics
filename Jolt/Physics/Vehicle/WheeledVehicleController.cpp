@@ -850,8 +850,8 @@ void WheeledVehicleController::RestoreState(StateRecorder &inStream)
 
 void WheeledVehicleController::ToSettings(WheeledVehicleControllerSettings &outSettings) const
 {
-	outSettings.mEngine = mEngine;
-	outSettings.mTransmission = mTransmission;
+	outSettings.mEngine = static_cast<const VehicleEngineSettings &>(mEngine);
+	outSettings.mTransmission = static_cast<const VehicleTransmissionSettings &>(mTransmission);
 	outSettings.mDifferentials = mDifferentials;
 	outSettings.mDifferentialLimitedSlipRatio = mDifferentialLimitedSlipRatio;
 }
