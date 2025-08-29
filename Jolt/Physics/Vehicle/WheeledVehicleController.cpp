@@ -848,4 +848,19 @@ void WheeledVehicleController::RestoreState(StateRecorder &inStream)
 	mTransmission.RestoreState(inStream);
 }
 
+void WheeledVehicleController::ToSettings(WheeledVehicleControllerSettings &outSettings) const
+{
+	outSettings.mEngine = mEngine;
+	outSettings.mTransmission = mTransmission;
+	outSettings.mDifferentials = mDifferentials;
+	outSettings.mDifferentialLimitedSlipRatio = mDifferentialLimitedSlipRatio;
+}
+
+Ref<VehicleControllerSettings> WheeledVehicleController::GetSettings() const
+{
+	WheeledVehicleControllerSettings *settings = new WheeledVehicleControllerSettings;
+	ToSettings(*settings);
+	return settings;
+}
+
 JPH_NAMESPACE_END
