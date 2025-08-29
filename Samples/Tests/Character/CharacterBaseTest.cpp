@@ -820,7 +820,7 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, RMa
 	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("State: %s\nMat: %s\nHorizontal Vel: %.1f m/s\nVertical Vel: %.1f m/s", CharacterBase::sToString(ground_state), ground_material->GetDebugName(), (double)horizontal_velocity.Length(), (double)inCharacterVelocity.GetY()), Color::sWhite, 0.25f);
 }
 
-void CharacterBaseTest::DrawPaddedCharacter(const Shape *inShape, float inPadding, Mat44Arg inCenterOfMass)
+void CharacterBaseTest::DrawPaddedCharacter(const Shape *inShape, float inPadding, RMat44Arg inCenterOfMass)
 {
 	if (inShape->GetSubType() == EShapeSubType::Capsule)
 	{

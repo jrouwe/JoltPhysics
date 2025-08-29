@@ -64,7 +64,7 @@ protected:
 	virtual void			AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu) { /* Nothing by default */ }
 
 	// Draw the character + padding
-	void					DrawPaddedCharacter(const Shape *inShape, float inPadding, Mat44Arg inCenterOfMass);
+	void					DrawPaddedCharacter(const Shape *inShape, float inPadding, RMat44Arg inCenterOfMass);
 
 	// Character size
 	static constexpr float	cCharacterHeightStanding = 1.35f;
