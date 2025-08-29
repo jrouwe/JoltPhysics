@@ -11,6 +11,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added `JPH_USE_EXTERNAL_PROFILE` cmake option that allows overriding the behavior of the profile macros.
 * Added `SoftBodyCreationSettings::mFacesDoubleSided` which treats the faces of the soft body as double sided. This can be used to make e.g. flags double sided.
 * Added functions to get the `CharacterSettings` from a `Character` and `CharacterVirtualSettings` from a `CharacterVirtual`.
+* Added support for compound shapes as character shape in `CharacterVirtual`.
 * Added `BodyInterface::SetIsSensor`/`IsSensor` functions.
 
 ### Bug Fixes
@@ -30,8 +31,9 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added an epsilon to the `CastRay` / `CastShape` early out condition to avoid dividing by a very small number and overflowing to INF. This can cause a float overflow exception.
 * Fixed Samples requiring Vulkan extension `VK_EXT_device_address_binding_report` without checking if it is available.
 * Fixed Vulkan warning in Samples: VkSemaphore is being signaled by VkQueue but it may still be in use by VkSwapchainKHR.
-* Fixed incorrect RTTI definition of MotorcycleControllerSettings which led to the members of WheeledVehicleControllerSettings not being serialized.
-* Implemented missing VehicleConstraint::GetConstraintSettings function.
+* Fixed incorrect RTTI definition of `MotorcycleControllerSettings` which led to the members of `WheeledVehicleControllerSettings` not being serialized.
+* Implemented missing `VehicleConstraint::GetConstraintSettings` function.
+* Fixed colliding a compound shape vs a regular shape ignoring `CollideShapeSettings::mMaxSeparationDistance`. This potentially led to missed collisions.
 
 ## v5.3.0
 

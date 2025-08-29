@@ -60,14 +60,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	mCharacter->GetShape()->Draw(mDebugRenderer, com, Vec3::sOne(), Color::sGreen, false, true);
 #endif // JPH_DEBUG_RENDERER
 
-	// Draw shape including padding (only implemented for capsules right now)
-	if (static_cast<const RotatedTranslatedShape *>(mCharacter->GetShape())->GetInnerShape()->GetSubType() == EShapeSubType::Capsule)
-	{
-		if (mCharacter->GetShape() == mStandingShape)
-			mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding + mCharacter->GetCharacterPadding(), Color::sGrey, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
-		else
-			mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching + mCharacter->GetCharacterPadding(), Color::sGrey, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
-	}
+	DrawPaddedCharacter(mCharacter->GetShape(), mCharacter->GetCharacterPadding(), com);
 
 	// Remember old position
 	RVec3 old_position = mCharacter->GetPosition();
@@ -95,6 +88,9 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 #ifdef JPH_ENABLE_ASSERTS
 	// Validate that our contact list is in sync with that of the character
+	// Note that compound shapes could be non convex so we may detect more contacts than have been reported by the character
+	// as the character only reports contacts as it is sliding through the world. If 2 sub shapes hit at the same time then
+	// most likely only one will be reported as it stops the character and prevents the 2nd one from being seen.
 	uint num_contacts = 0;
 	for (const CharacterVirtual::Contact &c : mCharacter->GetActiveContacts())
 		if (c.mHadCollision)
@@ -102,7 +98,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), c) != mActiveContacts.end());
 			num_contacts++;
 		}
-	JPH_ASSERT(num_contacts == mActiveContacts.size());
+	JPH_ASSERT(sShapeType == EType::Compound? num_contacts >= mActiveContacts.size() : num_contacts == mActiveContacts.size());
 #endif
 
 	// Calculate effective velocity
