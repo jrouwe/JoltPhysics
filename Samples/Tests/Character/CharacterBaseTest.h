@@ -63,6 +63,9 @@ protected:
 	// Add test configuration settings
 	virtual void			AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu) { /* Nothing by default */ }
 
+	// Draw the character + padding
+	void					DrawPaddedCharacter(const Shape *inShape, float inPadding, RMat44Arg inCenterOfMass);
+
 	// Character size
 	static constexpr float	cCharacterHeightStanding = 1.35f;
 	static constexpr float	cCharacterRadiusStanding = 0.3f;
@@ -94,18 +97,19 @@ protected:
 	// List of active characters in the scene so they can collide
 	CharacterVsCharacterCollisionSimple mCharacterVsCharacterCollision;
 
-private:
 	// Shape types
 	enum class EType
 	{
 		Capsule,
 		Cylinder,
-		Box
+		Box,
+		Compound
 	};
 
 	// Character shape type
 	static inline EType		sShapeType = EType::Capsule;
 
+private:
 	// List of possible scene names
 	static const char *		sScenes[];
 

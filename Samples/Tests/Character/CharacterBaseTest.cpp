@@ -11,6 +11,7 @@
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Constraints/HingeConstraint.h>
 #include <Jolt/Core/StringTools.h>
@@ -118,6 +119,30 @@ void CharacterBaseTest::Initialize()
 		mCrouchingShape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, 0), Quat::sIdentity(), new BoxShape(Vec3(cCharacterRadiusCrouching, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, cCharacterRadiusCrouching))).Create().Get();
 		mInnerStandingShape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new BoxShape(cInnerShapeFraction * Vec3(cCharacterRadiusStanding, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, cCharacterRadiusStanding))).Create().Get();
 		mInnerCrouchingShape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, 0), Quat::sIdentity(), new BoxShape(cInnerShapeFraction * Vec3(cCharacterRadiusCrouching, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, cCharacterRadiusCrouching))).Create().Get();
+		break;
+
+	case EType::Compound:
+		{
+			StaticCompoundShapeSettings standing_compound;
+			standing_compound.AddShape(Vec3(-0.3f, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cCharacterHeightStanding, cCharacterRadiusStanding));
+			standing_compound.AddShape(Vec3(0.3f, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new BoxShape(Vec3(cCharacterRadiusStanding, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, cCharacterRadiusStanding)));
+			mStandingShape = standing_compound.Create().Get();
+
+			StaticCompoundShapeSettings crouching_compound;
+			crouching_compound.AddShape(Vec3(-0.3f, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching));
+			crouching_compound.AddShape(Vec3(0.3f, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, 0), Quat::sIdentity(), new BoxShape(Vec3(cCharacterRadiusCrouching, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, cCharacterRadiusCrouching)));
+			mCrouchingShape = crouching_compound.Create().Get();
+
+			StaticCompoundShapeSettings inner_standing_compound;
+			inner_standing_compound.AddShape(Vec3(-0.3f, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cInnerShapeFraction * cCharacterHeightStanding, cInnerShapeFraction * cCharacterRadiusStanding));
+			inner_standing_compound.AddShape(Vec3(0.3f, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new BoxShape(cInnerShapeFraction * Vec3(cCharacterRadiusStanding, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, cCharacterRadiusStanding)));
+			mInnerStandingShape = inner_standing_compound.Create().Get();
+
+			StaticCompoundShapeSettings inner_crouching_compound;
+			inner_crouching_compound.AddShape(Vec3(-0.3f, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cInnerShapeFraction * cCharacterHeightCrouching, cInnerShapeFraction * cCharacterRadiusCrouching));
+			inner_crouching_compound.AddShape(Vec3(0.3f, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, 0), Quat::sIdentity(), new BoxShape(cInnerShapeFraction * Vec3(cCharacterRadiusCrouching, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, cCharacterRadiusCrouching)));
+			mInnerCrouchingShape = inner_crouching_compound.Create().Get();
+		}
 		break;
 	}
 
@@ -638,11 +663,8 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	for (CharacterVirtual *character : { mAnimatedCharacterVirtual, mAnimatedCharacterVirtualWithInnerBody })
 		if (character != nullptr)
 		{
-		#ifdef JPH_DEBUG_RENDERER
-			character->GetShape()->Draw(mDebugRenderer, character->GetCenterOfMassTransform(), Vec3::sOne(), Color::sOrange, false, true);
-		#else
-			mDebugRenderer->DrawCapsule(character->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding + character->GetCharacterPadding(), Color::sOrange, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
-		#endif // JPH_DEBUG_RENDERER
+			// Draw the character
+			DrawPaddedCharacter(character->GetShape(), character->GetCharacterPadding(), character->GetCenterOfMassTransform());
 
 			// Update velocity and apply gravity
 			Vec3 velocity;
@@ -703,7 +725,7 @@ void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [this, inUI]() {
 		UIElement *configuration_settings = inUI->CreateMenu();
 
-		inUI->CreateComboBox(configuration_settings, "Shape Type", { "Capsule", "Cylinder", "Box" }, (int)sShapeType, [](int inItem) { sShapeType = (EType)inItem; });
+		inUI->CreateComboBox(configuration_settings, "Shape Type", { "Capsule", "Cylinder", "Box", "Compound" }, (int)sShapeType, [](int inItem) { sShapeType = (EType)inItem; });
 		AddConfigurationSettings(inUI, configuration_settings);
 		inUI->CreateTextButton(configuration_settings, "Accept Changes", [this]() { RestartTest(); });
 		inUI->ShowMenu(configuration_settings);
@@ -796,4 +818,38 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, RMa
 	Vec3 horizontal_velocity = inCharacterVelocity;
 	horizontal_velocity.SetY(0);
 	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("State: %s\nMat: %s\nHorizontal Vel: %.1f m/s\nVertical Vel: %.1f m/s", CharacterBase::sToString(ground_state), ground_material->GetDebugName(), (double)horizontal_velocity.Length(), (double)inCharacterVelocity.GetY()), Color::sWhite, 0.25f);
+}
+
+void CharacterBaseTest::DrawPaddedCharacter(const Shape *inShape, float inPadding, RMat44Arg inCenterOfMass)
+{
+	if (inShape->GetSubType() == EShapeSubType::Capsule)
+	{
+		const CapsuleShape *capsule = static_cast<const CapsuleShape *>(inShape);
+		mDebugRenderer->DrawCapsule(inCenterOfMass, capsule->GetHalfHeightOfCylinder(), capsule->GetRadius() + inPadding, Color::sGrey, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	}
+	else if (inShape->GetSubType() == EShapeSubType::Cylinder)
+	{
+		// Not correct as the edges should be rounded
+		const CylinderShape *cylinder = static_cast<const CylinderShape *>(inShape);
+		mDebugRenderer->DrawCylinder(inCenterOfMass, cylinder->GetHalfHeight() + inPadding, cylinder->GetRadius() + inPadding, Color::sGrey, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	}
+	else if (inShape->GetSubType() == EShapeSubType::Box)
+	{
+		// Not correct as the edges should be rounded
+		const BoxShape *box = static_cast<const BoxShape *>(inShape);
+		AABox bounds = box->GetLocalBounds();
+		bounds.ExpandBy(Vec3::sReplicate(inPadding));
+		mDebugRenderer->DrawWireBox(inCenterOfMass, bounds, Color::sGrey);
+	}
+	else if (inShape->GetSubType() == EShapeSubType::RotatedTranslated)
+	{
+		const RotatedTranslatedShape *rt = static_cast<const RotatedTranslatedShape *>(inShape);
+		DrawPaddedCharacter(rt->GetInnerShape(), inPadding, inCenterOfMass);
+	}
+	else if (inShape->GetType() == EShapeType::Compound)
+	{
+		const CompoundShape *compound = static_cast<const CompoundShape *>(inShape);
+		for (const CompoundShape::SubShape &sub_shape : compound->GetSubShapes())
+			DrawPaddedCharacter(sub_shape.mShape, inPadding, inCenterOfMass * sub_shape.GetLocalTransformNoScale(Vec3::sOne()));
+	}
 }
