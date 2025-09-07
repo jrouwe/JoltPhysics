@@ -156,8 +156,9 @@ If you're interested in how Jolt scales with multiple CPUs and compares to other
 
 ## Integrations in other engines
 
-* [Godot](https://github.com/godot-jolt/godot-jolt)
+* [Godot](https://github.com/godotengine/godot)
 * [Source Engine](https://github.com/Joshua-Ashton/VPhysics-Jolt)
+* Unreal Plugin [here](https://github.com/OversizedSunCoreDev/ArtilleryEco) and [here](https://github.com/Yadhu-S/UnrealJolt)
 
 See [a list of projects that use Jolt Physics here](Docs/ProjectsUsingJolt.md).
 

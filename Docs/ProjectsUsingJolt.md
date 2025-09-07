@@ -1,10 +1,11 @@
 # Projects Using Jolt
 
+* [Artillery Eco](https://github.com/OversizedSunCoreDev/ArtilleryEco) - Plugin for Unreal Engine 5 (UE5).
 * [Dagor Engine](https://github.com/GaijinEntertainment/DagorEngine) - An open source engine used by [War Thunder](https://warthunder.com/). See [here](https://github.com/GaijinEntertainment/DagorEngine/tree/main/prog/engine/phys/physJolt).
 * [Death Stranding 2: On the Beach](https://www.playstation.com/en-us/games/death-stranding-2-on-the-beach/) - A third person action adventure game set in a post-apocalyptic world ravaged by otherworldly creatures.
 * [ezEngine](https://github.com/ezEngine/ezEngine) - An open source C++ game engine.
 * [GDevelop](https://gdevelop.io/) - An open-source, no-code game engine. See [this](https://blog.blips.fm/articles/gdevelop-55-released-with-enhanced-3d-support) announcement.
-* [Godot Jolt](https://github.com/godot-jolt/godot-jolt) - Godot extension that integrates the Jolt physics engine
+* [Godot](https://github.com/godotengine/godot) - Godot Engine – Multi-platform 2D and 3D game engine. See [this](https://godotengine.org/releases/4.4/#jolt-physics-module) announcement.
 * [Horizon Forbidden West](https://www.playstation.com/en-us/games/horizon-forbidden-west/) - An open world action RPG adventure.
 * [HypeHype](https://www.hypehype.com/) - A mobile app to create, remix and play games. See [this](https://twitter.com/SebAaltonen/status/1726871354228482237) X post.
 * [Light Tracer Render](https://lighttracer.org/) - A rendering tool, uses Jolt for object placement. See [this](https://lighttracer.org/blog/light-tracer-render-2-4-0/) announcement.
@@ -17,7 +18,7 @@
 * [Substrata](https://substrata.info/) - A metaverse platform.
 * [Supernova Engine](https://www.supernovaengine.org/) - Game engine for 2D and 3D projects with entity component system (ECS) and data-oriented design.
 * [Traktor Engine](https://github.com/apistol78/traktor/) - An open-source 3d game engine written in C++.
-* [UnrealJolt](https://github.com/Yadhu-S/UnrealJolt) - Jolt physics integration (Plugin) for Unreal Engine 5 (UE5)
+* [Unreal Jolt](https://github.com/Yadhu-S/UnrealJolt) - Plugin for Unreal Engine 5 (UE5).
 * [VPhysics Jolt](https://github.com/Joshua-Ashton/VPhysics-Jolt), a replacement for Ipion Virtual Physics in the Source Engine. Can be used in e.g. [Garry's Mod](https://store.steampowered.com/app/4000/Garrys_Mod/).
 * [Wicked Engine](https://wickedengine.net/) - 3D engine with modern graphics. See [X post](https://x.com/turanszkij/status/1805979390557528217) and [github](https://github.com/turanszkij/WickedEngine/blob/master/WickedEngine/wiPhysics_Jolt.cpp).
 * [X4 Foundations](https://store.steampowered.com/app/392160/X4_Foundations/) - A space simulation game. See [this](https://forum.egosoft.com/viewtopic.php?t=451046) announcement.
