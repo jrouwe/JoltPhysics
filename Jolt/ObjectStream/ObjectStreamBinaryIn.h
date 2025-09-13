@@ -35,10 +35,12 @@ public:
 	virtual bool				ReadPrimitiveData(bool &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(String &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(Float3 &outPrimitive) override;
+	virtual bool				ReadPrimitiveData(Float4 &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(Double3 &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(Vec3 &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(DVec3 &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(Vec4 &outPrimitive) override;
+	virtual bool				ReadPrimitiveData(UVec4 &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(Quat &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(Mat44 &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(DMat44 &outPrimitive) override;

@@ -23,6 +23,16 @@ public:
 		return *(&x + inCoordinate);
 	}
 
+	bool		operator == (const Float4 &inRHS) const
+	{
+		return x == inRHS.x && y == inRHS.y && z == inRHS.z && w == inRHS.w;
+	}
+
+	bool		operator != (const Float4 &inRHS) const
+	{
+		return x != inRHS.x || y != inRHS.y || z != inRHS.z || w != inRHS.w;
+	}
+
 	float		x;
 	float		y;
 	float		z;

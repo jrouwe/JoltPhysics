@@ -165,6 +165,15 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(Float3 &outPrimitive)
 	return true;
 }
 
+bool ObjectStreamBinaryIn::ReadPrimitiveData(Float4 &outPrimitive)
+{
+	Float4 primitive;
+	mStream.read((char *)&primitive, sizeof(Float4));
+	if (mStream.fail()) return false;
+	outPrimitive = primitive;
+	return true;
+}
+
 bool ObjectStreamBinaryIn::ReadPrimitiveData(Double3 &outPrimitive)
 {
 	Double3 primitive;
@@ -195,6 +204,15 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(DVec3 &outPrimitive)
 bool ObjectStreamBinaryIn::ReadPrimitiveData(Vec4 &outPrimitive)
 {
 	Vec4 primitive;
+	mStream.read((char *)&primitive, sizeof(primitive));
+	if (mStream.fail()) return false;
+	outPrimitive = primitive;
+	return true;
+}
+
+bool ObjectStreamBinaryIn::ReadPrimitiveData(UVec4 &outPrimitive)
+{
+	UVec4 primitive;
 	mStream.read((char *)&primitive, sizeof(primitive));
 	if (mStream.fail()) return false;
 	outPrimitive = primitive;

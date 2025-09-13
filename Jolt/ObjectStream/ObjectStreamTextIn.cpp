@@ -51,6 +51,8 @@ bool ObjectStreamTextIn::ReadDataType(EOSDataType &outType)
 			outType = EOSDataType::T_String;
 		else if (token == "float3")
 			outType = EOSDataType::T_Float3;
+		else if (token == "float4")
+			outType = EOSDataType::T_Float4;
 		else if (token == "double3")
 			outType = EOSDataType::T_Double3;
 		else if (token == "vec3")
@@ -59,6 +61,8 @@ bool ObjectStreamTextIn::ReadDataType(EOSDataType &outType)
 			outType = EOSDataType::T_DVec3;
 		else if (token == "vec4")
 			outType = EOSDataType::T_Vec4;
+		else if (token == "uvec4")
+			outType = EOSDataType::T_UVec4;
 		else if (token == "quat")
 			outType = EOSDataType::T_Quat;
 		else if (token == "mat44")
@@ -290,6 +294,15 @@ bool ObjectStreamTextIn::ReadPrimitiveData(Float3 &outPrimitive)
 	return true;
 }
 
+bool ObjectStreamTextIn::ReadPrimitiveData(Float4 &outPrimitive)
+{
+	float x, y, z, w;
+	if (!ReadPrimitiveData(x) || !ReadPrimitiveData(y) || !ReadPrimitiveData(z) || !ReadPrimitiveData(w))
+		return false;
+	outPrimitive = Float4(x, y, z, w);
+	return true;
+}
+
 bool ObjectStreamTextIn::ReadPrimitiveData(Double3 &outPrimitive)
 {
 	double x, y, z;
@@ -323,6 +336,15 @@ bool ObjectStreamTextIn::ReadPrimitiveData(Vec4 &outPrimitive)
 	if (!ReadPrimitiveData(x) || !ReadPrimitiveData(y) || !ReadPrimitiveData(z) || !ReadPrimitiveData(w))
 		return false;
 	outPrimitive = Vec4(x, y, z, w);
+	return true;
+}
+
+bool ObjectStreamTextIn::ReadPrimitiveData(UVec4 &outPrimitive)
+{
+	uint32 x, y, z, w;
+	if (!ReadPrimitiveData(x) || !ReadPrimitiveData(y) || !ReadPrimitiveData(z) || !ReadPrimitiveData(w))
+		return false;
+	outPrimitive = UVec4(x, y, z, w);
 	return true;
 }
 
