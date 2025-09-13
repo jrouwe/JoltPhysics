@@ -35,10 +35,12 @@ public:
 	virtual void				WritePrimitiveData(const bool &inPrimitive) override;
 	virtual void				WritePrimitiveData(const String &inPrimitive) override;
 	virtual void				WritePrimitiveData(const Float3 &inPrimitive) override;
+	virtual void				WritePrimitiveData(const Float4 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const Double3 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const Vec3 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const DVec3 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const Vec4 &inPrimitive) override;
+	virtual void				WritePrimitiveData(const UVec4 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const Quat &inPrimitive) override;
 	virtual void				WritePrimitiveData(const Mat44 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const DMat44 &inPrimitive) override;
