@@ -269,6 +269,18 @@ public:
 	float						GetGravityFactor(const BodyID &inBodyID) const;
 	///@}
 
+    ///@name Max linear velocity
+    ///@{
+    void						SetMaxLinearVelocity(const BodyID &inBodyID, float inVelocity);
+    float						GetMaxLinearVelocity(const BodyID &inBodyID) const;
+    ///@}
+
+    ///@name Max linear velocity
+    ///@{
+    void						SetMaxAngularVelocity(const BodyID &inBodyID, float inVelocity);
+    float						GetMaxAngularVelocity(const BodyID &inBodyID) const;
+    ///@}
+
 	///@name Manifold reduction
 	///@{
 	void						SetUseManifoldReduction(const BodyID &inBodyID, bool inUseReduction);

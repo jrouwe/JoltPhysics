@@ -965,6 +965,38 @@ float BodyInterface::GetGravityFactor(const BodyID &inBodyID) const
 		return 1.0f;
 }
 
+void BodyInterface::SetMaxLinearVelocity(const BodyID &inBodyID, float inVelocity)
+{
+    BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+    if (lock.Succeeded() && lock.GetBody().GetMotionPropertiesUnchecked() != nullptr)
+        lock.GetBody().GetMotionPropertiesUnchecked()->SetMaxLinearVelocity(inVelocity);
+}
+
+float BodyInterface::GetMaxLinearVelocity(const BodyID &inBodyID) const
+{
+    BodyLockRead lock(*mBodyLockInterface, inBodyID);
+    if (lock.Succeeded() && lock.GetBody().GetMotionPropertiesUnchecked() != nullptr)
+        return lock.GetBody().GetMotionPropertiesUnchecked()->GetMaxLinearVelocity();
+    else
+        return 500.0f;
+}
+
+void BodyInterface::SetMaxAngularVelocity(const BodyID &inBodyID, float inVelocity)
+{
+    BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+    if (lock.Succeeded() && lock.GetBody().GetMotionPropertiesUnchecked() != nullptr)
+        lock.GetBody().GetMotionPropertiesUnchecked()->SetMaxAngularVelocity(inVelocity);
+}
+
+float BodyInterface::GetMaxAngularVelocity(const BodyID &inBodyID) const
+{
+    BodyLockRead lock(*mBodyLockInterface, inBodyID);
+    if (lock.Succeeded() && lock.GetBody().GetMotionPropertiesUnchecked() != nullptr)
+        return lock.GetBody().GetMotionPropertiesUnchecked()->GetMaxAngularVelocity();
+    else
+        return 0.25f * JPH_PI * 60.0f;
+}
+
 void BodyInterface::SetUseManifoldReduction(const BodyID &inBodyID, bool inUseReduction)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
