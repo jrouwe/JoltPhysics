@@ -965,11 +965,11 @@ float BodyInterface::GetGravityFactor(const BodyID &inBodyID) const
 		return 1.0f;
 }
 
-void BodyInterface::SetMaxLinearVelocity(const BodyID &inBodyID, float inVelocity)
+void BodyInterface::SetMaxLinearVelocity(const BodyID &inBodyID, float inLinearVelocity)
 {
     BodyLockWrite lock(*mBodyLockInterface, inBodyID);
     if (lock.Succeeded() && lock.GetBody().GetMotionPropertiesUnchecked() != nullptr)
-        lock.GetBody().GetMotionPropertiesUnchecked()->SetMaxLinearVelocity(inVelocity);
+        lock.GetBody().GetMotionPropertiesUnchecked()->SetMaxLinearVelocity(inLinearVelocity);
 }
 
 float BodyInterface::GetMaxLinearVelocity(const BodyID &inBodyID) const
@@ -981,11 +981,11 @@ float BodyInterface::GetMaxLinearVelocity(const BodyID &inBodyID) const
         return 500.0f;
 }
 
-void BodyInterface::SetMaxAngularVelocity(const BodyID &inBodyID, float inVelocity)
+void BodyInterface::SetMaxAngularVelocity(const BodyID &inBodyID, float inAngularVelocity)
 {
     BodyLockWrite lock(*mBodyLockInterface, inBodyID);
     if (lock.Succeeded() && lock.GetBody().GetMotionPropertiesUnchecked() != nullptr)
-        lock.GetBody().GetMotionPropertiesUnchecked()->SetMaxAngularVelocity(inVelocity);
+        lock.GetBody().GetMotionPropertiesUnchecked()->SetMaxAngularVelocity(inAngularVelocity);
 }
 
 float BodyInterface::GetMaxAngularVelocity(const BodyID &inBodyID) const

@@ -271,13 +271,13 @@ public:
 
     ///@name Max linear velocity
     ///@{
-    void						SetMaxLinearVelocity(const BodyID &inBodyID, float inVelocity);
+    void						SetMaxLinearVelocity(const BodyID &inBodyID, float inLinearVelocity);
     float						GetMaxLinearVelocity(const BodyID &inBodyID) const;
     ///@}
 
-    ///@name Max linear velocity
+    ///@name Max angular velocity
     ///@{
-    void						SetMaxAngularVelocity(const BodyID &inBodyID, float inVelocity);
+    void						SetMaxAngularVelocity(const BodyID &inBodyID, float inAngularVelocity);
     float						GetMaxAngularVelocity(const BodyID &inBodyID) const;
     ///@}
 
