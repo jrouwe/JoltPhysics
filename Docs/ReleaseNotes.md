@@ -19,6 +19,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed bug in `ManifoldBetweenTwoFaces` which would not find the correct manifold in case face 1 had 3 or more vertices and face 2 only 2. E.g. for a box resting the long edge of a cylinder this would mean that only a single contact point was found instead of 2 (the other way around would work fine).
 * Fixed bug in `ConvexHullShape::CollideSoftBodyVertices` where the wrong edge could be reported as the closest edge.
 * Fixed bug in `PhysicsSystem::OptimizeBroadPhase`. When calling this function after removing all bodies from the `PhysicsSystem`, the internal nodes would not be freed until bodies are added again. This could lead to running out of internal nodes in rare cases.
+* Fixed bug in `MeshShape` active edge calculation which could mark edges of non-manifold meshes as inactive instead of active.
 * Fixed passing underestimate of penetration depth in `ContactListener::OnContactPersisted` when the contact comes from the contact cache.
 * `QuadTree` will now fall back to the heap when running out of stack space during collision queries. Previously this would trigger an assert and some collisions would not be detected.
 * Fixed `BodyInterface::MoveKinematic`, `SetLinearVelocity`, `SetAngularVelocity`, `SetLinearAndAngularVelocity`, `AddLinearVelocity`, `AddLinearAndAngularVelocity`, `SetPositionRotationAndVelocity` and `SetMotionType` when body not added to the physics system yet.
