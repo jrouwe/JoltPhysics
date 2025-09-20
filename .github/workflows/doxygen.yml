@@ -1,0 +1,26 @@
+name: Doxygen Action
+
+on:
+  push:
+    branches: [ master ]
+
+# Builds and deploys doxygen documentation  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v5
+        
+    - name: Doxygen Action
+      uses: mattnotmitt/doxygen-action@v1.12.0
+      with:
+        doxyfile-path: "./Doxyfile"
+        working-directory: "."
+    
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./Build/Doxygen
+        force_orphan: true
