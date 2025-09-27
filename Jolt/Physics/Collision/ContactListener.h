@@ -69,8 +69,12 @@ enum class ValidateResult
 /// Note that contact listener callbacks are called from multiple threads at the same time when all bodies are locked, this means you cannot
 /// use PhysicsSystem::GetBodyInterface / PhysicsSystem::GetBodyLockInterface but must use PhysicsSystem::GetBodyInterfaceNoLock / PhysicsSystem::GetBodyLockInterfaceNoLock instead.
 /// If you use a locking interface, the simulation will deadlock. You're only allowed to read from the bodies and you can't change physics state.
-///
 /// During OnContactRemoved you cannot access the bodies at all, see the comments at that function.
+/// 
+/// While a callback can come from multiple threads, all callbacks relating to a single body pair are serialized.
+/// For EMotionQuality::Discrete bodies, during every 'collision step' in a PhysicsSystem::Update, you will receive at most one OnContactAdded/Persisted/Removed call per body/sub shape pair.
+/// For EMotionQuality::LinearCast bodies, you may get an OnContactAdded followed by an OnContactPersisted for the same body/sub shape pair.
+/// This happens when a body collides both in the discrete and the continuous collision detection stage.
 class ContactListener
 {
 public:
