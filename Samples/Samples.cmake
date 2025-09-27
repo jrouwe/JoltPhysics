@@ -309,6 +309,8 @@ if (ENABLE_OBJECT_STREAM)
 		${SAMPLES_ROOT}/Tests/Rig/RigPileTest.h
 		${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.cpp
 		${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.h
+		${SAMPLES_ROOT}/Tests/Rig/SoftKeyFramedRigTest.cpp
+		${SAMPLES_ROOT}/Tests/Rig/SoftKeyFramedRigTest.h
 	)
 endif()
 

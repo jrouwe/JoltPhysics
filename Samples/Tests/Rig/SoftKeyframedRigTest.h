@@ -1,5 +1,5 @@
 // Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
-// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-FileCopyrightText: 2025 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -11,20 +11,21 @@
 #include <Utils/RagdollLoader.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-class KinematicRigTest : public Test
+class SoftKeyframedRigTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, KinematicRigTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftKeyframedRigTest)
 
 	// Description of the test
 	virtual const char *	GetDescription() const override
 	{
-		return "Tests a kinematic ragdoll moving towards a wall of boxes.\n"
-			"Also demonstrates that kinematic bodies don't get influenced by static bodies.";
+		return "Tests a soft keyframed ragdoll moving towards a wall of boxes.\n"
+			"This applies velocities to dynamic bodies to force the ragdoll to follow an animation.\n"
+			"Since the bodies are dynamic, they will collide with static objects.";
 	}
 
 	// Destructor
-	virtual					~KinematicRigTest() override;
+	virtual					~SoftKeyframedRigTest() override;
 
 	// Number used to scale the terrain and camera movement to the scene
 	virtual float			GetWorldScale() const override								{ return 0.2f; }
