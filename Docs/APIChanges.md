@@ -4,7 +4,7 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See [Saving Shapes](https://jrouwe.github.io/JoltPhysics/#saving-shapes) for further information.
 
-## Changes between v5.3.0 and latest
+## Changes between v5.3.0 and v5.4.0
 
 * 20240529 - *SBS* - Added `SoftBodyCreationSettings::mFacesDoubleSided` which treats the faces of the soft body as double sided. This changes the binary serialization format. (3ad037b9262ba81bf7ceda10687f2a07da38f091)
 * 20240529 - *SBS* - WheelSettingsTV and WheelSettingsWV were not serializing their base class members. This changes the binary serialization format. (cfefdc669291bd25dd168af95fb32515cc05a78b)

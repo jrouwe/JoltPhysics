@@ -2,7 +2,7 @@
 
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
-## Unreleased Changes
+## v5.4.0
 
 ### New functionality
 
