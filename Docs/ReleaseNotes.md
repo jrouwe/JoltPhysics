@@ -2,6 +2,12 @@
 
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
+## Unreleased Changes
+
+### Bug Fixes
+
+* A 6DOF constraint that constrains all rotation axis in combination with a body that has some of its rotation axis locked would not constrain the rotation in the unlocked axis
+
 ## v5.4.0
 
 ### New functionality
