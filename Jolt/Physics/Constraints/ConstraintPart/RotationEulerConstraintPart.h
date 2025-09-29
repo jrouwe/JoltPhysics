@@ -146,13 +146,15 @@ public:
 		Mat44 inertia_sum = mInvI1 + mInvI2;
 		if (!mEffectiveMass.SetInversed3x3(inertia_sum))
 		{
-			// Can happen if one or more translation axis are locked.
-			// We add a very small number (a very large inertia) to the diagonal to try to make the matrix invertible.
-			// This does not matter for the end result because any impulse will always be multiplied with mInvI1 or mInvI2 which will result in zero for the locked coordinate.
-			constexpr float very_small = 1.0e-12f;
-			inertia_sum.SetColumn4(0, inertia_sum.GetColumn4(0) + Vec4(very_small, 0, 0, 0));
-			inertia_sum.SetColumn4(1, inertia_sum.GetColumn4(1) + Vec4(0, very_small, 0, 0));
-			inertia_sum.SetColumn4(2, inertia_sum.GetColumn4(2) + Vec4(0, 0, very_small, 0));
+			// If a column is zero, the axis is locked and we set the column to identity.
+			// This does not matter because any impulse will always be multiplied with mInvI1 or mInvI2 which will result in zero for the locked coordinate.
+			Vec4 zero = Vec4::sZero();
+			if (inertia_sum.GetColumn4(0) == zero)
+				inertia_sum.SetColumn4(0, Vec4(1, 0, 0, 0));
+			if (inertia_sum.GetColumn4(1) == zero)
+				inertia_sum.SetColumn4(1, Vec4(0, 1, 0, 0));
+			if (inertia_sum.GetColumn4(2) == zero)
+				inertia_sum.SetColumn4(2, Vec4(0, 0, 1, 0));
 			if (!mEffectiveMass.SetInversed3x3(inertia_sum))
 				Deactivate();
 		}
