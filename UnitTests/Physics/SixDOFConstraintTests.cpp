@@ -5,6 +5,7 @@
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
 #include <Jolt/Physics/Constraints/SixDOFConstraint.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include "Layers.h"
 
 TEST_SUITE("SixDOFConstraintTests")
@@ -83,5 +84,44 @@ TEST_SUITE("SixDOFConstraintTests")
 				}
 			}
 		}
+	}
+
+	// Test combination of locked rotation axis with a 6DOF constraint
+	TEST_CASE("TestSixDOFLockedRotation")
+	{
+		PhysicsTestContext context;
+		BodyInterface &bi = context.GetBodyInterface();
+		PhysicsSystem *system = context.GetSystem();
+
+		RefConst<Shape> box_shape = new BoxShape(Vec3::sReplicate(1.0f));
+
+		// Static 'anchor' body
+		BodyCreationSettings settings1(box_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		Body &body1 = *bi.CreateBody(settings1);
+		bi.AddBody(body1.GetID(), EActivation::Activate);
+
+		// Dynamic body that cannot rotate around X and Y
+		const RVec3 position2(3, 0, 0);
+		const Quat rotation2 = Quat::sIdentity();
+		BodyCreationSettings settings2(box_shape, position2, rotation2, EMotionType::Dynamic, Layers::MOVING);
+		settings2.mAllowedDOFs = EAllowedDOFs::RotationZ | EAllowedDOFs::TranslationX | EAllowedDOFs::TranslationY | EAllowedDOFs::TranslationZ;
+		Body &body2 = *bi.CreateBody(settings2);
+		bi.AddBody(body2.GetID(), EActivation::Activate);
+
+		// Lock all 6 axis with a 6DOF constraint
+		SixDOFConstraintSettings six_dof;
+		six_dof.MakeFixedAxis(SixDOFConstraintSettings::EAxis::TranslationX);
+		six_dof.MakeFixedAxis(SixDOFConstraintSettings::EAxis::TranslationY);
+		six_dof.MakeFixedAxis(SixDOFConstraintSettings::EAxis::TranslationZ);
+		six_dof.MakeFixedAxis(SixDOFConstraintSettings::EAxis::RotationX);
+		six_dof.MakeFixedAxis(SixDOFConstraintSettings::EAxis::RotationY);
+		six_dof.MakeFixedAxis(SixDOFConstraintSettings::EAxis::RotationZ);
+		system->AddConstraint(six_dof.Create(body1, body2));
+
+		context.Simulate(1.0f);
+
+		// Check that body didn't rotate
+		CHECK_APPROX_EQUAL(body2.GetPosition(), position2, 5.0e-3f);
+		CHECK_APPROX_EQUAL(body2.GetRotation(), rotation2, 5.0e-3f);
 	}
 }
