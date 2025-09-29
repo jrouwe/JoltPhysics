@@ -40,6 +40,9 @@ using BodyVector = Array<Body *>;
 using BodyIDVector = Array<BodyID>;
 
 /// Class that contains all bodies
+///
+/// WARNING: This class is an internal part of PhysicsSystem, it has no functions that can be called by users of the library.
+/// Its functionality is exposed through PhysicsSystem, BodyInterface, BodyLockRead and BodyLockWrite.
 class JPH_EXPORT BodyManager : public NonCopyable
 {
 public:

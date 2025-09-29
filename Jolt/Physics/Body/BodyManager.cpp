@@ -47,7 +47,8 @@ JPH_NAMESPACE_BEGIN
 	}
 #endif
 
-// Helper class that combines a body and its motion properties
+/// @cond INTERNAL
+/// Helper class that combines a body and its motion properties
 class BodyWithMotionProperties : public Body
 {
 public:
@@ -55,8 +56,10 @@ public:
 
 	MotionProperties			mMotionProperties;
 };
+/// @endcond
 
-// Helper class that combines a soft body its motion properties and shape
+/// @cond INTERNAL
+/// Helper class that combines a soft body its motion properties and shape
 class SoftBodyWithMotionPropertiesAndShape : public Body
 {
 public:
@@ -68,6 +71,7 @@ public:
 	SoftBodyMotionProperties	mMotionProperties;
 	SoftBodyShape				mShape;
 };
+/// @endcond
 
 inline void BodyManager::sDeleteBody(Body *inBody)
 {
