@@ -15,9 +15,7 @@ class TempAllocator;
 //#define JPH_VALIDATE_ISLAND_BUILDER
 
 /// Keeps track of connected bodies and builds islands for multithreaded velocity/position update
-///
-/// WARNING: This class is an internal part of PhysicsSystem, it has no functions that can be called by users of the library.
-class IslandBuilder : public NonCopyable
+class JPH_EXPORT IslandBuilder : public NonCopyable
 {
 public:
 	/// Destructor
