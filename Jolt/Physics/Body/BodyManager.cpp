@@ -1172,6 +1172,8 @@ void BodyManager::ValidateActiveBodyBounds()
 #ifdef JPH_TRACK_SIMULATION_STATS
 void BodyManager::ResetSimulationStats()
 {
+	JPH_PROFILE_FUNCTION();
+
 	UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
 
 	for (uint type = 0; type < cBodyTypeCount; ++type)

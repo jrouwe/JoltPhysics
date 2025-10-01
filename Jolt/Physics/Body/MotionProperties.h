@@ -187,15 +187,17 @@ public:
 	uint					GetNumPositionStepsOverride() const								{ return mNumPositionStepsOverride; }
 
 #ifdef JPH_TRACK_SIMULATION_STATS
+	/// Stats for this body. These are average for the simulation island the body was part of.
 	struct SimulationStats
 	{
-		void				Reset()															{ mCollisionTicks = 0; mVelocityConstraintTicks = 0; mPositionConstraintTicks = 0; mNumVelocitySteps = 0; mNumPositionSteps = 0; }
+		void				Reset()															{ mNarrowPhaseTicks = 0; mVelocityConstraintTicks = 0; mPositionConstraintTicks = 0; mNumContactConstraints = 0; mNumVelocitySteps = 0; mNumPositionSteps = 0; }
 
-		atomic<uint64>		mCollisionTicks = 0;
-		atomic<uint64>		mVelocityConstraintTicks = 0;
-		atomic<uint64>		mPositionConstraintTicks = 0;
-		uint8				mNumVelocitySteps = 0;
-		uint8				mNumPositionSteps = 0;
+		atomic<uint64>		mNarrowPhaseTicks = 0;											///< Number of processor ticks spent doing narrow phase collision detection
+		uint64				mVelocityConstraintTicks = 0;									///< Number of ticks spent solving velocity constraints
+		uint64				mPositionConstraintTicks = 0;									///< Number of ticks spent solving position constraints
+		atomic<uint32>		mNumContactConstraints = 0;										///< Number of contact constraints created for this body
+		uint8				mNumVelocitySteps = 0;											///< Number of velocity iterations performed
+		uint8				mNumPositionSteps = 0;											///< Number of position iterations performed
 	};
 
 	const SimulationStats &	GetSimulationStats() const										{ return mSimulationStats; }

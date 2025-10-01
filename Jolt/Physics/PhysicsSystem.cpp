@@ -129,6 +129,35 @@ void PhysicsSystem::RemoveStepListener(PhysicsStepListener *inListener)
 	mStepListeners.pop_back();
 }
 
+#ifdef JPH_TRACK_SIMULATION_STATS
+void PhysicsSystem::GatherIslandStats()
+{
+	JPH_PROFILE_FUNCTION();
+	
+	for (uint32 island_idx = 0; island_idx < mIslandBuilder.GetNumIslands(); ++island_idx)
+	{
+		BodyID *bodies_begin, *bodies_end;
+		mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);		
+		uint64 num_bodies = bodies_end - bodies_begin;
+
+		// Equally distribute the stats over all bodies
+		const IslandBuilder::IslandStats &stats = mIslandBuilder.GetIslandStats(island_idx);
+		uint64 num_velocity_ticks = stats.mVelocityConstraintTicks / num_bodies;
+		uint64 num_position_ticks = stats.mPositionConstraintTicks / num_bodies;
+		uint8 num_position_steps = (uint8)mIslandBuilder.GetNumPositionSteps(island_idx);
+
+		for (BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
+		{
+			MotionProperties::SimulationStats &out_stats = mBodyManager.GetBody(*body_id).GetMotionProperties()->GetSimulationStats();
+			out_stats.mNumVelocitySteps = stats.mNumVelocitySteps;
+			out_stats.mNumPositionSteps = num_position_steps;
+			out_stats.mVelocityConstraintTicks += num_velocity_ticks; // In case of multiple collision steps we accumulate
+			out_stats.mPositionConstraintTicks += num_position_ticks;
+		}
+	}
+}
+#endif // JPH_TRACK_SIMULATION_STATS
+
 EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem)
 {
 	JPH_PROFILE_FUNCTION();
@@ -404,6 +433,11 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 						mBodyManager.ValidateActiveBodyBounds();
 					#endif // JPH_DEBUG
 
+					#ifdef JPH_TRACK_SIMULATION_STATS
+						// Gather stats from the islands and distribute them over the bodies
+						GatherIslandStats();
+					#endif
+
 						// Store the number of active bodies at the start of the step
 						next_step->mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
 
@@ -584,6 +618,11 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	// Validate that the cached bounds are correct
 	mBodyManager.ValidateActiveBodyBounds();
 #endif // JPH_DEBUG
+
+#ifdef JPH_TRACK_SIMULATION_STATS
+	// Gather stats from the islands and distribute them over the bodies
+	GatherIslandStats();
+#endif
 
 	// Clear the large island splitter
 	mLargeIslandSplitter.Reset(inTempAllocator);
@@ -1278,15 +1317,15 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		if (body1->GetMotionType() > body2->GetMotionType())
 		{
 			// Assign all ticks to the body with the higher motion type
-			body1->GetMotionProperties()->GetSimulationStats().mCollisionTicks.fetch_add(num_ticks, memory_order_relaxed);
+			body1->GetMotionProperties()->GetSimulationStats().mNarrowPhaseTicks.fetch_add(num_ticks, memory_order_relaxed);
 		}
 		else
 		{
 			// When two bodies with the same motion type are involved, we give both bodies half the ticks
 			JPH_ASSERT(body1->GetMotionType() == body2->GetMotionType());
 			num_ticks /= 2;
-			body1->GetMotionProperties()->GetSimulationStats().mCollisionTicks.fetch_add(num_ticks, memory_order_relaxed);
-			body1->GetMotionProperties()->GetSimulationStats().mCollisionTicks.fetch_add(num_ticks, memory_order_relaxed);
+			body1->GetMotionProperties()->GetSimulationStats().mNarrowPhaseTicks.fetch_add(num_ticks, memory_order_relaxed);
+			body1->GetMotionProperties()->GetSimulationStats().mNarrowPhaseTicks.fetch_add(num_ticks, memory_order_relaxed);
 		}
 	#endif	
 	}
@@ -1370,6 +1409,10 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			{
 			case LargeIslandSplitter::EStatus::BatchRetrieved:
 				{
+				#ifdef JPH_TRACK_SIMULATION_STATS
+					uint64 start_tick = GetProcessorTickCount();
+				#endif
+
 					if (first_iteration)
 					{
 						// Iteration 0 is used to warm start the batch (we added 1 to the number of iterations in LargeIslandSplitter::SplitIsland)
@@ -1391,6 +1434,11 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 					// Save back the lambdas in the contact cache for the warm start of the next physics update
 					if (last_iteration)
 						mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
+
+				#ifdef JPH_TRACK_SIMULATION_STATS
+					uint64 num_ticks = GetProcessorTickCount() - start_tick;
+					mIslandBuilder.GetIslandStats(mLargeIslandSplitter.GetIslandIndex(split_island_index)).mVelocityConstraintTicks.fetch_add(num_ticks, memory_order_relaxed);
+				#endif
 
 					// We processed work, loop again
 					continue;
@@ -1482,18 +1530,10 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			}
 
 		#ifdef JPH_TRACK_SIMULATION_STATS
-			// Average the total ticks spent over the number of bodies and assign each the average number of ticks per body
 			uint64 num_ticks = GetProcessorTickCount() - start_tick;
-			BodyID *bodies_begin, *bodies_end;
-			mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);
-			num_ticks /= bodies_end - bodies_begin;
-			for (BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
-			{
-				MotionProperties::SimulationStats &stats = mBodyManager.GetBody(*body_id).GetMotionProperties()->GetSimulationStats();
-				stats.mNumVelocitySteps = (uint8)steps_calculator.GetNumVelocitySteps();
-				stats.mNumPositionSteps = (uint8)steps_calculator.GetNumPositionSteps();
-				stats.mVelocityConstraintTicks.fetch_add(num_ticks, memory_order_relaxed);
-			}
+			IslandBuilder::IslandStats &stats = mIslandBuilder.GetIslandStats(island_idx);
+			stats.mNumVelocitySteps = (uint8)steps_calculator.GetNumVelocitySteps();
+			stats.mVelocityConstraintTicks.fetch_add(num_ticks, memory_order_relaxed);
 		#endif
 
 			// We processed work, loop again
@@ -2448,20 +2488,31 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 			switch (mLargeIslandSplitter.FetchNextBatch(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, first_iteration))
 			{
 			case LargeIslandSplitter::EStatus::BatchRetrieved:
-				// Solve the batch
-				ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);
-				mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
+				{
+				#ifdef JPH_TRACK_SIMULATION_STATS
+					uint64 start_tick = GetProcessorTickCount();
+				#endif
 
-				// Mark the batch as processed
-				bool last_iteration, final_batch;
-				mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, last_iteration, final_batch);
+					// Solve the batch
+					ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);
+					mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
 
-				// The final batch will update all bounds and check sleeping
-				if (final_batch)
-					CheckSleepAndUpdateBounds(mLargeIslandSplitter.GetIslandIndex(split_island_index), ioContext, ioStep, bodies_to_sleep);
+					// Mark the batch as processed
+					bool last_iteration, final_batch;
+					mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, last_iteration, final_batch);
 
-				// We processed work, loop again
-				continue;
+					// The final batch will update all bounds and check sleeping
+					if (final_batch)
+						CheckSleepAndUpdateBounds(mLargeIslandSplitter.GetIslandIndex(split_island_index), ioContext, ioStep, bodies_to_sleep);
+
+				#ifdef JPH_TRACK_SIMULATION_STATS
+					uint64 num_ticks = GetProcessorTickCount() - start_tick;
+					mIslandBuilder.GetIslandStats(mLargeIslandSplitter.GetIslandIndex(split_island_index)).mPositionConstraintTicks.fetch_add(num_ticks, memory_order_relaxed);
+				#endif
+
+					// We processed work, loop again
+					continue;
+				}
 
 			case LargeIslandSplitter::EStatus::WaitingForBatch:
 				break;
@@ -2521,14 +2572,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 		#ifdef JPH_TRACK_SIMULATION_STATS
 			// Average the total ticks spent over the number of bodies and assign each the average number of ticks per body
 			uint64 num_ticks = GetProcessorTickCount() - start_tick;
-			BodyID *bodies_begin, *bodies_end;
-			mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);
-			num_ticks /= bodies_end - bodies_begin;
-			for (BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
-			{
-				MotionProperties::SimulationStats &stats = mBodyManager.GetBody(*body_id).GetMotionProperties()->GetSimulationStats();
-				stats.mPositionConstraintTicks.fetch_add(num_ticks, memory_order_relaxed);
-			}
+			mIslandBuilder.GetIslandStats(island_idx).mPositionConstraintTicks.fetch_add(num_ticks, memory_order_relaxed);
 		#endif
 
 			// We processed work, loop again

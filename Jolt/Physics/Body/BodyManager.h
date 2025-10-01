@@ -293,6 +293,7 @@ public:
 #endif // JPH_DEBUG
 
 #ifdef JPH_TRACK_SIMULATION_STATS
+	/// Resets the per body simulation stats
 	void							ResetSimulationStats();
 #endif
 
