@@ -562,6 +562,11 @@ if (TRACK_NARROWPHASE_STATS)
 	target_compile_definitions(Jolt PUBLIC JPH_TRACK_NARROWPHASE_STATS)
 endif()
 
+# Setting to track simulation timings per body
+if (JPH_TRACK_SIMULATION_STATS)
+	target_compile_definitions(Jolt PUBLIC JPH_TRACK_SIMULATION_STATS)
+endif()
+
 # Enable the debug renderer
 if (DEBUG_RENDERER_IN_DISTRIBUTION)
 	target_compile_definitions(Jolt PUBLIC "JPH_DEBUG_RENDERER")

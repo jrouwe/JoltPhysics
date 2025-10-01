@@ -255,6 +255,11 @@ public:
 	void						ReportBroadphaseStats()										{ mBroadPhase->ReportStats(); }
 #endif // JPH_TRACK_BROADPHASE_STATS
 
+#if defined(JPH_TRACK_SIMULATION_STATS) && defined(JPH_PROFILE_ENABLED)
+	/// Dump the per body simulation stats to the TTY
+	void						ReportSimulationStats()										{ mBodyManager.ReportSimulationStats(); }
+#endif
+
 private:
 	using CCDBody = PhysicsUpdateContext::Step::CCDBody;
 
@@ -282,6 +287,11 @@ private:
 
 	/// Tries to spawn a new FindCollisions job if max concurrency hasn't been reached yet
 	void						TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep) const;
+
+#ifdef JPH_TRACK_SIMULATION_STATS
+	/// Gather stats from the islands and distribute them over the bodies
+	void						GatherIslandStats();
+#endif
 
 	using ContactAllocator = ContactConstraintManager::ContactAllocator;
 

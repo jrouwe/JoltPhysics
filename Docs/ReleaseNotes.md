@@ -4,6 +4,10 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ## Unreleased Changes
 
+### New functionality
+
+* Added new define `JPH_TRACK_SIMULATION_STATS` which tracks simulation statistics on a per body basis. This can be used to figure out bodies are the most expensive to simulate.
+
 ### Bug Fixes
 
 * A 6DOF constraint that constrains all rotation axis in combination with a body that has some of its rotation axis locked would not constrain the rotation in the unlocked axis

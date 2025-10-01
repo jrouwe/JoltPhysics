@@ -292,6 +292,16 @@ public:
 	void							ValidateActiveBodyBounds();
 #endif // JPH_DEBUG
 
+#ifdef JPH_TRACK_SIMULATION_STATS
+	/// Resets the per body simulation stats
+	void							ResetSimulationStats();
+
+#ifdef JPH_PROFILE_ENABLED
+	/// Dump the per body simulation stats to the TTY
+	void							ReportSimulationStats();
+#endif
+#endif
+
 private:
 	/// Increment and get the sequence number of the body
 #ifdef JPH_COMPILER_CLANG

@@ -2170,6 +2170,12 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 				mPlaybackMode = shift? EPlaybackMode::FastForward : EPlaybackMode::StepForward;
 			}
 			break;
+
+	#if defined(JPH_TRACK_SIMULATION_STATS) && defined(JPH_PROFILE_ENABLED)
+		case EKey::Y:
+			mPhysicsSystem->ReportSimulationStats();
+			break;
+	#endif
 		}
 
 	// Stop recording if record state is turned off
