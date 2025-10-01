@@ -1212,7 +1212,6 @@ void BodyManager::ReportSimulationStats()
 		}
 }
 #endif // JPH_PROFILE_ENABLED
-
 #endif // JPH_TRACK_SIMULATION_STATS
 
 JPH_NAMESPACE_END
