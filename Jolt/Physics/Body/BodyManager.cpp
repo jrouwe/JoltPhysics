@@ -1189,7 +1189,7 @@ void BodyManager::ReportSimulationStats()
 {
 	UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
 
-	Trace("BodyID, IslandIndex, NarrowPhaseUs, VelocityConstraintUs, PositionConstraintUS, CCDUs, NumContactConstraints, NumVelocitySteps, NumPositionSteps");
+	Trace("BodyID, IslandIndex, NarrowPhase (us), VelocityConstraint (us), PositionConstraint (us), CCD (us), NumContactConstraints, NumVelocitySteps, NumPositionSteps");
 
 	double us_per_tick = 1000000.0 / Profiler::sInstance->GetProcessorTicksPerSecond();
 

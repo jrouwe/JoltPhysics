@@ -1513,9 +1513,6 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 				mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, steps_calculator);
 				steps_calculator.Finalize();
 
-				// Store the number of position steps for later
-				mIslandBuilder.SetNumPositionSteps(island_idx, steps_calculator.GetNumPositionSteps());
-
 				// Solve velocity constraints
 				for (uint velocity_step = 0; velocity_step < steps_calculator.GetNumVelocitySteps(); ++velocity_step)
 				{
@@ -1528,6 +1525,9 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 				// Save back the lambdas in the contact cache for the warm start of the next physics update
 				mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
 			}
+
+			// Store the number of position steps for later
+			mIslandBuilder.SetNumPositionSteps(island_idx, steps_calculator.GetNumPositionSteps());
 
 		#ifdef JPH_TRACK_SIMULATION_STATS
 			uint64 num_ticks = GetProcessorTickCount() - start_tick;
