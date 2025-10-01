@@ -1183,6 +1183,36 @@ void BodyManager::ResetSimulationStats()
 			body->mMotionProperties->GetSimulationStats().Reset();
 		}
 }
+
+#ifdef JPH_PROFILE_ENABLED
+void BodyManager::ReportSimulationStats()
+{
+	UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
+
+	Trace("BodyID, IslandIndex, NarrowPhaseUs, VelocityConstraintUs, PositionConstraintUS, CCDUs, NumContactConstraints, NumVelocitySteps, NumPositionSteps");
+
+	double us_per_tick = 1000000.0 / Profiler::sInstance->GetProcessorTicksPerSecond();
+
+	for (uint type = 0; type < cBodyTypeCount; ++type)
+		for (BodyID *id = mActiveBodies[type], *id_end = mActiveBodies[type] + mNumActiveBodies[type].load(memory_order_relaxed); id < id_end; ++id)
+		{
+			const Body *body = mBodies[id->GetIndex()];
+			const MotionProperties *mp = body->mMotionProperties;
+			const MotionProperties::SimulationStats &stats = mp->GetSimulationStats();
+			Trace("%u, %u, %.2f, %.2f, %.2f, %.2f, %u, %u, %u",
+				body->GetID().GetIndex(),
+				mp->GetIslandIndexInternal(),
+				double(stats.mNarrowPhaseTicks) * us_per_tick,
+				double(stats.mVelocityConstraintTicks) * us_per_tick,
+				double(stats.mPositionConstraintTicks) * us_per_tick,
+				double(stats.mCCDTicks) * us_per_tick,
+				stats.mNumContactConstraints.load(memory_order_relaxed),
+				stats.mNumVelocitySteps,
+				stats.mNumPositionSteps);
+		}
+}
+#endif // JPH_PROFILE_ENABLED
+
 #endif // JPH_TRACK_SIMULATION_STATS
 
 JPH_NAMESPACE_END

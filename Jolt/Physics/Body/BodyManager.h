@@ -295,6 +295,11 @@ public:
 #ifdef JPH_TRACK_SIMULATION_STATS
 	/// Resets the per body simulation stats
 	void							ResetSimulationStats();
+
+#ifdef JPH_PROFILE_ENABLED
+	/// Dump the per body simulation stats to the TTY
+	void							ReportSimulationStats();
+#endif
 #endif
 
 private:
