@@ -610,6 +610,11 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 				// Mark this body as no longer active
 				body.mMotionProperties->mIslandIndex = Body::cInactiveIndex;
 
+			#ifdef JPH_TRACK_SIMULATION_STATS
+				// Reset simulation stats
+				body.mMotionProperties->mSimulationStats.Reset();
+			#endif		
+
 				// Reset velocity
 				body.mMotionProperties->mLinearVelocity = Vec3::sZero();
 				body.mMotionProperties->mAngularVelocity = Vec3::sZero();
@@ -1163,5 +1168,19 @@ void BodyManager::ValidateActiveBodyBounds()
 		}
 }
 #endif // JPH_DEBUG
+
+#ifdef JPH_TRACK_SIMULATION_STATS
+void BodyManager::ResetSimulationStats()
+{
+	UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
+
+	for (uint type = 0; type < cBodyTypeCount; ++type)
+		for (BodyID *id = mActiveBodies[type], *id_end = mActiveBodies[type] + mNumActiveBodies[type].load(memory_order_relaxed); id < id_end; ++id)
+		{
+			const Body *body = mBodies[id->GetIndex()];
+			body->mMotionProperties->GetSimulationStats().Reset();
+		}
+}
+#endif // JPH_TRACK_SIMULATION_STATS
 
 JPH_NAMESPACE_END

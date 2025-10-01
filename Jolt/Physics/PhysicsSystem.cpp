@@ -162,6 +162,11 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 		return EPhysicsUpdateError::None;
 	}
 
+#ifdef JPH_TRACK_SIMULATION_STATS
+	// Reset accumulated stats on the active bodies
+	mBodyManager.ResetSimulationStats();
+#endif
+
 	// Calculate ratio between current and previous frame delta time to scale initial constraint forces
 	float step_delta_time = inDeltaTime / inCollisionSteps;
 	float warm_start_impulse_ratio = mPhysicsSettings.mConstraintWarmStart && mPreviousStepDeltaTime > 0.0f? step_delta_time / mPreviousStepDeltaTime : 0.0f;
@@ -1023,6 +1028,10 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 	// If the cache hasn't handled this body pair do actual collision detection
 	if (!pair_handled)
 	{
+	#ifdef JPH_TRACK_SIMULATION_STATS
+		uint64 start_ticks = GetProcessorTickCount();
+	#endif
+	
 		// Create entry in the cache for this body pair
 		// Needs to happen irrespective if we found a collision or not (we want to remember that no collision was found too)
 		ContactConstraintManager::BodyPairHandle body_pair_handle = mContactManager.AddBodyPair(ioContactAllocator, *body1, *body2);
@@ -1262,6 +1271,24 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			constraint_created = collector.mConstraintCreated;
 		}
+		
+	#ifdef JPH_TRACK_SIMULATION_STATS
+		// Track time spent processing collision for this body pair
+		uint64 num_ticks = GetProcessorTickCount() - start_ticks;
+		if (body1->GetMotionType() > body2->GetMotionType())
+		{
+			// Assign all ticks to the body with the higher motion type
+			body1->GetMotionProperties()->GetSimulationStats().mCollisionTicks.fetch_add(num_ticks, memory_order_relaxed);
+		}
+		else
+		{
+			// When two bodies with the same motion type are involved, we give both bodies half the ticks
+			JPH_ASSERT(body1->GetMotionType() == body2->GetMotionType());
+			num_ticks /= 2;
+			body1->GetMotionProperties()->GetSimulationStats().mCollisionTicks.fetch_add(num_ticks, memory_order_relaxed);
+			body1->GetMotionProperties()->GetSimulationStats().mCollisionTicks.fetch_add(num_ticks, memory_order_relaxed);
+		}
+	#endif	
 	}
 
 	// If a contact constraint was created, we need to do some extra work
@@ -1414,6 +1441,10 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 				continue;
 			}
 
+		#ifdef JPH_TRACK_SIMULATION_STATS
+			uint64 start_tick = GetProcessorTickCount();
+		#endif
+
 			// Sorting is costly but needed for a deterministic simulation, allow the user to turn this off
 			if (mPhysicsSettings.mDeterministicSimulation)
 			{
@@ -1426,29 +1457,44 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 
 			// Split up large islands
 			CalculateSolverSteps steps_calculator(mPhysicsSettings);
-			if (mPhysicsSettings.mUseLargeIslandSplitter
-				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, steps_calculator))
-				continue; // Loop again to try to fetch the newly split island
-
-			// We didn't create a split, just run the solver now for this entire island. Begin by warm starting.
-			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, steps_calculator);
-			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, steps_calculator);
-			steps_calculator.Finalize();
-
-			// Store the number of position steps for later
-			mIslandBuilder.SetNumPositionSteps(island_idx, steps_calculator.GetNumPositionSteps());
-
-			// Solve velocity constraints
-			for (uint velocity_step = 0; velocity_step < steps_calculator.GetNumVelocitySteps(); ++velocity_step)
+			if (!mPhysicsSettings.mUseLargeIslandSplitter
+				|| !mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, steps_calculator))
 			{
-				bool applied_impulse = ConstraintManager::sSolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
-				applied_impulse |= mContactManager.SolveVelocityConstraints(contacts_begin, contacts_end);
-				if (!applied_impulse)
-					break;
+				// We didn't create a split, just run the solver now for this entire island. Begin by warm starting.
+				ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, steps_calculator);
+				mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, steps_calculator);
+				steps_calculator.Finalize();
+	
+				// Store the number of position steps for later
+				mIslandBuilder.SetNumPositionSteps(island_idx, steps_calculator.GetNumPositionSteps());
+	
+				// Solve velocity constraints
+				for (uint velocity_step = 0; velocity_step < steps_calculator.GetNumVelocitySteps(); ++velocity_step)
+				{
+					bool applied_impulse = ConstraintManager::sSolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
+					applied_impulse |= mContactManager.SolveVelocityConstraints(contacts_begin, contacts_end);
+					if (!applied_impulse)
+						break;
+				}
+	
+				// Save back the lambdas in the contact cache for the warm start of the next physics update
+				mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
 			}
 
-			// Save back the lambdas in the contact cache for the warm start of the next physics update
-			mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
+		#ifdef JPH_TRACK_SIMULATION_STATS
+			// Average the total ticks spent over the number of bodies and assign each the average number of ticks per body
+			uint64 num_ticks = GetProcessorTickCount() - start_tick;
+			BodyID *bodies_begin, *bodies_end;
+			mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);
+			num_ticks /= bodies_end - bodies_begin;
+			for (BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
+			{
+				MotionProperties::SimulationStats &stats = mBodyManager.GetBody(*body_id).GetMotionProperties()->GetSimulationStats();
+				stats.mNumVelocitySteps = (uint8)steps_calculator.GetNumVelocitySteps();
+				stats.mNumPositionSteps = (uint8)steps_calculator.GetNumPositionSteps();
+				stats.mVelocityConstraintTicks.fetch_add(num_ticks, memory_order_relaxed);
+			}
+		#endif
 
 			// We processed work, loop again
 			continue;
@@ -2451,6 +2497,10 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 				&& num_items >= LargeIslandSplitter::cLargeIslandTreshold)
 				continue;
 
+		#ifdef JPH_TRACK_SIMULATION_STATS
+			uint64 start_tick = GetProcessorTickCount();
+		#endif
+
 			// Check if this island needs solving
 			if (num_items > 0)
 			{
@@ -2467,6 +2517,19 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 
 			// After solving we will update all bounds and check sleeping
 			CheckSleepAndUpdateBounds(island_idx, ioContext, ioStep, bodies_to_sleep);
+
+		#ifdef JPH_TRACK_SIMULATION_STATS
+			// Average the total ticks spent over the number of bodies and assign each the average number of ticks per body
+			uint64 num_ticks = GetProcessorTickCount() - start_tick;
+			BodyID *bodies_begin, *bodies_end;
+			mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);
+			num_ticks /= bodies_end - bodies_begin;
+			for (BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
+			{
+				MotionProperties::SimulationStats &stats = mBodyManager.GetBody(*body_id).GetMotionProperties()->GetSimulationStats();
+				stats.mPositionConstraintTicks.fetch_add(num_ticks, memory_order_relaxed);
+			}
+		#endif
 
 			// We processed work, loop again
 			continue;

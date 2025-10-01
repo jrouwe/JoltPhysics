@@ -186,6 +186,22 @@ public:
 	void					SetNumPositionStepsOverride(uint inN)							{ JPH_ASSERT(inN < 256); mNumPositionStepsOverride = uint8(inN); }
 	uint					GetNumPositionStepsOverride() const								{ return mNumPositionStepsOverride; }
 
+#ifdef JPH_TRACK_SIMULATION_STATS
+	struct SimulationStats
+	{
+		void				Reset()															{ mCollisionTicks = 0; mVelocityConstraintTicks = 0; mPositionConstraintTicks = 0; mNumVelocitySteps = 0; mNumPositionSteps = 0; }
+
+		atomic<uint64>		mCollisionTicks = 0;
+		atomic<uint64>		mVelocityConstraintTicks = 0;
+		atomic<uint64>		mPositionConstraintTicks = 0;
+		uint8				mNumVelocitySteps = 0;
+		uint8				mNumPositionSteps = 0;
+	};
+
+	const SimulationStats &	GetSimulationStats() const										{ return mSimulationStats; }
+	SimulationStats &		GetSimulationStats()											{ return mSimulationStats; }
+#endif // JPH_TRACK_SIMULATION_STATS
+
 	////////////////////////////////////////////////////////////
 	// FUNCTIONS BELOW THIS LINE ARE FOR INTERNAL USE ONLY
 	////////////////////////////////////////////////////////////
@@ -275,6 +291,10 @@ private:
 	EBodyType				mCachedBodyType;												///< Copied from Body::mBodyType and cached for asserting purposes
 	EMotionType				mCachedMotionType;												///< Copied from Body::mMotionType and cached for asserting purposes
 #endif
+
+#ifdef JPH_TRACK_SIMULATION_STATS
+	SimulationStats			mSimulationStats;
+#endif // JPH_TRACK_SIMULATION_STATS
 };
 
 JPH_NAMESPACE_END
