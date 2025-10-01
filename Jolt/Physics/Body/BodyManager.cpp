@@ -613,7 +613,7 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 			#ifdef JPH_TRACK_SIMULATION_STATS
 				// Reset simulation stats
 				body.mMotionProperties->mSimulationStats.Reset();
-			#endif		
+			#endif
 
 				// Reset velocity
 				body.mMotionProperties->mLinearVelocity = Vec3::sZero();

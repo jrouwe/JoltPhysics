@@ -133,11 +133,11 @@ void PhysicsSystem::RemoveStepListener(PhysicsStepListener *inListener)
 void PhysicsSystem::GatherIslandStats()
 {
 	JPH_PROFILE_FUNCTION();
-	
+
 	for (uint32 island_idx = 0; island_idx < mIslandBuilder.GetNumIslands(); ++island_idx)
 	{
 		BodyID *bodies_begin, *bodies_end;
-		mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);		
+		mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);
 		uint64 num_bodies = bodies_end - bodies_begin;
 
 		// Equally distribute the stats over all bodies
@@ -1070,7 +1070,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 	#ifdef JPH_TRACK_SIMULATION_STATS
 		uint64 start_ticks = GetProcessorTickCount();
 	#endif
-	
+
 		// Create entry in the cache for this body pair
 		// Needs to happen irrespective if we found a collision or not (we want to remember that no collision was found too)
 		ContactConstraintManager::BodyPairHandle body_pair_handle = mContactManager.AddBodyPair(ioContactAllocator, *body1, *body2);
@@ -1310,7 +1310,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			constraint_created = collector.mConstraintCreated;
 		}
-		
+
 	#ifdef JPH_TRACK_SIMULATION_STATS
 		// Track time spent processing collision for this body pair
 		uint64 num_ticks = GetProcessorTickCount() - start_ticks;
@@ -1327,7 +1327,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			body1->GetMotionProperties()->GetSimulationStats().mNarrowPhaseTicks.fetch_add(num_ticks, memory_order_relaxed);
 			body1->GetMotionProperties()->GetSimulationStats().mNarrowPhaseTicks.fetch_add(num_ticks, memory_order_relaxed);
 		}
-	#endif	
+	#endif
 	}
 
 	// If a contact constraint was created, we need to do some extra work
@@ -1512,10 +1512,10 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 				ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, steps_calculator);
 				mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, steps_calculator);
 				steps_calculator.Finalize();
-	
+
 				// Store the number of position steps for later
 				mIslandBuilder.SetNumPositionSteps(island_idx, steps_calculator.GetNumPositionSteps());
-	
+
 				// Solve velocity constraints
 				for (uint velocity_step = 0; velocity_step < steps_calculator.GetNumVelocitySteps(); ++velocity_step)
 				{
@@ -1524,7 +1524,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 					if (!applied_impulse)
 						break;
 				}
-	
+
 				// Save back the lambdas in the contact cache for the warm start of the next physics update
 				mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
 			}
