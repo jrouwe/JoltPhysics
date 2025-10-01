@@ -1802,7 +1802,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		if (idx >= ioStep->mNumCCDBodies)
 			break;
 		CCDBody &ccd_body = ioStep->mCCDBodies[idx];
-		const Body &body = mBodyManager.GetBody(ccd_body.mBodyID1);
+		Body &body = mBodyManager.GetBody(ccd_body.mBodyID1);
 
 		// Filter out layers
 		DefaultBroadPhaseLayerFilter broadphase_layer_filter = GetDefaultBroadPhaseLayerFilter(body.GetObjectLayer());
@@ -2019,10 +2019,19 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		// Create shape filter
 		SimShapeFilterWrapper shape_filter(mSimShapeFilter, &body);
 
+	#ifdef JPH_TRACK_SIMULATION_STATS
+		uint64 start_tick = GetProcessorTickCount();
+	#endif
+
 		// Check if we collide with any other body. Note that we use the non-locking interface as we know the broadphase cannot be modified at this point.
 		RShapeCast shape_cast(body.GetShape(), Vec3::sOne(), body.GetCenterOfMassTransform(), ccd_body.mDeltaPosition);
 		CCDBroadPhaseCollector bp_collector(ccd_body, body, shape_cast, settings, shape_filter, np_collector, mBodyManager, ioStep, ioContext->mStepDeltaTime);
 		mBroadPhase->CastAABoxNoLock({ shape_cast.mShapeWorldBounds, shape_cast.mDirection }, bp_collector, broadphase_layer_filter, object_layer_filter);
+
+	#ifdef JPH_TRACK_SIMULATION_STATS
+		uint64 num_ticks = GetProcessorTickCount() - start_tick;
+		body.GetMotionPropertiesUnchecked()->GetSimulationStats().mCCDTicks.fetch_add(num_ticks, memory_order_relaxed);
+	#endif
 
 		// Check if there was a hit
 		if (ccd_body.mFractionPlusSlop < 1.0f)
