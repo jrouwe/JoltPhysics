@@ -1189,7 +1189,7 @@ void BodyManager::ReportSimulationStats()
 {
 	UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
 
-	Trace("BodyID, IslandIndex, NarrowPhase (us), VelocityConstraint (us), PositionConstraint (us), CCD (us), NumContactConstraints, NumVelocitySteps, NumPositionSteps");
+	Trace("BodyID, IslandIndex, LargeIsland, BroadPhase (us), NarrowPhase (us), VelocityConstraint (us), PositionConstraint (us), UpdateBounds (us), CCD (us), NumContactConstraints, NumVelocitySteps, NumPositionSteps");
 
 	double us_per_tick = 1000000.0 / Profiler::sInstance->GetProcessorTicksPerSecond();
 
@@ -1199,12 +1199,15 @@ void BodyManager::ReportSimulationStats()
 			const Body *body = mBodies[id->GetIndex()];
 			const MotionProperties *mp = body->mMotionProperties;
 			const MotionProperties::SimulationStats &stats = mp->GetSimulationStats();
-			Trace("%u, %u, %.2f, %.2f, %.2f, %.2f, %u, %u, %u",
+			Trace("%u, %u, %s, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %u, %u, %u",
 				body->GetID().GetIndex(),
 				mp->GetIslandIndexInternal(),
+				stats.mIsLargeIsland? "True" : "False",
+				double(stats.mBroadPhaseTicks) * us_per_tick,
 				double(stats.mNarrowPhaseTicks) * us_per_tick,
 				double(stats.mVelocityConstraintTicks) * us_per_tick,
 				double(stats.mPositionConstraintTicks) * us_per_tick,
+				double(stats.mUpdateBoundsTicks) * us_per_tick,
 				double(stats.mCCDTicks) * us_per_tick,
 				stats.mNumContactConstraints.load(memory_order_relaxed),
 				stats.mNumVelocitySteps,

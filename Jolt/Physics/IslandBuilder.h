@@ -59,7 +59,10 @@ public:
 	{
 		atomic<uint64>		mVelocityConstraintTicks = 0;
 		atomic<uint64>		mPositionConstraintTicks = 0;
+		atomic<uint64>		mUpdateBoundsTicks = 0;
 		uint8				mNumVelocitySteps = 0;
+		uint8				mNumPositionSteps = 0;												///< Tracking this a 2nd time since IslandBuilder::mNumPositionSteps is not filled in when there are no constraints or for large islands.
+		bool				mIsLargeIsland = false;
 	};
 
 	/// Tracks simulation stats per island
