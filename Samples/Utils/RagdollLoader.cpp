@@ -112,6 +112,9 @@ RagdollSettings *RagdollLoader::sLoad(const char *inFileName, EMotionType inMoti
 	// Stabilize the constraints of the ragdoll
 	ragdoll->Stabilize();
 
+	// Optional: Calculate constraint priorities to give more priority to the root
+	ragdoll->CalculateConstraintPriorities();
+
 	// Calculate body <-> constraint map
 	ragdoll->CalculateBodyIndexToConstraintIndex();
 	ragdoll->CalculateConstraintIndexToBodyIdxPair();
@@ -295,6 +298,9 @@ RagdollSettings *RagdollLoader::sCreate()
 
 	// Optional: Stabilize the inertia of the limbs
 	settings->Stabilize();
+
+	// Optional: Calculate constraint priorities to give more priority to the root
+	settings->CalculateConstraintPriorities();
 
 	// Disable parent child collisions so that we don't get collisions between constrained bodies
 	settings->DisableParentChildCollisions();
