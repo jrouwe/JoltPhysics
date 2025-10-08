@@ -190,45 +190,36 @@ bool RagdollSettings::Stabilize()
 	return true;
 }
 
-void RagdollSettings::PropagateConstraintPriority(int inPartIndex, uint32 inPriority)
-{
-	// Update priority if it is higher
-	TwoBodyConstraintSettings *constraint = mParts[inPartIndex].mToParent;
-	if (constraint != nullptr && (constraint->mConstraintPriority < inPriority || constraint->mConstraintPriority == 0xffffffff))
-		constraint->mConstraintPriority = inPriority;
-	else
-		return; // If we didn't increase the priority, there's no point in propagating
-
-	// Increase priority and propagate to parent
-	int parent_index = mSkeleton->GetJoint(inPartIndex).mParentJointIndex;
-	if (parent_index >= 0)
-		PropagateConstraintPriority(parent_index, inPriority + 1);
-};
-
 void RagdollSettings::CalculateConstraintPriorities(uint32 inBasePriority)
 {
 	JPH_ASSERT(inBasePriority + (uint32)mParts.size() > inBasePriority, "Base priority is too high and will cause overflows");
+	JPH_ASSERT(mSkeleton->AreJointsCorrectlyOrdered());
 
-	// Tag all priorites as not set
-	for (Part &part : mParts)
-		if (part.mToParent != nullptr)
-			part.mToParent->mConstraintPriority = 0xffffffff;
-
-	// Increase priority towards the root (walk backwards since leaves are towards the end)
-	for (int p = (int)mParts.size() - 1; p >= 0; --p)
-		PropagateConstraintPriority(p, inBasePriority);
-
-	// Go through the additional constraints and use the minimum of the priorities of connected bodies
-	for (AdditionalConstraint &constraint : mAdditionalConstraints)
+	// Calculate priority for each part. Start with the base priority and increment towards the root
+	Array<uint32> priorities;
+	priorities.resize(mParts.size(), inBasePriority);
+	for (int i = (int)mParts.size() - 1; i >= 0; --i)
 	{
-		uint32 priority[2];
-		for (int i = 0; i < 2; ++i)
+		uint32 cur_priority = inBasePriority;
+		int j = i;
+		do
 		{
-			const TwoBodyConstraintSettings *settings = mParts[constraint.mBodyIdx[i]].mToParent;
-			priority[i] = settings != nullptr? settings->mConstraintPriority : inBasePriority;
+			priorities[j] = max(priorities[j], cur_priority);
+			cur_priority++;
+
+			j = mSkeleton->GetJoint(j).mParentJointIndex;
 		}
-		constraint.mConstraint->mConstraintPriority = min(priority[0], priority[1]);
+		while (j != -1);
 	}
+
+	// Copy the priorities to the constraints
+	for (uint i = 0, n = (uint)mParts.size(); i < n; ++i)
+		if (mParts[i].mToParent != nullptr)
+			mParts[i].mToParent->mConstraintPriority = priorities[i];
+
+	// Use the minimum of the priorities of connected bodies for additional constraints
+	for (AdditionalConstraint &constraint : mAdditionalConstraints)
+		constraint.mConstraint->mConstraintPriority = min(priorities[constraint.mBodyIdx[0]], priorities[constraint.mBodyIdx[1]]);
 }
 
 void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices, float inMinSeparationDistance)
