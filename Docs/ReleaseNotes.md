@@ -7,6 +7,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 ### New functionality
 
 * Added new define `JPH_TRACK_SIMULATION_STATS` which tracks simulation statistics on a per body basis. This can be used to figure out bodies are the most expensive to simulate.
+* Added `RagdollSettings::CalculateConstraintPriorities` which calculates constraint priorities that boost the priority of joints towards the root of the ragdoll.
 
 ### Bug Fixes
 
