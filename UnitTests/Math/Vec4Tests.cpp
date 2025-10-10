@@ -771,6 +771,16 @@ TEST_SUITE("Vec4Tests")
 
 	TEST_CASE("TestVec4CompressUnitVector")
 	{
+		// We want these to be preserved exactly
+		CHECK(Vec4::sDecompressUnitVector(Vec4(1, 0, 0, 0).CompressUnitVector()) == Vec4(1, 0, 0, 0));
+		CHECK(Vec4::sDecompressUnitVector(Vec4(0, 1, 0, 0).CompressUnitVector()) == Vec4(0, 1, 0, 0));
+		CHECK(Vec4::sDecompressUnitVector(Vec4(0, 0, 1, 0).CompressUnitVector()) == Vec4(0, 0, 1, 0));
+		CHECK(Vec4::sDecompressUnitVector(Vec4(0, 0, 0, 1).CompressUnitVector()) == Vec4(0, 0, 0, 1));
+		CHECK(Vec4::sDecompressUnitVector(Vec4(-1, 0, 0, 0).CompressUnitVector()) == Vec4(-1, 0, 0, 0));
+		CHECK(Vec4::sDecompressUnitVector(Vec4(0, -1, 0, 0).CompressUnitVector()) == Vec4(0, -1, 0, 0));
+		CHECK(Vec4::sDecompressUnitVector(Vec4(0, 0, -1, 0).CompressUnitVector()) == Vec4(0, 0, -1, 0));
+		CHECK(Vec4::sDecompressUnitVector(Vec4(0, 0, 0, -1).CompressUnitVector()) == Vec4(0, 0, 0, -1));
+
 		UnitTestRandom random;
 		for (int i = 0; i < 1000; ++i)
 		{
