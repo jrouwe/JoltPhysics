@@ -13,6 +13,7 @@
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/ShapeFilter.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/CastSphereVsTriangles.h>
@@ -456,5 +457,58 @@ TEST_SUITE("CastShapeTests")
 			CHECK(closest_collector.mHits[1].mBodyID2 == body1.GetID());
 			CHECK_APPROX_EQUAL(closest_collector.mHits[1].mContactPointOn1, Vec3(0.5f, 0, 0));
 		}
+	}
+
+	// Test 2D shape cast against a box
+	TEST_CASE("TestCast2DBoxVsBox")
+	{
+		RefConst<Shape> box_shape;
+		{
+			float size = 5.0f;
+			float thickness = 1.0f;
+			Array<Vec3> points = {
+				Vec3(-size, -size, thickness),
+				Vec3(size, -size, thickness),
+				Vec3(size, size, thickness),
+				Vec3(-size, size, thickness),
+				Vec3(-size, -size, -thickness),
+				Vec3(size, -size, -thickness),
+				Vec3(size, size, -thickness),
+				Vec3(-size, size, -thickness),
+			};
+			ConvexHullShapeSettings box_shape_settings(points);
+			box_shape_settings.SetEmbedded();
+			box_shape_settings.mMaxConvexRadius = 0.0f;
+			box_shape = box_shape_settings.Create().Get();
+		}
+
+		RefConst<Shape> cast_shape;
+		{
+			float size = 1.0f;
+			Array<Vec3> points = {
+				Vec3(-size, -size, 0),
+				Vec3(size, -size, 0),
+				Vec3(size, size, 0),
+				Vec3(-size, size, 0),
+			};
+			ConvexHullShapeSettings cast_shape_settings(points);
+			cast_shape_settings.SetEmbedded();
+			cast_shape_settings.mMaxConvexRadius = 0.0f;
+			cast_shape = cast_shape_settings.Create().Get();
+		}
+
+		// The 2d box cast touches the surface of the box at the start and moves into it
+		ShapeCastSettings settings;
+		settings.mReturnDeepestPoint = true;
+		ShapeCast shape_cast(cast_shape, Vec3::sOne(), Mat44::sTranslation(Vec3(0, 0, 1)), Vec3(0, 0, -10));
+		ClosestHitCollisionCollector<CastShapeCollector> cast_shape_collector;
+		CollisionDispatch::sCastShapeVsShapeLocalSpace(shape_cast, settings, box_shape, Vec3::sOne(), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), cast_shape_collector);
+
+		CHECK(cast_shape_collector.HadHit());
+		CHECK(cast_shape_collector.mHit.mFraction == 0.0f);
+		CHECK_APPROX_EQUAL(cast_shape_collector.mHit.mPenetrationAxis.Normalized(), Vec3(0, 0, -1));
+		CHECK_APPROX_EQUAL(cast_shape_collector.mHit.mPenetrationDepth, 0.0f);
+		CHECK_APPROX_EQUAL(cast_shape_collector.mHit.mContactPointOn1, Vec3(0, 0, 1), 1.0e-4f);
+		CHECK_APPROX_EQUAL(cast_shape_collector.mHit.mContactPointOn2, Vec3(0, 0, 1), 1.0e-4f);
 	}
 }
