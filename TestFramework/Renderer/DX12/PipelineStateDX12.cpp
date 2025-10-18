@@ -110,7 +110,7 @@ PipelineStateDX12::PipelineStateDX12(RendererDX12 *inRenderer, const VertexShade
 
 	pso_desc.DepthStencilState.DepthEnable = inDepthTest == EDepthTest::On? TRUE : FALSE;
 	pso_desc.DepthStencilState.DepthWriteMask = inDepthTest == EDepthTest::On? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
-	pso_desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_GREATER;
+	pso_desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
 	pso_desc.DepthStencilState.StencilEnable = FALSE;
 
 	pso_desc.SampleMask = UINT_MAX;

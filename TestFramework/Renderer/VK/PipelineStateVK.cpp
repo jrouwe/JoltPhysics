@@ -108,7 +108,7 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 	depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	depth_stencil.depthTestEnable = inDepthTest == EDepthTest::On? VK_TRUE : VK_FALSE;
 	depth_stencil.depthWriteEnable = inDepthTest == EDepthTest::On? VK_TRUE : VK_FALSE;
-	depth_stencil.depthCompareOp = VK_COMPARE_OP_GREATER; // Reverse-Z, greater is closer
+	depth_stencil.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL; // Reverse-Z, greater is closer
 
 	VkPipelineColorBlendAttachmentState color_blend_attachment = {};
 	color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
