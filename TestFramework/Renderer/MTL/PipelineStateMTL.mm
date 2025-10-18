@@ -123,7 +123,7 @@ PipelineStateMTL::PipelineStateMTL(RendererMTL *inRenderer, const VertexShaderMT
 	MTLDepthStencilDescriptor *depth_descriptor = [[MTLDepthStencilDescriptor new] init];
 	if (inDepthTest == EDepthTest::On)
 	{
-		depth_descriptor.depthCompareFunction = MTLCompareFunctionGreater;
+		depth_descriptor.depthCompareFunction = MTLCompareFunctionGreaterEqual;
 		depth_descriptor.depthWriteEnabled = YES;
 	}
 	else
