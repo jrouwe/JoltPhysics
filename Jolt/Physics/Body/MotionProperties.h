@@ -76,11 +76,11 @@ public:
 	inline void				ClampLinearVelocity();
 	inline void				ClampAngularVelocity();
 
-	/// Get linear damping: dv/dt = -c * v. c must be between 0 and 1 but is usually close to 0.
+	/// Get linear damping: dv/dt = -c * v. c. Value should be zero or positive and is usually close to 0.
 	inline float			GetLinearDamping() const										{ return mLinearDamping; }
 	void					SetLinearDamping(float inLinearDamping)							{ JPH_ASSERT(inLinearDamping >= 0.0f); mLinearDamping = inLinearDamping; }
 
-	/// Get angular damping: dw/dt = -c * w. c must be between 0 and 1 but is usually close to 0.
+	/// Get angular damping: dw/dt = -c * w. c. Value should be zero or positive and is usually close to 0.
 	inline float			GetAngularDamping() const										{ return mAngularDamping; }
 	void					SetAngularDamping(float inAngularDamping)						{ JPH_ASSERT(inAngularDamping >= 0.0f); mAngularDamping = inAngularDamping; }
 
@@ -270,8 +270,8 @@ private:
 	Float3					mForce { 0, 0, 0 };												///< Accumulated world space force (N). Note loaded through intrinsics so ensure that the 4 bytes after this are readable!
 	Float3					mTorque { 0, 0, 0 };											///< Accumulated world space torque (N m). Note loaded through intrinsics so ensure that the 4 bytes after this are readable!
 	float					mInvMass;														///< Inverse mass of the object (1/kg)
-	float					mLinearDamping;													///< Linear damping: dv/dt = -c * v. c must be between 0 and 1 but is usually close to 0.
-	float					mAngularDamping;												///< Angular damping: dw/dt = -c * w. c must be between 0 and 1 but is usually close to 0.
+	float					mLinearDamping;													///< Linear damping: dv/dt = -c * v. Value should be zero or positive and is usually close to 0.
+	float					mAngularDamping;												///< Angular damping: dw/dt = -c * w. Value should be zero or positive and is usually close to 0.
 	float					mMaxLinearVelocity;												///< Maximum linear velocity that this body can reach (m/s)
 	float					mMaxAngularVelocity;											///< Maximum angular velocity that this body can reach (rad/s)
 	float					mGravityFactor;													///< Factor to multiply gravity with
