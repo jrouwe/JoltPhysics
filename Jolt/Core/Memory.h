@@ -8,13 +8,19 @@ JPH_NAMESPACE_BEGIN
 
 #ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 
-// Normal memory allocation, must be at least 8 byte aligned on 32 bit platform and 16 byte aligned on 64 bit platform
+/// Normal memory allocation, must be at least 8 byte aligned on 32 bit platform and 16 byte aligned on 64 bit platform.
 using AllocateFunction = void *(*)(size_t inSize);
+
+/// Reallocate memory. inBlock can be nullptr in which case it must behave as a memory allocation.
 using ReallocateFunction = void *(*)(void *inBlock, size_t inOldSize, size_t inNewSize);
+
+/// Free memory. inBlock can be nullptr in which case it must do nothing.
 using FreeFunction = void (*)(void *inBlock);
 
-// Aligned memory allocation
+/// Aligned memory allocation.
 using AlignedAllocateFunction = void *(*)(size_t inSize, size_t inAlignment);
+
+/// Free aligned memory. inBlock can be nullptr in which case it must do nothing.
 using AlignedFreeFunction = void (*)(void *inBlock);
 
 // User defined allocation / free functions
