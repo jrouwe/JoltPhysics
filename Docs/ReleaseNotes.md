@@ -15,6 +15,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added include `type_traits` for `std::is_trivial` to avoid compile error on macOS with clang 21.
 * Fixed compilation error when using Jolt in conjunction with the `_CRTDBG_MAP_ALLOC` define on Windows.
 * Fixed cast shape possibly not returning a hit when a shape cast starts touching (but not intersecting) another shape and requesting the deepest hit.
+* Fixed division by zero when doing a really long (6 KM) sphere cast against a triangle. In this case the floating point accuracy became low enough so that the distance between the sphere center and the triangle (which should be 'radius') became zero instead.
 
 ## v5.4.0
 
