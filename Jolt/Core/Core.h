@@ -321,9 +321,15 @@
 #else
 	#define JPH_MSVC2019_SUPPRESS_WARNING(w)
 #endif
+#if _MSC_VER >= 1950
+#define JPH_MSVC2026_PLUS_SUPPRESS_WARNING(w) JPH_MSVC_SUPPRESS_WARNING(w)
+#else
+#define JPH_MSVC2026_PLUS_SUPPRESS_WARNING(w)
+#endif
 #else
 #define JPH_MSVC_SUPPRESS_WARNING(w)
 #define JPH_MSVC2019_SUPPRESS_WARNING(w)
+#define JPH_MSVC2026_PLUS_SUPPRESS_WARNING(w)
 #endif
 
 // Disable common warnings triggered by Jolt when compiling with -Wall
