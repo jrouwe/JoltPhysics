@@ -28,6 +28,7 @@ using namespace JPH;
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 JPH_CLANG_16_PLUS_SUPPRESS_WARNING("-Wunsafe-buffer-usage")
+JPH_MSVC2026_PLUS_SUPPRESS_WARNING(4865) // wingdi.h(2806,1): '<unnamed-enum-DISPLAYCONFIG_OUTPUT_TECHNOLOGY_OTHER>': the underlying type will change from 'int' to '__int64' when '/Zc:enumTypes' is specified on the command line
 #include "doctest.h"
 JPH_SUPPRESS_WARNINGS_STD_END
 

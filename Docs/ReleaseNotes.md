@@ -11,6 +11,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### Bug Fixes
 
+* Visual Studio 2026 compile fixes.
 * A 6DOF constraint that constrains all rotation axis in combination with a body that has some of its rotation axis locked would not constrain the rotation in the unlocked axis.
 * Added include `type_traits` for `std::is_trivial` to avoid compile error on macOS with clang 21.
 * Fixed compilation error when using Jolt in conjunction with the `_CRTDBG_MAP_ALLOC` define on Windows.
