@@ -1,3 +1,7 @@
+.cache/
+.clangd/
+.fleet/
+.idea/
 .vs
 .vscode
 .DS_Store
