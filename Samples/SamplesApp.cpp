@@ -548,7 +548,7 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Contact Manifolds (M)", ContactConstraintManager::sDrawContactManifolds, [](UICheckBox::EState inState) { ContactConstraintManager::sDrawContactManifolds = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Motion Quality Linear Cast", PhysicsSystem::sDrawMotionQualityLinearCast, [](UICheckBox::EState inState) { PhysicsSystem::sDrawMotionQualityLinearCast = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Bounding Boxes", mBodyDrawSettings.mDrawBoundingBox, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawBoundingBox = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateCheckBox(drawing_options, "Draw Physics System Bounds", mDrawPhysicsSystemBounds, [this](UICheckBox::EState inState) { mDrawPhysicsSystemBounds = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(drawing_options, "Draw Broadphase Bounds", mDrawBroadPhaseBounds, [this](UICheckBox::EState inState) { mDrawBroadPhaseBounds = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Center of Mass Transforms", mBodyDrawSettings.mDrawCenterOfMassTransform, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawCenterOfMassTransform = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw World Transforms", mBodyDrawSettings.mDrawWorldTransform, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawWorldTransform = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Velocity", mBodyDrawSettings.mDrawVelocity, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawVelocity = inState == UICheckBox::STATE_CHECKED; });
@@ -2365,8 +2365,8 @@ void SamplesApp::DrawPhysics()
 	if (mDrawConstraintReferenceFrame)
 		mPhysicsSystem->DrawConstraintReferenceFrame(mDebugRenderer);
 
-	if (mDrawPhysicsSystemBounds)
-		mDebugRenderer->DrawWireBox(mPhysicsSystem->GetBounds(), Color::sGreen);
+	if (mDrawBroadPhaseBounds)
+		mDebugRenderer->DrawWireBox(mPhysicsSystem->GetBroadPhaseQuery().GetBounds(), Color::sGreen);
 #endif // JPH_DEBUG_RENDERER
 
 	mTest->DrawBodyLabels();
