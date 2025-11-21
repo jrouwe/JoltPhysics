@@ -562,10 +562,11 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 			Body &body = *mBodies[body_id.GetIndex()];
 
 			JPH_ASSERT(body.GetID() == body_id);
-			JPH_ASSERT(body.IsInBroadPhase(), "Use BodyInterface::AddBody to add the body first!");
 
 			if (!body.IsStatic())
 			{
+				JPH_ASSERT(body.IsInBroadPhase(), "Use BodyInterface::AddBody to add the body first!");
+
 				// Reset sleeping timer so that we don't immediately go to sleep again
 				body.ResetSleepTimer();
 
