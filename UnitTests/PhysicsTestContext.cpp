@@ -59,6 +59,13 @@ Body &PhysicsTestContext::CreateFloor()
 	return floor;
 }
 
+Body &PhysicsTestContext::CreateBody(const BodyCreationSettings &inSettings, EActivation inActivation)
+{
+	Body &body = *mSystem->GetBodyInterface().CreateBody(inSettings);
+	mSystem->GetBodyInterface().AddBody(body.GetID(), inActivation);
+	return body;
+}
+
 Body &PhysicsTestContext::CreateBody(const ShapeSettings *inShapeSettings, RVec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, EActivation inActivation)
 {
 	BodyCreationSettings settings;
@@ -71,9 +78,7 @@ Body &PhysicsTestContext::CreateBody(const ShapeSettings *inShapeSettings, RVec3
 	settings.mLinearDamping = 0.0f;
 	settings.mAngularDamping = 0.0f;
 	settings.mCollisionGroup.SetGroupID(0);
-	Body &body = *mSystem->GetBodyInterface().CreateBody(settings);
-	mSystem->GetBodyInterface().AddBody(body.GetID(), inActivation);
-	return body;
+	return CreateBody(settings, inActivation);
 }
 
 Body &PhysicsTestContext::CreateBox(RVec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, Vec3Arg inHalfExtent, EActivation inActivation)

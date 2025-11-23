@@ -909,4 +909,176 @@ TEST_SUITE("ShapeTests")
 			CHECK(user_data == expected_user_data);
 		}
 	}
+
+	TEST_CASE("TestBoxShape")
+	{
+		{
+			// Check half extents must be positive
+			BoxShapeSettings box_settings(Vec3(-1, 1, 1));
+			CHECK(box_settings.Create().HasError());
+		}
+
+		{
+			// Check convex radius must be positive
+			BoxShapeSettings box_settings(Vec3::sReplicate(1.0f), -1.0f);
+			CHECK(box_settings.Create().HasError());
+		}
+
+		{
+			// Create zero sized box
+			BoxShapeSettings box_settings(Vec3::sZero(), 1.0f);
+			RefConst<BoxShape> box = StaticCast<BoxShape>(box_settings.Create().Get());
+
+			// Create another box by using a different constructor
+			RefConst<BoxShape> box2 = new BoxShape(Vec3::sZero(), 1.0f);
+
+			// Check convex radius is adjusted to zero
+			CHECK(box->GetConvexRadius() == 0.0f);
+			CHECK(box2->GetConvexRadius() == 0.0f);
+
+			// Check that it successfully rests on a floor
+			PhysicsTestContext c;
+			c.CreateFloor();
+
+			// Override speculative contact distance and penetration slop to 0 so that we land exactly at (0, 0, 0)
+			PhysicsSettings settings;
+			settings.mSpeculativeContactDistance = 0.0f;
+			settings.mPenetrationSlop = 0.0f;
+			c.GetSystem()->SetPhysicsSettings(settings);
+
+			// Create bodies and check it lands on the floor
+			BodyCreationSettings bcs;
+			bcs.SetShape(box);
+			bcs.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
+			bcs.mMassPropertiesOverride.mMass = 1.0f;
+			bcs.mMassPropertiesOverride.mInertia = Mat44::sIdentity();
+			bcs.mPosition = RVec3(0, 1, 0);
+			bcs.mObjectLayer = Layers::MOVING;
+			Body &body1 = c.CreateBody(bcs, EActivation::Activate);
+			bcs.mPosition = RVec3(1, 1, 0);
+			bcs.SetShape(box2);
+			Body &body2 = c.CreateBody(bcs, EActivation::Activate);
+			c.Simulate(1.0f);
+			CHECK_APPROX_EQUAL(body1.GetPosition(), RVec3::sZero());
+			CHECK_APPROX_EQUAL(body2.GetPosition(), RVec3(1, 0, 0));
+		}
+	}
+
+	TEST_CASE("TestCylinderShape")
+	{
+		{
+			// Check half height must be positive
+			CylinderShapeSettings cylinder_settings(-1.0f, 1.0f, 1.0f);
+			CHECK(cylinder_settings.Create().HasError());
+		}
+
+		{
+			// Check radius must be positive
+			CylinderShapeSettings cylinder_settings(1.0f, -1.0f, 1.0f);
+			CHECK(cylinder_settings.Create().HasError());
+		}
+
+		{
+			// Check convex radius must be positive
+			CylinderShapeSettings cylinder_settings(1.0f, 1.0f, -1.0f);
+			CHECK(cylinder_settings.Create().HasError());
+		}
+
+		{
+			// Create zero sized cylinder
+			CylinderShapeSettings cylinder_settings(0.0f, 0.0f, 1.0f);
+			RefConst<CylinderShape> cylinder = StaticCast<CylinderShape>(cylinder_settings.Create().Get());
+
+			// Create another cylinder by using a different constructor
+			RefConst<CylinderShape> cylinder2 = new CylinderShape(0.0f, 0.0f, 1.0f);
+
+			// Check convex radius is adjusted to zero
+			CHECK(cylinder->GetConvexRadius() == 0.0f);
+			CHECK(cylinder2->GetConvexRadius() == 0.0f);
+
+			// Check that it successfully rests on a floor
+			PhysicsTestContext c;
+			c.CreateFloor();
+
+			// Override speculative contact distance and penetration slop to 0 so that we land exactly at (0, 0, 0)
+			PhysicsSettings settings;
+			settings.mSpeculativeContactDistance = 0.0f;
+			settings.mPenetrationSlop = 0.0f;
+			c.GetSystem()->SetPhysicsSettings(settings);
+
+			// Create bodies and check it lands on the floor
+			BodyCreationSettings bcs;
+			bcs.SetShape(cylinder);
+			bcs.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
+			bcs.mMassPropertiesOverride.mMass = 1.0f;
+			bcs.mMassPropertiesOverride.mInertia = Mat44::sIdentity();
+			bcs.mPosition = RVec3(0, 1, 0);
+			bcs.mObjectLayer = Layers::MOVING;
+			Body &body1 = c.CreateBody(bcs, EActivation::Activate);
+			bcs.mPosition = RVec3(1, 1, 0);
+			bcs.SetShape(cylinder2);
+			Body &body2 = c.CreateBody(bcs, EActivation::Activate);
+			c.Simulate(1.0f);
+			CHECK_APPROX_EQUAL(body1.GetPosition(), RVec3::sZero());
+			CHECK_APPROX_EQUAL(body2.GetPosition(), RVec3(1, 0, 0));
+		}
+	}
+
+	TEST_CASE("TestTaperedCylinderShape")
+	{
+		{
+			// Check half height must be positive
+			TaperedCylinderShapeSettings cylinder_settings(-1.0f, 1.0f, 1.0f, 1.0f);
+			CHECK(cylinder_settings.Create().HasError());
+		}
+
+		{
+			// Check top radius must be positive
+			TaperedCylinderShapeSettings cylinder_settings(1.0f, -1.0f, 1.0f, 1.0f);
+			CHECK(cylinder_settings.Create().HasError());
+		}
+
+		{
+			// Check bottom radius must be positive
+			TaperedCylinderShapeSettings cylinder_settings(1.0f, 1.0f, -1.0f, 1.0f);
+			CHECK(cylinder_settings.Create().HasError());
+		}
+
+		{
+			// Check convex radius must be positive
+			TaperedCylinderShapeSettings cylinder_settings(1.0f, 1.0f, 1.0f, -1.0f);
+			CHECK(cylinder_settings.Create().HasError());
+		}
+
+		{
+			// Create zero sized cylinder
+			TaperedCylinderShapeSettings cylinder_settings(1.0e-12f, 0.0f, 1.0e-12f, 1.0f); // Top != bottom or else we'll be creating a CylinderShape instead
+			RefConst<TaperedCylinderShape> cylinder = StaticCast<TaperedCylinderShape>(cylinder_settings.Create().Get());
+
+			// Check convex radius is adjusted to zero
+			CHECK(cylinder->GetConvexRadius() == 0.0f);
+
+			// Check that it successfully rests on a floor
+			PhysicsTestContext c;
+			c.CreateFloor();
+
+			// Override speculative contact distance and penetration slop to 0 so that we land exactly at (0, 0, 0)
+			PhysicsSettings settings;
+			settings.mSpeculativeContactDistance = 0.0f;
+			settings.mPenetrationSlop = 0.0f;
+			c.GetSystem()->SetPhysicsSettings(settings);
+
+			// Create bodies and check it lands on the floor
+			BodyCreationSettings bcs;
+			bcs.SetShape(cylinder);
+			bcs.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
+			bcs.mMassPropertiesOverride.mMass = 1.0f;
+			bcs.mMassPropertiesOverride.mInertia = Mat44::sIdentity();
+			bcs.mPosition = RVec3(0, 1, 0);
+			bcs.mObjectLayer = Layers::MOVING;
+			Body &body1 = c.CreateBody(bcs, EActivation::Activate);
+			c.Simulate(1.0f);
+			CHECK_APPROX_EQUAL(body1.GetPosition(), RVec3::sZero());
+		}
+	}
 }
