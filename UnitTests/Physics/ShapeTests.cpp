@@ -1028,25 +1028,25 @@ TEST_SUITE("ShapeTests")
 	{
 		{
 			// Check half height must be positive
-			TaperedCylinderShapeSettings cylinder_settings(-1.0f, 1.0f, 1.0f, 1.0f);
+			TaperedCylinderShapeSettings cylinder_settings(-1.0f, 1.0f, 0.1f, 1.0f); // Top != bottom or else we'll be creating a CylinderShape instead
 			CHECK(cylinder_settings.Create().HasError());
 		}
 
 		{
 			// Check top radius must be positive
-			TaperedCylinderShapeSettings cylinder_settings(1.0f, -1.0f, 1.0f, 1.0f);
+			TaperedCylinderShapeSettings cylinder_settings(1.0f, -1.0f, 0.1f, 1.0f); // Top != bottom or else we'll be creating a CylinderShape instead
 			CHECK(cylinder_settings.Create().HasError());
 		}
 
 		{
 			// Check bottom radius must be positive
-			TaperedCylinderShapeSettings cylinder_settings(1.0f, 1.0f, -1.0f, 1.0f);
+			TaperedCylinderShapeSettings cylinder_settings(1.0f, 1.0f, -0.1f, 1.0f); // Top != bottom or else we'll be creating a CylinderShape instead
 			CHECK(cylinder_settings.Create().HasError());
 		}
 
 		{
 			// Check convex radius must be positive
-			TaperedCylinderShapeSettings cylinder_settings(1.0f, 1.0f, 1.0f, -1.0f);
+			TaperedCylinderShapeSettings cylinder_settings(1.0f, 1.0f, 0.1f, -1.0f); // Top != bottom or else we'll be creating a CylinderShape instead
 			CHECK(cylinder_settings.Create().HasError());
 		}
 
