@@ -55,12 +55,12 @@ ShapeSettings::ShapeResult TaperedCylinderShapeSettings::Create() const
 			settings.mRadius = mTopRadius;
 			settings.mMaterial = mMaterial;
 			settings.mConvexRadius = mConvexRadius;
-			new CylinderShape(settings, mCachedResult);
+			shape = new CylinderShape(settings, mCachedResult);
 		}
 		else
 		{
 			// Normal tapered cylinder shape
-			new TaperedCylinderShape(*this, mCachedResult);
+			shape = new TaperedCylinderShape(*this, mCachedResult);
 		}
 	}
 	return mCachedResult;

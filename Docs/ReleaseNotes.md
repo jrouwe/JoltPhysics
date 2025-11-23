@@ -18,6 +18,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed compilation error when using Jolt in conjunction with the `_CRTDBG_MAP_ALLOC` define on Windows.
 * Fixed cast shape possibly not returning a hit when a shape cast starts touching (but not intersecting) another shape and requesting the deepest hit.
 * Fixed division by zero when doing a really long (6 KM) sphere cast against a triangle. In this case the floating point accuracy became low enough so that the distance between the sphere center and the triangle (which should be 'radius') became zero instead.
+* Fixed memory leak when providing invalid parameters to TaperedCylinderShapeSettings and creating the shape.
 
 ## v5.4.0
 
