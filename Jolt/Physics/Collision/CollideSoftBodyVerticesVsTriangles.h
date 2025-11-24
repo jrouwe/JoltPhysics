@@ -62,8 +62,8 @@ public:
 			{
 				// Closest is interior to the triangle, use plane as collision plane but don't allow more than 0.1 m penetration
 				// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
-				float penetration = min(triangle_normal.Dot(v0 - ioVertex.GetPosition()), 0.1f);
-				if (ioVertex.UpdatePenetration(penetration))
+				float penetration = triangle_normal.Dot(v0 - ioVertex.GetPosition());
+				if (penetration < 0.1f && ioVertex.UpdatePenetration(penetration))
 					ioVertex.SetCollision(Plane::sFromPointAndNormal(v0, triangle_normal), inCollidingShapeIndex);
 			}
 			else
