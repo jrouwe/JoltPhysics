@@ -14,9 +14,9 @@ class JPH_EXPORT CollideSoftBodyVerticesVsTriangles
 {
 public:
 						CollideSoftBodyVerticesVsTriangles(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) :
-		mTransform(inCenterOfMassTransform * Mat44::sScale(inScale)),
-		mInvTransform(mTransform.Inversed()),
-		mNormalSign(ScaleHelpers::IsInsideOut(inScale)? -1.0f : 1.0f)
+		mTransform(inCenterOfMassTransform),
+		mInvTransform(mTransform.InversedRotationTranslation()),
+		mScale(inScale)
 	{
 	}
 
@@ -28,15 +28,20 @@ public:
 
 	JPH_INLINE void		ProcessTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
 	{
+		// Apply the scale to the triangle
+		Vec3 v0 = mScale * inV0;
+		Vec3 v1 = mScale * inV1;
+		Vec3 v2 = mScale * inV2;
+
 		// Get the closest point from the vertex to the triangle
 		uint32 set;
-		Vec3 closest_point = ClosestPoint::GetClosestPointOnTriangle(inV0 - mLocalPosition, inV1 - mLocalPosition, inV2 - mLocalPosition, set);
+		Vec3 closest_point = ClosestPoint::GetClosestPointOnTriangle(v0 - mLocalPosition, v1 - mLocalPosition, v2 - mLocalPosition, set);
 		float dist_sq = closest_point.LengthSq();
 		if (dist_sq < mClosestDistanceSq)
 		{
-			mV0 = inV0;
-			mV1 = inV1;
-			mV2 = inV2;
+			mV0 = v0;
+			mV1 = v1;
+			mV2 = v2;
 			mClosestPoint = closest_point;
 			mClosestDistanceSq = dist_sq;
 			mSet = set;
@@ -51,7 +56,7 @@ public:
 			Vec3 v0 = mTransform * mV0;
 			Vec3 v1 = mTransform * mV1;
 			Vec3 v2 = mTransform * mV2;
-			Vec3 triangle_normal = mNormalSign * (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sAxisY());
+			Vec3 triangle_normal = (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sAxisY());
 
 			if (mSet == 0b111)
 			{
@@ -79,10 +84,10 @@ public:
 
 	Mat44				mTransform;
 	Mat44				mInvTransform;
+	Vec3				mScale;
 	Vec3				mLocalPosition;
 	Vec3				mV0, mV1, mV2;
 	Vec3				mClosestPoint;
-	float				mNormalSign;
 	float				mClosestDistanceSq;
 	uint32				mSet;
 };
