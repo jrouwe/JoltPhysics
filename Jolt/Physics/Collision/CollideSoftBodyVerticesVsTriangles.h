@@ -16,7 +16,8 @@ public:
 						CollideSoftBodyVerticesVsTriangles(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) :
 		mTransform(inCenterOfMassTransform),
 		mInvTransform(mTransform.InversedRotationTranslation()),
-		mScale(inScale)
+		mScale(inScale),
+		mNormalSign(ScaleHelpers::IsInsideOut(inScale)? -1.0f : 1.0f)
 	{
 	}
 
@@ -56,7 +57,7 @@ public:
 			Vec3 v0 = mTransform * mV0;
 			Vec3 v1 = mTransform * mV1;
 			Vec3 v2 = mTransform * mV2;
-			Vec3 triangle_normal = (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sAxisY());
+			Vec3 triangle_normal = mNormalSign * (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sAxisY());
 
 			if (mSet == 0b111)
 			{
@@ -88,6 +89,7 @@ public:
 	Vec3				mLocalPosition;
 	Vec3				mV0, mV1, mV2;
 	Vec3				mClosestPoint;
+	float				mNormalSign;
 	float				mClosestDistanceSq;
 	uint32				mSet;
 };
