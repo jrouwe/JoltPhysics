@@ -61,10 +61,10 @@ public:
 
 			if (mSet == 0b111)
 			{
-				// Closest is interior to the triangle, use plane as collision plane but don't allow more than 0.1 m penetration
+				// Closest is interior to the triangle, use plane as collision plane but don't allow more than sTriangleThickness penetration
 				// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
 				float penetration = triangle_normal.Dot(v0 - ioVertex.GetPosition());
-				if (penetration < 0.1f && ioVertex.UpdatePenetration(penetration))
+				if (penetration < sTriangleThickness && ioVertex.UpdatePenetration(penetration))
 					ioVertex.SetCollision(Plane::sFromPointAndNormal(v0, triangle_normal), inCollidingShapeIndex);
 			}
 			else
@@ -82,6 +82,11 @@ public:
 			}
 		}
 	}
+
+	/// Triangles are considered to have some thickness. This thickness extends backwards along the negative triangle normal.
+	/// Make this value smaller than the smallest 'wall thickness' so that the back side of the triangle doesn't protrude through the other side.
+	/// Make this value too small and tunneling is more likely to occur.
+	static inline float	sTriangleThickness = 0.1f;
 
 	Mat44				mTransform;
 	Mat44				mInvTransform;
