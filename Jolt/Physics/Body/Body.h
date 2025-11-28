@@ -178,7 +178,7 @@ public:
 	/// If you want the body to wake up when it is sleeping, use BodyInterface::AddForce instead.
 	inline void				AddForce(Vec3Arg inForce)										{ JPH_ASSERT(IsDynamic()); (Vec3::sLoadFloat3Unsafe(mMotionProperties->mForce) + inForce).StoreFloat3(&mMotionProperties->mForce); }
 
-	/// Add force (unit: N) at inPosition for the next time step, will be reset after the next call to PhysicsSystem::Update.
+	/// Add force (unit: N) at world space position inPosition for the next time step, will be reset after the next call to PhysicsSystem::Update.
 	/// If you want the body to wake up when it is sleeping, use BodyInterface::AddForce instead.
 	inline void				AddForce(Vec3Arg inForce, RVec3Arg inPosition);
 
