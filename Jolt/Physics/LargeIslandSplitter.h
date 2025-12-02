@@ -6,6 +6,8 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Core/Atomics.h>
 
+#define NO_STD_ATOMIC_1
+
 JPH_NAMESPACE_BEGIN
 
 class Body;
@@ -132,6 +134,8 @@ public:
 	};
 
 public:
+							LargeIslandSplitter();
+
 	/// Destructor
 							~LargeIslandSplitter();
 
@@ -181,7 +185,13 @@ private:
 
 	uint					mNumSplitIslands = 0;								///< Total number of islands that required splitting
 	Splits *				mSplitIslands = nullptr;							///< List of islands that required splitting
+
+#ifdef NO_STD_ATOMIC_1
+	uint					mNextSplitIsland = 0;								///< Next split island to pick from mSplitIslandsm
+#else
 	atomic<uint>			mNextSplitIsland = 0;								///< Next split island to pick from mSplitIslands
+#endif
+
 };
 
 JPH_NAMESPACE_END

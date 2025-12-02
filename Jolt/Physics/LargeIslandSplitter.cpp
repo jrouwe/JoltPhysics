@@ -175,6 +175,14 @@ void LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed, bool &
 	outFinalBatch = iteration >= mNumIterations;
 }
 
+LargeIslandSplitter::LargeIslandSplitter()
+{
+#if defined(NO_STD_ATOMIC_1) && defined(JPH_ENABLE_ASSERTS)
+	uint* pNextSplitIsland = &mNextSplitIsland;
+	JPH_ASSERT((size_t)pNextSplitIsland % 4 == 0);
+	#endif
+}
+
 LargeIslandSplitter::~LargeIslandSplitter()
 {
 	JPH_ASSERT(mSplitMasks == nullptr);
@@ -352,7 +360,20 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 
 	// Start with 0 splits
 	uint split_remap_table[cNumSplits];
+#ifdef NO_STD_ATOMIC_1
+	volatile uint* pNextSplitIsland = (volatile uint*)&mNextSplitIsland;
+	uint new_split_idx = 0;
+	while(true) {
+		new_split_idx = *pNextSplitIsland;
+		if(_InterlockedCompareExchange((volatile long*)pNextSplitIsland, new_split_idx + 1, new_split_idx) == (long)new_split_idx) {
+			break;
+		}
+
+		_mm_pause();
+	}
+#else
 	uint new_split_idx = mNextSplitIsland.fetch_add(1, memory_order_relaxed);
+#endif
 	JPH_ASSERT(new_split_idx < mNumSplitIslands);
 	Splits &splits = mSplitIslands[new_split_idx];
 	splits.mIslandIndex = inIslandIndex;
@@ -490,7 +511,12 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, bool &outFirstIteration)
 {
 	// We can't be done when all islands haven't been submitted yet
+	#ifdef NO_STD_ATOMIC_1
+	volatile uint* pNextSplitIsland = &mNextSplitIsland;
+	uint num_splits_created = *pNextSplitIsland;
+	#else
 	uint num_splits_created = mNextSplitIsland.load(memory_order_acquire);
+	#endif
 	bool all_done = num_splits_created == mNumSplitIslands;
 
 	// Loop over all split islands to find work
@@ -521,7 +547,12 @@ void LargeIslandSplitter::MarkBatchProcessed(uint inSplitIslandIndex, const uint
 {
 	uint num_items_processed = uint(inConstraintsEnd - inConstraintsBegin) + uint(inContactsEnd - inContactsBegin);
 
+#if defined(NO_STD_ATOMIC_1) && defined(JPH_ENABLE_ASSERTS)
+	volatile uint* pNextSplitIsland = &mNextSplitIsland;
+	JPH_ASSERT(inSplitIslandIndex < *pNextSplitIsland);
+#else
 	JPH_ASSERT(inSplitIslandIndex < mNextSplitIsland.load(memory_order_relaxed));
+#endif
 	Splits &splits = mSplitIslands[inSplitIslandIndex];
 	splits.MarkBatchProcessed(num_items_processed, outLastIteration, outFinalBatch);
 }
@@ -544,7 +575,13 @@ void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)
 
 	// Everything should have been used
 	JPH_ASSERT(mContactAndConstraintsNextFree.load(memory_order_relaxed) == mContactAndConstraintsSize);
+
+#if defined(NO_STD_ATOMIC_1) && defined(JPH_ENABLE_ASSERTS)
+	volatile uint* pNextSplitIsland = &mNextSplitIsland;
+	JPH_ASSERT(*pNextSplitIsland == mNumSplitIslands);
+#else
 	JPH_ASSERT(mNextSplitIsland.load(memory_order_relaxed) == mNumSplitIslands);
+#endif
 
 	// Free split islands
 	if (mNumSplitIslands > 0)
@@ -553,7 +590,12 @@ void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)
 		mSplitIslands = nullptr;
 
 		mNumSplitIslands = 0;
+#ifdef NO_STD_ATOMIC_1
+		volatile uint* pNextSplitIsland = &mNextSplitIsland;
+		*pNextSplitIsland = 0;
+#else
 		mNextSplitIsland.store(0, memory_order_relaxed);
+#endif
 	}
 
 	// Free contact and constraint buffers
