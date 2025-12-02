@@ -7,6 +7,7 @@
 #include <Jolt/Core/Atomics.h>
 
 #define NO_STD_ATOMIC_1
+#define NO_STD_ATOMIC_2
 
 JPH_NAMESPACE_BEGIN
 
@@ -61,6 +62,8 @@ public:
 	class Splits
 	{
 	public:
+		Splits();
+
 		inline uint			GetNumSplits() const
 		{
 			return mNumSplits;
@@ -83,14 +86,27 @@ public:
 		/// Reset current status so that no work can be picked up from this split
 		inline void			ResetStatus()
 		{
+#ifdef NO_STD_ATOMIC_2
+			volatile uint64* pStatus = &mStatus;
+			*pStatus = StatusItemMask;
+#else
 			mStatus.store(StatusItemMask, memory_order_relaxed);
+#endif
 		}
 
 		/// Make the first batch available to other threads
 		inline void			StartFirstBatch()
 		{
+#ifdef NO_STD_ATOMIC_2
+			volatile uint64* pStatus = &mStatus;
+			uint split_index = mNumSplits > 0? 0 : cNonParallelSplitIdx;
+			uint64 new_status = uint64(split_index) << StatusSplitShift;
+			_WriteBarrier();
+			*pStatus = new_status;
+#else
 			uint split_index = mNumSplits > 0? 0 : cNonParallelSplitIdx;
 			mStatus.store(uint64(split_index) << StatusSplitShift, memory_order_release);
+#endif
 		}
 
 		/// Fetch the next batch to process
@@ -129,7 +145,11 @@ public:
 		int					mNumIterations;										///< Number of iterations to do
 		int					mNumVelocitySteps;									///< Number of velocity steps to do (cached for 2nd sub step)
 		int					mNumPositionSteps;									///< Number of position steps to do
+#ifdef NO_STD_ATOMIC_2
+		uint64				mStatus;											///< Status of the split, see EIterationStatus
+#else
 		atomic<uint64>		mStatus;											///< Status of the split, see EIterationStatus
+#endif
 		atomic<uint>		mItemsProcessed;									///< Number of items that have been marked as processed
 	};
 
