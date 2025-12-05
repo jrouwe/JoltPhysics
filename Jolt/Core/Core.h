@@ -120,7 +120,9 @@
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
 	// X86 CPU architecture
 	#define JPH_CPU_X86
-	#if defined(__x86_64__) || defined(_M_X64)
+	#ifdef __SIZEOF_POINTER__
+		#define JPH_CPU_ADDRESS_BITS (__SIZEOF_POINTER__ * 8)
+	#elif defined(__x86_64__) || defined(_M_X64)
 		#define JPH_CPU_ADDRESS_BITS 64
 	#else
 		#define JPH_CPU_ADDRESS_BITS 32
