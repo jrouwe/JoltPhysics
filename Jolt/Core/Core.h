@@ -121,9 +121,9 @@
 	// X86 CPU architecture
 	#define JPH_CPU_X86
 	#if defined(__x86_64__) || defined(_M_X64)
-		#define JPH_CPU_ADDRESS_BITS 64
+		#define JPH_CPU_ARCH_BITS 64
 	#else
-		#define JPH_CPU_ADDRESS_BITS 32
+		#define JPH_CPU_ARCH_BITS 32
 	#endif
 	#define JPH_USE_SSE
 	#define JPH_VECTOR_ALIGNMENT 16
@@ -171,12 +171,12 @@
 	// ARM CPU architecture
 	#define JPH_CPU_ARM
 	#if defined(__aarch64__) || defined(_M_ARM64)
-		#define JPH_CPU_ADDRESS_BITS 64
+		#define JPH_CPU_ARCH_BITS 64
 		#define JPH_USE_NEON
 		#define JPH_VECTOR_ALIGNMENT 16
 		#define JPH_DVECTOR_ALIGNMENT 32
 	#else
-		#define JPH_CPU_ADDRESS_BITS 32
+		#define JPH_CPU_ARCH_BITS 32
 		#define JPH_VECTOR_ALIGNMENT 8 // 32-bit ARM does not support aligning on the stack on 16 byte boundaries
 		#define JPH_DVECTOR_ALIGNMENT 8
 	#endif
@@ -184,11 +184,11 @@
 	// RISC-V CPU architecture
 	#define JPH_CPU_RISCV
 	#if __riscv_xlen == 64
-		#define JPH_CPU_ADDRESS_BITS 64
+		#define JPH_CPU_ARCH_BITS 64
 		#define JPH_VECTOR_ALIGNMENT 16
 		#define JPH_DVECTOR_ALIGNMENT 32
 	#else
-		#define JPH_CPU_ADDRESS_BITS 32
+		#define JPH_CPU_ARCH_BITS 32
 		#define JPH_VECTOR_ALIGNMENT 16
 		#define JPH_DVECTOR_ALIGNMENT 8
 	#endif
@@ -196,9 +196,9 @@
 	// WebAssembly CPU architecture
 	#define JPH_CPU_WASM
 	#if defined(__wasm64__)
-		#define JPH_CPU_ADDRESS_BITS 64
+		#define JPH_CPU_ARCH_BITS 64
 	#else
-		#define JPH_CPU_ADDRESS_BITS 32
+		#define JPH_CPU_ARCH_BITS 32
 	#endif
 	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DVECTOR_ALIGNMENT 32
@@ -211,9 +211,9 @@
 	// PowerPC CPU architecture
 	#define JPH_CPU_PPC
 	#if defined(__powerpc64__)
-		#define JPH_CPU_ADDRESS_BITS 64
+		#define JPH_CPU_ARCH_BITS 64
 	#else
-		#define JPH_CPU_ADDRESS_BITS 32
+		#define JPH_CPU_ARCH_BITS 32
 	#endif
 	#ifdef _BIG_ENDIAN
 		#define JPH_CPU_BIG_ENDIAN
@@ -224,16 +224,16 @@
 	// LoongArch CPU architecture
 	#define JPH_CPU_LOONGARCH
 	#if defined(__loongarch64)
-		#define JPH_CPU_ADDRESS_BITS 64
+		#define JPH_CPU_ARCH_BITS 64
 	#else
-		#define JPH_CPU_ADDRESS_BITS 32
+		#define JPH_CPU_ARCH_BITS 32
 	#endif
 	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DVECTOR_ALIGNMENT 8
 #elif defined(__e2k__)
 	// E2K CPU architecture (MCST Elbrus 2000)
 	#define JPH_CPU_E2K
-	#define JPH_CPU_ADDRESS_BITS 64
+	#define JPH_CPU_ARCH_BITS 64
 	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DVECTOR_ALIGNMENT 32
 
@@ -453,6 +453,7 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <float.h>
 #include <limits.h>
 #include <string.h>
+#include <new>
 #include <utility>
 #include <cmath>
 #include <sstream>
@@ -508,7 +509,6 @@ static_assert(sizeof(uint8) == 1, "Invalid size of uint8");
 static_assert(sizeof(uint16) == 2, "Invalid size of uint16");
 static_assert(sizeof(uint32) == 4, "Invalid size of uint32");
 static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
-static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid size of pointer" );
 
 // Determine if we want extra debugging code to be active
 #if !defined(NDEBUG) && !defined(JPH_NO_DEBUG)
