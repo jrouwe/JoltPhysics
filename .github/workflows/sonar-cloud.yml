@@ -52,7 +52,7 @@ jobs:
       - name: Run sonar-scanner
         uses: SonarSource/sonarqube-scan-action@v6
         env:
-          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
             --define sonar.cfamily.compile-commands="${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json" --define sonar.cfamily.llvm-cov.reportPath="${{github.workspace}}/Build/Linux_ReleaseCoverage/coverage.txt"
