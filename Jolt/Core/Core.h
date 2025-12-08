@@ -534,6 +534,12 @@ static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 	#error Undefined
 #endif
 
+// Default memory allocation alignment.
+// This define can be overridden in case the user provides an Allocate function that has a different alignment than the platform default.
+#ifndef JPH_DEFAULT_ALLOCATE_ALIGNMENT
+	#define JPH_DEFAULT_ALLOCATE_ALIGNMENT __STDCPP_DEFAULT_NEW_ALIGNMENT__
+#endif
+
 // Cache line size (used for aligning to cache line)
 #ifndef JPH_CACHE_LINE_SIZE
 	#define JPH_CACHE_LINE_SIZE 64

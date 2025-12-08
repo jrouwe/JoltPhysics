@@ -18,7 +18,7 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// If this allocator needs to fall back to aligned allocations because JPH_RVECTOR_ALIGNMENT is bigger than the platform default
-	static constexpr bool			needs_aligned_allocate = JPH_RVECTOR_ALIGNMENT > __STDCPP_DEFAULT_NEW_ALIGNMENT__;
+	static constexpr bool			needs_aligned_allocate = JPH_RVECTOR_ALIGNMENT > JPH_DEFAULT_ALLOCATE_ALIGNMENT;
 
 	/// Destructor
 	virtual							~TempAllocator() = default;

@@ -842,7 +842,7 @@ public:
 
 private:
 	/// If this allocator needs to fall back to aligned allocations because the type requires it
-	static constexpr bool	cNeedsAlignedAllocate = alignof(KeyValue) > __STDCPP_DEFAULT_NEW_ALIGNMENT__;
+	static constexpr bool	cNeedsAlignedAllocate = alignof(KeyValue) > JPH_DEFAULT_ALLOCATE_ALIGNMENT;
 
 	/// Max load factor is cMaxLoadFactorNumerator / cMaxLoadFactorDenominator
 	static constexpr uint64	cMaxLoadFactorNumerator = 7;

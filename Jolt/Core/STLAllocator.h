@@ -44,7 +44,7 @@ public:
 	inline					STLAllocator(const STLAllocator<T2> &) { }
 
 	/// If this allocator needs to fall back to aligned allocations because the type requires it
-	static constexpr bool	needs_aligned_allocate = alignof(T) > __STDCPP_DEFAULT_NEW_ALIGNMENT__;
+	static constexpr bool	needs_aligned_allocate = alignof(T) > JPH_DEFAULT_ALLOCATE_ALIGNMENT;
 
 	/// Allocate memory
 	inline pointer			allocate(size_type inN)
