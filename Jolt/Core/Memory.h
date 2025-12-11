@@ -9,6 +9,7 @@ JPH_NAMESPACE_BEGIN
 #ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 
 /// Normal memory allocation, must be at least 8 byte aligned on 32 bit platform and 16 byte aligned on 64 bit platform.
+/// Note that you can override JPH_DEFAULT_ALLOCATE_ALIGNMENT if your allocator's alignment is different from the alignment as defined by `__STDCPP_DEFAULT_NEW_ALIGNMENT__`.
 using AllocateFunction = void *(*)(size_t inSize);
 
 /// Reallocate memory. inBlock can be nullptr in which case it must behave as a memory allocation.

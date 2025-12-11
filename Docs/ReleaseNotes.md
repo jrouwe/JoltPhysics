@@ -10,6 +10,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added `RagdollSettings::CalculateConstraintPriorities` which calculates constraint priorities that boost the priority of joints towards the root of the ragdoll.
 * BoxShape, CylinderShape and TaperedCylinderShape will now automatically reduce the convex radius if the specified value is too big for the shape (instead of erroring out).
 * Added ability to configure the thickness of triangles when colliding with soft bodies through `CollideSoftBodyVerticesVsTriangles::sTriangleThickness`.
+* Added `JPH_DEFAULT_ALLOCATE_ALIGNMENT` which allows defining the default `Allocate` alignment if your allocator's alignment is different from the alignment as defined by `__STDCPP_DEFAULT_NEW_ALIGNMENT__`.
 
 ### Bug Fixes
 
