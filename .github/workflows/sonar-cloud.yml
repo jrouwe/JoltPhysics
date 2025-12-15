@@ -37,7 +37,7 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Install build-wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v7
       - name: Configure CMake
         working-directory: ${{github.workspace}}/Build
         run: ./cmake_linux_clang_gcc.sh ReleaseCoverage clang++-${{ env.CLANG_VERSION }}
@@ -50,7 +50,7 @@ jobs:
           llvm-profdata-${{ env.CLANG_VERSION }} merge -sparse default.profraw -o default.profdata
           llvm-cov-${{ env.CLANG_VERSION }} show -format=text UnitTests -instr-profile=default.profdata > coverage.txt
       - name: Run sonar-scanner
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
