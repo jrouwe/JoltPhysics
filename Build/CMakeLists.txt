@@ -118,9 +118,6 @@ include(CMakeDependentOption)
 # Windows Store only supports the DLL version
 cmake_dependent_option(USE_STATIC_MSVC_RUNTIME_LIBRARY "Use the static MSVC runtime library" ON "MSVC;NOT WINDOWS_STORE" OFF)
 
-# Ability to always use the release MSVC runtime library even in Debug mode
-option(JPH_USE_RELEASE_MSVC_RUNTIME_LIBRARY "Use the release MSVC runtime library even in Debug mode" OFF)
-
 # Enable Vulkan instead of DirectX
 cmake_dependent_option(JPH_ENABLE_VULKAN "Enable Vulkan" ON "LINUX" OFF)
 
@@ -141,7 +138,9 @@ if (MSVC)
 	set(CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE "x64")
 
 	# Set runtime library
-	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<IF:$<BOOL:${JPH_USE_RELEASE_MSVC_RUNTIME_LIBRARY}>,,$<$<CONFIG:Debug>:Debug>>$<IF:$<BOOL:${USE_STATIC_MSVC_RUNTIME_LIBRARY}>,,DLL>")
+	if (USE_STATIC_MSVC_RUNTIME_LIBRARY)
+		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	endif()
 
 	# Set general compiler flags
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /Gm- /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline")
