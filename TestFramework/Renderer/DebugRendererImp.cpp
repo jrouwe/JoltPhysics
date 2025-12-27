@@ -200,8 +200,9 @@ void DebugRendererImp::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3,
 	// Set alpha to zero if we don't want to cast shadows to notify the pixel shader
 	Color color(inColor, inCastShadow == ECastShadow::Off? 0 : 0xff);
 
-	// Construct triangle
-	new ((Triangle *)mLockedVertices) Triangle(v1, v2, v3, color);
+	// Construct triangle in separate buffer and then copy it to the target memory block (may be uncached memory)
+	Triangle triangle(v1, v2, v3, color);
+	*(Triangle *)mLockedVertices = triangle;
 	mLockedVertices += 3;
 
 	// Update bounding box
