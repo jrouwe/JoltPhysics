@@ -511,8 +511,7 @@ else()
 	target_precompile_headers(Jolt PRIVATE "$<$<NOT:$<CONFIG:ReleaseCoverage>>:${JOLT_PHYSICS_ROOT}/Jolt.h>")
 endif()
 
-# Set the debug/non-debug build flags
-target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:_DEBUG>")
+# Set the NDEBUG define for release builds
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release,Distribution,ReleaseASAN,ReleaseUBSAN,ReleaseTSAN,ReleaseCoverage>:NDEBUG>")
 
 # ASAN and TSAN should use the default allocators
