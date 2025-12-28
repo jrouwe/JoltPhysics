@@ -650,12 +650,12 @@ static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 #endif
 
 // DirectX 12 is only supported on Windows
-#ifndef JPH_PLATFORM_WINDOWS
+#if defined(JPH_USE_DX12) && !defined(JPH_PLATFORM_WINDOWS)
 	#undef JPH_USE_DX12
 #endif // JPH_PLATFORM_WINDOWS
 
 // Metal is only supported on Apple platforms
-#if !defined(JPH_PLATFORM_MACOS) && !defined(JPH_PLATFORM_IOS)
+#if defined(JPH_USE_METAL) && !defined(JPH_PLATFORM_MACOS) && !defined(JPH_PLATFORM_IOS)
 	#undef JPH_USE_METAL
 #endif // !JPH_PLATFORM_MACOS && !JPH_PLATFORM_IOS
 
