@@ -91,7 +91,7 @@ void ComputeQueueDX12::SyncCPUToGPU(const ComputeBufferDX12 *inBuffer)
 	{
 		// After the first upload, the CPU buffer is no longer needed for Buffer and RWBuffer types
 		if (inBuffer->GetType() == ComputeBuffer::EType::Buffer || inBuffer->GetType() == ComputeBuffer::EType::RWBuffer)
-			mDelayedFreedBuffers.emplace_back(std::move(inBuffer->ReleaseResourceCPU()));
+			mDelayedFreedBuffers.emplace_back(inBuffer->ReleaseResourceCPU());
 	}
 }
 
