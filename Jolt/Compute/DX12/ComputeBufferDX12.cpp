@@ -56,7 +56,7 @@ ComputeBufferDX12::ComputeBufferDX12(ComputeSystemDX12 *inComputeSystem, EType i
 		void *data = nullptr;
 		D3D12_RANGE range = { 0, 0 }; // We're not going to read
 		mBufferCPU->Map(0, &range, &data);
-		memcpy(data, inData, buffer_size);
+		memcpy(data, inData, size_t(buffer_size));
 		mBufferCPU->Unmap(0, nullptr);
 	}
 }

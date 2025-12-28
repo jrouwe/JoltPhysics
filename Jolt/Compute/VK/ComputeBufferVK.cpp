@@ -30,7 +30,7 @@ ComputeBufferVK::ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType,
 		if (inData != nullptr)
 		{
 			void *data = mComputeSystem->MapBuffer(mBufferCPU);
-			memcpy(data, inData, buffer_size);
+			memcpy(data, inData, size_t(buffer_size));
 			mComputeSystem->UnmapBuffer(mBufferCPU);
 			mNeedsSync = true;
 		}
@@ -41,7 +41,7 @@ ComputeBufferVK::ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType,
 		if (inData != nullptr)
 		{
 			void* data = mComputeSystem->MapBuffer(mBufferCPU);
-			memcpy(data, inData, buffer_size);
+			memcpy(data, inData, size_t(buffer_size));
 			mComputeSystem->UnmapBuffer(mBufferCPU);
 		}
 		break;
