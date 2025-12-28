@@ -15,6 +15,8 @@ class UIElement;
 namespace JPH {
 	class StateRecorder;
 	class JobSystem;
+	class ComputeSystem;
+	class ComputeQueue;
 	class ContactListener;
 	class DebugRenderer;
 }
@@ -32,6 +34,9 @@ public:
 
 	// Set the job system
 	void			SetJobSystem(JobSystem *inJobSystem)						{ mJobSystem = inJobSystem; }
+
+	// Set compute system and queue
+	void			SetComputeSystem(ComputeSystem *inComputeSystem, ComputeQueue *inComputeQueue) { mComputeSystem = inComputeSystem; mComputeQueue = inComputeQueue; }
 
 	// Set the debug renderer
 	void			SetDebugRenderer(DebugRenderer *inDebugRenderer)			{ mDebugRenderer = inDebugRenderer; }
@@ -128,6 +133,8 @@ protected:
 	void			SetBodyLabel(const BodyID &inBodyID, const String &inLabel)	{ mBodyLabels[inBodyID] = inLabel; }
 
 	JobSystem *		mJobSystem = nullptr;
+	ComputeSystem *	mComputeSystem = nullptr;
+	ComputeQueue *	mComputeQueue = nullptr;
 	PhysicsSystem *	mPhysicsSystem = nullptr;
 	BodyInterface *	mBodyInterface = nullptr;
 	DebugRenderer *	mDebugRenderer = nullptr;

@@ -6,7 +6,7 @@
 
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/VK/RendererVK.h>
-#include <Renderer/VK/BufferVK.h>
+#include <Jolt/Compute/VK/BufferVK.h>
 
 /// Vulkan implementation of a render primitive
 class RenderPrimitiveVK : public RenderPrimitive

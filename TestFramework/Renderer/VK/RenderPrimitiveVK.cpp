@@ -9,7 +9,7 @@
 
 void RenderPrimitiveVK::ReleaseVertexBuffer()
 {
-	mRenderer->FreeBuffer(mVertexBuffer);
+	mRenderer->FreeBufferDelayed(mVertexBuffer);
 	mVertexBufferDeviceLocal = false;
 
 	RenderPrimitive::ReleaseVertexBuffer();
@@ -17,7 +17,7 @@ void RenderPrimitiveVK::ReleaseVertexBuffer()
 
 void RenderPrimitiveVK::ReleaseIndexBuffer()
 {
-	mRenderer->FreeBuffer(mIndexBuffer);
+	mRenderer->FreeBufferDelayed(mIndexBuffer);
 	mIndexBufferDeviceLocal = false;
 
 	RenderPrimitive::ReleaseIndexBuffer();
@@ -41,14 +41,12 @@ void *RenderPrimitiveVK::LockVertexBuffer()
 {
 	JPH_ASSERT(!mVertexBufferDeviceLocal);
 
-	void *data;
-	FatalErrorIfFailed(vkMapMemory(mRenderer->GetDevice(), mVertexBuffer.mMemory, mVertexBuffer.mOffset, VkDeviceSize(mNumVtx) * mVtxSize, 0, &data));
-	return data;
+	return mRenderer->MapBuffer(mVertexBuffer);
 }
 
 void RenderPrimitiveVK::UnlockVertexBuffer()
 {
-	vkUnmapMemory(mRenderer->GetDevice(), mVertexBuffer.mMemory);
+	mRenderer->UnmapBuffer(mVertexBuffer);
 }
 
 void RenderPrimitiveVK::CreateIndexBuffer(int inNumIdx, const uint32 *inData)
@@ -69,14 +67,12 @@ uint32 *RenderPrimitiveVK::LockIndexBuffer()
 {
 	JPH_ASSERT(!mIndexBufferDeviceLocal);
 
-	void *data;
-	vkMapMemory(mRenderer->GetDevice(), mIndexBuffer.mMemory, mIndexBuffer.mOffset, VkDeviceSize(mNumIdx) * sizeof(uint32), 0, &data);
-	return reinterpret_cast<uint32 *>(data);
+	return reinterpret_cast<uint32 *>(mRenderer->MapBuffer(mIndexBuffer));
 }
 
 void RenderPrimitiveVK::UnlockIndexBuffer()
 {
-	vkUnmapMemory(mRenderer->GetDevice(), mIndexBuffer.mMemory);
+	mRenderer->UnmapBuffer(mIndexBuffer);
 }
 
 void RenderPrimitiveVK::Draw() const

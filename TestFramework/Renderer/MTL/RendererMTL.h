@@ -6,17 +6,19 @@
 
 #include <Renderer/Renderer.h>
 #include <Renderer/MTL/TextureMTL.h>
-
-#include <MetalKit/MetalKit.h>
+#include <Jolt/Compute/MTL/ComputeSystemMTL.h>
 
 /// Metal renderer
-class RendererMTL : public Renderer
+class RendererMTL : public Renderer, public ComputeSystemMTL
 {
 public:
+	/// Constructor / destructor
+									RendererMTL();
 	virtual 						~RendererMTL() override;
 	
 	// See: Renderer
 	virtual void					Initialize(ApplicationWindow *inWindow) override;
+	virtual ComputeSystem &			GetComputeSystem() override										{ return *this; }
 	virtual bool					BeginFrame(const CameraState &inCamera, float inWorldScale) override;
 	virtual void					EndShadowPass() override;
 	virtual void					EndFrame() override;
@@ -32,7 +34,6 @@ public:
 	virtual void					OnWindowResize() override										{ }
 
 	MTKView *						GetView() const													{ return mView; }
-	id<MTLDevice>					GetDevice() const												{ return mView.device; }
 	id<MTLRenderCommandEncoder>		GetRenderEncoder() const										{ return mRenderEncoder; }
 
 private:

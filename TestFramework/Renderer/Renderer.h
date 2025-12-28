@@ -12,6 +12,7 @@
 #include <Renderer/PixelShader.h>
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/RenderInstances.h>
+#include <Jolt/Compute/ComputeSystem.h>
 #include <memory>
 
 // Forward declares
@@ -37,6 +38,9 @@ public:
 
 	/// Initialize renderer
 	virtual void					Initialize(ApplicationWindow *inWindow);
+
+	/// Access to the compute interface
+	virtual ComputeSystem &			GetComputeSystem() = 0;
 
 	/// Start / end drawing a frame
 	virtual bool					BeginFrame(const CameraState &inCamera, float inWorldScale);

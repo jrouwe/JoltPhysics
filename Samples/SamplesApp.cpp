@@ -49,6 +49,7 @@
 #include <Utils/ShapeCreator.h>
 #include <Utils/CustomMemoryHook.h>
 #include <Utils/SoftBodyCreator.h>
+#include <Utils/ReadData.h>
 #include <Renderer/DebugRendererImp.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
@@ -470,6 +471,22 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 	// Create single threaded job system for validating
 	mJobSystemValidating = new JobSystemSingleThreaded(cMaxPhysicsJobs);
 
+	// Set shader loader
+	mRenderer->GetComputeSystem().mShaderLoader = [](const char *inName, Array<uint8> &outData) {
+	#ifdef JPH_PLATFORM_MACOS
+		// In macOS the shaders are copied to the bundle
+		String base_path = "Jolt/Shaders/";
+	#else
+		// On other platforms they are in the Jolt source folder
+		String base_path = "../Jolt/Shaders/";
+	#endif
+		outData = ReadData((base_path + inName).c_str());
+		return true;
+	};
+
+	// Create compute queue
+	mComputeQueue = mRenderer->GetComputeSystem().CreateComputeQueue();
+
 	{
 		// Disable allocation checking
 		DisableCustomMemoryHook dcmh;
@@ -642,10 +659,16 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 		mDebugUI->ShowMenu(main_menu);
 	}
 
-	// Get test name from command line
-	String cmd_line = ToLower(inCommandLine);
+	// Explode command line into separate arguments
 	Array<String> args;
-	StringToVector(cmd_line, args, " ");
+	StringToVector(ToLower(inCommandLine), args, " ");
+
+	// Remove entries starting with `-`
+	for (int i = (int)args.size() - 1; i >= 0; --i)
+		if (!args[i].empty() && args[i].at(0) == '-')
+			args.erase(args.begin() + i);
+
+	// Get test name from command line
 	if (args.size() == 2)
 	{
 		String cmd = args[1];
@@ -689,6 +712,7 @@ SamplesApp::~SamplesApp()
 	delete mTest;
 	delete mContactListener;
 	delete mPhysicsSystem;
+	mComputeQueue = nullptr;
 	delete mJobSystemValidating;
 	delete mJobSystem;
 	delete mTempAllocator;
@@ -736,6 +760,7 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 	mTest = static_cast<Test *>(inRTTI->CreateObject());
 	mTest->SetPhysicsSystem(mPhysicsSystem);
 	mTest->SetJobSystem(mJobSystem);
+	mTest->SetComputeSystem(&mRenderer->GetComputeSystem(), mComputeQueue);
 	mTest->SetDebugRenderer(mDebugRenderer);
 	mTest->SetTempAllocator(mTempAllocator);
 	if (mInstallContactListener)

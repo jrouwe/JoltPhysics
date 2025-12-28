@@ -110,7 +110,7 @@ option(USE_STD_VECTOR "Use std::vector instead of own Array class" OFF)
 option(ENABLE_OBJECT_STREAM "Compile the ObjectStream class and RTTI attribute information" ON)
 
 # Enable installation
-option(ENABLE_INSTALL "Generate installation target"  ON)
+option(ENABLE_INSTALL "Generate installation target" ON)
 
 include(CMakeDependentOption)
 
@@ -118,8 +118,17 @@ include(CMakeDependentOption)
 # Windows Store only supports the DLL version
 cmake_dependent_option(USE_STATIC_MSVC_RUNTIME_LIBRARY "Use the static MSVC runtime library" ON "MSVC;NOT WINDOWS_STORE" OFF)
 
-# Enable Vulkan instead of DirectX
-cmake_dependent_option(JPH_ENABLE_VULKAN "Enable Vulkan" ON "LINUX" OFF)
+# Option to compile with DirectX 12 compute
+option(JPH_USE_DX12 "Use DirectX" ON)
+
+# Use DXC compiler to compile shaders, when off falls back to FXC
+option(JPH_USE_DXC "Use DXC shader compiler" ON)
+
+# Option to compile with Vulkan compute
+option(JPH_USE_VK "Use Vulkan" ON)
+
+# Option to compile with Metal compute
+option(JPH_USE_MTL "Use Metal" ON)
 
 # Determine which configurations exist
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR) # Only do this when we're at the top level, see: https://gitlab.kitware.com/cmake/cmake/-/issues/24181
@@ -353,42 +362,6 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	if (TARGET_UNIT_TESTS)
 		# Create UnitTests executable
 		include(${PHYSICS_REPO_ROOT}/UnitTests/UnitTests.cmake)
-		add_executable(UnitTests ${UNIT_TESTS_SRC_FILES})
-		target_include_directories(UnitTests PUBLIC ${UNIT_TESTS_ROOT})
-		target_link_libraries(UnitTests LINK_PUBLIC Jolt)
-
-		if (EMSCRIPTEN)
-			target_link_options(UnitTests PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=134217728)
-		endif()
-
-		# Code coverage doesn't work when using precompiled headers
-		if (CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND MSVC)
-			# The Ninja Multi-Config generator errors out when selectively disabling precompiled headers for certain configurations.
-			# See: https://github.com/jrouwe/JoltPhysics/issues/1211
-			target_precompile_headers(UnitTests PRIVATE "${JOLT_PHYSICS_ROOT}/Jolt.h")
-		else()
-			target_precompile_headers(UnitTests PRIVATE "$<$<NOT:$<CONFIG:ReleaseCoverage>>:${JOLT_PHYSICS_ROOT}/Jolt.h>")
-		endif()
-
-		if (MSVC)
-			target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
-		endif()
-
-		if (IOS)
-			# Set the bundle information
-			set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/UnitTestsInfo.plist")
-			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
-		endif()
-
-		if (XCODE)
-			# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
-			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
-		endif()
-
-		# Register unit tests as a test so that it can be run with:
-		# ctest --output-on-failure
-		enable_testing()
-		add_test(UnitTests UnitTests)
 	endif()
 
 	if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
@@ -427,7 +400,6 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	endif()
 
 	if ((WIN32 OR LINUX OR ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")) AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
-		# Windows only targets
 		if (TARGET_SAMPLES OR TARGET_VIEWER)
 			include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
 		endif()
@@ -435,14 +407,14 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			if (TEST_FRAMEWORK_AVAILABLE)
 				include(${PHYSICS_REPO_ROOT}/Samples/Samples.cmake)
 			else()
-				message("Cannot build Samples because Vulkan/DirectX SDK is not available!")
+				message("Cannot build Samples because Vulkan/DirectX/Metal SDK is not available!")
 			endif()
 		endif()
 		if (TARGET_VIEWER)
 			if (TEST_FRAMEWORK_AVAILABLE)
 				include(${PHYSICS_REPO_ROOT}/JoltViewer/JoltViewer.cmake)
 			else()
-				message("Cannot build JoltViewer because Vulkan/DirectX SDK is not available!")
+				message("Cannot build JoltViewer because Vulkan/DirectX/Metal SDK is not available!")
 			endif()
 		endif()
 	endif()

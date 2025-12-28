@@ -14,8 +14,7 @@ class VertexShaderVK : public VertexShader
 public:
 	/// Constructor
 							VertexShaderVK(VkDevice inDevice, VkShaderModule inShaderModule) :
-		mDevice(inDevice),
-		mStageInfo()
+		mDevice(inDevice)
 	{
 		mStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		mStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -30,5 +29,5 @@ public:
 	}
 
 	VkDevice				mDevice;
-	VkPipelineShaderStageCreateInfo mStageInfo;
+	VkPipelineShaderStageCreateInfo mStageInfo = {};
 };

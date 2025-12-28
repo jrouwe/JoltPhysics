@@ -5,21 +5,20 @@
 #pragma once
 
 #include <Renderer/Renderer.h>
-#include <Renderer/VK/ConstantBufferVK.h>
 #include <Renderer/VK/TextureVK.h>
-#include <Jolt/Core/UnorderedMap.h>
-
-#include <vulkan/vulkan.h>
+#include <Jolt/Compute/VK/ComputeSystemVKImpl.h>
 
 /// Vulkan renderer
-class RendererVK : public Renderer
+class RendererVK : public Renderer, public ComputeSystemVKImpl
 {
 public:
-	/// Destructor
+	/// Constructor / destructor
+									RendererVK();
 	virtual							~RendererVK() override;
 
 	// See: Renderer
 	virtual void					Initialize(ApplicationWindow *inWindow) override;
+	virtual ComputeSystem &			GetComputeSystem() override										{ return *this; }
 	virtual bool					BeginFrame(const CameraState &inCamera, float inWorldScale) override;
 	virtual void					EndShadowPass() override;
 	virtual void					EndFrame() override;
@@ -34,7 +33,6 @@ public:
 	virtual Texture *				GetShadowMap() const override									{ return mShadowMap.GetPtr(); }
 	virtual void					OnWindowResize() override;
 
-	VkDevice						GetDevice() const												{ return mDevice; }
 	VkDescriptorPool				GetDescriptorPool() const										{ return mDescriptorPool; }
 	VkDescriptorSetLayout			GetDescriptorSetLayoutTexture() const							{ return mDescriptorSetLayoutTexture; }
 	VkSampler						GetTextureSamplerRepeat() const									{ return mTextureSamplerRepeat; }
@@ -45,39 +43,30 @@ public:
 	VkCommandBuffer					GetCommandBuffer()												{ JPH_ASSERT(mInFrame); return mCommandBuffers[mFrameIndex]; }
 	VkCommandBuffer					StartTempCommandBuffer();
 	void							EndTempCommandBuffer(VkCommandBuffer inCommandBuffer);
-	void							AllocateMemory(VkDeviceSize inSize, uint32 inMemoryTypeBits, VkMemoryPropertyFlags inProperties, VkDeviceMemory &outMemory);
-	void							FreeMemory(VkDeviceMemory inMemory, VkDeviceSize inSize);
-	void							CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer);
 	void							CopyBuffer(VkBuffer inSrc, VkBuffer inDst, VkDeviceSize inSize);
 	void							CreateDeviceLocalBuffer(const void *inData, VkDeviceSize inSize, VkBufferUsageFlags inUsage, BufferVK &outBuffer);
-	void							FreeBuffer(BufferVK &ioBuffer);
-	unique_ptr<ConstantBufferVK>	CreateConstantBuffer(VkDeviceSize inBufferSize);
-	void							CreateImage(uint32 inWidth, uint32 inHeight, VkFormat inFormat, VkImageTiling inTiling, VkImageUsageFlags inUsage, VkMemoryPropertyFlags inProperties, VkImage &outImage, VkDeviceMemory &outMemory);
-	void							DestroyImage(VkImage inImage, VkDeviceMemory inMemory);
+	void							CreateImage(uint32 inWidth, uint32 inHeight, VkFormat inFormat, VkImageTiling inTiling, VkImageUsageFlags inUsage, VkMemoryPropertyFlags inProperties, VkImage &outImage, MemoryVK &ioMemory);
+	void							DestroyImage(VkImage inImage, MemoryVK &ioMemory);
 	VkImageView						CreateImageView(VkImage inImage, VkFormat inFormat, VkImageAspectFlags inAspectFlags);
 	VkFormat						FindDepthFormat();
+	void							FreeBufferDelayed(const BufferVK &inBuffer)						{ mPerFrameFreedBuffers[mFrameIndex].push_back(inBuffer); }
+
+protected:
+	// Callbacks from ComputeSystemVKImpl
+	virtual void					OnInstanceCreated() override;
+	virtual void					GetInstanceExtensions(Array<const char *> &outExtensions) override;
+	virtual void					GetDeviceExtensions(Array<const char *> &outExtensions) override;
+	virtual void					GetEnabledFeatures(VkPhysicalDeviceFeatures2 &ioFeatures) override;
+	virtual bool					HasPresentSupport(VkPhysicalDevice inDevice, uint32 inQueueFamilyIndex) override;
+	virtual VkSurfaceFormatKHR		SelectFormat(VkPhysicalDevice inDevice) override;
 
 private:
-	uint32							FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties);
-	void							FreeBufferInternal(BufferVK &ioBuffer);
-	VkSurfaceFormatKHR				SelectFormat(VkPhysicalDevice inDevice);
 	void							CreateSwapChain(VkPhysicalDevice inDevice);
 	void							DestroySwapChain();
 	void							UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight);
 	VkSemaphore						AllocateSemaphore();
 	void							FreeSemaphore(VkSemaphore inSemaphore);
 
-	VkInstance						mInstance = VK_NULL_HANDLE;
-#ifdef JPH_DEBUG
-	VkDebugUtilsMessengerEXT		mDebugMessenger = VK_NULL_HANDLE;
-#endif
-	VkPhysicalDevice				mPhysicalDevice = VK_NULL_HANDLE;
-	VkPhysicalDeviceMemoryProperties mMemoryProperties;
-	VkDevice						mDevice = VK_NULL_HANDLE;
-	uint32							mGraphicsQueueIndex = 0;
-	uint32							mPresentQueueIndex = 0;
-	VkQueue							mGraphicsQueue = VK_NULL_HANDLE;
-	VkQueue							mPresentQueue = VK_NULL_HANDLE;
 	VkSurfaceKHR					mSurface = VK_NULL_HANDLE;
 	VkSwapchainKHR					mSwapChain = VK_NULL_HANDLE;
 	bool							mSubOptimalSwapChain = false;
@@ -86,7 +75,7 @@ private:
 	VkExtent2D						mSwapChainExtent;
 	Array<VkImageView>				mSwapChainImageViews;
 	VkImage							mDepthImage = VK_NULL_HANDLE;
-	VkDeviceMemory					mDepthImageMemory = VK_NULL_HANDLE;
+	MemoryVK						mDepthImageMemory;
 	VkImageView						mDepthImageView = VK_NULL_HANDLE;
 	VkDescriptorSetLayout			mDescriptorSetLayoutUBO = VK_NULL_HANDLE;
 	VkDescriptorSetLayout			mDescriptorSetLayoutTexture = VK_NULL_HANDLE;
@@ -108,49 +97,10 @@ private:
 	Array<VkSemaphore>				mRenderFinishedSemaphores;
 	VkFence							mInFlightFences[cFrameCount];
 	Ref<TextureVK>					mShadowMap;
-	unique_ptr<ConstantBufferVK>	mVertexShaderConstantBufferProjection[cFrameCount];
-	unique_ptr<ConstantBufferVK>	mVertexShaderConstantBufferOrtho[cFrameCount];
-	unique_ptr<ConstantBufferVK>	mPixelShaderConstantBuffer[cFrameCount];
-
-	struct Key
-	{
-		bool						operator == (const Key &inRHS) const
-		{
-			return mSize == inRHS.mSize && mUsage == inRHS.mUsage && mProperties == inRHS.mProperties;
-		}
-
-		VkDeviceSize				mSize;
-		VkBufferUsageFlags			mUsage;
-		VkMemoryPropertyFlags		mProperties;
-	};
-
-	JPH_MAKE_HASH_STRUCT(Key, KeyHasher, t.mSize, t.mUsage, t.mProperties)
-
-	// We try to recycle buffers from frame to frame
-	using BufferCache = UnorderedMap<Key, Array<BufferVK>, KeyHasher>;
-
-	BufferCache						mFreedBuffers[cFrameCount];
-	BufferCache						mBufferCache;
-
-	// Smaller allocations (from cMinAllocSize to cMaxAllocSize) will be done in blocks of cBlockSize bytes.
-	// We do this because there is a limit to the number of allocations that we can make in Vulkan.
-	static constexpr VkDeviceSize	cMinAllocSize = 512;
-	static constexpr VkDeviceSize	cMaxAllocSize = 65536;
-	static constexpr VkDeviceSize	cBlockSize = 524288;
-
-	JPH_MAKE_HASH_STRUCT(Key, MemKeyHasher, t.mUsage, t.mProperties, t.mSize)
-
-	struct Memory
-	{
-		VkDeviceMemory				mMemory;
-		VkDeviceSize				mOffset;
-	};
-
-	using MemoryCache = UnorderedMap<Key, Array<Memory>, KeyHasher>;
-
-	MemoryCache						mMemoryCache;
-	uint32							mNumAllocations = 0;
-	uint32							mMaxNumAllocations = 0;
-	VkDeviceSize					mTotalAllocated = 0;
-	VkDeviceSize					mMaxTotalAllocated = 0;
+	Ref<ComputeBuffer>				mVertexShaderConstantBufferProjection[cFrameCount];
+	Ref<ComputeBuffer>				mVertexShaderConstantBufferOrtho[cFrameCount];
+	Ref<ComputeBuffer>				mPixelShaderConstantBuffer[cFrameCount];
+	Array<BufferVK>					mPerFrameFreedBuffers[cFrameCount];
 };
+
+extern Renderer *CreateRendererVK();

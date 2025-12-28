@@ -5,8 +5,7 @@
 #pragma once
 
 #include <Renderer/Texture.h>
-
-#include <vulkan/vulkan.h>
+#include <Jolt/Compute/VK/BufferVK.h>
 
 class RendererVK;
 
@@ -29,7 +28,7 @@ private:
 
 	RendererVK *						mRenderer;
 	VkImage								mImage = VK_NULL_HANDLE;
-	VkDeviceMemory						mImageMemory = VK_NULL_HANDLE;
+	MemoryVK							mImageMemory;
 	VkImageView							mImageView = VK_NULL_HANDLE;
 	VkDescriptorSet						mDescriptorSet = VK_NULL_HANDLE;
 };
