@@ -4,9 +4,10 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See [Saving Shapes](https://jrouwe.github.io/JoltPhysics/#saving-shapes) for further information.
 
-## Changes between v5.4.0 and latest
+## Changes between v5.4.0 and v5.5.0
 
 * 20251206 - Renamed `JPH_CPU_ADDRESS_BITS` to `JPH_CPU_ARCH_BITS` because the size of a pointer can be different from the number of bits used by the architecture. (db654de2a6098fd1ad78cb9a3e70f6a8a61c00b5)
+* 20251120 - Added BroadPhaseQuery::GetBounds, deprecated PhysicsSystem::GetBounds. (793b3a0dbd978552cc6bf68db1c473b32e8ba1ef)
 
 ## Changes between v5.3.0 and v5.4.0
 
