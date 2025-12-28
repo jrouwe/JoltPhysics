@@ -156,7 +156,8 @@ TEST_SUITE("ComputeTests")
 	{
 		Ref<ComputeSystem> compute_system = CreateComputeSystemDX12();
 		CHECK(compute_system != nullptr);
-		RunTests(compute_system);
+		if (compute_system != nullptr)
+			RunTests(compute_system);
 	}
 #endif // JPH_USE_DX12
 
@@ -165,7 +166,8 @@ TEST_SUITE("ComputeTests")
 	{
 		Ref<ComputeSystem> compute_system = CreateComputeSystemMTL();
 		CHECK(compute_system != nullptr);
-		RunTests(compute_system);
+		if (compute_system != nullptr)
+			RunTests(compute_system);
 	}
 #endif // JPH_USE_MTL
 
@@ -174,7 +176,8 @@ TEST_SUITE("ComputeTests")
 	{
 		Ref<ComputeSystem> compute_system = CreateComputeSystemVK();
 		CHECK(compute_system != nullptr);
-		RunTests(compute_system);
+		if (compute_system != nullptr)
+			RunTests(compute_system);
 	}
 #endif // JPH_USE_VK
 }
