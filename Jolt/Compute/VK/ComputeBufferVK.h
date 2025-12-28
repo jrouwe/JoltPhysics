@@ -15,9 +15,11 @@ JPH_NAMESPACE_BEGIN
 class ComputeSystemVK;
 
 /// Buffer that can be read from / written to by a compute shader
-class ComputeBufferVK final : public ComputeBuffer
+class JPH_EXPORT ComputeBufferVK final : public ComputeBuffer
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 									ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData);
 	virtual							~ComputeBufferVK() override;

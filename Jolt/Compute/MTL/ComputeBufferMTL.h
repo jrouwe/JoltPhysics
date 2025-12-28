@@ -11,9 +11,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Buffer that can be read from / written to by a compute shader
-class ComputeBufferMTL final : public ComputeBuffer
+class JPH_EXPORT ComputeBufferMTL final : public ComputeBuffer
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 									ComputeBufferMTL(ComputeSystemMTL *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData);
 	virtual							~ComputeBufferMTL() override;

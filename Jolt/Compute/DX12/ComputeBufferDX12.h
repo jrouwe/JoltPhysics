@@ -15,9 +15,11 @@ JPH_NAMESPACE_BEGIN
 class ComputeSystemDX12;
 
 /// Buffer that can be read from / written to by a compute shader
-class ComputeBufferDX12 final : public ComputeBuffer
+class JPH_EXPORT ComputeBufferDX12 final : public ComputeBuffer
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 									ComputeBufferDX12(ComputeSystemDX12 *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData);
 

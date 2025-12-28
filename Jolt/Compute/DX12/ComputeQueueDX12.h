@@ -15,9 +15,11 @@ JPH_NAMESPACE_BEGIN
 class ComputeBufferDX12;
 
 /// A command queue for DirectX for executing compute workloads on the GPU.
-class ComputeQueueDX12 final : public ComputeQueue
+class JPH_EXPORT ComputeQueueDX12 final : public ComputeQueue
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 	virtual								~ComputeQueueDX12() override;
 

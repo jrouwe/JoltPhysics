@@ -11,9 +11,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Interface to run a workload on the GPU that fully initializes Metal.
-class ComputeSystemMTLImpl : public ComputeSystemMTL
+class JPH_EXPORT ComputeSystemMTLImpl : public ComputeSystemMTL
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 	virtual							~ComputeSystemMTLImpl() override;
 

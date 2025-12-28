@@ -15,9 +15,11 @@ JPH_NAMESPACE_BEGIN
 class ComputeShaderMTL;
 
 /// A command queue for Metal for executing compute workloads on the GPU.
-class ComputeQueueMTL final : public ComputeQueue
+class JPH_EXPORT ComputeQueueMTL final : public ComputeQueue
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / destructor
 										ComputeQueueMTL(id<MTLDevice> inDevice);
 	virtual								~ComputeQueueMTL() override;

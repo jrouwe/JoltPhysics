@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Jolt/Core/Reference.h>
+#include <Jolt/Core/NonCopyable.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -12,9 +13,11 @@ class ComputeShader;
 class ComputeBuffer;
 
 /// A command queue for executing compute workloads on the GPU.
-class ComputeQueue : public RefTarget<ComputeQueue>
+class JPH_EXPORT ComputeQueue : public RefTarget<ComputeQueue>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 	virtual					~ComputeQueue() = default;
 

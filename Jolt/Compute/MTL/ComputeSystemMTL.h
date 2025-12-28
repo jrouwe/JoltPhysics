@@ -13,9 +13,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Interface to run a workload on the GPU
-class ComputeSystemMTL : public ComputeSystem
+class JPH_EXPORT ComputeSystemMTL : public ComputeSystem
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	// Initialize / shutdown the compute system
 	bool							Initialize(id<MTLDevice> inDevice);
 	void							Shutdown();

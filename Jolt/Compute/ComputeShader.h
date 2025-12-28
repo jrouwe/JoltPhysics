@@ -5,13 +5,16 @@
 #pragma once
 
 #include <Jolt/Core/Reference.h>
+#include <Jolt/Core/NonCopyable.h>
 
 JPH_NAMESPACE_BEGIN
 
 /// Compute shader handle
-class ComputeShader : public RefTarget<ComputeShader>
+class JPH_EXPORT ComputeShader : public RefTarget<ComputeShader>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / destructor
 							ComputeShader(uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) :
 		mGroupSizeX(inGroupSizeX),

@@ -14,9 +14,11 @@ JPH_NAMESPACE_BEGIN
 
 /// Interface to run a workload on the GPU using Vulkan.
 /// Minimal implementation that can integrate with your own Vulkan setup.
-class ComputeSystemVK : public ComputeSystem
+class JPH_EXPORT ComputeSystemVK : public ComputeSystem
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	// Initialize / shutdown the compute system
 	bool							Initialize(VkPhysicalDevice inPhysicalDevice, VkDevice inDevice, uint32 inComputeQueueIndex);
 	void							Shutdown();

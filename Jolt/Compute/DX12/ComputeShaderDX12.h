@@ -13,9 +13,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Compute shader handle for DirectX
-class ComputeShaderDX12 : public ComputeShader
+class JPH_EXPORT ComputeShaderDX12 : public ComputeShader
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 									ComputeShaderDX12(ComPtr<ID3DBlob> inShader, ComPtr<ID3D12RootSignature> inRootSignature, ComPtr<ID3D12PipelineState> inPipelineState, Array<String> &&inBindingNames, UnorderedMap<string_view, uint> &&inNameToIndex, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) :
 		ComputeShader(inGroupSizeX, inGroupSizeY, inGroupSizeZ),

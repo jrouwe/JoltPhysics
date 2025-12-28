@@ -11,9 +11,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Interface to run a workload on the GPU
-class ComputeSystem : public RefTarget<ComputeSystem>
+class JPH_EXPORT ComputeSystem : public RefTarget<ComputeSystem>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 	virtual							~ComputeSystem() = default;
 
@@ -33,13 +35,13 @@ public:
 
 #ifdef JPH_USE_VK
 /// Factory function to create a compute system using Vulkan
-extern ComputeSystem *				CreateComputeSystemVK();
+extern JPH_EXPORT ComputeSystem *	CreateComputeSystemVK();
 #endif
 
 #ifdef JPH_USE_DX12
 
 /// Factory function to create a compute system using DirectX 12
-extern ComputeSystem *				CreateComputeSystemDX12();
+extern JPH_EXPORT ComputeSystem *	CreateComputeSystemDX12();
 
 /// Factory function to create the default compute system for this platform
 inline ComputeSystem *				CreateComputeSystem()		{ return CreateComputeSystemDX12(); }
@@ -47,7 +49,7 @@ inline ComputeSystem *				CreateComputeSystem()		{ return CreateComputeSystemDX1
 #elif defined(JPH_USE_MTL)
 
 /// Factory function to create a compute system using Metal
-extern ComputeSystem *				CreateComputeSystemMTL();
+extern JPH_EXPORT ComputeSystem *	CreateComputeSystemMTL();
 
 /// Factory function to create the default compute system for this platform
 inline ComputeSystem *				CreateComputeSystem()		{ return CreateComputeSystemMTL(); }

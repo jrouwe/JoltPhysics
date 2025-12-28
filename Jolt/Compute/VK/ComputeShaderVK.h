@@ -14,9 +14,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Compute shader handle for Vulkan
-class ComputeShaderVK : public ComputeShader
+class JPH_EXPORT ComputeShaderVK : public ComputeShader
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / destructor
 										ComputeShaderVK(VkDevice inDevice, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) : ComputeShader(inGroupSizeX, inGroupSizeY, inGroupSizeZ), mDevice(inDevice) { }
 	virtual								~ComputeShaderVK() override;

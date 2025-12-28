@@ -11,9 +11,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Implementation of ComputeSystemDX12 that fully initializes DirectX 12
-class ComputeSystemDX12Impl : public ComputeSystemDX12
+class JPH_EXPORT ComputeSystemDX12Impl : public ComputeSystemDX12
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 	virtual 						~ComputeSystemDX12Impl() override;
 

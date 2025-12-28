@@ -11,9 +11,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Implementation of ComputeSystemVK that fully initializes Vulkan
-class ComputeSystemVKImpl : public ComputeSystemVKWithAllocator
+class JPH_EXPORT ComputeSystemVKImpl : public ComputeSystemVKWithAllocator
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 	virtual							~ComputeSystemVKImpl() override;
 

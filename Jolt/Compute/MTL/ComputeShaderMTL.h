@@ -14,9 +14,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Compute shader handle for Metal
-class ComputeShaderMTL : public ComputeShader
+class JPH_EXPORT ComputeShaderMTL : public ComputeShader
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 								ComputeShaderMTL(id<MTLComputePipelineState> inPipelineState, MTLComputePipelineReflection *inReflection, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ);
 	virtual						~ComputeShaderMTL() override 					{ [mPipelineState release]; }

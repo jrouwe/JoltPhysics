@@ -15,9 +15,11 @@ JPH_NAMESPACE_BEGIN
 
 /// Interface to run a workload on the GPU using DirectX 12.
 /// Minimal implementation that can integrate with your own DirectX 12 setup.
-class ComputeSystemDX12 : public ComputeSystem
+class JPH_EXPORT ComputeSystemDX12 : public ComputeSystem
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// How we want to compile our shaders
 	enum class EDebug
 	{

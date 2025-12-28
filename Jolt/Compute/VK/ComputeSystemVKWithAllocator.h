@@ -13,9 +13,11 @@ JPH_NAMESPACE_BEGIN
 
 /// This extends ComputeSystemVK to provide a default implementation for memory allocation and mapping.
 /// It uses a simple block based allocator to reduce the number of allocations done to Vulkan.
-class ComputeSystemVKWithAllocator : public ComputeSystemVK
+class JPH_EXPORT ComputeSystemVKWithAllocator : public ComputeSystemVK
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Allow the application to override buffer creation and memory mapping in case it uses its own allocator
 	virtual void					CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer) override;
 	virtual void					FreeBuffer(BufferVK &ioBuffer) override;

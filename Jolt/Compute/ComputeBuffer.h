@@ -5,13 +5,16 @@
 #pragma once
 
 #include <Jolt/Core/Reference.h>
+#include <Jolt/Core/NonCopyable.h>
 
 JPH_NAMESPACE_BEGIN
 
 /// Buffer that can be read from / written to by a compute shader
-class ComputeBuffer : public RefTarget<ComputeBuffer>
+class JPH_EXPORT ComputeBuffer : public RefTarget<ComputeBuffer>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Type of buffer
 	enum class EType
 	{

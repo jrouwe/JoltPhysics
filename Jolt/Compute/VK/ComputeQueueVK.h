@@ -19,9 +19,11 @@ class ComputeSystemVK;
 class ComputeBufferVK;
 
 /// A command queue for Vulkan for executing compute workloads on the GPU.
-class ComputeQueueVK final : public ComputeQueue
+class JPH_EXPORT ComputeQueueVK final : public ComputeQueue
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / Destructor
 										ComputeQueueVK(ComputeSystemVK *inComputeSystem) : mComputeSystem(inComputeSystem) { }
 	virtual								~ComputeQueueVK() override;
