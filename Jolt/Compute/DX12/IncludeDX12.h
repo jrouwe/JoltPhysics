@@ -15,7 +15,9 @@ JPH_MSVC_SUPPRESS_WARNING(5220) // 'X': a non-static data member with a volatile
 JPH_MSVC2026_PLUS_SUPPRESS_WARNING(4865) // wingdi.h(2806,1): '<unnamed-enum-DISPLAYCONFIG_OUTPUT_TECHNOLOGY_OTHER>': the underlying type will change from 'int' to '__int64' when '/Zc:enumTypes' is specified on the command line
 JPH_CLANG_SUPPRESS_WARNING("-Wreserved-macro-identifier") // Complains about _WIN32_WINNT being reserved
 #define WINVER 0x0A00 // Targeting Windows 10 and above
-#define _WIN32_WINNT 0x0A00
+#ifndef _WIN32_WINNT
+	#define _WIN32_WINNT 0x0A00
+#endif
 #define WIN32_LEAN_AND_MEAN
 #ifndef JPH_COMPILER_MINGW
 	#include <Windows.h>

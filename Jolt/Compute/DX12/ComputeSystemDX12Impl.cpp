@@ -60,9 +60,13 @@ bool ComputeSystemDX12Impl::Initialize()
 				continue;
 
 			// Check to see whether the adapter supports Direct3D 12
-			JPH_IF_DEBUG(int prev_state = _CrtSetDbgFlag(0);) // Temporarily disable leak detection as this call reports false positives
+		#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
+			int prev_state = _CrtSetDbgFlag(0); // Temporarily disable leak detection as this call reports false positives
+		#endif
 			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
-			JPH_IF_DEBUG(_CrtSetDbgFlag(prev_state);)
+		#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
+			_CrtSetDbgFlag(prev_state);
+		#endif
 			if (SUCCEEDED(result))
 				break;
 		}
@@ -80,9 +84,13 @@ bool ComputeSystemDX12Impl::Initialize()
 				continue;
 
 			// Check to see whether the adapter supports Direct3D 12
-			JPH_IF_DEBUG(int prev_state = _CrtSetDbgFlag(0);) // Temporarily disable leak detection as this call reports false positives
+		#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
+			int prev_state = _CrtSetDbgFlag(0); // Temporarily disable leak detection as this call reports false positives
+		#endif
 			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
-			JPH_IF_DEBUG(_CrtSetDbgFlag(prev_state);)
+		#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
+			_CrtSetDbgFlag(prev_state);
+		#endif
 			if (SUCCEEDED(result))
 				break;
 		}
