@@ -2,6 +2,12 @@
 
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
+## Unreleased changes
+
+### Bug Fixes
+
+* Made it possible to make a class outside the JPH namespace serializable.
+
 ## v5.5.0
 
 ### New functionality
