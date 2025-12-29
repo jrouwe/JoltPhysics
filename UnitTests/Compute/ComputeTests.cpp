@@ -122,8 +122,11 @@ TEST_SUITE("ComputeTests")
 		// Create the shader
 		Ref<ComputeShader> shader = inComputeSystem->CreateComputeShader("TestCompute", cTestComputeGroupSize);
 		CHECK(shader != nullptr);
-		if (shader == nullptr) // Shader was not found. This can e.g. fail on macOS when dxc or spirv-cross could not be found so the shaders could not be compiled.
+		if (shader == nullptr)
+		{
+			Trace("Shader could not be loaded. This can fail on macOS when dxc or spirv-cross could not be found so the shaders could not be compiled.");
 			return;
+		}
 
 		// Create the queue
 		Ref<ComputeQueue> queue = inComputeSystem->CreateComputeQueue();
