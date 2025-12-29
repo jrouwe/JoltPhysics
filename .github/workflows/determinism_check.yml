@@ -146,6 +146,8 @@ jobs:
   macos:
     runs-on: macos-latest
     name: macOS Determinism Check
+    env:
+        VULKAN_SDK_INSTALL: ${{github.workspace}}/vulkan_sdk
 
     steps:
     - name: Checkout Code
