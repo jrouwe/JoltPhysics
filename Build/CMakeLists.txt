@@ -384,8 +384,13 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 			# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
+
+			# Unit tests are in the app bundle on macOS
+			set(UNIT_TEST_COMMAND UnitTests.app/Contents/MacOS/UnitTests)
 		else()
 			add_executable(UnitTests ${UNIT_TESTS_SRC_FILES})
+
+			set(UNIT_TEST_COMMAND UnitTests)
 		endif()
 		target_include_directories(UnitTests PUBLIC ${UNIT_TESTS_ROOT})
 		target_link_libraries(UnitTests LINK_PUBLIC Jolt)
@@ -410,7 +415,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		# Register unit tests as a test so that it can be run with:
 		# ctest --output-on-failure
 		enable_testing()
-		add_test(UnitTests UnitTests)
+		add_test(UnitTests ${UNIT_TEST_COMMAND})
 	endif()
 
 	if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
