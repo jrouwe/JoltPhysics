@@ -8,9 +8,14 @@
 
 #include <Jolt/Compute/ComputeSystem.h>
 #include <Jolt/Shaders/TestCompute.h>
+#include <Jolt/Core/IncludeWindows.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
+#include <filesystem>
+#ifdef JPH_PLATFORM_LINUX
+#include <unistd.h>
+#endif
 JPH_SUPPRESS_WARNINGS_STD_END
 
 #if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
@@ -35,8 +40,33 @@ TEST_SUITE("ComputeTests")
 			CFRelease(path_string);
     		String base_path = String(path) + "/Jolt/Shaders/";
 		#else
-			// On other platforms they are in the Jolt source folder
-			String base_path = "../../Jolt/Shaders/";
+			// On other platforms, start searching up from the application path
+			#ifdef JPH_PLATFORM_WINDOWS
+				char application_path[MAX_PATH] = { 0 };
+				GetModuleFileName(nullptr, application_path, MAX_PATH);
+			#elif defined(JPH_PLATFORM_LINUX)
+				char application_path[PATH_MAX] = { 0 };
+				int count = readlink("/proc/self/exe", application_path, PATH_MAX);
+				if (count > 0)
+					application_path[count] = 0;
+			#else
+				#error Unsupported platform
+			#endif
+			String base_path;
+			filesystem::path shader_path(application_path);
+			while (!shader_path.empty())
+			{
+				filesystem::path parent_path = shader_path.parent_path();
+				if (parent_path == shader_path)
+					break;
+				shader_path = parent_path;
+				filesystem::path full_path = shader_path / "Jolt" / "Shaders" / "";
+				if (filesystem::exists(full_path))
+				{
+					base_path = String(full_path.string());
+					break;
+				}
+			}
 		#endif
 
 			// Open file
