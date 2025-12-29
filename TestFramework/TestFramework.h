@@ -19,6 +19,9 @@ JPH_MSVC_SUPPRESS_WARNING(4062) // enumerator 'X' in switch of enum 'X' is not h
 
 #ifdef JPH_PLATFORM_WINDOWS
 
+#ifdef _WIN32_WINNT
+	#undef _WIN32_WINNT
+#endif
 #define Ellipse DrawEllipse // Windows.h defines a name that we would like to use
 #include <Jolt/Compute/DX12/IncludeDX12.h>
 #undef Ellipse
