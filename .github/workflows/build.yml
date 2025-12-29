@@ -374,7 +374,9 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}
-      run: ctest --output-on-failure --verbose
+      run: |
+        source ${VULKAN_SDK_INSTALL}/setup-env.sh
+        ctest --output-on-failure --verbose
 
   android:
     runs-on: ubuntu-latest
