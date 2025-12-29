@@ -21,14 +21,15 @@ JPH_CLANG_SUPPRESS_WARNING("-Wreserved-macro-identifier") // Complains about _WI
 	#define WIN32_LEAN_AND_MEAN
 #endif
 
+#ifndef NOMINMAX
+	#define NOMINMAX
+#endif
+
 #ifndef JPH_COMPILER_MINGW
 	#include <Windows.h>
 #else
 	#include <windows.h>
 #endif
-
-#undef min // We'd like to use std::min and max instead of the ones defined in windows.h
-#undef max
 
 JPH_SUPPRESS_WARNING_POP
 
