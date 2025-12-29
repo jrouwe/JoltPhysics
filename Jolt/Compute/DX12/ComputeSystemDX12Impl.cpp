@@ -50,50 +50,54 @@ bool ComputeSystemDX12Impl::Initialize()
 	ComPtr<IDXGIFactory6> factory6;
 	if (SUCCEEDED(mDXGIFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
 	{
-		for (UINT index = 0; DXGI_ERROR_NOT_FOUND != factory6->EnumAdapterByGpuPreference(index, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)); ++index)
-		{
-			DXGI_ADAPTER_DESC1 desc;
-			adapter->GetDesc1(&desc);
+		for (int search_software = 0; search_software < 2 && device == nullptr; ++search_software)
+			for (UINT index = 0; factory6->EnumAdapterByGpuPreference(index, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)) != DXGI_ERROR_NOT_FOUND; ++index)
+			{
+				DXGI_ADAPTER_DESC1 desc;
+				adapter->GetDesc1(&desc);
 
-			// We don't want software renderers
-			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-				continue;
+				// We don't want software renderers in the first pass
+				int is_software = (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) != 0? 1 : 0;
+				if (search_software != is_software)
+					continue;
 
-			// Check to see whether the adapter supports Direct3D 12
-		#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
-			int prev_state = _CrtSetDbgFlag(0); // Temporarily disable leak detection as this call reports false positives
-		#endif
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
-		#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
-			_CrtSetDbgFlag(prev_state);
-		#endif
-			if (SUCCEEDED(result))
-				break;
-		}
+				// Check to see whether the adapter supports Direct3D 12
+			#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
+				int prev_state = _CrtSetDbgFlag(0); // Temporarily disable leak detection as this call reports false positives
+			#endif
+				result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
+			#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
+				_CrtSetDbgFlag(prev_state);
+			#endif
+				if (SUCCEEDED(result))
+					break;
+			}
 	}
 	else
 	{
 		// Fall back to the older method that may not get the fastest GPU
-		for (UINT index = 0; DXGI_ERROR_NOT_FOUND != mDXGIFactory->EnumAdapters1(index, &adapter); ++index)
-		{
-			DXGI_ADAPTER_DESC1 desc;
-			adapter->GetDesc1(&desc);
+		for (int search_software = 0; search_software < 2 && device == nullptr; ++search_software)
+			for (UINT index = 0; mDXGIFactory->EnumAdapters1(index, &adapter) != DXGI_ERROR_NOT_FOUND; ++index)
+			{
+				DXGI_ADAPTER_DESC1 desc;
+				adapter->GetDesc1(&desc);
 
-			// We don't want software renderers
-			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-				continue;
+				// We don't want software renderers in the first pass
+				int is_software = (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) != 0? 1 : 0;
+				if (search_software != is_software)
+					continue;
 
-			// Check to see whether the adapter supports Direct3D 12
-		#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
-			int prev_state = _CrtSetDbgFlag(0); // Temporarily disable leak detection as this call reports false positives
-		#endif
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
-		#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
-			_CrtSetDbgFlag(prev_state);
-		#endif
-			if (SUCCEEDED(result))
-				break;
-		}
+				// Check to see whether the adapter supports Direct3D 12
+			#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
+				int prev_state = _CrtSetDbgFlag(0); // Temporarily disable leak detection as this call reports false positives
+			#endif
+				result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
+			#if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
+				_CrtSetDbgFlag(prev_state);
+			#endif
+				if (SUCCEEDED(result))
+					break;
+			}
 	}
 
 	// Check if we managed to obtain a device
