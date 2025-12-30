@@ -13,7 +13,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, VkDevice inDevice, uint32 inComputeQueueIndex)
+bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, VkDevice inDevice, uint32 inComputeQueueIndex, ComputeSystemResult &outResult)
 {
 	mPhysicalDevice = inPhysicalDevice;
 	mDevice = inDevice;
@@ -23,10 +23,17 @@ bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, VkDevice inD
 	mVkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(reinterpret_cast<void *>(vkGetDeviceProcAddr(mDevice, "vkSetDebugUtilsObjectNameEXT")));
 
 	if (!InitializeMemory())
+	{
+		outResult.SetError("Failed to initialize memory subsystem");
 		return false;
+	}
 
 	// Create the dummy buffer. This is used to bind to shaders for which we have no buffer. We can't rely on VK_EXT_robustness2 being available to set nullDescriptor = VK_TRUE (it is unavailable on macOS).
-	CreateBuffer(1024, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mDummyBuffer);
+	if (!CreateBuffer(1024, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mDummyBuffer))
+	{
+		outResult.SetError("Failed to create dummy buffer");
+		return false;
+	}
 
 	return true;
 }
@@ -42,20 +49,23 @@ void ComputeSystemVK::Shutdown()
 	ShutdownMemory();
 }
 
-Ref<ComputeShader> ComputeSystemVK::CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ)
+ComputeShaderResult ComputeSystemVK::CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ)
 {
+	ComputeShaderResult result;
+
 	// Read shader source file
 	Array<uint8> data;
 	String file_name = String(inName) + ".spv";
-	if (!mShaderLoader(file_name.c_str(), data))
-		return nullptr;
+	String error;
+	if (!mShaderLoader(file_name.c_str(), data, error))
+	{
+		result.SetError(error);
+		return result;
+	};
 
 	Ref<ComputeShaderVK> shader = new ComputeShaderVK(mDevice, inGroupSizeX, inGroupSizeY, inGroupSizeZ);
-	if (!shader->Initialize(data, mDummyBuffer.mBuffer))
-	{
-		Trace("Failed to create compute shader: %s", file_name.c_str());
-		return nullptr;
-	}
+	if (!shader->Initialize(data, mDummyBuffer.mBuffer, result))
+		return result;
 
 	// Name the pipeline so we can easily find it in a profile
 	if (mVkSetDebugUtilsObjectNameEXT != nullptr)
@@ -69,20 +79,33 @@ Ref<ComputeShader> ComputeSystemVK::CreateComputeShader(const char *inName, uint
 		mVkSetDebugUtilsObjectNameEXT(mDevice, &info);
 	}
 
-	return shader.GetPtr();
+	result.Set(shader.GetPtr());
+	return result;
 }
 
-Ref<ComputeBuffer> ComputeSystemVK::CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData)
+ComputeBufferResult ComputeSystemVK::CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData)
 {
-	return new ComputeBufferVK(this, inType, inSize, inStride, inData);
+	ComputeBufferResult result;
+
+	Ref<ComputeBufferVK> buffer = new ComputeBufferVK(this, inType, inSize, inStride);
+	if (!buffer->Initialize(inData))
+	{
+		result.SetError("Failed to create compute buffer");
+		return result;
+	}
+
+	result.Set(buffer.GetPtr());
+	return result;
 }
 
-Ref<ComputeQueue> ComputeSystemVK::CreateComputeQueue()
+ComputeQueueResult ComputeSystemVK::CreateComputeQueue()
 {
+	ComputeQueueResult result;
 	Ref<ComputeQueueVK> q = new ComputeQueueVK(this);
-	if (!q->Initialize(mComputeQueueIndex))
-		return nullptr;
-	return q.GetPtr();
+	if (!q->Initialize(mComputeQueueIndex, result))
+		return result;
+	result.Set(q.GetPtr());
+	return result;
 }
 
 JPH_NAMESPACE_END

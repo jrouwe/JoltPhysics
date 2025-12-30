@@ -19,7 +19,7 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Allow the application to override buffer creation and memory mapping in case it uses its own allocator
-	virtual void					CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer) override;
+	virtual bool					CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer) override;
 	virtual void					FreeBuffer(BufferVK &ioBuffer) override;
 	virtual void *					MapBuffer(BufferVK &ioBuffer) override;
 	virtual void					UnmapBuffer(BufferVK &ioBuffer) override;

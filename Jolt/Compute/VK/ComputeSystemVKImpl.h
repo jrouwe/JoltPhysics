@@ -20,7 +20,7 @@ public:
 	virtual							~ComputeSystemVKImpl() override;
 
 	/// Initialize the compute system
-	bool							Initialize();
+	bool							Initialize(ComputeSystemResult &outResult);
 
 protected:
 	/// Override to perform actions once the instance has been created

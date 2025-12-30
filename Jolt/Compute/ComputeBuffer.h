@@ -6,8 +6,12 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/Result.h>
 
 JPH_NAMESPACE_BEGIN
+
+class ComputeBuffer;
+using ComputeBufferResult = Result<Ref<ComputeBuffer>>;
 
 /// Buffer that can be read from / written to by a compute shader
 class JPH_EXPORT ComputeBuffer : public RefTarget<ComputeBuffer>, public NonCopyable
@@ -48,7 +52,7 @@ public:
 
 	/// Create a readback buffer of the same size and stride that can be used to read the data stored in this buffer on CPU.
 	/// Note that this could also be implemented as 'return this' in case the underlying implementation allows locking GPU data on CPU directly.
-	virtual Ref<ComputeBuffer>	CreateReadBackBuffer() const = 0;
+	virtual ComputeBufferResult	CreateReadBackBuffer() const = 0;
 
 protected:
 	EType						mType;

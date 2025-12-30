@@ -17,52 +17,54 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Destructor
-	virtual							~ComputeSystem() = default;
+	virtual								~ComputeSystem() = default;
 
 	/// Compile a compute shader
-	virtual Ref<ComputeShader>		CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY = 1, uint32 inGroupSizeZ = 1) = 0;
+	virtual ComputeShaderResult			CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY = 1, uint32 inGroupSizeZ = 1) = 0;
 
 	/// Create a buffer for use with a compute shader
-	virtual Ref<ComputeBuffer>		CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData = nullptr) = 0;
+	virtual ComputeBufferResult			CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData = nullptr) = 0;
 
 	/// Create a queue for executing compute shaders
-	virtual Ref<ComputeQueue>		CreateComputeQueue() = 0;
+	virtual ComputeQueueResult			CreateComputeQueue() = 0;
 
 	/// Callback used when loading shaders
-	using ShaderLoader = std::function<bool(const char *inName, Array<uint8> &outData)>;
-	ShaderLoader					mShaderLoader = [](const char *, Array<uint8> &) { JPH_ASSERT(false, "Override this function"); return false; };
+	using ShaderLoader = std::function<bool(const char *inName, Array<uint8> &outData, String &outError)>;
+	ShaderLoader						mShaderLoader = [](const char *, Array<uint8> &, String &outError) { JPH_ASSERT(false, "Override this function"); outError = "Not implemented"; return false; };
 };
+
+using ComputeSystemResult = Result<Ref<ComputeSystem>>;
 
 #ifdef JPH_USE_VK
 /// Factory function to create a compute system using Vulkan
-extern JPH_EXPORT ComputeSystem *	CreateComputeSystemVK();
+extern JPH_EXPORT ComputeSystemResult	CreateComputeSystemVK();
 #endif
 
 #ifdef JPH_USE_DX12
 
 /// Factory function to create a compute system using DirectX 12
-extern JPH_EXPORT ComputeSystem *	CreateComputeSystemDX12();
+extern JPH_EXPORT ComputeSystemResult	CreateComputeSystemDX12();
 
 /// Factory function to create the default compute system for this platform
-inline ComputeSystem *				CreateComputeSystem()		{ return CreateComputeSystemDX12(); }
+inline ComputeSystemResult 				CreateComputeSystem()		{ return CreateComputeSystemDX12(); }
 
 #elif defined(JPH_USE_MTL)
 
 /// Factory function to create a compute system using Metal
-extern JPH_EXPORT ComputeSystem *	CreateComputeSystemMTL();
+extern JPH_EXPORT ComputeSystemResult	CreateComputeSystemMTL();
 
 /// Factory function to create the default compute system for this platform
-inline ComputeSystem *				CreateComputeSystem()		{ return CreateComputeSystemMTL(); }
+inline ComputeSystemResult 				CreateComputeSystem()		{ return CreateComputeSystemMTL(); }
 
 #elif defined(JPH_USE_VK)
 
 /// Factory function to create the default compute system for this platform
-inline ComputeSystem *				CreateComputeSystem()		{ return CreateComputeSystemVK(); }
+inline ComputeSystemResult 				CreateComputeSystem()		{ return CreateComputeSystemVK(); }
 
 #else
 
 /// Fallback implementation when no compute system is available
-inline ComputeSystem *				CreateComputeSystem()		{ return nullptr; }
+inline ComputeSystemResult 				CreateComputeSystem()		{ return nullptr; }
 
 #endif
 

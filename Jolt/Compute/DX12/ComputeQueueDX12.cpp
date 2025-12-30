@@ -20,28 +20,28 @@ ComputeQueueDX12::~ComputeQueueDX12()
 		CloseHandle(mFenceEvent);
 }
 
-bool ComputeQueueDX12::Initialize(ID3D12Device *inDevice, D3D12_COMMAND_LIST_TYPE inType)
+bool ComputeQueueDX12::Initialize(ID3D12Device *inDevice, D3D12_COMMAND_LIST_TYPE inType, ComputeQueueResult &outResult)
 {
 	D3D12_COMMAND_QUEUE_DESC queue_desc = {};
 	queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queue_desc.Type = inType;
 	queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH;
-	if (HRFailed(inDevice->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(&mCommandQueue))))
+	if (HRFailed(inDevice->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(&mCommandQueue)), outResult))
 		return false;
 
-	if (HRFailed(inDevice->CreateCommandAllocator(inType, IID_PPV_ARGS(&mCommandAllocator))))
+	if (HRFailed(inDevice->CreateCommandAllocator(inType, IID_PPV_ARGS(&mCommandAllocator)), outResult))
 		return false;
 
 	// Create the command list
-	if (HRFailed(inDevice->CreateCommandList(0, inType, mCommandAllocator.Get(), nullptr, IID_PPV_ARGS(&mCommandList))))
+	if (HRFailed(inDevice->CreateCommandList(0, inType, mCommandAllocator.Get(), nullptr, IID_PPV_ARGS(&mCommandList)), outResult))
 		return false;
 
 	// Command lists are created in the recording state, but there is nothing to record yet. The main loop expects it to be closed, so close it now
-	if (HRFailed(mCommandList->Close()))
+	if (HRFailed(mCommandList->Close(), outResult))
 		return false;
 
 	// Create synchronization object
-	if (HRFailed(inDevice->CreateFence(mFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence))))
+	if (HRFailed(inDevice->CreateFence(mFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)), outResult))
 		return false;
 
 	// Increment fence value so we don't skip waiting the first time a command list is executed
@@ -49,7 +49,7 @@ bool ComputeQueueDX12::Initialize(ID3D12Device *inDevice, D3D12_COMMAND_LIST_TYP
 
 	// Create an event handle to use for frame synchronization
 	mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-	if (HRFailed(HRESULT_FROM_WIN32(GetLastError())))
+	if (HRFailed(HRESULT_FROM_WIN32(GetLastError()), outResult))
 		return false;
 
 	return true;

@@ -24,7 +24,7 @@ public:
 	virtual								~ComputeShaderVK() override;
 
 	/// Initialize from SPIR-V code
-	bool								Initialize(const Array<uint8> &inSPVCode, VkBuffer inDummyBuffer);
+	bool								Initialize(const Array<uint8> &inSPVCode, VkBuffer inDummyBuffer, ComputeShaderResult &outResult);
 
 	/// Get index of parameter in buffer infos
 	uint32								NameToBufferInfoIndex(const char *inName) const;

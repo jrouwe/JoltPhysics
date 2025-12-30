@@ -29,7 +29,7 @@ public:
 	virtual								~ComputeQueueVK() override;
 
 	/// Initialize the queue
-	bool								Initialize(uint32 inComputeQueueIndex);
+	bool								Initialize(uint32 inComputeQueueIndex, ComputeQueueResult &outResult);
 
 	// See: ComputeQueue
 	virtual void						SetShader(const ComputeShader *inShader) override;

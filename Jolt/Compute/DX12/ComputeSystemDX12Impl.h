@@ -20,7 +20,7 @@ public:
 	virtual 						~ComputeSystemDX12Impl() override;
 
 	/// Initialize the compute system
-	bool							Initialize();
+	bool							Initialize(ComputeSystemResult &outResult);
 
 	IDXGIFactory4 *					GetDXGIFactory() const						{ return mDXGIFactory.Get(); }
 

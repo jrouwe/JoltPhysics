@@ -62,7 +62,7 @@ void ComputeSystemVKWithAllocator::FreeMemory(MemoryVK &ioMemory)
 	ioMemory.mMemory = VK_NULL_HANDLE;
 }
 
-void ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer)
+bool ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer)
 {
 	// Create a new buffer
 	outBuffer.mSize = inSize;
@@ -75,7 +75,7 @@ void ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsa
 	if (VKFailed(vkCreateBuffer(mDevice, &create_info, nullptr, &outBuffer.mBuffer)))
 	{
 		outBuffer.mBuffer = VK_NULL_HANDLE;
-		return;
+		return false;
 	}
 
 	VkMemoryRequirements mem_requirements;
@@ -118,6 +118,7 @@ void ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsa
 
 	// Bind the memory to the buffer
 	vkBindBufferMemory(mDevice, outBuffer.mBuffer, outBuffer.mMemory->mMemory, outBuffer.mOffset);
+	return true;
 }
 
 void ComputeSystemVKWithAllocator::FreeBuffer(BufferVK &ioBuffer)

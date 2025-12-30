@@ -11,32 +11,44 @@
 
 JPH_NAMESPACE_BEGIN
 
-ComputeBufferDX12::ComputeBufferDX12(ComputeSystemDX12 *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData) :
+ComputeBufferDX12::ComputeBufferDX12(ComputeSystemDX12 *inComputeSystem, EType inType, uint64 inSize, uint inStride) :
 	ComputeBuffer(inType, inSize, inStride),
 	mComputeSystem(inComputeSystem)
 {
-	uint64 buffer_size = inSize * inStride;
+}
 
-	switch (inType)
+bool ComputeBufferDX12::Initialize(const void *inData)
+{
+	uint64 buffer_size = mSize * mStride;
+
+	switch (mType)
 	{
 	case EType::UploadBuffer:
 		mBufferCPU = mComputeSystem->CreateD3DResource(D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_FLAG_NONE, buffer_size);
 		mBufferGPU = mComputeSystem->CreateD3DResource(D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_FLAG_NONE, buffer_size);
+		if (mBufferCPU == nullptr || mBufferGPU == nullptr)
+			return false;
 		break;
 
 	case EType::ConstantBuffer:
 		mBufferCPU = mComputeSystem->CreateD3DResource(D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_FLAG_NONE, buffer_size);
+		if (mBufferCPU == nullptr)
+			return false;
 		break;
 
 	case EType::ReadbackBuffer:
 		JPH_ASSERT(inData == nullptr, "Can't upload data to a readback buffer");
 		mBufferCPU = mComputeSystem->CreateD3DResource(D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_FLAG_NONE, buffer_size);
+		if (mBufferCPU == nullptr)
+			return false;
 		break;
 
 	case EType::Buffer:
 		JPH_ASSERT(inData != nullptr);
 		mBufferCPU = mComputeSystem->CreateD3DResource(D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_FLAG_NONE, buffer_size);
 		mBufferGPU = mComputeSystem->CreateD3DResource(D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_FLAG_NONE, buffer_size);
+		if (mBufferCPU == nullptr || mBufferGPU == nullptr)
+			return false;
 		mNeedsSync = true;
 		break;
 
@@ -44,9 +56,13 @@ ComputeBufferDX12::ComputeBufferDX12(ComputeSystemDX12 *inComputeSystem, EType i
 		if (inData != nullptr)
 		{
 			mBufferCPU = mComputeSystem->CreateD3DResource(D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_FLAG_NONE, buffer_size);
+			if (mBufferCPU == nullptr)
+				return false;
 			mNeedsSync = true;
 		}
 		mBufferGPU = mComputeSystem->CreateD3DResource(D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, buffer_size);
+		if (mBufferGPU == nullptr)
+			return false;
 		break;
 	}
 
@@ -59,6 +75,8 @@ ComputeBufferDX12::ComputeBufferDX12(ComputeSystemDX12 *inComputeSystem, EType i
 		memcpy(data, inData, size_t(buffer_size));
 		mBufferCPU->Unmap(0, nullptr);
 	}
+
+	return true;
 }
 
 bool ComputeBufferDX12::Barrier(ID3D12GraphicsCommandList *inCommandList, D3D12_RESOURCE_STATES inTo) const
@@ -139,7 +157,7 @@ void ComputeBufferDX12::UnmapInternal()
 	mBufferCPU->Unmap(0, nullptr);
 }
 
-Ref<ComputeBuffer> ComputeBufferDX12::CreateReadBackBuffer() const
+ComputeBufferResult ComputeBufferDX12::CreateReadBackBuffer() const
 {
 	return mComputeSystem->CreateComputeBuffer(EType::ReadbackBuffer, mSize, mStride);
 }

@@ -6,6 +6,7 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/Result.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -76,5 +77,7 @@ public:
 		Wait();
 	}
 };
+
+using ComputeQueueResult = Result<Ref<ComputeQueue>>;
 
 JPH_NAMESPACE_END
