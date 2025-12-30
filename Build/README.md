@@ -39,6 +39,9 @@ There are a number of user configurable defines that turn on/off certain feature
 		<li>JPH_NO_FORCE_INLINE - Don't use force inlining but fall back to a regular 'inline'.</li>
 		<li>JPH_USE_STD_VECTOR - Use std::vector instead of Jolt's own Array class.</li>
 		<li>CPP_RTTI_ENABLED - Enable C++ RTTI for the library. Disabled by default.</li>
+		<li>JPH_USE_DX12 - Implement the DX12 version of ComputeSystem.</li>
+		<li>JPH_USE_VK - Implement the Vulkan version of ComputeSystem.</li>
+		<li>JPH_USE_MTL - Implement the Metal version of ComputeSystem.</li>
 	</ul>
 </details>
 
@@ -130,7 +133,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 	<ul>
 		<li>Install clang (apt-get install clang)</li>
 		<li>Install cmake (apt-get install cmake)</li>
-		<li>If you want to build the Samples or JoltViewer, install the <a href="https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html">Vulkan SDK</a></li>
+		<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html">Vulkan SDK</a></li>
 		<li>Run: ./cmake_linux_clang_gcc.sh</li>
 		<li>Go to the Linux_Debug folder</li>
 		<li>Run: make -j$(nproc) && ./UnitTests</li>
@@ -152,6 +155,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 	<summary>macOS</summary>
 	<ul>
 		<li>Install XCode</li>
+		<li>Install the Vulkan SDK or the dxc and spirv-cross tools (required to cross compile hlsl shaders to Metal)</li>
 		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
 		<li>Run: ./cmake_xcode_macos.sh</li>
 		<li>This will open XCode with a newly generated project</li>
@@ -164,6 +168,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 	<summary>iOS</summary>
 	<ul>
 		<li>Install XCode</li>
+		<li>Install the Vulkan SDK or the dxc and spirv-cross tools (required to cross compile hlsl shaders to Metal)</li>
 		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
 		<li>Run: ./cmake_xcode.ios.sh</li>
 		<li>This will open XCode with a newly generated project</li>

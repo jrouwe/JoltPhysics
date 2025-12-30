@@ -4,22 +4,23 @@
 
 #pragma once
 
-#include <Jolt/Core/UnorderedMap.h>
 #include <Renderer/Renderer.h>
-#include <Renderer/DX12/CommandQueueDX12.h>
+#include <Jolt/Compute/DX12/ComputeSystemDX12Impl.h>
+#include <Jolt/Compute/DX12/ComputeQueueDX12.h>
 #include <Renderer/DX12/DescriptorHeapDX12.h>
-#include <Renderer/DX12/ConstantBufferDX12.h>
 #include <Renderer/DX12/TextureDX12.h>
 
 /// DirectX 12 renderer
-class RendererDX12 : public Renderer
+class RendererDX12 : public Renderer, public ComputeSystemDX12Impl
 {
 public:
-	/// Destructor
+	/// Constructor / destructor
+									RendererDX12();
 	virtual							~RendererDX12() override;
 
 	// See: Renderer
 	virtual void					Initialize(ApplicationWindow *inWindow) override;
+	virtual ComputeSystem &			GetComputeSystem() override			{ return *this; }
 	virtual bool					BeginFrame(const CameraState &inCamera, float inWorldScale) override;
 	virtual void					EndShadowPass() override;
 	virtual void					EndFrame() override;
@@ -34,9 +35,6 @@ public:
 	virtual Texture *				GetShadowMap() const override		{ return mShadowMap.GetPtr(); }
 	virtual void					OnWindowResize() override;
 
-	/// Create a constant buffer
-	unique_ptr<ConstantBufferDX12>	CreateConstantBuffer(uint inBufferSize);
-
 	/// Create a buffer on the default heap (usable for permanent buffers)
 	ComPtr<ID3D12Resource>			CreateD3DResourceOnDefaultHeap(const void *inData, uint64 inSize);
 
@@ -50,10 +48,9 @@ public:
 	void							RecycleD3DObject(ID3D12Object *inResource);
 
 	/// Access to the most important DirectX structures
-	ID3D12Device *					GetDevice()							{ return mDevice.Get(); }
 	ID3D12RootSignature *			GetRootSignature()					{ return mRootSignature.Get(); }
 	ID3D12GraphicsCommandList *		GetCommandList()					{ JPH_ASSERT(mInFrame); return mCommandList.Get(); }
-	CommandQueueDX12 &				GetUploadQueue()					{ return mUploadQueue; }
+	ComputeQueueDX12 &				GetUploadQueue()					{ return mUploadQueue; }
 	DescriptorHeapDX12 &			GetDSVHeap()						{ return mDSVHeap; }
 	DescriptorHeapDX12 &			GetSRVHeap()						{ return mSRVHeap; }
 
@@ -67,9 +64,6 @@ private:
 	// Create a depth buffer for the back buffer
 	void							CreateDepthBuffer();
 
-	// Function to create a ID3D12Resource on specified heap with specified state
-	ComPtr<ID3D12Resource>			CreateD3DResource(D3D12_HEAP_TYPE inHeapType, D3D12_RESOURCE_STATES inResourceState, uint64 inSize);
-
 	// Copy CPU memory into a ID3D12Resource
 	void							CopyD3DResource(ID3D12Resource *inDest, const void *inSrc, uint64 inSize);
 
@@ -77,8 +71,6 @@ private:
 	void							CopyD3DResource(ID3D12Resource *inDest, ID3D12Resource *inSrc, uint64 inSize);
 
 	// DirectX interfaces
-	ComPtr<IDXGIFactory4>			mDXGIFactory;
-	ComPtr<ID3D12Device>			mDevice;
 	DescriptorHeapDX12				mRTVHeap;							///< Render target view heap
 	DescriptorHeapDX12				mDSVHeap;							///< Depth stencil view heap
 	DescriptorHeapDX12				mSRVHeap;							///< Shader resource view heap
@@ -92,10 +84,10 @@ private:
 	ComPtr<ID3D12GraphicsCommandList> mCommandList;						///< The command list
 	ComPtr<ID3D12RootSignature>		mRootSignature;						///< The root signature, we have a simple application so we only need 1, which is suitable for all our shaders
 	Ref<TextureDX12>				mShadowMap;							///< Used to render shadow maps
-	CommandQueueDX12				mUploadQueue;						///< Queue used to upload resources to GPU memory
-	unique_ptr<ConstantBufferDX12>	mVertexShaderConstantBufferProjection[cFrameCount];
-	unique_ptr<ConstantBufferDX12>	mVertexShaderConstantBufferOrtho[cFrameCount];
-	unique_ptr<ConstantBufferDX12>	mPixelShaderConstantBuffer[cFrameCount];
+	ComputeQueueDX12				mUploadQueue;						///< Queue used to upload resources to GPU memory
+	Ref<ComputeBuffer>				mVertexShaderConstantBufferProjection[cFrameCount];
+	Ref<ComputeBuffer>				mVertexShaderConstantBufferOrtho[cFrameCount];
+	Ref<ComputeBuffer>				mPixelShaderConstantBuffer[cFrameCount];
 
 	// Synchronization objects used to finish rendering and swapping before reusing a command queue
 	HANDLE							mFenceEvent;						///< Fence event to wait for the previous frame rendering to complete (in order to free 1 of the buffers)

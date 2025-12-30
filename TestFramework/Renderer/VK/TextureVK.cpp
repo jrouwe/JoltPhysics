@@ -48,18 +48,16 @@ TextureVK::TextureVK(RendererVK *inRenderer, const Surface *inSurface) :
 
 	int bpp = surface->GetBytesPerPixel();
 	VkDeviceSize image_size = VkDeviceSize(mWidth) * mHeight * bpp;
-	VkDevice device = mRenderer->GetDevice();
 
 	BufferVK staging_buffer;
 	mRenderer->CreateBuffer(image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging_buffer);
 
 	// Copy data to upload texture
 	surface->Lock(ESurfaceLockMode::Read);
-	void *data;
-	vkMapMemory(device, staging_buffer.mMemory, staging_buffer.mOffset, image_size, 0, &data);
+	void *data = mRenderer->MapBuffer(staging_buffer);
 	for (int y = 0; y < mHeight; ++y)
 		memcpy(reinterpret_cast<uint8 *>(data) + y * mWidth * bpp, surface->GetData() + y * surface->GetStride(), mWidth * bpp);
-	vkUnmapMemory(device, staging_buffer.mMemory);
+	mRenderer->UnmapBuffer(staging_buffer);
 	surface->UnLock();
 
 	// Create destination image

@@ -338,7 +338,7 @@ set(SAMPLES_ASSETS
 source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 
 # Create Samples executable
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
+if (APPLE)
 	# Icon
 	set(JPH_ICON "${CMAKE_CURRENT_SOURCE_DIR}/macOS/icon.icns")
 	set_source_files_properties(${JPH_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")

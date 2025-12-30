@@ -14,6 +14,10 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h
 	${JOLT_PHYSICS_ROOT}/AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h
 	${JOLT_PHYSICS_ROOT}/ConfigurationString.h
+	${JOLT_PHYSICS_ROOT}/Compute/ComputeBuffer.h
+	${JOLT_PHYSICS_ROOT}/Compute/ComputeQueue.h
+	${JOLT_PHYSICS_ROOT}/Compute/ComputeSystem.h
+	${JOLT_PHYSICS_ROOT}/Compute/ComputeShader.h
 	${JOLT_PHYSICS_ROOT}/Core/ARMNeon.h
 	${JOLT_PHYSICS_ROOT}/Core/Array.h
 	${JOLT_PHYSICS_ROOT}/Core/Atomics.h
@@ -31,6 +35,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/FPFlushDenormals.h
 	${JOLT_PHYSICS_ROOT}/Core/HashCombine.h
 	${JOLT_PHYSICS_ROOT}/Core/HashTable.h
+	${JOLT_PHYSICS_ROOT}/Core/IncludeWindows.h
 	${JOLT_PHYSICS_ROOT}/Core/InsertionSort.h
 	${JOLT_PHYSICS_ROOT}/Core/IssueReporting.cpp
 	${JOLT_PHYSICS_ROOT}/Core/IssueReporting.h
@@ -457,16 +462,174 @@ if (ENABLE_OBJECT_STREAM)
 	)
 endif()
 
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL)
+	# Compute shaders
+	set(JOLT_PHYSICS_SHADERS
+		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute.hlsl
+	)
+
+	set(JOLT_PHYSICS_SHADER_HEADERS
+		${JOLT_PHYSICS_ROOT}/Shaders/ShaderCore.h
+		${JOLT_PHYSICS_ROOT}/Shaders/ShaderMat44.h
+		${JOLT_PHYSICS_ROOT}/Shaders/ShaderMath.h
+		${JOLT_PHYSICS_ROOT}/Shaders/ShaderPlane.h
+		${JOLT_PHYSICS_ROOT}/Shaders/ShaderQuat.h
+		${JOLT_PHYSICS_ROOT}/Shaders/ShaderVec3.h
+		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute.h
+		${JOLT_PHYSICS_ROOT}/Shaders/TestComputeBindings.h
+	)
+endif()
+
+if (WIN32)
 	# Add natvis file
 	set(JOLT_PHYSICS_SRC_FILES ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_ROOT}/Jolt.natvis)
+
+	# Set properties to compile shaders as compute shaders
+	set_source_files_properties(${JOLT_PHYSICS_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T cs_5_0")
+
+	# DirectX support
+	if (JPH_USE_DX12)
+		# DirectX source files
+		set(JOLT_PHYSICS_SRC_FILES
+			${JOLT_PHYSICS_SRC_FILES}
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeQueueDX12.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeQueueDX12.h
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeBufferDX12.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeBufferDX12.h
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeSystemDX12.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeSystemDX12.h
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeSystemDX12Impl.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeSystemDX12Impl.h
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeShaderDX12.h
+			${JOLT_PHYSICS_ROOT}/Compute/DX12/IncludeDX12.h
+		)
+	endif()
+else()
+	set(JPH_USE_DX12 OFF)
+endif()
+
+if (APPLE)
+	# Metal support
+	if (JPH_USE_MTL)
+		# Metal source files
+		set(JOLT_PHYSICS_SRC_FILES
+			${JOLT_PHYSICS_SRC_FILES}
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeBufferMTL.mm
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeBufferMTL.h
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeQueueMTL.mm
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeQueueMTL.h
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeShaderMTL.mm
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeShaderMTL.h
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeSystemMTL.mm
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeSystemMTL.h
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeSystemMTLImpl.mm
+			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeSystemMTLImpl.h
+		)
+
+		find_program(DXC_COMPILER NAMES dxc)
+		find_program(SPIRV_CROSS_COMPILER NAMES spirv-cross)
+		if (NOT DXC_COMPILER)
+			MESSAGE("Application 'dxc' not found. Can't compile compute shaders. Some functionality will be unavailable. You can install it by e.g. installing the Vulkan SDK.")
+		elseif (NOT SPIRV_CROSS_COMPILER)
+			MESSAGE("Application 'spirv-cross' not found. Can't compile compute shaders. Some functionality will be unavailable. You can install it by e.g. installing the Vulkan SDK.")
+		else()
+			# Determine target for shader compiler
+			if (IOS)
+				set(METAL_SDK_TARGET "iphonesimulator")
+			else()
+				set(METAL_SDK_TARGET "macosx")
+			endif()
+
+			# Compile Metal shaders
+			foreach(SHADER ${JOLT_PHYSICS_SHADERS})
+				cmake_path(GET SHADER STEM SHADER_STEM) # Filename without extension
+				set(SPV_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${SHADER_STEM}.spv")
+				set(MTL_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${SHADER_STEM}.metal")
+				set(AIR_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${SHADER_STEM}.air")
+				add_custom_command(OUTPUT ${AIR_SHADER}
+					COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I Jolt/Shaders -WX -O3 -all_resources_bound ${SHADER} -spirv -fvk-use-dx-layout -fspv-entrypoint-name=${SHADER_STEM} -Fo ${SPV_SHADER}
+					COMMAND ${SPIRV_CROSS_COMPILER} ${SPV_SHADER} --msl --output ${MTL_SHADER}
+					COMMAND xcrun -sdk ${METAL_SDK_TARGET} metal -c ${MTL_SHADER} -o ${AIR_SHADER}
+					DEPENDS ${SHADER} ${JOLT_PHYSICS_SHADER_HEADERS} # Currently don't have a way to detect header dependencies, so making dependent on all
+					COMMENT "Compiling Metal ${SHADER}")
+				list(APPEND JOLT_PHYSICS_MTL_SHADERS ${AIR_SHADER})
+			endforeach()
+
+			# Link Metal shaders
+			set(JOLT_PHYSICS_METAL_LIB ${JOLT_PHYSICS_ROOT}/Shaders/Jolt.metallib)
+			add_custom_command(OUTPUT ${JOLT_PHYSICS_METAL_LIB}
+				COMMAND xcrun -sdk ${METAL_SDK_TARGET} metallib -o ${JOLT_PHYSICS_METAL_LIB} ${JOLT_PHYSICS_MTL_SHADERS}
+				DEPENDS ${JOLT_PHYSICS_MTL_SHADERS}
+				COMMENT "Linking shaders")
+
+			# Group intermediate files
+			source_group(Intermediate FILES ${JOLT_PHYSICS_MTL_SHADERS} ${JOLT_PHYSICS_METAL_LIB})
+		endif()
+	endif()
+
+	# Ignore PCH files for .mm files
+	foreach(SRC_FILE ${JOLT_PHYSICS_SRC_FILES})
+		if (SRC_FILE MATCHES "\.mm")
+			set_source_files_properties(${SRC_FILE} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+		endif()
+	endforeach()
+else()
+	set(JPH_USE_MTL OFF)
+endif()
+
+# Vulkan support
+if (JPH_USE_VK)
+	find_package(Vulkan)
+	if (Vulkan_FOUND)
+		# Vulkan source files
+		set(JOLT_PHYSICS_SRC_FILES
+			${JOLT_PHYSICS_SRC_FILES}
+			${JOLT_PHYSICS_ROOT}/Compute/VK/BufferVK.h
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeBufferVK.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeBufferVK.h
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeQueueVK.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeQueueVK.h
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeShaderVK.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeShaderVK.h
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeSystemVK.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeSystemVK.h
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeSystemVKImpl.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeSystemVKImpl.h
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeSystemVKWithAllocator.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/VK/ComputeSystemVKWithAllocator.h
+			${JOLT_PHYSICS_ROOT}/Compute/VK/IncludeVK.h
+		)
+
+		# TODO: For some reason it errors on finding dxc when we specify the dxc component to find_vulkan (and update cmake version)
+		# For now, just set it manually
+		string(REPLACE "glslc" "dxc" Vulkan_dxc_EXECUTABLE ${Vulkan_GLSLC_EXECUTABLE})
+
+		# Compile Vulkan shaders
+		foreach(SHADER ${JOLT_PHYSICS_SHADERS})
+			string(REPLACE ".hlsl" ".spv" SPV_SHADER ${SHADER})
+			add_custom_command(OUTPUT ${SPV_SHADER}
+				# We use dxc instead of: ${Vulkan_GLSLC_EXECUTABLE} -fshader-stage=compute ${SHADER} -o ${SPV_SHADER}
+				# The glslc compiler has the following issues:
+				# - All buffers bind to slot 0. We don't want to manually specify registers so this requires going into the SPIRV code and patching it.
+				# - It automatically aligns float3 to 16 byte boundaries which wastes a lot of memory in structs. We only seem to be able to override this alignment when compiling a GLSL shader and not with HLSL.
+				COMMAND ${Vulkan_dxc_EXECUTABLE} -E main -T cs_6_0 -I Jolt/Shaders -WX -O3 -all_resources_bound ${SHADER} -spirv -fvk-use-dx-layout -Fo ${SPV_SHADER}
+				DEPENDS ${SHADER} ${JOLT_PHYSICS_SHADER_HEADERS} # Currently don't have a way to detect header dependencies, so making dependent on all
+				COMMENT "Compiling Vulkan ${SHADER}")
+			list(APPEND JOLT_PHYSICS_SPV_SHADERS ${SPV_SHADER})
+		endforeach()
+
+		# Group intermediate files
+		source_group(Intermediate FILES ${JOLT_PHYSICS_SPV_SHADERS})
+	else()
+		set(JPH_USE_VK OFF)
+	endif()
 endif()
 
 # Group source files
-source_group(TREE ${JOLT_PHYSICS_ROOT} FILES ${JOLT_PHYSICS_SRC_FILES})
+source_group(TREE ${JOLT_PHYSICS_ROOT} FILES ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_SHADERS} ${JOLT_PHYSICS_SHADER_HEADERS})
 
 # Create Jolt lib
-add_library(Jolt ${JOLT_PHYSICS_SRC_FILES})
+add_library(Jolt ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_SHADERS} ${JOLT_PHYSICS_SHADER_HEADERS} ${JOLT_PHYSICS_SPV_SHADERS} ${JOLT_PHYSICS_METAL_LIB})
 add_library(Jolt::Jolt ALIAS Jolt)
 
 if (BUILD_SHARED_LIBS)
@@ -564,6 +727,33 @@ endif()
 # Setting to track simulation timings per body
 if (JPH_TRACK_SIMULATION_STATS)
 	target_compile_definitions(Jolt PUBLIC JPH_TRACK_SIMULATION_STATS)
+endif()
+
+# Compile against DirectX 12
+if (JPH_USE_DX12)
+	target_compile_definitions(Jolt PUBLIC JPH_USE_DX12)
+	target_link_libraries(Jolt LINK_PUBLIC dxgi.lib d3d12.lib d3dcompiler.lib dxguid.lib)
+
+	# Use DXC compiler to compile shaders, when off falls back to FXC
+	if (JPH_USE_DXC)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_DXC)
+		target_link_libraries(Jolt LINK_PUBLIC dxcompiler.lib)
+	endif()
+endif()
+
+# Compile against Vulkan
+if (JPH_USE_VK)
+	target_compile_definitions(Jolt PUBLIC JPH_USE_VK)
+
+	target_include_directories(Jolt PUBLIC ${Vulkan_INCLUDE_DIRS})
+	target_link_libraries(Jolt LINK_PUBLIC ${Vulkan_LIBRARIES})
+endif()
+
+# Compile against Metal
+if (JPH_USE_MTL)
+	target_compile_definitions(Jolt PUBLIC JPH_USE_MTL)
+
+	target_link_libraries(Jolt LINK_PUBLIC "-framework Foundation -framework Metal -framework MetalKit")
 endif()
 
 # Enable the debug renderer

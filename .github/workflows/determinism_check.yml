@@ -99,7 +99,12 @@ jobs:
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=Distribution
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
-      run: ./UnitTests.exe
+      shell: cmd
+      # We need to run vcvarsall to set the search path to include the Windows SDK, if not dxcompiler.dll will not be found and the UnitTests application will crash
+      run: |
+        for /f "delims=" %%i in ('vswhere -latest -property installationPath') do set VS_PATH=%%i
+        call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+        UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
@@ -129,7 +134,12 @@ jobs:
       run: msbuild Build\VS2022_CL_32BIT\JoltPhysics.sln /property:Configuration=Distribution
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
-      run: ./UnitTests.exe
+      shell: cmd
+      # We need to run vcvarsall to set the search path to include the Windows SDK, if not dxcompiler.dll will not be found and the UnitTests application will crash
+      run: |
+        for /f "delims=" %%i in ('vswhere -latest -property installationPath') do set VS_PATH=%%i
+        call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x86
+        UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
@@ -146,18 +156,26 @@ jobs:
   macos:
     runs-on: macos-latest
     name: macOS Determinism Check
+    env:
+        VULKAN_SDK_INSTALL: ${{github.workspace}}/vulkan_sdk
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v6
+    - name: Install Vulkan SDK
+      run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution clang++ -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: |
+        source ${VULKAN_SDK_INSTALL}/setup-env.sh
+        ./cmake_linux_clang_gcc.sh Distribution clang++ -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ctest --output-on-failure --verbose
+      run: |
+        source ${VULKAN_SDK_INSTALL}/setup-env.sh
+        ctest --output-on-failure --verbose
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
@@ -374,7 +392,7 @@ jobs:
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_emscripten.sh Distribution -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)      
+      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
       run: node UnitTests.js
@@ -412,7 +430,7 @@ jobs:
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_emscripten.sh Distribution -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DJPH_USE_WASM64=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)      
+      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
       run: node --experimental-wasm-memory64 UnitTests.js

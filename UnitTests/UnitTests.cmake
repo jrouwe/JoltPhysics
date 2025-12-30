@@ -3,6 +3,7 @@ set(UNIT_TESTS_ROOT ${PHYSICS_REPO_ROOT}/UnitTests)
 
 # Source files
 set(UNIT_TESTS_SRC_FILES
+	${UNIT_TESTS_ROOT}/Compute/ComputeTests.cpp
 	${UNIT_TESTS_ROOT}/Core/ArrayTest.cpp
 	${UNIT_TESTS_ROOT}/Core/BinaryHeapTest.cpp
 	${UNIT_TESTS_ROOT}/Core/FPFlushDenormalsTest.cpp
@@ -88,6 +89,12 @@ if (ENABLE_OBJECT_STREAM)
 		${UNIT_TESTS_ROOT}/ObjectStream/ObjectStreamTest.cpp
 	)
 endif()
+
+# Assets used by the unit tests
+set(UNIT_TESTS_ASSETS
+	${JOLT_PHYSICS_SPV_SHADERS}
+	${JOLT_PHYSICS_METAL_LIB}
+)
 
 # Group source files
 source_group(TREE ${UNIT_TESTS_ROOT} FILES ${UNIT_TESTS_SRC_FILES})

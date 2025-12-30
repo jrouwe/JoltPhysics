@@ -29,9 +29,14 @@ JPH_GCC_SUPPRESS_WARNING("-Wswitch")
 JoltViewer::JoltViewer(const String &inCommandLine) :
 	Application("Jolt Viewer", inCommandLine)
 {
-	// Get file name from command line
+	// Explode command line into separate arguments
 	Array<String> args;
 	StringToVector(inCommandLine, args, " ");
+
+	// Remove entries starting with `-`
+	for (int i = (int)args.size() - 1; i >= 0; --i)
+		if (!args[i].empty() && args[i].at(0) == '-')
+			args.erase(args.begin() + i);
 
 	// Check arguments
 	if (args.size() != 2 || args[1].empty())

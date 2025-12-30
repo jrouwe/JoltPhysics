@@ -13,15 +13,19 @@
 #include <Renderer/DX12/RenderInstancesDX12.h>
 #include <Renderer/DX12/FatalErrorIfFailedDX12.h>
 #include <Window/ApplicationWindowWin.h>
+#include <Jolt/Compute/DX12/ComputeBufferDX12.h>
 #include <Jolt/Core/Profiler.h>
 #include <Utils/ReadData.h>
 #include <Utils/Log.h>
 #include <Utils/AssetStream.h>
 
 #include <d3dcompiler.h>
-#ifdef JPH_DEBUG
-	#include <d3d12sdklayers.h>
-#endif
+
+RendererDX12::RendererDX12()
+{
+	// Ensure ComputeSystem doesn't get destructed
+	ComputeSystem::SetEmbedded();
+}
 
 RendererDX12::~RendererDX12()
 {
@@ -65,7 +69,7 @@ void RendererDX12::CreateRenderTargets()
 		mRenderTargetViews[n] = mRTVHeap.Allocate();
 
 		FatalErrorIfFailed(mSwapChain->GetBuffer(n, IID_PPV_ARGS(&mRenderTargets[n])));
-		mDevice->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, mRenderTargetViews[n]);
+		GetDevice()->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, mRenderTargetViews[n]);
 	}
 }
 
@@ -104,7 +108,8 @@ void RendererDX12::CreateDepthBuffer()
 	depth_stencil_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depth_stencil_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-	FatalErrorIfFailed(mDevice->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &depth_stencil_desc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clear_value, IID_PPV_ARGS(&mDepthStencilBuffer)));
+	ID3D12Device *device = GetDevice();
+	FatalErrorIfFailed(device->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &depth_stencil_desc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clear_value, IID_PPV_ARGS(&mDepthStencilBuffer)));
 
 	// Allocate depth stencil view
 	D3D12_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc = {};
@@ -113,108 +118,36 @@ void RendererDX12::CreateDepthBuffer()
 	depth_stencil_view_desc.Flags = D3D12_DSV_FLAG_NONE;
 
 	mDepthStencilView = mDSVHeap.Allocate();
-	mDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &depth_stencil_view_desc, mDepthStencilView);
+	device->CreateDepthStencilView(mDepthStencilBuffer.Get(), &depth_stencil_view_desc, mDepthStencilView);
 }
 
 void RendererDX12::Initialize(ApplicationWindow *inWindow)
 {
 	Renderer::Initialize(inWindow);
 
-#if defined(JPH_DEBUG)
-	// Enable the D3D12 debug layer
-	ComPtr<ID3D12Debug> debug_controller;
-	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller))))
-		debug_controller->EnableDebugLayer();
-#endif
-
-	// Create DXGI factory
-	FatalErrorIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mDXGIFactory)));
-
-	// Find adapter
-	ComPtr<IDXGIAdapter1> adapter;
-
-	HRESULT result = E_FAIL;
-
-	// First check if we have the Windows 1803 IDXGIFactory6 interface
-	ComPtr<IDXGIFactory6> factory6;
-	if (SUCCEEDED(mDXGIFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
-	{
-		for (UINT index = 0; DXGI_ERROR_NOT_FOUND != factory6->EnumAdapterByGpuPreference(index, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)); ++index)
-		{
-			DXGI_ADAPTER_DESC1 desc;
-			adapter->GetDesc1(&desc);
-
-			// We don't want software renderers
-			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-				continue;
-
-			// Check to see whether the adapter supports Direct3D 12
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mDevice));
-			if (SUCCEEDED(result))
-				break;
-		}
-	}
-	else
-	{
-		// Fall back to the older method that may not get the fastest GPU
-		for (UINT index = 0; DXGI_ERROR_NOT_FOUND != mDXGIFactory->EnumAdapters1(index, &adapter); ++index)
-		{
-			DXGI_ADAPTER_DESC1 desc;
-			adapter->GetDesc1(&desc);
-
-			// We don't want software renderers
-			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-				continue;
-
-			// Check to see whether the adapter supports Direct3D 12
-			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mDevice));
-			if (SUCCEEDED(result))
-				break;
-		}
-	}
-
-	// Check if we managed to obtain a device
-	FatalErrorIfFailed(result);
-
-#ifdef JPH_DEBUG
-	// Enable breaking on errors
-	ComPtr<ID3D12InfoQueue> info_queue;
-	if (SUCCEEDED(mDevice.As(&info_queue)))
-	{
-		info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
-		info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
-		info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
-
-		// Disable an error that triggers on Windows 11 with a hybrid graphic system
-		// See: https://stackoverflow.com/questions/69805245/directx-12-application-is-crashing-in-windows-11
-		D3D12_MESSAGE_ID hide[] =
-		{
-			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE,
-		};
-		D3D12_INFO_QUEUE_FILTER filter = { };
-		filter.DenyList.NumIDs = static_cast<UINT>( std::size( hide ) );
-		filter.DenyList.pIDList = hide;
-		info_queue->AddStorageFilterEntries( &filter );
-	}
-#endif // JPH_DEBUG
+	if (!ComputeSystemDX12Impl::Initialize())
+		FatalError("Failed to initialize DirectX");
 
 	// Disable full screen transitions
-	FatalErrorIfFailed(mDXGIFactory->MakeWindowAssociation(static_cast<ApplicationWindowWin *>(mWindow)->GetWindowHandle(), DXGI_MWA_NO_ALT_ENTER));
+	IDXGIFactory4 *factory = GetDXGIFactory();
+	FatalErrorIfFailed(factory->MakeWindowAssociation(static_cast<ApplicationWindowWin *>(mWindow)->GetWindowHandle(), DXGI_MWA_NO_ALT_ENTER));
 
 	// Create heaps
-	mRTVHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 2);
-	mDSVHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 4);
-	mSRVHeap.Init(mDevice.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 128);
+	ID3D12Device *device = GetDevice();
+	mRTVHeap.Init(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 2);
+	mDSVHeap.Init(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 4);
+	mSRVHeap.Init(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 128);
 
 	// Create a command queue
 	D3D12_COMMAND_QUEUE_DESC queue_desc = {};
 	queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-	FatalErrorIfFailed(mDevice->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(&mCommandQueue)));
+	queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+	FatalErrorIfFailed(device->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(&mCommandQueue)));
 
 	// Create a command allocator for each frame
 	for (uint n = 0; n < cFrameCount; n++)
-		FatalErrorIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocators[n])));
+		FatalErrorIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocators[n])));
 
 	// Describe and create the swap chain
 	DXGI_SWAP_CHAIN_DESC swap_chain_desc = {};
@@ -229,7 +162,7 @@ void RendererDX12::Initialize(ApplicationWindow *inWindow)
 	swap_chain_desc.Windowed = TRUE;
 
 	ComPtr<IDXGISwapChain> swap_chain;
-	FatalErrorIfFailed(mDXGIFactory->CreateSwapChain(mCommandQueue.Get(), &swap_chain_desc, &swap_chain));
+	FatalErrorIfFailed(factory->CreateSwapChain(mCommandQueue.Get(), &swap_chain_desc, &swap_chain));
 	FatalErrorIfFailed(swap_chain.As(&mSwapChain));
 	mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
 
@@ -299,16 +232,16 @@ void RendererDX12::Initialize(ApplicationWindow *inWindow)
 	ComPtr<ID3DBlob> signature;
 	ComPtr<ID3DBlob> error;
 	FatalErrorIfFailed(D3D12SerializeRootSignature(&root_signature_desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-	FatalErrorIfFailed(mDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
+	FatalErrorIfFailed(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
 
 	// Create the command list
-	FatalErrorIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocators[mFrameIndex].Get(), nullptr, IID_PPV_ARGS(&mCommandList)));
+	FatalErrorIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocators[mFrameIndex].Get(), nullptr, IID_PPV_ARGS(&mCommandList)));
 
 	// Command lists are created in the recording state, but there is nothing to record yet. The main loop expects it to be closed, so close it now
 	FatalErrorIfFailed(mCommandList->Close());
 
 	// Create synchronization object
-	FatalErrorIfFailed(mDevice->CreateFence(mFenceValues[mFrameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
+	FatalErrorIfFailed(device->CreateFence(mFenceValues[mFrameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
 
 	// Increment fence value so we don't skip waiting the first time a command list is executed
 	mFenceValues[mFrameIndex]++;
@@ -319,14 +252,14 @@ void RendererDX12::Initialize(ApplicationWindow *inWindow)
 		FatalErrorIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 
 	// Initialize the queue used to upload resources to the GPU
-	mUploadQueue.Initialize(mDevice.Get());
+	mUploadQueue.Initialize(device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 
 	// Create constant buffer. One per frame to avoid overwriting the constant buffer while the GPU is still using it.
 	for (uint n = 0; n < cFrameCount; ++n)
 	{
-		mVertexShaderConstantBufferProjection[n] = CreateConstantBuffer(sizeof(VertexShaderConstantBuffer));
-		mVertexShaderConstantBufferOrtho[n] = CreateConstantBuffer(sizeof(VertexShaderConstantBuffer));
-		mPixelShaderConstantBuffer[n] = CreateConstantBuffer(sizeof(PixelShaderConstantBuffer));
+		mVertexShaderConstantBufferProjection[n] = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
+		mVertexShaderConstantBufferOrtho[n] = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
+		mPixelShaderConstantBuffer[n] = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(PixelShaderConstantBuffer));
 	}
 
 	// Create depth only texture (no color buffer, as seen from light)
@@ -380,7 +313,7 @@ bool RendererDX12::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Set SRV heap
 	ID3D12DescriptorHeap *heaps[] = { mSRVHeap.Get() };
-	mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+	mCommandList->SetDescriptorHeaps(std::size(heaps), heaps);
 
 	// Indicate that the back buffer will be used as a render target.
 	D3D12_RESOURCE_BARRIER barrier;
@@ -398,12 +331,12 @@ bool RendererDX12::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	mCommandList->ClearDepthStencilView(mDepthStencilView, D3D12_CLEAR_FLAG_DEPTH, 0.0f, 0, 0, nullptr);
 
 	// Set constants for vertex shader in projection mode
-	VertexShaderConstantBuffer *vs = mVertexShaderConstantBufferProjection[mFrameIndex]->Map<VertexShaderConstantBuffer>();
+	VertexShaderConstantBuffer *vs = mVertexShaderConstantBufferProjection[mFrameIndex]->Map<VertexShaderConstantBuffer>(ComputeBuffer::EMode::Write);
 	*vs = mVSBuffer;
 	mVertexShaderConstantBufferProjection[mFrameIndex]->Unmap();
 
 	// Set constants for vertex shader in ortho mode
-	vs = mVertexShaderConstantBufferOrtho[mFrameIndex]->Map<VertexShaderConstantBuffer>();
+	vs = mVertexShaderConstantBufferOrtho[mFrameIndex]->Map<VertexShaderConstantBuffer>(ComputeBuffer::EMode::Write);
 	*vs = mVSBufferOrtho;
 	mVertexShaderConstantBufferOrtho[mFrameIndex]->Unmap();
 
@@ -411,12 +344,12 @@ bool RendererDX12::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	SetProjectionMode();
 
 	// Set constants for pixel shader
-	PixelShaderConstantBuffer *ps = mPixelShaderConstantBuffer[mFrameIndex]->Map<PixelShaderConstantBuffer>();
+	PixelShaderConstantBuffer *ps = mPixelShaderConstantBuffer[mFrameIndex]->Map<PixelShaderConstantBuffer>(ComputeBuffer::EMode::Write);
 	*ps = mPSBuffer;
 	mPixelShaderConstantBuffer[mFrameIndex]->Unmap();
 
 	// Set the pixel shader constant buffer data.
-	mPixelShaderConstantBuffer[mFrameIndex]->Bind(1);
+	mCommandList->SetGraphicsRootConstantBufferView(1, static_cast<ComputeBufferDX12 *>(mPixelShaderConstantBuffer[mFrameIndex].GetPtr())->GetResourceCPU()->GetGPUVirtualAddress());
 
 	// Start drawing the shadow pass
 	mShadowMap->SetAsRenderTarget(true);
@@ -464,7 +397,7 @@ void RendererDX12::EndFrame()
 
 	// Execute the command list
 	ID3D12CommandList* command_lists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(_countof(command_lists), command_lists);
+	mCommandQueue->ExecuteCommandLists(std::size(command_lists), command_lists);
 
 	// Present the frame
 	FatalErrorIfFailed(mSwapChain->Present(1, 0));
@@ -500,14 +433,14 @@ void RendererDX12::SetProjectionMode()
 {
 	JPH_ASSERT(mInFrame);
 
-	mVertexShaderConstantBufferProjection[mFrameIndex]->Bind(0);
+	mCommandList->SetGraphicsRootConstantBufferView(0, static_cast<ComputeBufferDX12 *>(mVertexShaderConstantBufferProjection[mFrameIndex].GetPtr())->GetResourceCPU()->GetGPUVirtualAddress());
 }
 
 void RendererDX12::SetOrthoMode()
 {
 	JPH_ASSERT(mInFrame);
 
-	mVertexShaderConstantBufferOrtho[mFrameIndex]->Bind(0);
+	mCommandList->SetGraphicsRootConstantBufferView(0, static_cast<ComputeBufferDX12 *>(mVertexShaderConstantBufferOrtho[mFrameIndex].GetPtr())->GetResourceCPU()->GetGPUVirtualAddress());
 }
 
 Ref<Texture> RendererDX12::CreateTexture(const Surface *inSurface)
@@ -595,11 +528,6 @@ Ref<PixelShader> RendererDX12::CreatePixelShader(const char *inName)
 	return new PixelShaderDX12(shader_blob);
 }
 
-unique_ptr<ConstantBufferDX12> RendererDX12::CreateConstantBuffer(uint inBufferSize)
-{
-	return make_unique<ConstantBufferDX12>(this, inBufferSize);
-}
-
 unique_ptr<PipelineState> RendererDX12::CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode)
 {
 	return make_unique<PipelineStateDX12>(this, static_cast<const VertexShaderDX12 *>(inVertexShader), inInputDescription, inInputDescriptionCount, static_cast<const PixelShaderDX12 *>(inPixelShader), inDrawPass, inFillMode, inTopology, inDepthTest, inBlendMode, inCullMode);
@@ -613,34 +541,6 @@ RenderPrimitive *RendererDX12::CreateRenderPrimitive(PipelineState::ETopology in
 RenderInstances *RendererDX12::CreateRenderInstances()
 {
 	return new RenderInstancesDX12(this);
-}
-
-ComPtr<ID3D12Resource> RendererDX12::CreateD3DResource(D3D12_HEAP_TYPE inHeapType, D3D12_RESOURCE_STATES inResourceState, uint64 inSize)
-{
-	// Create a new resource
-	D3D12_RESOURCE_DESC desc;
-	desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	desc.Alignment = 0;
-	desc.Width = inSize;
-	desc.Height = 1;
-	desc.DepthOrArraySize = 1;
-	desc.MipLevels = 1;
-	desc.Format = DXGI_FORMAT_UNKNOWN;
-	desc.SampleDesc.Count = 1;
-	desc.SampleDesc.Quality = 0;
-	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-	D3D12_HEAP_PROPERTIES heap_properties = {};
-	heap_properties.Type = inHeapType;
-	heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	heap_properties.CreationNodeMask = 1;
-	heap_properties.VisibleNodeMask = 1;
-
-	ComPtr<ID3D12Resource> resource;
-	FatalErrorIfFailed(mDevice->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &desc, inResourceState, nullptr, IID_PPV_ARGS(&resource)));
-	return resource;
 }
 
 void RendererDX12::CopyD3DResource(ID3D12Resource *inDest, const void *inSrc, uint64 inSize)
@@ -678,7 +578,7 @@ void RendererDX12::CopyD3DResource(ID3D12Resource *inDest, ID3D12Resource *inSrc
 ComPtr<ID3D12Resource> RendererDX12::CreateD3DResourceOnDefaultHeap(const void *inData, uint64 inSize)
 {
 	ComPtr<ID3D12Resource> upload = CreateD3DResourceOnUploadHeap(inSize);
-	ComPtr<ID3D12Resource> resource = CreateD3DResource(D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON, inSize);
+	ComPtr<ID3D12Resource> resource = CreateD3DResource(D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_FLAG_NONE, inSize);
 	CopyD3DResource(upload.Get(), inData, inSize);
 	CopyD3DResource(resource.Get(), upload.Get(), inSize);
 	RecycleD3DResourceOnUploadHeap(upload.Get(), inSize);
@@ -696,7 +596,7 @@ ComPtr<ID3D12Resource> RendererDX12::CreateD3DResourceOnUploadHeap(uint64 inSize
 		return resource;
 	}
 
-	return CreateD3DResource(D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ, inSize);
+	return CreateD3DResource(D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_FLAG_NONE, inSize);
 }
 
 void RendererDX12::RecycleD3DResourceOnUploadHeap(ID3D12Resource *inResource, uint64 inSize)
@@ -711,9 +611,7 @@ void RendererDX12::RecycleD3DObject(ID3D12Object *inResource)
 		mDelayReleased[mFrameIndex].push_back(inResource);
 }
 
-#ifndef JPH_ENABLE_VULKAN
 Renderer *Renderer::sCreate()
 {
 	return new RendererDX12;
 }
-#endif

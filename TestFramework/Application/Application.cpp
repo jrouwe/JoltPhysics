@@ -27,6 +27,10 @@
 	#include <Window/ApplicationWindowMacOS.h>
 #endif
 
+#ifdef JPH_USE_VK
+extern Renderer *CreateRendererVK();
+#endif
+
 JPH_GCC_SUPPRESS_WARNING("-Wswitch")
 
 // Constructor
@@ -61,6 +65,10 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 	// Register physics types with the factory
 	RegisterTypes();
 
+	// Explode command line into separate arguments
+	Array<String> args;
+	StringToVector(ToLower(inCommandLine), args, " ");
+
 	{
 		// Disable allocation checking
 		DisableCustomMemoryHook dcmh;
@@ -78,7 +86,12 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 		mWindow->Initialize(inApplicationName);
 
 		// Create renderer
-		mRenderer = Renderer::sCreate();
+	#ifdef JPH_USE_VK
+		if (std::find(args.begin(), args.end(), "-vulkan") != args.end())
+			mRenderer = CreateRendererVK();
+		else
+	#endif
+			mRenderer = Renderer::sCreate();
 		mRenderer->Initialize(mWindow);
 
 		// Create font

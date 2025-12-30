@@ -17,11 +17,19 @@
 #include <Utils/AssetStream.h>
 #include <Jolt/Core/Profiler.h>
 
+RendererMTL::RendererMTL()
+{
+	// Ensure ComputeSystem doesn't get destructed
+	ComputeSystem::SetEmbedded();
+}
+
 RendererMTL::~RendererMTL()
 {
 	[mCommandQueue release];
 	[mShadowRenderPass release];
 	[mShaderLibrary release];
+
+	ComputeSystemMTL::Shutdown();
 }
 
 void RendererMTL::Initialize(ApplicationWindow *inWindow)
@@ -30,7 +38,9 @@ void RendererMTL::Initialize(ApplicationWindow *inWindow)
 
 	mView = static_cast<ApplicationWindowMacOS *>(inWindow)->GetMetalView();
 
-	id<MTLDevice> device = GetDevice();
+	id<MTLDevice> device = mView.device;
+
+	ComputeSystemMTL::Initialize(device);
 
 	// Load the shader library containing all shaders for the test framework
 	NSError *error = nullptr;
@@ -176,9 +186,7 @@ RenderInstances *RendererMTL::CreateRenderInstances()
 	return new RenderInstancesMTL(this);
 }
 
-#ifndef JPH_ENABLE_VULKAN
 Renderer *Renderer::sCreate()
 {
 	return new RendererMTL;
 }
-#endif

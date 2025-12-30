@@ -42,7 +42,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux_clang_tsan:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang Sanitizers
     strategy:
         fail-fast: false
@@ -52,6 +52,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v6
+    - name: Install Vulkan
+      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -68,7 +70,7 @@ jobs:
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll
 
   linux-clang-so:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang Shared Library
     strategy:
         fail-fast: false
@@ -78,6 +80,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v6
+    - name: Install Vulkan
+      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DBUILD_SHARED_LIBS=YES
@@ -88,7 +92,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-clang-32-bit:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang 32-bit
     strategy:
         fail-fast: false
@@ -112,7 +116,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-clang-use-std-vector:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux Clang using std::vector
     strategy:
         fail-fast: false
@@ -123,6 +127,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v6
+    - name: Install Vulkan
+      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}} -DUSE_STD_VECTOR=ON
@@ -133,7 +139,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-gcc:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux GCC
     strategy:
         fail-fast: false
@@ -155,7 +161,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-gcc-so:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Linux GCC Shared Library
     strategy:
         fail-fast: false
@@ -165,6 +171,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v6
+    - name: Install Vulkan
+      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}} -DBUILD_SHARED_LIBS=Yes
@@ -203,7 +211,7 @@ jobs:
     - name: Test
       working-directory: Build/MinGW_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
-      
+
   msvc_cl:
     runs-on: windows-latest
     name: Visual Studio CL
@@ -224,7 +232,12 @@ jobs:
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
-      run: ./UnitTests.exe
+      shell: cmd
+      # We need to run vcvarsall to set the search path to include the Windows SDK, if not dxcompiler.dll will not be found and the UnitTests application will crash
+      run: |
+        for /f "delims=" %%i in ('vswhere -latest -property installationPath') do set VS_PATH=%%i
+        call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+        UnitTests.exe
 
   msvc_cl_no_object_stream:
     runs-on: windows-latest
@@ -245,7 +258,12 @@ jobs:
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
-      run: ./UnitTests.exe
+      shell: cmd
+      # We need to run vcvarsall to set the search path to include the Windows SDK, if not dxcompiler.dll will not be found and the UnitTests application will crash
+      run: |
+        for /f "delims=" %%i in ('vswhere -latest -property installationPath') do set VS_PATH=%%i
+        call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+        UnitTests.exe
 
   msvc_cl_dll:
     runs-on: windows-latest
@@ -266,7 +284,12 @@ jobs:
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
-      run: ./UnitTests.exe
+      shell: cmd
+      # We need to run vcvarsall to set the search path to include the Windows SDK, if not dxcompiler.dll will not be found and the UnitTests application will crash
+      run: |
+        for /f "delims=" %%i in ('vswhere -latest -property installationPath') do set VS_PATH=%%i
+        call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+        UnitTests.exe
 
   msvc_cl_32_bit:
     runs-on: windows-latest
@@ -287,7 +310,12 @@ jobs:
       run: msbuild Build\VS2022_CL_32_BIT\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32_BIT/${{matrix.build_type}}
-      run: ./UnitTests.exe
+      shell: cmd
+      # We need to run vcvarsall to set the search path to include the Windows SDK, if not dxcompiler.dll will not be found and the UnitTests application will crash
+      run: |
+        for /f "delims=" %%i in ('vswhere -latest -property installationPath') do set VS_PATH=%%i
+        call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x86
+        UnitTests.exe
 
   msvc_cl_arm:
     runs-on: windows-latest
@@ -349,7 +377,12 @@ jobs:
       run: msbuild Build\VS2022_Clang\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_Clang/${{matrix.build_type}}
-      run: ./UnitTests.exe
+      shell: cmd
+      # We need to run vcvarsall to set the search path to include the Windows SDK, if not dxcompiler.dll will not be found and the UnitTests application will crash
+      run: |
+        for /f "delims=" %%i in ('vswhere -latest -property installationPath') do set VS_PATH=%%i
+        call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+        UnitTests.exe
 
   macos:
     runs-on: macos-latest
@@ -374,7 +407,9 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}
-      run: ctest --output-on-failure --verbose
+      run: |
+        source ${VULKAN_SDK_INSTALL}/setup-env.sh
+        ctest --output-on-failure --verbose
 
   android:
     runs-on: ubuntu-latest
@@ -429,7 +464,7 @@ jobs:
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_emscripten.sh Distribution -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)      
+      run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
       run: node UnitTests.js

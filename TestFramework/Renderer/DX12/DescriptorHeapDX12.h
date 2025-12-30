@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <Renderer/DX12/FatalErrorIfFailedDX12.h>
+
 /// DirectX descriptor heap, used to allocate handles for resources to bind them to shaders
 class DescriptorHeapDX12
 {
