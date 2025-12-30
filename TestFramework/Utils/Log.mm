@@ -52,6 +52,6 @@ void FatalError [[noreturn]] (const char *inFMT, ...)
 	NSAlert *alert = [[[NSAlert alloc] init] autorelease];
 	alert.messageText = [NSString stringWithCString: buffer encoding: NSUTF8StringEncoding];
 	[alert runModal];
-	
+
 	exit(1);
 }

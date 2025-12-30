@@ -82,8 +82,8 @@ private:
 	VkDescriptorPool				mDescriptorPool = VK_NULL_HANDLE;
 	VkDescriptorSet					mDescriptorSets[cFrameCount];
 	VkDescriptorSet					mDescriptorSetsOrtho[cFrameCount];
-	VkSampler						mTextureSamplerShadow = VK_NULL_HANDLE;	
-	VkSampler						mTextureSamplerRepeat = VK_NULL_HANDLE;	
+	VkSampler						mTextureSamplerShadow = VK_NULL_HANDLE;
+	VkSampler						mTextureSamplerRepeat = VK_NULL_HANDLE;
 	VkRenderPass					mRenderPassShadow = VK_NULL_HANDLE;
 	VkRenderPass					mRenderPass = VK_NULL_HANDLE;
 	VkPipelineLayout				mPipelineLayout = VK_NULL_HANDLE;

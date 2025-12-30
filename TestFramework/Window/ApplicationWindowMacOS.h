@@ -30,7 +30,7 @@ public:
 
 	/// Enter the main loop and keep rendering frames until the window is closed
 	virtual void					MainLoop(RenderCallback inRenderCallback) override;
-	
+
 	/// Call the render callback
 	bool							RenderCallback()						{ return mRenderCallback && mRenderCallback(); }
 
@@ -44,4 +44,4 @@ protected:
 	ApplicationWindow::RenderCallback mRenderCallback;
 	MouseMovedCallback				mMouseMovedCallback;
 };
-	
+

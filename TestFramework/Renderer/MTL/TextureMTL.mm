@@ -83,7 +83,7 @@ TextureMTL::TextureMTL(RendererMTL *inRenderer, int inWidth, int inHeight) :
 	descriptor.storageMode = MTLStorageModePrivate;
 
 	mTexture = [inRenderer->GetDevice() newTextureWithDescriptor: descriptor];
-	
+
 	[descriptor release];
 }
 

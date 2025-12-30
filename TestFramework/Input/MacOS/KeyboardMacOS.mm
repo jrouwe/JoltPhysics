@@ -104,7 +104,7 @@ static EKey sToKey(GCKeyCode inValue)
 			strongSelf->mKeyboard->OnKeyPressed(ekey, pressed);
 	};
 }
-	
+
 @end
 
 bool KeyboardMacOS::Initialize(ApplicationWindow *inWindow)
@@ -138,6 +138,6 @@ void KeyboardMacOS::OnKeyPressed(EKey inKey, bool inPressed)
 {
 	if (inPressed && mPendingKeyBuffer.size() < mPendingKeyBuffer.capacity())
 		mPendingKeyBuffer.push_back(inKey);
-	
+
 	mKeyPressed[(int)inKey] = inPressed;
 }

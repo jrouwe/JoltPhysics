@@ -178,7 +178,7 @@ void DebugRendererImp::EnsurePrimitiveSpace(int inVtxSize)
 		// Create new
 		mLockedPrimitive = mRenderer->CreateRenderPrimitive(PipelineState::ETopology::Triangle);
 		mLockedPrimitive->CreateVertexBuffer(cVertexBufferSize, sizeof(Vertex));
-		
+
 		// Lock buffers
 		mLockedVerticesStart = mLockedVertices = (Vertex *)mLockedPrimitive->LockVertexBuffer();
 		mLockedVerticesEnd = mLockedVertices + cVertexBufferSize;

@@ -158,7 +158,7 @@ if (NOT CROSS_COMPILE_ARM AND (JPH_USE_VK OR JPH_USE_DX12 OR JPH_USE_MTL))
 			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowLinux.h
 		)
 	endif()
-		
+
 	if (APPLE)
 		# macOS source files
 		set(TEST_FRAMEWORK_SRC_FILES

@@ -24,9 +24,9 @@
 	[device release];
 
 	mWindow = window;
-	
+
 	self.delegate = self;
-	
+
 	return self;
 }
 
@@ -117,7 +117,7 @@ void ApplicationWindowMacOS::Initialize(const char *inTitle)
 void ApplicationWindowMacOS::MainLoop(ApplicationWindow::RenderCallback inRenderCallback)
 {
 	mRenderCallback = inRenderCallback;
-	
+
 	@autoreleasepool
 	{
 		NSApplication *app = [NSApplication sharedApplication];

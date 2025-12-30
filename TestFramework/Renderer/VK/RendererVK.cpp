@@ -52,7 +52,7 @@ RendererVK::~RendererVK()
 		cb = nullptr;
 	for (Ref<ComputeBuffer> &cb : mPixelShaderConstantBuffer)
 		cb = nullptr;
-	
+
 	// Free all buffers
 	for (Array<BufferVK> &buffers : mPerFrameFreedBuffers)
 	{
@@ -556,15 +556,15 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 void RendererVK::DestroySwapChain()
 {
 	// Destroy semaphores
-	for (VkSemaphore semaphore : mImageAvailableSemaphores) 
+	for (VkSemaphore semaphore : mImageAvailableSemaphores)
 		vkDestroySemaphore(mDevice, semaphore, nullptr);
 	mImageAvailableSemaphores.clear();
 
-	for (VkSemaphore semaphore : mRenderFinishedSemaphores) 
+	for (VkSemaphore semaphore : mRenderFinishedSemaphores)
 		vkDestroySemaphore(mDevice, semaphore, nullptr);
 	mRenderFinishedSemaphores.clear();
 
-	for (VkSemaphore semaphore : mAvailableSemaphores) 
+	for (VkSemaphore semaphore : mAvailableSemaphores)
 		vkDestroySemaphore(mDevice, semaphore, nullptr);
 	mAvailableSemaphores.clear();
 

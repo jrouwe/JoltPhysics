@@ -68,7 +68,7 @@
 		strongSelf->mMouse->SetMiddlePressed(pressed);
 	};
 }
-	
+
 @end
 
 bool MouseMacOS::Initialize(ApplicationWindow *inWindow)
@@ -77,7 +77,7 @@ bool MouseMacOS::Initialize(ApplicationWindow *inWindow)
 
 	// Install listener for mouse move callbacks
 	mWindow->SetMouseMovedCallback([this](int inX, int inY) { OnMouseMoved(inX, inY); });
-	
+
 	// Install listener for mouse delta callbacks (will work also when mouse is outside the window or at the edge of the screen)
 	MouseDelegate *delegate = [[MouseDelegate alloc] init: this];
 	[NSNotificationCenter.defaultCenter addObserver: delegate selector: @selector(mouseDidConnect:) name: GCMouseDidConnectNotification object:nil];
@@ -97,7 +97,7 @@ void MouseMacOS::Poll()
 {
 	mDeltaX = mDeltaXAcc;
 	mDeltaY = mDeltaYAcc;
-	
+
 	mDeltaXAcc = 0;
 	mDeltaYAcc = 0;
 }

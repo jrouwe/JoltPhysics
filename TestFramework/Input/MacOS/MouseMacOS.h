@@ -40,14 +40,14 @@ public:
 
 private:
 	ApplicationWindowMacOS *		mWindow = nullptr;
-	
+
 	int								mX = 0;
 	int								mY = 0;
 	int								mDeltaX = 0;
 	int								mDeltaY = 0;
 	int								mDeltaXAcc = 0;
 	int								mDeltaYAcc = 0;
-	
+
 	bool							mLeftPressed = false;
 	bool							mRightPressed = false;
 	bool							mMiddlePressed = false;

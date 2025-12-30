@@ -32,7 +32,7 @@ public:
 
 private:
 	friend class 			RenderInstancesMTL;
-	
+
 	RendererMTL *			mRenderer;
 	MTLPrimitiveType		mPrimitiveType;
 	id<MTLBuffer>			mVertexBuffer;

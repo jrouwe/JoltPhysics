@@ -27,7 +27,7 @@ public:
 	/// Enter the main loop and keep rendering frames until the window is closed
 	using RenderCallback = std::function<bool()>;
 	virtual void					MainLoop(RenderCallback inRenderCallback) = 0;
-	
+
 	/// Function that will trigger the callback
 	void							OnWindowResized(int inWidth, int inHeight) { mWindowWidth = inWidth; mWindowHeight = inHeight; if (mWindowResizeListener) { mWindowResizeListener(); } }
 

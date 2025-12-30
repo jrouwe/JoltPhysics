@@ -15,7 +15,7 @@ public:
 	/// Constructor / destructor
 									RendererMTL();
 	virtual 						~RendererMTL() override;
-	
+
 	// See: Renderer
 	virtual void					Initialize(ApplicationWindow *inWindow) override;
 	virtual ComputeSystem &			GetComputeSystem() override										{ return *this; }
