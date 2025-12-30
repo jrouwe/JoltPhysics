@@ -4,6 +4,10 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ## Unreleased changes
 
+### New functionality
+
+* Added interface to run compute shaders on the GPU with implementations for DX12, Vulkan and Metal. These interfaces can be disabled by setting JPH_USE_DX12, JPH_USE_VK and JPH_USE_MTL to OFF. To build on macOS, you'll need to have dxc and spirv-cross installed. The easiest way to install them is by installing the Vulkan SDK.
+
 ### Bug Fixes
 
 * Made it possible to make a class outside the JPH namespace serializable.
