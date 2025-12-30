@@ -25,7 +25,7 @@ JPH_SUPPRESS_WARNINGS_STD_END
 TEST_SUITE("ComputeTests")
 {
 	static const char *cInvalidShaderName = "InvalidShader";
-	static const char *cInvalidShaderCode = "invalid shader code";
+	static const char *cInvalidShaderCode = "invalid_shader_code";
 
 	static void RunTests(ComputeSystem *inComputeSystem)
 	{
