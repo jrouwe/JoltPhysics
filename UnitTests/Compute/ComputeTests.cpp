@@ -91,6 +91,12 @@ TEST_SUITE("ComputeTests")
 			return true;
 		};
 
+		// Test failing shader creation
+		{
+			ComputeShaderResult shader_result = inComputeSystem->CreateComputeShader("NonExistingShader", 64);
+			CHECK(shader_result.HasError());
+		}
+
 		constexpr uint32 cNumElements = 1234; // Not a multiple of cTestComputeGroupSize
 		constexpr uint32 cNumIterations = 10;
 		constexpr JPH_float3 cFloat3Value = JPH_float3(0, 0, 0);
