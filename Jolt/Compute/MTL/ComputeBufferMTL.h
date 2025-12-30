@@ -20,14 +20,13 @@ public:
 									ComputeBufferMTL(ComputeSystemMTL *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData);
 	virtual							~ComputeBufferMTL() override;
 
-	virtual void					Unmap() override;
-
 	virtual Ref<ComputeBuffer>		CreateReadBackBuffer() const override;
 
 	id<MTLBuffer>					GetBuffer() const							{ return mBuffer; }
 
 private:
 	virtual void *					MapInternal(EMode inMode) override;
+	virtual void					UnmapInternal() override;
 
 	id<MTLBuffer>					mBuffer;
 };

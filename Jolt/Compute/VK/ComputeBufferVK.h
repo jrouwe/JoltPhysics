@@ -24,8 +24,6 @@ public:
 									ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData);
 	virtual							~ComputeBufferVK() override;
 
-	virtual void					Unmap() override;
-
 	virtual Ref<ComputeBuffer>		CreateReadBackBuffer() const override;
 
 	VkBuffer						GetBufferCPU() const									{ return mBufferCPU.mBuffer; }
@@ -37,6 +35,7 @@ public:
 
 private:
 	virtual void *					MapInternal(EMode inMode) override;
+	virtual void					UnmapInternal() override;
 
 	ComputeSystemVK *				mComputeSystem;
 	mutable BufferVK				mBufferCPU;

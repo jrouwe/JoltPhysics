@@ -31,12 +31,11 @@ public:
 	void							RWBarrier(ID3D12GraphicsCommandList *inCommandList);
 	bool							SyncCPUToGPU(ID3D12GraphicsCommandList *inCommandList) const;
 
-	virtual void					Unmap() override;
-
 	Ref<ComputeBuffer>				CreateReadBackBuffer() const override;
 
 private:
 	virtual void *					MapInternal(EMode inMode) override;
+	virtual void					UnmapInternal() override;
 
 	ComputeSystemDX12 *				mComputeSystem;
 	mutable ComPtr<ID3D12Resource>	mBufferCPU;

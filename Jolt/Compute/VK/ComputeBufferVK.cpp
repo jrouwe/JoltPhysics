@@ -115,7 +115,7 @@ void *ComputeBufferVK::MapInternal(EMode inMode)
 	return mComputeSystem->MapBuffer(mBufferCPU);
 }
 
-void ComputeBufferVK::Unmap()
+void ComputeBufferVK::UnmapInternal()
 {
 	mComputeSystem->UnmapBuffer(mBufferCPU);
 }

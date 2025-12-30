@@ -134,7 +134,7 @@ void *ComputeBufferDX12::MapInternal(EMode inMode)
 	return mapped_resource;
 }
 
-void ComputeBufferDX12::Unmap()
+void ComputeBufferDX12::UnmapInternal()
 {
 	mBufferCPU->Unmap(0, nullptr);
 }
