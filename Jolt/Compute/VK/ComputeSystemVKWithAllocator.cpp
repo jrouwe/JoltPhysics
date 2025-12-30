@@ -31,7 +31,7 @@ void ComputeSystemVKWithAllocator::ShutdownMemory()
 	mMemoryCache.clear();
 }
 
-uint32 ComputeSystemVKWithAllocator::FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties)
+uint32 ComputeSystemVKWithAllocator::FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties) const
 {
 	for (uint32 i = 0; i < mMemoryProperties.memoryTypeCount; i++)
 		if ((inTypeFilter & (1 << i))

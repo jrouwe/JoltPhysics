@@ -28,7 +28,7 @@ protected:
 	virtual bool					InitializeMemory() override;
 	virtual void					ShutdownMemory() override;
 
-	uint32							FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties);
+	uint32							FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties) const;
 	void							AllocateMemory(VkDeviceSize inSize, uint32 inMemoryTypeBits, VkMemoryPropertyFlags inProperties, MemoryVK &ioMemory);
 	void							FreeMemory(MemoryVK &ioMemory);
 
