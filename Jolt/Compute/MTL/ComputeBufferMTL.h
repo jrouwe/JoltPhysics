@@ -17,10 +17,12 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor
-									ComputeBufferMTL(ComputeSystemMTL *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData);
+									ComputeBufferMTL(ComputeSystemMTL *inComputeSystem, EType inType, uint64 inSize, uint inStride);
 	virtual							~ComputeBufferMTL() override;
 
-	virtual Ref<ComputeBuffer>		CreateReadBackBuffer() const override;
+	bool							Initialize(const void *inData);
+
+	virtual ComputeBufferResult		CreateReadBackBuffer() const override;
 
 	id<MTLBuffer>					GetBuffer() const							{ return mBuffer; }
 
@@ -28,6 +30,7 @@ private:
 	virtual void *					MapInternal(EMode inMode) override;
 	virtual void					UnmapInternal() override;
 
+	ComputeSystemMTL *				mComputeSystem;
 	id<MTLBuffer>					mBuffer;
 };
 

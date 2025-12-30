@@ -26,29 +26,32 @@ void ComputeSystemMTL::Shutdown()
 	[mDevice release];
 }
 
-Ref<ComputeShader> ComputeSystemMTL::CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ)
+ComputeShaderResult ComputeSystemMTL::CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ)
 {
+	ComputeShaderResult result;
+
 	if (mShaderLibrary == nil)
 	{
 		// Load the shader library containing all shaders
 		Array<uint8> *data = new Array<uint8>();
-		if (!mShaderLoader("Jolt.metallib", *data))
+		String error;
+		if (!mShaderLoader("Jolt.metallib", *data, error))
 		{
-			JPH_ASSERT(false, "Failed to load shader library");
+			result.SetError(error);
 			delete data;
-			return nullptr;
+			return result;
 		}
 
 		// Convert to dispatch data
 		dispatch_data_t data_dispatch = dispatch_data_create(data->data(), data->size(), nullptr, ^{ delete data; });
 
 		// Create the library
-		NSError *error = nullptr;
-		mShaderLibrary = [mDevice newLibraryWithData: data_dispatch error: &error];
-		if (error != nil)
+		NSError *ns_error = nullptr;
+		mShaderLibrary = [mDevice newLibraryWithData: data_dispatch error: &ns_error];
+		if (ns_error != nil)
 		{
-			JPH_ASSERT(false, "Failed to load shader library");
-			return nullptr;
+			result.SetError("Failed to laod shader library");
+			return result;
 		}
 	}
 
@@ -56,8 +59,8 @@ Ref<ComputeShader> ComputeSystemMTL::CreateComputeShader(const char *inName, uin
 	id<MTLFunction> function = [mShaderLibrary newFunctionWithName: [NSString stringWithCString: inName encoding: NSUTF8StringEncoding]];
 	if (function == nil)
 	{
-		Trace("Failed to create compute shader: %s", inName);
-		return nullptr;
+		result.SetError("Failed to instantiate compute shader");
+		return result;
 	}
 
 	// Create the pipeline
@@ -66,22 +69,35 @@ Ref<ComputeShader> ComputeSystemMTL::CreateComputeShader(const char *inName, uin
 	id<MTLComputePipelineState> pipeline_state = [mDevice newComputePipelineStateWithFunction: function options: MTLPipelineOptionBindingInfo | MTLPipelineOptionBufferTypeInfo reflection: &reflection error: &error];
 	if (error != nil || pipeline_state == nil)
 	{
-		JPH_ASSERT(false, "Failed to create compute pipeline");
+		result.SetError("Failed to create compute pipeline");
 		[function release];
-		return nullptr;
+		return result;
 	}
 
-	return new ComputeShaderMTL(pipeline_state, reflection, inGroupSizeX, inGroupSizeY, inGroupSizeZ);
+	result.Set(new ComputeShaderMTL(pipeline_state, reflection, inGroupSizeX, inGroupSizeY, inGroupSizeZ));
+	return result;
 }
 
-Ref<ComputeBuffer> ComputeSystemMTL::CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData)
+ComputeBufferResult ComputeSystemMTL::CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData)
 {
-	return new ComputeBufferMTL(this, inType, inSize, inStride, inData);
+	ComputeBufferResult result;
+
+	Ref<ComputeBufferMTL> buffer = new ComputeBufferMTL(this, inType, inSize, inStride);
+	if (!buffer->Initialize(inData))
+	{
+		result.SetError("Failed to create compute buffer");
+		return result;
+	}
+
+	result.Set(buffer.GetPtr());
+	return result;
 }
 
-Ref<ComputeQueue> ComputeSystemMTL::CreateComputeQueue()
+ComputeQueueResult ComputeSystemMTL::CreateComputeQueue()
 {
-	return new ComputeQueueMTL(mDevice);
+	ComputeQueueResult result;
+	result.Set(new ComputeQueueMTL(mDevice));
+	return result;
 }
 
 JPH_NAMESPACE_END
