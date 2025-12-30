@@ -24,8 +24,8 @@ bool ComputeSystemVKWithAllocator::InitializeMemory()
 void ComputeSystemVKWithAllocator::ShutdownMemory()
 {
 	// Free all memory
-	for (MemoryCache::value_type &mc : mMemoryCache)
-		for (Memory &m : mc.second)
+	for (const MemoryCache::value_type &mc : mMemoryCache)
+		for (const Memory &m : mc.second)
 			if (m.mOffset == 0)
 				FreeMemory(*m.mMemory);
 	mMemoryCache.clear();
@@ -142,13 +142,11 @@ void ComputeSystemVKWithAllocator::FreeBuffer(BufferVK &ioBuffer)
 
 void *ComputeSystemVKWithAllocator::MapBuffer(BufferVK& ioBuffer)
 {
-	if (++ioBuffer.mMemory->mMappedCount == 1)
+	if (++ioBuffer.mMemory->mMappedCount == 1
+		&& VKFailed(vkMapMemory(mDevice, ioBuffer.mMemory->mMemory, 0, VK_WHOLE_SIZE, 0, &ioBuffer.mMemory->mMappedPtr)))
 	{
-		if (VKFailed(vkMapMemory(mDevice, ioBuffer.mMemory->mMemory, 0, VK_WHOLE_SIZE, 0, &ioBuffer.mMemory->mMappedPtr)))
-		{
-			ioBuffer.mMemory->mMappedCount = 0;
-			return nullptr;
-		}
+		ioBuffer.mMemory->mMappedCount = 0;
+		return nullptr;
 	}
 
 	return static_cast<uint8 *>(ioBuffer.mMemory->mMappedPtr) + ioBuffer.mOffset;

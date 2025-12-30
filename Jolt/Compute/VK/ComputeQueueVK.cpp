@@ -118,11 +118,11 @@ void ComputeQueueVK::SetConstantBuffer(const char *inName, const ComputeBuffer *
 void ComputeQueueVK::SyncCPUToGPU(const ComputeBufferVK *inBuffer)
 {
 	// Ensure that any CPU writes are visible to the GPU
-	if (inBuffer->SyncCPUToGPU(mCommandBuffer))
+	if (inBuffer->SyncCPUToGPU(mCommandBuffer)
+		&& (inBuffer->GetType() == ComputeBuffer::EType::Buffer || inBuffer->GetType()  == ComputeBuffer::EType::RWBuffer))
 	{
 		// After the first upload, the CPU buffer is no longer needed for Buffer and RWBuffer types
-		if (inBuffer->GetType() == ComputeBuffer::EType::Buffer || inBuffer->GetType()  == ComputeBuffer::EType::RWBuffer)
-			mDelayedFreedBuffers.push_back(inBuffer->ReleaseBufferCPU());
+		mDelayedFreedBuffers.push_back(inBuffer->ReleaseBufferCPU());
 	}
 }
 
@@ -176,7 +176,7 @@ void ComputeQueueVK::ScheduleReadback(ComputeBuffer *inDst, const ComputeBuffer 
 		return;
 
 	const ComputeBufferVK *src_vk = static_cast<const ComputeBufferVK *>(inSrc);
-	ComputeBufferVK *dst_vk = static_cast<ComputeBufferVK *>(inDst);
+	const ComputeBufferVK *dst_vk = static_cast<ComputeBufferVK *>(inDst);
 
 	// Barrier to start reading from GPU buffer and writing to CPU buffer
 	src_vk->Barrier(mCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT, false);

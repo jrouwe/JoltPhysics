@@ -61,7 +61,7 @@ ComputeShaderResult ComputeSystemVK::CreateComputeShader(const char *inName, uin
 	{
 		result.SetError(error);
 		return result;
-	};
+	}
 
 	Ref<ComputeShaderVK> shader = new ComputeShaderVK(mDevice, inGroupSizeX, inGroupSizeY, inGroupSizeZ);
 	if (!shader->Initialize(data, mDummyBuffer.mBuffer, result))

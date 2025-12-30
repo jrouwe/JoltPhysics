@@ -120,7 +120,7 @@ bool ComputeShaderVK::Initialize(const Array<uint8> &inSPVCode, VkBuffer inDummy
 
 	// Build name to binding map
 	UnorderedMap<String, std::pair<uint32, VkDescriptorType>> name_to_binding;
-	for (const UnorderedMap<uint32, uint32>::value_type& entry : id_to_binding)
+	for (const UnorderedMap<uint32, uint32>::value_type &entry : id_to_binding)
 	{
 		uint32 target_id = entry.first;
 		uint32 binding = entry.second;

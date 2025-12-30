@@ -243,20 +243,32 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	// Create device
 	float queue_priority = 1.0f;
 	VkDeviceQueueCreateInfo queue_create_info[3] = {};
-	for (size_t i = 0; i < std::size(queue_create_info); ++i)
+	for (VkDeviceQueueCreateInfo &q : queue_create_info)
 	{
-		queue_create_info[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queue_create_info[i].queueCount = 1;
-		queue_create_info[i].pQueuePriorities = &queue_priority;
+		q.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		q.queueCount = 1;
+		q.pQueuePriorities = &queue_priority;
 	}
 	uint32 num_queues = 0;
 	queue_create_info[num_queues++].queueFamilyIndex = selected_device.mGraphicsQueueIndex;
+	bool found = false;
 	for (uint32 i = 0; i < num_queues; ++i)
-		if (queue_create_info[i].queueFamilyIndex != selected_device.mPresentQueueIndex)
-			queue_create_info[num_queues++].queueFamilyIndex = selected_device.mPresentQueueIndex;
+		if (queue_create_info[i].queueFamilyIndex == selected_device.mPresentQueueIndex)
+		{
+			found = true;
+			break;
+		}
+	if (!found)
+		queue_create_info[num_queues++].queueFamilyIndex = selected_device.mPresentQueueIndex;
+	found = false;
 	for (uint32 i = 0; i < num_queues; ++i)
-		if (queue_create_info[i].queueFamilyIndex != selected_device.mComputeQueueIndex)
-			queue_create_info[num_queues++].queueFamilyIndex = selected_device.mComputeQueueIndex;
+		if (queue_create_info[i].queueFamilyIndex == selected_device.mComputeQueueIndex)
+		{
+			found = true;
+			break;
+		}
+	if (!found)
+		queue_create_info[num_queues++].queueFamilyIndex = selected_device.mComputeQueueIndex;
 
 	VkPhysicalDeviceScalarBlockLayoutFeatures enable_scalar_block = {};
 	enable_scalar_block.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;

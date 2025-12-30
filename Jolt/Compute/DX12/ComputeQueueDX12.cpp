@@ -87,11 +87,11 @@ void ComputeQueueDX12::SetShader(const ComputeShader *inShader)
 void ComputeQueueDX12::SyncCPUToGPU(const ComputeBufferDX12 *inBuffer)
 {
 	// Ensure that any CPU writes are visible to the GPU
-	if (inBuffer->SyncCPUToGPU(mCommandList.Get()))
+	if (inBuffer->SyncCPUToGPU(mCommandList.Get())
+		&& (inBuffer->GetType() == ComputeBuffer::EType::Buffer || inBuffer->GetType() == ComputeBuffer::EType::RWBuffer))
 	{
 		// After the first upload, the CPU buffer is no longer needed for Buffer and RWBuffer types
-		if (inBuffer->GetType() == ComputeBuffer::EType::Buffer || inBuffer->GetType() == ComputeBuffer::EType::RWBuffer)
-			mDelayedFreedBuffers.emplace_back(inBuffer->ReleaseResourceCPU());
+		mDelayedFreedBuffers.emplace_back(inBuffer->ReleaseResourceCPU());
 	}
 }
 
