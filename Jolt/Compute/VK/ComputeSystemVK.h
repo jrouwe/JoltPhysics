@@ -20,19 +20,19 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	// Initialize / shutdown the compute system
-	bool							Initialize(VkPhysicalDevice inPhysicalDevice, VkDevice inDevice, uint32 inComputeQueueIndex);
+	bool							Initialize(VkPhysicalDevice inPhysicalDevice, VkDevice inDevice, uint32 inComputeQueueIndex, ComputeSystemResult &outResult);
 	void							Shutdown();
 
 	// See: ComputeSystem
-	virtual Ref<ComputeShader>		CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) override;
-	virtual Ref<ComputeBuffer>		CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData = nullptr) override;
-	virtual Ref<ComputeQueue>		CreateComputeQueue() override;
+	virtual ComputeShaderResult		CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) override;
+	virtual ComputeBufferResult		CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData = nullptr) override;
+	virtual ComputeQueueResult		CreateComputeQueue() override;
 
 	/// Access to the Vulkan device
 	VkDevice						GetDevice() const												{ return mDevice; }
 
 	/// Allow the application to override buffer creation and memory mapping in case it uses its own allocator
-	virtual void					CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer) = 0;
+	virtual bool					CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer) = 0;
 	virtual void					FreeBuffer(BufferVK &ioBuffer) = 0;
 	virtual void *					MapBuffer(BufferVK &ioBuffer) = 0;
 	virtual void					UnmapBuffer(BufferVK &ioBuffer) = 0;

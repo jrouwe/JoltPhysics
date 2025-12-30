@@ -21,7 +21,9 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor
-									ComputeBufferDX12(ComputeSystemDX12 *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData);
+									ComputeBufferDX12(ComputeSystemDX12 *inComputeSystem, EType inType, uint64 inSize, uint inStride);
+
+	bool							Initialize(const void *inData);
 
 	ID3D12Resource *				GetResourceCPU() const									{ return mBufferCPU.Get(); }
 	ID3D12Resource *				GetResourceGPU() const									{ return mBufferGPU.Get(); }
@@ -31,12 +33,11 @@ public:
 	void							RWBarrier(ID3D12GraphicsCommandList *inCommandList);
 	bool							SyncCPUToGPU(ID3D12GraphicsCommandList *inCommandList) const;
 
-	virtual void					Unmap() override;
-
-	Ref<ComputeBuffer>				CreateReadBackBuffer() const override;
+	ComputeBufferResult				CreateReadBackBuffer() const override;
 
 private:
 	virtual void *					MapInternal(EMode inMode) override;
+	virtual void					UnmapInternal() override;
 
 	ComputeSystemDX12 *				mComputeSystem;
 	mutable ComPtr<ID3D12Resource>	mBufferCPU;

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <Jolt/Core/StringTools.h>
+
 #ifdef JPH_USE_VK
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
@@ -21,6 +23,18 @@ inline bool VKFailed(VkResult inResult)
 		return false;
 
 	Trace("Vulkan call failed with error code: %d", (int)inResult);
+	JPH_ASSERT(false);
+	return true;
+}
+
+template <class Result>
+inline bool VKFailed(VkResult inResult, Result &outResult)
+{
+	if (inResult == VK_SUCCESS)
+		return false;
+
+	String error = StringFormat("Vulkan call failed with error code: %d", (int)inResult);
+	outResult.SetError(error);
 	JPH_ASSERT(false);
 	return true;
 }

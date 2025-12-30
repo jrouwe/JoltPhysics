@@ -21,12 +21,12 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor
-									ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData);
+									ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType, uint64 inSize, uint inStride);
 	virtual							~ComputeBufferVK() override;
 
-	virtual void					Unmap() override;
+	bool							Initialize(const void *inData);
 
-	virtual Ref<ComputeBuffer>		CreateReadBackBuffer() const override;
+	virtual ComputeBufferResult		CreateReadBackBuffer() const override;
 
 	VkBuffer						GetBufferCPU() const									{ return mBufferCPU.mBuffer; }
 	VkBuffer						GetBufferGPU() const									{ return mBufferGPU.mBuffer; }
@@ -37,6 +37,7 @@ public:
 
 private:
 	virtual void *					MapInternal(EMode inMode) override;
+	virtual void					UnmapInternal() override;
 
 	ComputeSystemVK *				mComputeSystem;
 	mutable BufferVK				mBufferCPU;

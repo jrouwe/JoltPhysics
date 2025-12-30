@@ -472,7 +472,7 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 	mJobSystemValidating = new JobSystemSingleThreaded(cMaxPhysicsJobs);
 
 	// Set shader loader
-	mRenderer->GetComputeSystem().mShaderLoader = [](const char *inName, Array<uint8> &outData) {
+	mRenderer->GetComputeSystem().mShaderLoader = [](const char *inName, Array<uint8> &outData, String &outError) {
 	#ifdef JPH_PLATFORM_MACOS
 		// In macOS the shaders are copied to the bundle
 		String base_path = "Jolt/Shaders/";
@@ -485,7 +485,10 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 	};
 
 	// Create compute queue
-	mComputeQueue = mRenderer->GetComputeSystem().CreateComputeQueue();
+	ComputeQueueResult queue_result = mRenderer->GetComputeSystem().CreateComputeQueue();
+	if (queue_result.HasError())
+		FatalError(queue_result.GetError().c_str());
+	mComputeQueue = queue_result.Get();
 
 	{
 		// Disable allocation checking

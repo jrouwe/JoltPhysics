@@ -24,14 +24,14 @@ bool ComputeSystemVKWithAllocator::InitializeMemory()
 void ComputeSystemVKWithAllocator::ShutdownMemory()
 {
 	// Free all memory
-	for (MemoryCache::value_type &mc : mMemoryCache)
-		for (Memory &m : mc.second)
+	for (const MemoryCache::value_type &mc : mMemoryCache)
+		for (const Memory &m : mc.second)
 			if (m.mOffset == 0)
 				FreeMemory(*m.mMemory);
 	mMemoryCache.clear();
 }
 
-uint32 ComputeSystemVKWithAllocator::FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties)
+uint32 ComputeSystemVKWithAllocator::FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties) const
 {
 	for (uint32 i = 0; i < mMemoryProperties.memoryTypeCount; i++)
 		if ((inTypeFilter & (1 << i))
@@ -62,7 +62,7 @@ void ComputeSystemVKWithAllocator::FreeMemory(MemoryVK &ioMemory)
 	ioMemory.mMemory = VK_NULL_HANDLE;
 }
 
-void ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer)
+bool ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer)
 {
 	// Create a new buffer
 	outBuffer.mSize = inSize;
@@ -75,7 +75,7 @@ void ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsa
 	if (VKFailed(vkCreateBuffer(mDevice, &create_info, nullptr, &outBuffer.mBuffer)))
 	{
 		outBuffer.mBuffer = VK_NULL_HANDLE;
-		return;
+		return false;
 	}
 
 	VkMemoryRequirements mem_requirements;
@@ -118,6 +118,7 @@ void ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsa
 
 	// Bind the memory to the buffer
 	vkBindBufferMemory(mDevice, outBuffer.mBuffer, outBuffer.mMemory->mMemory, outBuffer.mOffset);
+	return true;
 }
 
 void ComputeSystemVKWithAllocator::FreeBuffer(BufferVK &ioBuffer)
@@ -141,13 +142,11 @@ void ComputeSystemVKWithAllocator::FreeBuffer(BufferVK &ioBuffer)
 
 void *ComputeSystemVKWithAllocator::MapBuffer(BufferVK& ioBuffer)
 {
-	if (++ioBuffer.mMemory->mMappedCount == 1)
+	if (++ioBuffer.mMemory->mMappedCount == 1
+		&& VKFailed(vkMapMemory(mDevice, ioBuffer.mMemory->mMemory, 0, VK_WHOLE_SIZE, 0, &ioBuffer.mMemory->mMappedPtr)))
 	{
-		if (VKFailed(vkMapMemory(mDevice, ioBuffer.mMemory->mMemory, 0, VK_WHOLE_SIZE, 0, &ioBuffer.mMemory->mMappedPtr)))
-		{
-			ioBuffer.mMemory->mMappedCount = 0;
-			return nullptr;
-		}
+		ioBuffer.mMemory->mMappedCount = 0;
+		return nullptr;
 	}
 
 	return static_cast<uint8 *>(ioBuffer.mMemory->mMappedPtr) + ioBuffer.mOffset;

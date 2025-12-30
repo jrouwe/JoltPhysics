@@ -32,9 +32,9 @@ public:
 	void							Shutdown();
 
 	// See: ComputeSystem
-	virtual Ref<ComputeShader>		CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) override;
-	virtual Ref<ComputeBuffer>		CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData = nullptr) override;
-	virtual Ref<ComputeQueue>		CreateComputeQueue() override;
+	virtual ComputeShaderResult  	CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) override;
+	virtual ComputeBufferResult  	CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData = nullptr) override;
+	virtual ComputeQueueResult  	CreateComputeQueue() override;
 
 	/// Access to the DX12 device
 	ID3D12Device *					GetDevice() const								{ return mDevice.Get(); }

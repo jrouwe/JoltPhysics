@@ -24,14 +24,19 @@ bool ComputeSystemMTLImpl::Initialize()
 	return ComputeSystemMTL::Initialize(device);
 }
 
-ComputeSystem *CreateComputeSystemMTL()
+ComputeSystemResult CreateComputeSystemMTL()
 {
-	ComputeSystemMTLImpl *compute = new ComputeSystemMTLImpl;
-	if (compute->Initialize())
-		return compute;
+	ComputeSystemResult result;
 
-	delete compute;
-	return nullptr;
+	Ref<ComputeSystemMTLImpl> compute = new ComputeSystemMTLImpl;
+	if (!compute->Initialize())
+	{
+		result.SetError("Failed to initialize compute system");
+		return result;
+	}
+
+	result.Set(compute.GetPtr());
+	return result;
 }
 
 JPH_NAMESPACE_END

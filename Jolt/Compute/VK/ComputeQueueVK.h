@@ -25,11 +25,11 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor / Destructor
-										ComputeQueueVK(ComputeSystemVK *inComputeSystem) : mComputeSystem(inComputeSystem) { }
+	explicit							ComputeQueueVK(ComputeSystemVK *inComputeSystem) : mComputeSystem(inComputeSystem) { }
 	virtual								~ComputeQueueVK() override;
 
 	/// Initialize the queue
-	bool								Initialize(uint32 inComputeQueueIndex);
+	bool								Initialize(uint32 inComputeQueueIndex, ComputeQueueResult &outResult);
 
 	// See: ComputeQueue
 	virtual void						SetShader(const ComputeShader *inShader) override;

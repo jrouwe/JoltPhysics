@@ -11,13 +11,17 @@
 
 JPH_NAMESPACE_BEGIN
 
-ComputeBufferVK::ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData) :
+ComputeBufferVK::ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType, uint64 inSize, uint inStride) :
 	ComputeBuffer(inType, inSize, inStride),
 	mComputeSystem(inComputeSystem)
 {
-	VkDeviceSize buffer_size = VkDeviceSize(inSize * inStride);
+}
 
-	switch (inType)
+bool ComputeBufferVK::Initialize(const void *inData)
+{
+	VkDeviceSize buffer_size = VkDeviceSize(mSize * mStride);
+
+	switch (mType)
 	{
 	case EType::Buffer:
 		JPH_ASSERT(inData != nullptr);
@@ -25,8 +29,10 @@ ComputeBufferVK::ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType,
 
 	case EType::UploadBuffer:
 	case EType::RWBuffer:
-		mComputeSystem->CreateBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, mBufferCPU);
-		mComputeSystem->CreateBuffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mBufferGPU);
+		if (!mComputeSystem->CreateBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, mBufferCPU))
+			return false;
+		if (!mComputeSystem->CreateBuffer(buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mBufferGPU))
+			return false;
 		if (inData != nullptr)
 		{
 			void *data = mComputeSystem->MapBuffer(mBufferCPU);
@@ -37,7 +43,8 @@ ComputeBufferVK::ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType,
 		break;
 
 	case EType::ConstantBuffer:
-		mComputeSystem->CreateBuffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, mBufferCPU);
+		if (!mComputeSystem->CreateBuffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, mBufferCPU))
+			return false;
 		if (inData != nullptr)
 		{
 			void* data = mComputeSystem->MapBuffer(mBufferCPU);
@@ -48,9 +55,12 @@ ComputeBufferVK::ComputeBufferVK(ComputeSystemVK *inComputeSystem, EType inType,
 
 	case EType::ReadbackBuffer:
 		JPH_ASSERT(inData == nullptr, "Can't upload data to a readback buffer");
-		mComputeSystem->CreateBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, mBufferCPU);
+		if (!mComputeSystem->CreateBuffer(buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, mBufferCPU))
+			return false;
 		break;
 	}
+
+	return true;
 }
 
 ComputeBufferVK::~ComputeBufferVK()
@@ -115,12 +125,12 @@ void *ComputeBufferVK::MapInternal(EMode inMode)
 	return mComputeSystem->MapBuffer(mBufferCPU);
 }
 
-void ComputeBufferVK::Unmap()
+void ComputeBufferVK::UnmapInternal()
 {
 	mComputeSystem->UnmapBuffer(mBufferCPU);
 }
 
-Ref<ComputeBuffer> ComputeBufferVK::CreateReadBackBuffer() const
+ComputeBufferResult ComputeBufferVK::CreateReadBackBuffer() const
 {
 	return mComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::ReadbackBuffer, mSize, mStride);
 }

@@ -40,7 +40,7 @@ ComputeSystemVKImpl::~ComputeSystemVKImpl()
 		vkDestroyInstance(mInstance, nullptr);
 }
 
-bool ComputeSystemVKImpl::Initialize()
+bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 {
 	// Required instance extensions
 	Array<const char *> required_instance_extensions;
@@ -62,11 +62,11 @@ bool ComputeSystemVKImpl::Initialize()
 
 	// Query supported instance extensions
 	uint32 instance_extension_count = 0;
-	if (VKFailed(vkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, nullptr)))
+	if (VKFailed(vkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, nullptr), outResult))
 		return false;
 	Array<VkExtensionProperties> instance_extensions;
 	instance_extensions.resize(instance_extension_count);
-	if (VKFailed(vkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, instance_extensions.data())))
+	if (VKFailed(vkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, instance_extensions.data()), outResult))
 		return false;
 
 	// Query supported validation layers
@@ -115,14 +115,14 @@ bool ComputeSystemVKImpl::Initialize()
 
 	instance_create_info.enabledExtensionCount = (uint32)required_instance_extensions.size();
 	instance_create_info.ppEnabledExtensionNames = required_instance_extensions.data();
-	if (VKFailed(vkCreateInstance(&instance_create_info, nullptr, &mInstance)))
+	if (VKFailed(vkCreateInstance(&instance_create_info, nullptr, &mInstance), outResult))
 		return false;
 
 #ifdef JPH_DEBUG
 	// Finalize debug messenger callback
 	PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)(std::uintptr_t)vkGetInstanceProcAddr(mInstance, "vkCreateDebugUtilsMessengerEXT");
 	if (vkCreateDebugUtilsMessengerEXT != nullptr)
-		if (VKFailed(vkCreateDebugUtilsMessengerEXT(mInstance, &messenger_create_info, nullptr, &mDebugMessenger)))
+		if (VKFailed(vkCreateDebugUtilsMessengerEXT(mInstance, &messenger_create_info, nullptr, &mDebugMessenger), outResult))
 			return false;
 #endif
 
@@ -131,11 +131,11 @@ bool ComputeSystemVKImpl::Initialize()
 
 	// Select device
 	uint32 device_count = 0;
-	if (VKFailed(vkEnumeratePhysicalDevices(mInstance, &device_count, nullptr)))
+	if (VKFailed(vkEnumeratePhysicalDevices(mInstance, &device_count, nullptr), outResult))
 		return false;
 	Array<VkPhysicalDevice> devices;
 	devices.resize(device_count);
-	if (VKFailed(vkEnumeratePhysicalDevices(mInstance, &device_count, devices.data())))
+	if (VKFailed(vkEnumeratePhysicalDevices(mInstance, &device_count, devices.data()), outResult))
 		return false;
 	struct Device
 	{
@@ -229,7 +229,10 @@ bool ComputeSystemVKImpl::Initialize()
 		available_devices.push_back({ device, properties.deviceName, selected_format, graphics_queue, present_queue, compute_queue, score });
 	}
 	if (available_devices.empty())
+	{
+		outResult.SetError("No suitable Vulkan device found");
 		return false;
+	}
 
 	// Sort the devices by score
 	QuickSort(available_devices.begin(), available_devices.end(), [](const Device &inLHS, const Device &inRHS) {
@@ -240,20 +243,32 @@ bool ComputeSystemVKImpl::Initialize()
 	// Create device
 	float queue_priority = 1.0f;
 	VkDeviceQueueCreateInfo queue_create_info[3] = {};
-	for (size_t i = 0; i < std::size(queue_create_info); ++i)
+	for (VkDeviceQueueCreateInfo &q : queue_create_info)
 	{
-		queue_create_info[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queue_create_info[i].queueCount = 1;
-		queue_create_info[i].pQueuePriorities = &queue_priority;
+		q.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		q.queueCount = 1;
+		q.pQueuePriorities = &queue_priority;
 	}
 	uint32 num_queues = 0;
 	queue_create_info[num_queues++].queueFamilyIndex = selected_device.mGraphicsQueueIndex;
+	bool found = false;
 	for (uint32 i = 0; i < num_queues; ++i)
-		if (queue_create_info[i].queueFamilyIndex != selected_device.mPresentQueueIndex)
-			queue_create_info[num_queues++].queueFamilyIndex = selected_device.mPresentQueueIndex;
+		if (queue_create_info[i].queueFamilyIndex == selected_device.mPresentQueueIndex)
+		{
+			found = true;
+			break;
+		}
+	if (!found)
+		queue_create_info[num_queues++].queueFamilyIndex = selected_device.mPresentQueueIndex;
+	found = false;
 	for (uint32 i = 0; i < num_queues; ++i)
-		if (queue_create_info[i].queueFamilyIndex != selected_device.mComputeQueueIndex)
-			queue_create_info[num_queues++].queueFamilyIndex = selected_device.mComputeQueueIndex;
+		if (queue_create_info[i].queueFamilyIndex == selected_device.mComputeQueueIndex)
+		{
+			found = true;
+			break;
+		}
+	if (!found)
+		queue_create_info[num_queues++].queueFamilyIndex = selected_device.mComputeQueueIndex;
 
 	VkPhysicalDeviceScalarBlockLayoutFeatures enable_scalar_block = {};
 	enable_scalar_block.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
@@ -277,7 +292,7 @@ bool ComputeSystemVKImpl::Initialize()
 	device_create_info.pEnabledFeatures = nullptr;
 
 	VkDevice device = VK_NULL_HANDLE;
-	if (VKFailed(vkCreateDevice(selected_device.mPhysicalDevice, &device_create_info, nullptr, &device)))
+	if (VKFailed(vkCreateDevice(selected_device.mPhysicalDevice, &device_create_info, nullptr, &device), outResult))
 		return false;
 
 	// Get the queues
@@ -290,17 +305,19 @@ bool ComputeSystemVKImpl::Initialize()
 	mSelectedFormat = selected_device.mFormat;
 
 	// Initialize the compute system
-	return ComputeSystemVK::Initialize(selected_device.mPhysicalDevice, device, selected_device.mComputeQueueIndex);
+	return ComputeSystemVK::Initialize(selected_device.mPhysicalDevice, device, selected_device.mComputeQueueIndex, outResult);
 }
 
-ComputeSystem *CreateComputeSystemVK()
+ComputeSystemResult CreateComputeSystemVK()
 {
-	ComputeSystemVKImpl *compute = new ComputeSystemVKImpl;
-	if (compute->Initialize())
-		return compute;
+	ComputeSystemResult result;
 
-	delete compute;
-	return nullptr;
+	Ref<ComputeSystemVKImpl> compute = new ComputeSystemVKImpl;
+	if (!compute->Initialize(result))
+		return result;
+
+	result.Set(compute.GetPtr());
+	return result;
 }
 
 JPH_NAMESPACE_END

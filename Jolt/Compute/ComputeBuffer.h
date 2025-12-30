@@ -6,8 +6,12 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/Result.h>
 
 JPH_NAMESPACE_BEGIN
+
+class ComputeBuffer;
+using ComputeBufferResult = Result<Ref<ComputeBuffer>>;
 
 /// Buffer that can be read from / written to by a compute shader
 class JPH_EXPORT ComputeBuffer : public RefTarget<ComputeBuffer>, public NonCopyable
@@ -27,7 +31,7 @@ public:
 
 	/// Constructor / Destructor
 								ComputeBuffer(EType inType, uint64 inSize, uint inStride) : mType(inType), mSize(inSize), mStride(inStride) { }
-	virtual						~ComputeBuffer() = default;
+	virtual						~ComputeBuffer()								{ JPH_ASSERT(!mIsMapped); }
 
 	/// Properties
 	EType						GetType() const									{ return mType; }
@@ -42,20 +46,24 @@ public:
 	};
 
 	/// Map / unmap buffer (get pointer to data).
-	void *						Map(EMode inMode)								{ return MapInternal(inMode); }
-	template <typename T> T *	Map(EMode inMode)								{ JPH_ASSERT(sizeof(T) == mStride); return reinterpret_cast<T *>(MapInternal(inMode)); }
-	virtual void				Unmap() = 0;
+	void *						Map(EMode inMode)								{ JPH_ASSERT(!mIsMapped); JPH_IF_ENABLE_ASSERTS(mIsMapped = true;) return MapInternal(inMode); }
+	template <typename T> T *	Map(EMode inMode)								{ JPH_ASSERT(!mIsMapped); JPH_IF_ENABLE_ASSERTS(mIsMapped = true;) JPH_ASSERT(sizeof(T) == mStride); return reinterpret_cast<T *>(MapInternal(inMode)); }
+	void						Unmap()											{ JPH_ASSERT(mIsMapped); JPH_IF_ENABLE_ASSERTS(mIsMapped = false;) UnmapInternal(); }
 
 	/// Create a readback buffer of the same size and stride that can be used to read the data stored in this buffer on CPU.
 	/// Note that this could also be implemented as 'return this' in case the underlying implementation allows locking GPU data on CPU directly.
-	virtual Ref<ComputeBuffer>	CreateReadBackBuffer() const = 0;
+	virtual ComputeBufferResult	CreateReadBackBuffer() const = 0;
 
 protected:
 	EType						mType;
 	uint64						mSize;
 	uint						mStride;
+#ifdef JPH_ENABLE_ASSERTS
+	bool						mIsMapped = false;
+#endif // JPH_ENABLE_ASSERTS
 
 	virtual void *				MapInternal(EMode inMode) = 0;
+	virtual void				UnmapInternal() = 0;
 };
 
 JPH_NAMESPACE_END

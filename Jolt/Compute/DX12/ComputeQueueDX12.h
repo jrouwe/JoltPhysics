@@ -24,7 +24,7 @@ public:
 	virtual								~ComputeQueueDX12() override;
 
 	/// Initialize the queue
-	bool								Initialize(ID3D12Device *inDevice, D3D12_COMMAND_LIST_TYPE inType);
+	bool								Initialize(ID3D12Device *inDevice, D3D12_COMMAND_LIST_TYPE inType, ComputeQueueResult &outResult);
 
 	/// Start the command list (requires waiting until the previous one is finished)
 	ID3D12GraphicsCommandList *			Start();

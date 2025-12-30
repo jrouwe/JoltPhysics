@@ -7,6 +7,7 @@
 #ifdef JPH_USE_DX12
 
 #include <Jolt/Core/IncludeWindows.h>
+#include <Jolt/Core/StringTools.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 JPH_MSVC_SUPPRESS_WARNING(4265) // 'X': class has virtual functions, but its non-trivial destructor is not virtual; instances of this class may not be destructed correctly
@@ -24,6 +25,18 @@ JPH_SUPPRESS_WARNINGS_STD_END
 JPH_NAMESPACE_BEGIN
 
 using Microsoft::WRL::ComPtr;
+
+template <class Result>
+inline bool HRFailed(HRESULT inHR, Result &outResult)
+{
+	if (SUCCEEDED(inHR))
+		return false;
+
+	String error = StringFormat("Call failed with error code: %08X", inHR);
+	outResult.SetError(error);
+	JPH_ASSERT(false);
+	return true;
+}
 
 inline bool HRFailed(HRESULT inHR)
 {

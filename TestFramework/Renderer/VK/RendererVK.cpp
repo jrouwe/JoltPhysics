@@ -118,8 +118,9 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	// Flip the sign of the projection matrix
 	mPerspectiveYSign = -1.0f;
 
-	if (!ComputeSystemVKImpl::Initialize())
-		FatalError("Unable to initialize Vulkan");
+	ComputeSystemResult result;
+	if (!ComputeSystemVKImpl::Initialize(result))
+		FatalError(result.GetError().c_str());
 
 	// Check if fill mode non solid is supported
 	VkPhysicalDeviceFeatures2 supported_features2 = {};
@@ -151,9 +152,20 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	// Create constant buffer. One per frame to avoid overwriting the constant buffer while the GPU is still using it.
 	for (uint n = 0; n < cFrameCount; ++n)
 	{
-		mVertexShaderConstantBufferProjection[n] = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
-		mVertexShaderConstantBufferOrtho[n] = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
-		mPixelShaderConstantBuffer[n] = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(PixelShaderConstantBuffer));
+		ComputeBufferResult buffer_result = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
+		if (buffer_result.HasError())
+			FatalError(buffer_result.GetError().c_str());
+		mVertexShaderConstantBufferProjection[n] = buffer_result.Get();
+
+		buffer_result = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
+		if (buffer_result.HasError())
+			FatalError(buffer_result.GetError().c_str());
+		mVertexShaderConstantBufferOrtho[n] = buffer_result.Get();
+
+		buffer_result = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(PixelShaderConstantBuffer));
+		if (buffer_result.HasError())
+			FatalError(buffer_result.GetError().c_str());
+		mPixelShaderConstantBuffer[n] = buffer_result.Get();
 	}
 
 	// Create descriptor set layout for the uniform buffers

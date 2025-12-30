@@ -19,7 +19,7 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Allow the application to override buffer creation and memory mapping in case it uses its own allocator
-	virtual void					CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer) override;
+	virtual bool					CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer) override;
 	virtual void					FreeBuffer(BufferVK &ioBuffer) override;
 	virtual void *					MapBuffer(BufferVK &ioBuffer) override;
 	virtual void					UnmapBuffer(BufferVK &ioBuffer) override;
@@ -28,7 +28,7 @@ protected:
 	virtual bool					InitializeMemory() override;
 	virtual void					ShutdownMemory() override;
 
-	uint32							FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties);
+	uint32							FindMemoryType(uint32 inTypeFilter, VkMemoryPropertyFlags inProperties) const;
 	void							AllocateMemory(VkDeviceSize inSize, uint32 inMemoryTypeBits, VkMemoryPropertyFlags inProperties, MemoryVK &ioMemory);
 	void							FreeMemory(MemoryVK &ioMemory);
 

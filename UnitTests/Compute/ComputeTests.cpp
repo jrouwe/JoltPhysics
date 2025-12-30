@@ -24,9 +24,19 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 TEST_SUITE("ComputeTests")
 {
+	static const char *cInvalidShaderName = "InvalidShader";
+	static const char *cInvalidShaderCode = "invalid_shader_code";
+
 	static void RunTests(ComputeSystem *inComputeSystem)
 	{
-		inComputeSystem->mShaderLoader = [](const char *inName, Array<uint8> &outData) {
+		inComputeSystem->mShaderLoader = [](const char *inName, Array<uint8> &outData, String &outError) {
+			// Special case to test what happens when an invalid file is returned
+			if (strstr(inName, cInvalidShaderName) != nullptr)
+			{
+				outData.assign(cInvalidShaderCode, cInvalidShaderCode + strlen(cInvalidShaderCode));
+				return true;
+			}
+
 		#if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 			// In macOS the shaders are copied to the bundle
 			CFBundleRef bundle = CFBundleGetMainBundle();
@@ -72,16 +82,30 @@ TEST_SUITE("ComputeTests")
 			// Open file
 			std::ifstream input((base_path + inName).c_str(), std::ios::in | std::ios::binary);
 			if (!input.is_open())
+			{
+				outError = String("Could not open shader file: ") + base_path + inName;
+				#if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+					outError += "\nThis can fail on macOS when dxc or spirv-cross could not be found so the shaders could not be compiled.";
+				#endif
 				return false;
+			}
 
 			// Read contents of file
 			input.seekg(0, ios_base::end);
 			ifstream::pos_type length = input.tellg();
 			input.seekg(0, ios_base::beg);
 			outData.resize(size_t(length));
+			if (length == 0)
+				return true;
 			input.read((char *)&outData[0], length);
 			return true;
 		};
+
+		// Test failing shader creation
+		{
+			ComputeShaderResult shader_result = inComputeSystem->CreateComputeShader("NonExistingShader", 64);
+			CHECK(shader_result.HasError());
+		}
 
 		constexpr uint32 cNumElements = 1234; // Not a multiple of cTestComputeGroupSize
 		constexpr uint32 cNumIterations = 10;
@@ -93,11 +117,17 @@ TEST_SUITE("ComputeTests")
 		// Can't change context buffer while commands are queued, so create multiple constant buffers
 		Ref<ComputeBuffer> context[cNumIterations];
 		for (uint32 iter = 0; iter < cNumIterations; ++iter)
-			context[iter] = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(TestComputeContext));
+		{
+			ComputeBufferResult buffer_result = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(TestComputeContext));
+			CHECK(!buffer_result.HasError());
+			context[iter] = buffer_result.Get();
+		}
 		CHECK(context != nullptr);
 
 		// Create an upload buffer
-		Ref<ComputeBuffer> upload_buffer = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::UploadBuffer, 1, sizeof(uint32));
+		ComputeBufferResult upload_buffer_result = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::UploadBuffer, 1, sizeof(uint32));
+		CHECK(!upload_buffer_result.HasError());
+		Ref<ComputeBuffer> upload_buffer = upload_buffer_result.Get();
 		CHECK(upload_buffer != nullptr);
 		uint32 *upload_data = upload_buffer->Map<uint32>(ComputeBuffer::EMode::Write);
 		upload_data[0] = cUploadValue;
@@ -108,28 +138,38 @@ TEST_SUITE("ComputeTests")
 		Array<uint32> optional_data(cNumElements);
 		for (uint32 &d : optional_data)
 			d = rnd();
-		Ref<ComputeBuffer> optional_buffer = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::Buffer, cNumElements, sizeof(uint32), optional_data.data());
+		ComputeBufferResult optional_buffer_result = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::Buffer, cNumElements, sizeof(uint32), optional_data.data());
+		CHECK(!optional_buffer_result.HasError());
+		Ref<ComputeBuffer> optional_buffer = optional_buffer_result.Get();
 		CHECK(optional_buffer != nullptr);
 
 		// Create a read-write buffer
-		Ref<ComputeBuffer> buffer = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::RWBuffer, cNumElements, sizeof(uint32));
+		ComputeBufferResult buffer_result = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::RWBuffer, cNumElements, sizeof(uint32));
+		CHECK(!buffer_result.HasError());
+		Ref<ComputeBuffer> buffer = buffer_result.Get();
 		CHECK(buffer != nullptr);
 
 		// Create a read back buffer
-		Ref<ComputeBuffer> readback_buffer = buffer->CreateReadBackBuffer();
+		ComputeBufferResult readback_buffer_result = buffer->CreateReadBackBuffer();
+		CHECK(!readback_buffer_result.HasError());
+		Ref<ComputeBuffer> readback_buffer = readback_buffer_result.Get();
 		CHECK(readback_buffer != nullptr);
 
 		// Create the shader
-		Ref<ComputeShader> shader = inComputeSystem->CreateComputeShader("TestCompute", cTestComputeGroupSize);
-		CHECK(shader != nullptr);
-		if (shader == nullptr)
+		ComputeShaderResult shader_result = inComputeSystem->CreateComputeShader("TestCompute", cTestComputeGroupSize);
+		if (shader_result.HasError())
 		{
-			Trace("Shader could not be loaded. This can fail on macOS when dxc or spirv-cross could not be found so the shaders could not be compiled.");
+			Trace("Shader could not be created: %s", shader_result.GetError().c_str());
 			return;
 		}
+		Ref<ComputeShader> shader = shader_result.Get();
+		CHECK(shader != nullptr);
 
 		// Create the queue
-		Ref<ComputeQueue> queue = inComputeSystem->CreateComputeQueue();
+		ComputeQueueResult queue_result = inComputeSystem->CreateComputeQueue();
+		CHECK(!queue_result.HasError());
+		Ref<ComputeQueue> queue = queue_result.Get();
+		CHECK(queue != nullptr);
 
 		// Schedule work
 		for (uint32 iter = 0; iter < cNumIterations; ++iter)
@@ -187,30 +227,46 @@ TEST_SUITE("ComputeTests")
 #ifdef JPH_USE_DX12
 	TEST_CASE("TestComputeDX12")
 	{
-		Ref<ComputeSystem> compute_system = CreateComputeSystemDX12();
-		CHECK(compute_system != nullptr);
-		if (compute_system != nullptr)
-			RunTests(compute_system);
+		ComputeSystemResult compute_system = CreateComputeSystemDX12();
+		CHECK(!compute_system.HasError());
+		if (!compute_system.HasError())
+		{
+			CHECK(compute_system.Get() != nullptr);
+			RunTests(compute_system.Get());
+
+			// Test failing shader compilation
+			{
+				ComputeShaderResult shader_result = compute_system.Get()->CreateComputeShader(cInvalidShaderName, 64);
+				CHECK(shader_result.HasError());
+				CHECK(strstr(shader_result.GetError().c_str(), cInvalidShaderCode) != nullptr); // Assume that the error message contains the invalid code
+			}
+		}
 	}
 #endif // JPH_USE_DX12
 
 #ifdef JPH_USE_MTL
 	TEST_CASE("TestComputeMTL")
 	{
-		Ref<ComputeSystem> compute_system = CreateComputeSystemMTL();
-		CHECK(compute_system != nullptr);
-		if (compute_system != nullptr)
-			RunTests(compute_system);
+		ComputeSystemResult compute_system = CreateComputeSystemMTL();
+		CHECK(!compute_system.HasError());
+		if (!compute_system.HasError())
+		{
+			CHECK(compute_system.Get() != nullptr);
+			RunTests(compute_system.Get());
+		}
 	}
 #endif // JPH_USE_MTL
 
 #ifdef JPH_USE_VK
 	TEST_CASE("TestComputeVK")
 	{
-		Ref<ComputeSystem> compute_system = CreateComputeSystemVK();
-		CHECK(compute_system != nullptr);
-		if (compute_system != nullptr)
-			RunTests(compute_system);
+		ComputeSystemResult compute_system = CreateComputeSystemVK();
+		CHECK(!compute_system.HasError());
+		if (!compute_system.HasError())
+		{
+			CHECK(compute_system.Get() != nullptr);
+			RunTests(compute_system.Get());
+		}
 	}
 #endif // JPH_USE_VK
 }

@@ -10,14 +10,20 @@
 
 JPH_NAMESPACE_BEGIN
 
-ComputeBufferMTL::ComputeBufferMTL(ComputeSystemMTL *inComputeSystem, EType inType, uint64 inSize, uint inStride, const void *inData) :
-	ComputeBuffer(inType, inSize, inStride)
+ComputeBufferMTL::ComputeBufferMTL(ComputeSystemMTL *inComputeSystem, EType inType, uint64 inSize, uint inStride) :
+	ComputeBuffer(inType, inSize, inStride),
+	mComputeSystem(inComputeSystem)
 {
-	NSUInteger size = NSUInteger(inSize) * inStride;
+}
+
+bool ComputeBufferMTL::Initialize(const void *inData)
+{
+	NSUInteger size = NSUInteger(mSize) * mStride;
 	if (inData != nullptr)
-		mBuffer = [inComputeSystem->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
+		mBuffer = [mComputeSystem->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
 	else
-		mBuffer = [inComputeSystem->GetDevice() newBufferWithLength: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
+		mBuffer = [mComputeSystem->GetDevice() newBufferWithLength: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
+	return mBuffer != nil;
 }
 
 ComputeBufferMTL::~ComputeBufferMTL()
@@ -30,13 +36,15 @@ void *ComputeBufferMTL::MapInternal(EMode inMode)
 	return mBuffer.contents;
 }
 
-void ComputeBufferMTL::Unmap()
+void ComputeBufferMTL::UnmapInternal()
 {
 }
 
-Ref<ComputeBuffer> ComputeBufferMTL::CreateReadBackBuffer() const
+ComputeBufferResult ComputeBufferMTL::CreateReadBackBuffer() const
 {
-	return const_cast<ComputeBufferMTL *>(this);
+	ComputeBufferResult result;
+	result.Set(const_cast<ComputeBufferMTL *>(this));
+	return result;
 }
 
 JPH_NAMESPACE_END

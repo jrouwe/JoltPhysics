@@ -27,7 +27,7 @@ ComputeSystemDX12Impl::~ComputeSystemDX12Impl()
 #endif
 }
 
-bool ComputeSystemDX12Impl::Initialize()
+bool ComputeSystemDX12Impl::Initialize(ComputeSystemResult &outResult)
 {
 #if defined(JPH_DEBUG)
 	// Enable the D3D12 debug layer
@@ -37,7 +37,7 @@ bool ComputeSystemDX12Impl::Initialize()
 #endif
 
 	// Create DXGI factory
-	if (HRFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mDXGIFactory))))
+	if (HRFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mDXGIFactory)), outResult))
 		return false;
 
 	// Find adapter
@@ -101,7 +101,7 @@ bool ComputeSystemDX12Impl::Initialize()
 	}
 
 	// Check if we managed to obtain a device
-	if (HRFailed(result))
+	if (HRFailed(result, outResult))
 		return false;
 
 	// Initialize the compute interface
@@ -132,14 +132,16 @@ bool ComputeSystemDX12Impl::Initialize()
 	return true;
 }
 
-ComputeSystem *CreateComputeSystemDX12()
+ComputeSystemResult CreateComputeSystemDX12()
 {
-	ComputeSystemDX12Impl *compute = new ComputeSystemDX12Impl();
-	if (compute->Initialize())
-		return compute;
+	ComputeSystemResult result;
 
-	delete compute;
-	return nullptr;
+	Ref<ComputeSystemDX12Impl> compute = new ComputeSystemDX12Impl();
+	if (!compute->Initialize(result))
+		return result;
+
+	result.Set(compute.GetPtr());
+	return result;
 }
 
 JPH_NAMESPACE_END

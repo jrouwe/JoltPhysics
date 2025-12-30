@@ -31,7 +31,7 @@ ComputeQueueVK::~ComputeQueueVK()
 		vkDestroyFence(device, mFence, nullptr);
 }
 
-bool ComputeQueueVK::Initialize(uint32 inComputeQueueIndex)
+bool ComputeQueueVK::Initialize(uint32 inComputeQueueIndex, ComputeQueueResult &outResult)
 {
 	// Get the queue
 	VkDevice device = mComputeSystem->GetDevice();
@@ -42,7 +42,7 @@ bool ComputeQueueVK::Initialize(uint32 inComputeQueueIndex)
 	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	pool_info.queueFamilyIndex = inComputeQueueIndex;
-	if (VKFailed(vkCreateCommandPool(device, &pool_info, nullptr, &mCommandPool)))
+	if (VKFailed(vkCreateCommandPool(device, &pool_info, nullptr, &mCommandPool), outResult))
 		return false;
 
 	// Create descriptor pool
@@ -55,7 +55,7 @@ bool ComputeQueueVK::Initialize(uint32 inComputeQueueIndex)
 	descriptor_info.poolSizeCount = std::size(descriptor_pool_sizes);
 	descriptor_info.pPoolSizes = descriptor_pool_sizes;
 	descriptor_info.maxSets = 256;
-	if (VKFailed(vkCreateDescriptorPool(device, &descriptor_info, nullptr, &mDescriptorPool)))
+	if (VKFailed(vkCreateDescriptorPool(device, &descriptor_info, nullptr, &mDescriptorPool), outResult))
 		return false;
 
 	// Create a command buffer
@@ -64,13 +64,13 @@ bool ComputeQueueVK::Initialize(uint32 inComputeQueueIndex)
 	alloc_info.commandPool = mCommandPool;
 	alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	alloc_info.commandBufferCount = 1;
-	if (VKFailed(vkAllocateCommandBuffers(device, &alloc_info, &mCommandBuffer)))
+	if (VKFailed(vkAllocateCommandBuffers(device, &alloc_info, &mCommandBuffer), outResult))
 		return false;
 
 	// Create a fence
 	VkFenceCreateInfo fence_info = {};
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	if (VKFailed(vkCreateFence(device, &fence_info, nullptr, &mFence)))
+	if (VKFailed(vkCreateFence(device, &fence_info, nullptr, &mFence), outResult))
 		return false;
 
 	return true;
@@ -118,11 +118,11 @@ void ComputeQueueVK::SetConstantBuffer(const char *inName, const ComputeBuffer *
 void ComputeQueueVK::SyncCPUToGPU(const ComputeBufferVK *inBuffer)
 {
 	// Ensure that any CPU writes are visible to the GPU
-	if (inBuffer->SyncCPUToGPU(mCommandBuffer))
+	if (inBuffer->SyncCPUToGPU(mCommandBuffer)
+		&& (inBuffer->GetType() == ComputeBuffer::EType::Buffer || inBuffer->GetType()  == ComputeBuffer::EType::RWBuffer))
 	{
 		// After the first upload, the CPU buffer is no longer needed for Buffer and RWBuffer types
-		if (inBuffer->GetType() == ComputeBuffer::EType::Buffer || inBuffer->GetType()  == ComputeBuffer::EType::RWBuffer)
-			mDelayedFreedBuffers.push_back(inBuffer->ReleaseBufferCPU());
+		mDelayedFreedBuffers.push_back(inBuffer->ReleaseBufferCPU());
 	}
 }
 
@@ -176,7 +176,7 @@ void ComputeQueueVK::ScheduleReadback(ComputeBuffer *inDst, const ComputeBuffer 
 		return;
 
 	const ComputeBufferVK *src_vk = static_cast<const ComputeBufferVK *>(inSrc);
-	ComputeBufferVK *dst_vk = static_cast<ComputeBufferVK *>(inDst);
+	const ComputeBufferVK *dst_vk = static_cast<ComputeBufferVK *>(inDst);
 
 	// Barrier to start reading from GPU buffer and writing to CPU buffer
 	src_vk->Barrier(mCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT, false);

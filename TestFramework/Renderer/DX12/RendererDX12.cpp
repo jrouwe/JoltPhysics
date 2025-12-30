@@ -125,8 +125,9 @@ void RendererDX12::Initialize(ApplicationWindow *inWindow)
 {
 	Renderer::Initialize(inWindow);
 
-	if (!ComputeSystemDX12Impl::Initialize())
-		FatalError("Failed to initialize DirectX");
+	ComputeSystemResult result;
+	if (!ComputeSystemDX12Impl::Initialize(result))
+		FatalError(result.GetError().c_str());
 
 	// Disable full screen transitions
 	IDXGIFactory4 *factory = GetDXGIFactory();
@@ -252,14 +253,27 @@ void RendererDX12::Initialize(ApplicationWindow *inWindow)
 		FatalErrorIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 
 	// Initialize the queue used to upload resources to the GPU
-	mUploadQueue.Initialize(device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+	ComputeQueueResult queue_result;
+	if (!mUploadQueue.Initialize(device, D3D12_COMMAND_LIST_TYPE_DIRECT, queue_result))
+		FatalError(queue_result.GetError().c_str());
 
 	// Create constant buffer. One per frame to avoid overwriting the constant buffer while the GPU is still using it.
 	for (uint n = 0; n < cFrameCount; ++n)
 	{
-		mVertexShaderConstantBufferProjection[n] = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
-		mVertexShaderConstantBufferOrtho[n] = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
-		mPixelShaderConstantBuffer[n] = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(PixelShaderConstantBuffer));
+		ComputeBufferResult buffer_result = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
+		if (buffer_result.HasError())
+			FatalError(buffer_result.GetError().c_str());
+		mVertexShaderConstantBufferProjection[n] = buffer_result.Get();
+
+		buffer_result = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(VertexShaderConstantBuffer));
+		if (buffer_result.HasError())
+			FatalError(buffer_result.GetError().c_str());
+		mVertexShaderConstantBufferOrtho[n] = buffer_result.Get();
+
+		buffer_result = CreateComputeBuffer(ComputeBuffer::EType::ConstantBuffer, 1, sizeof(PixelShaderConstantBuffer));
+		if (buffer_result.HasError())
+			FatalError(buffer_result.GetError().c_str());
+		mPixelShaderConstantBuffer[n] = buffer_result.Get();
 	}
 
 	// Create depth only texture (no color buffer, as seen from light)

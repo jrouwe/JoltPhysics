@@ -66,13 +66,19 @@ ComPtr<ID3D12Resource> ComputeSystemDX12::CreateD3DResource(D3D12_HEAP_TYPE inHe
 	return resource;
 }
 
-Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ)
+ComputeShaderResult ComputeSystemDX12::CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ)
 {
+	ComputeShaderResult result;
+
 	// Read shader source file
 	Array<uint8> data;
+	String error;
 	String file_name = String(inName) + ".hlsl";
-	if (!mShaderLoader(file_name.c_str(), data))
-		return nullptr;
+	if (!mShaderLoader(file_name.c_str(), data, error))
+	{
+		result.SetError(error);
+		return result;
+	}
 
 #ifndef JPH_USE_DXC // Use FXC, the old shader compiler?
 
@@ -100,7 +106,8 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 		{
 			// Read the header file
 			Array<uint8> file_data;
-			if (!mShaderLoader(inFileName, file_data))
+			String error;
+			if (!mShaderLoader(inFileName, file_data, error))
 				return E_FAIL;
 			if (file_data.empty())
 			{
@@ -146,14 +153,19 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 				error_blob.GetAddressOf())))
 	{
 		if (error_blob)
-			Trace("Shader compile error: %s", (const char *)error_blob->GetBufferPointer());
-		return nullptr;
+			result.SetError((const char *)error_blob->GetBufferPointer());
+		else
+			result.SetError("Shader compile error");
+		return result;
 	}
 
 	// Get shader description
 	ComPtr<ID3D12ShaderReflection> reflector;
 	if (FAILED(D3DReflect(shader_blob->GetBufferPointer(), shader_blob->GetBufferSize(), IID_PPV_ARGS(&reflector))))
-		return nullptr;
+	{
+		result.SetError("Failed to reflect shader");
+		return result;
+	}
 
 #else
 
@@ -195,7 +207,8 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 
 			// Load the header
 			Array<uint8> file_data;
-			if (!mShaderLoader(file_name, file_data))
+			String error;
+			if (!mShaderLoader(file_name, file_data, error))
 				return E_FAIL;
 
 			// Create a blob from the loaded data
@@ -215,8 +228,8 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 	DxcIncludeHandler include_handler(utils.Get(), mShaderLoader);
 
 	ComPtr<IDxcBlobEncoding> source;
-	if (HRFailed(utils->CreateBlob(data.data(), (uint)data.size(), CP_UTF8, source.GetAddressOf())))
-		return nullptr;
+	if (HRFailed(utils->CreateBlob(data.data(), (uint)data.size(), CP_UTF8, source.GetAddressOf()), result))
+		return result;
 
 	ComPtr<IDxcCompiler3> compiler;
 	DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(compiler.GetAddressOf()));
@@ -237,30 +250,33 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 	source_buffer.Ptr = source->GetBufferPointer();
 	source_buffer.Size = source->GetBufferSize();
 	source_buffer.Encoding = 0;
-	ComPtr<IDxcResult> result;
-	if (FAILED(compiler->Compile(&source_buffer, arguments.data(), (uint32)arguments.size(), &include_handler, IID_PPV_ARGS(result.GetAddressOf()))))
-		return nullptr;
+	ComPtr<IDxcResult> compile_result;
+	if (FAILED(compiler->Compile(&source_buffer, arguments.data(), (uint32)arguments.size(), &include_handler, IID_PPV_ARGS(compile_result.GetAddressOf()))))
+	{
+		result.SetError("Failed to compile shader");
+		return result;
+	}
 
 	// Check for compilation errors
 	ComPtr<IDxcBlobUtf8> errors;
-	result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errors.GetAddressOf()), nullptr);
+	compile_result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errors.GetAddressOf()), nullptr);
 	if (errors != nullptr && errors->GetStringLength() > 0)
 	{
-		Trace((char *)errors->GetBufferPointer());
-		return nullptr;
+		result.SetError((const char *)errors->GetBufferPointer());
+		return result;
 	}
 
 	// Get the compiled shader code
 	ComPtr<ID3DBlob> shader_blob;
-	if (HRFailed(result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(shader_blob.GetAddressOf()), nullptr)))
-		return nullptr;
+	if (HRFailed(compile_result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(shader_blob.GetAddressOf()), nullptr), result))
+		return result;
 
 	if (mDebug == EDebug::DebugSymbols)
 	{
 		// Get shader hash and create PDB file name
 		ComPtr<IDxcBlob> hash;
-		if (HRFailed(result->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(hash.GetAddressOf()), nullptr)))
-			return nullptr;
+		if (HRFailed(compile_result->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(hash.GetAddressOf()), nullptr), result))
+			return result;
 		DxcShaderHash *hash_buf = (DxcShaderHash *)hash->GetBufferPointer();
 		String hash_str;
 		for (BYTE b : hash_buf->HashDigest)
@@ -269,8 +285,8 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 
 		// Get PDB file from the compiler
 		ComPtr<IDxcBlob> pdb;
-		if (HRFailed(result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(pdb.GetAddressOf()), nullptr)))
-			return nullptr;
+		if (HRFailed(compile_result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(pdb.GetAddressOf()), nullptr), result))
+			return result;
 
 		// Write PDB file to the temp folder
 		char temp_path[MAX_PATH];
@@ -281,27 +297,27 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 
 	// Get reflection data
 	ComPtr<IDxcBlob> reflection_data;
-	if (HRFailed(result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(reflection_data.GetAddressOf()), nullptr)))
-		return nullptr;
+	if (HRFailed(compile_result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(reflection_data.GetAddressOf()), nullptr), result))
+		return result;
 	DxcBuffer reflection_buffer;
 	reflection_buffer.Ptr = reflection_data->GetBufferPointer();
 	reflection_buffer.Size = reflection_data->GetBufferSize();
 	reflection_buffer.Encoding = 0;
 	ComPtr<ID3D12ShaderReflection> reflector;
-	if (HRFailed(utils->CreateReflection(&reflection_buffer, IID_PPV_ARGS(reflector.GetAddressOf()))))
-		return nullptr;
+	if (HRFailed(utils->CreateReflection(&reflection_buffer, IID_PPV_ARGS(reflector.GetAddressOf())), result))
+		return result;
 
 #endif // JPH_USE_DXC
 
 	// Get the shader description
 	D3D12_SHADER_DESC shader_desc;
-	if (HRFailed(reflector->GetDesc(&shader_desc)))
-		return nullptr;
+	if (HRFailed(reflector->GetDesc(&shader_desc), result))
+		return result;
 
 	// Verify that the group sizes match the shader's thread group size
 	UINT thread_group_size_x, thread_group_size_y, thread_group_size_z;
-	if (HRFailed(reflector->GetThreadGroupSize(&thread_group_size_x, &thread_group_size_y, &thread_group_size_z)))
-		return nullptr;
+	if (HRFailed(reflector->GetThreadGroupSize(&thread_group_size_x, &thread_group_size_y, &thread_group_size_z), result))
+		return result;
 	JPH_ASSERT(inGroupSizeX == thread_group_size_x, "Group size X mismatch");
 	JPH_ASSERT(inGroupSizeY == thread_group_size_y, "Group size Y mismatch");
 	JPH_ASSERT(inGroupSizeZ == thread_group_size_z, "Group size Z mismatch");
@@ -370,12 +386,20 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 	if (FAILED(D3D12SerializeVersionedRootSignature(&root_sig_desc, &serialized_sig, &root_sig_error_blob)))
 	{
 		if (root_sig_error_blob)
-			Trace("Failed to create root signature: %s", (const char *)root_sig_error_blob->GetBufferPointer());
-		return nullptr;
+		{
+			error = StringFormat("Failed to create root signature: %s", (const char *)root_sig_error_blob->GetBufferPointer());
+			result.SetError(error);
+		}
+		else
+			result.SetError("Failed to create root signature");
+		return result;
 	}
 	ComPtr<ID3D12RootSignature> root_sig;
 	if (FAILED(mDevice->CreateRootSignature(0, serialized_sig->GetBufferPointer(), serialized_sig->GetBufferSize(), IID_PPV_ARGS(&root_sig))))
-		return nullptr;
+	{
+		result.SetError("Failed to create root signature");
+		return result;
+	}
 
 	// Create a pipeline state object from the root signature and the shader
 	ComPtr<ID3D12PipelineState> pipeline_state;
@@ -383,7 +407,10 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 	compute_state_desc.pRootSignature = root_sig.Get();
 	compute_state_desc.CS = { shader_blob->GetBufferPointer(), shader_blob->GetBufferSize() };
 	if (FAILED(mDevice->CreateComputePipelineState(&compute_state_desc, IID_PPV_ARGS(&pipeline_state))))
-		return nullptr;
+	{
+		result.SetError("Failed to create compute pipeline state");
+		return result;
+	}
 
 	// Set name on DX12 objects for easier debugging
 	wchar_t w_name[1024];
@@ -391,20 +418,35 @@ Ref<ComputeShader> ComputeSystemDX12::CreateComputeShader(const char *inName, ui
 	mbstowcs_s(&converted_chars, w_name, 1024, inName, _TRUNCATE);
 	pipeline_state->SetName(w_name);
 
-	return new ComputeShaderDX12(shader_blob, root_sig, pipeline_state, std::move(binding_names), std::move(name_to_index), inGroupSizeX, inGroupSizeY, inGroupSizeZ);
+	result.Set(new ComputeShaderDX12(shader_blob, root_sig, pipeline_state, std::move(binding_names), std::move(name_to_index), inGroupSizeX, inGroupSizeY, inGroupSizeZ));
+	return result;
 }
 
-Ref<ComputeBuffer> ComputeSystemDX12::CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData)
+ComputeBufferResult ComputeSystemDX12::CreateComputeBuffer(ComputeBuffer::EType inType, uint64 inSize, uint inStride, const void *inData)
 {
-	return new ComputeBufferDX12(this, inType, inSize, inStride, inData);
+	ComputeBufferResult result;
+
+	Ref<ComputeBufferDX12> buffer = new ComputeBufferDX12(this, inType, inSize, inStride);
+	if (!buffer->Initialize(inData))
+	{
+		result.SetError("Failed to create compute buffer");
+		return result;
+	}
+
+	result.Set(buffer.GetPtr());
+	return result;
 }
 
-Ref<ComputeQueue> ComputeSystemDX12::CreateComputeQueue()
+ComputeQueueResult ComputeSystemDX12::CreateComputeQueue()
 {
+	ComputeQueueResult result;
+
 	Ref<ComputeQueueDX12> queue = new ComputeQueueDX12();
-	if (!queue->Initialize(mDevice.Get(), D3D12_COMMAND_LIST_TYPE_COMPUTE))
-		return nullptr;
-	return queue.GetPtr();
+	if (!queue->Initialize(mDevice.Get(), D3D12_COMMAND_LIST_TYPE_COMPUTE, result))
+		return result;
+
+	result.Set(queue.GetPtr());
+	return result;
 }
 
 JPH_NAMESPACE_END

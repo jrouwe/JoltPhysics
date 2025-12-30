@@ -6,6 +6,7 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/Result.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -34,5 +35,7 @@ private:
 	uint32					mGroupSizeY;
 	uint32					mGroupSizeZ;
 };
+
+using ComputeShaderResult = Result<Ref<ComputeShader>>;
 
 JPH_NAMESPACE_END
