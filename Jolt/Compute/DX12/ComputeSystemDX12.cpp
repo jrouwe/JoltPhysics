@@ -153,11 +153,7 @@ ComputeShaderResult ComputeSystemDX12::CreateComputeShader(const char *inName, u
 				error_blob.GetAddressOf())))
 	{
 		if (error_blob)
-		{
-			error = StringFormat("Shader compile error: %s", (const char *)error_blob->GetBufferPointer());
-			Trace(error.c_str());
-			result.SetError(error);
-		}
+			result.SetError((const char *)error_blob->GetBufferPointer());
 		else
 			result.SetError("Shader compile error");
 		return result;
@@ -266,9 +262,7 @@ ComputeShaderResult ComputeSystemDX12::CreateComputeShader(const char *inName, u
 	compile_result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errors.GetAddressOf()), nullptr);
 	if (errors != nullptr && errors->GetStringLength() > 0)
 	{
-		error = StringFormat("Shader compile error: %s", (const char *)errors->GetBufferPointer());
-		Trace(error.c_str());
-		result.SetError(error);
+		result.SetError((const char *)errors->GetBufferPointer());
 		return result;
 	}
 
