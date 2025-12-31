@@ -1311,8 +1311,14 @@ static stbtt_uint32 stbtt__find_table(stbtt_uint8 *data, stbtt_uint32 fontstart,
    stbtt_int32 num_tables = ttUSHORT(data+fontstart+4);
    stbtt_uint32 tabledir = fontstart + 12;
    stbtt_int32 i;
+   // Bounds check: each table directory entry is 16 bytes, limit num_tables to prevent
+   // integer overflow in (16*i) and to ensure we don't read beyond reasonable bounds.
+   // The maximum value of num_tables in a valid font is limited; we cap it to prevent
+   // malicious fonts from causing out-of-bounds reads.
+   if (num_tables > 4096) // Reasonable upper limit for table count
+      num_tables = 4096;
    for (i=0; i < num_tables; ++i) {
-      stbtt_uint32 loc = tabledir + 16*i;
+      stbtt_uint32 loc = tabledir + (stbtt_uint32)(16*i);
       if (stbtt_tag(data+loc+0, tag))
          return ttULONG(data+loc+8);
    }

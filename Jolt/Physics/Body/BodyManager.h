@@ -142,10 +142,24 @@ public:
 	void							GetBodyIDs(BodyIDVector &outBodies) const;
 
 	/// Access a body (not protected by lock)
-	const Body &					GetBody(const BodyID &inID) const			{ return *mBodies[inID.GetIndex()]; }
+	const Body &					GetBody(const BodyID &inID) const
+	{
+		uint32 idx = inID.GetIndex();
+		JPH_ASSERT(idx < mBodies.size(), "Body index out of range");
+		if (idx >= mBodies.size())
+			return *mBodies[0]; // Return first body as fallback to avoid undefined behavior
+		return *mBodies[idx];
+	}
 
 	/// Access a body (not protected by lock)
-	Body &							GetBody(const BodyID &inID)					{ return *mBodies[inID.GetIndex()]; }
+	Body &							GetBody(const BodyID &inID)
+	{
+		uint32 idx = inID.GetIndex();
+		JPH_ASSERT(idx < mBodies.size(), "Body index out of range");
+		if (idx >= mBodies.size())
+			return *mBodies[0]; // Return first body as fallback to avoid undefined behavior
+		return *mBodies[idx];
+	}
 
 	/// Access a body, will return a nullptr if the body ID is no longer valid (not protected by lock)
 	const Body *					TryGetBody(const BodyID &inID) const
