@@ -436,13 +436,13 @@ jobs:
       run: node UnitTests.js
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node --experimental-wasm-memory64 PerformanceTest.js -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node --experimental-wasm-memory64 PerformanceTest.js -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node --experimental-wasm-memory64 PerformanceTest.js -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
     - name: Test CharacterVirtual
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node --experimental-wasm-memory64 PerformanceTest.js -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
+      run: node PerformanceTest.js -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
