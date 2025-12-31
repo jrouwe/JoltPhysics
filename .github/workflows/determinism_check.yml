@@ -5,8 +5,8 @@ env:
   RAGDOLL_HASH: '0xc392d8f867b0be5b'
   PYRAMID_HASH: '0xafd93b295e75e3f6'
   CHARACTER_VIRTUAL_HASH: '0x19c55223035a8f1a'
-  EMSCRIPTEN_VERSION: 4.0.2
-  NODE_VERSION: 23.x
+  EMSCRIPTEN_VERSION: 4.0.22
+  NODE_VERSION: 24.x
   UBUNTU_CLANG_VERSION: clang++-18
   UBUNTU_GCC_VERSION: g++-14
   UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-14
@@ -433,16 +433,16 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/WASM_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node --experimental-wasm-memory64 UnitTests.js
+      run: node UnitTests.js
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node --experimental-wasm-memory64 PerformanceTest.js -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node --experimental-wasm-memory64 PerformanceTest.js -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node --experimental-wasm-memory64 PerformanceTest.js -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+      run: node PerformanceTest.js -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
     - name: Test CharacterVirtual
       working-directory: ${{github.workspace}}/Build/WASM_Distribution
-      run: node --experimental-wasm-memory64 PerformanceTest.js -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
+      run: node PerformanceTest.js -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}

@@ -13,7 +13,8 @@ on:
       - '**.md'
 
 env:
-  EMSCRIPTEN_VERSION: 3.1.64
+  EMSCRIPTEN_VERSION: 4.0.22
+  NODE_VERSION: 24.x
   UBUNTU_CLANG_VERSION: clang++-18
   UBUNTU_GCC_VERSION: g++-14
 
@@ -404,7 +405,7 @@ jobs:
         source ${VULKAN_SDK_INSTALL}/setup-env.sh
         cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=clang++ Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -j $(nproc)
+      run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -j $(sysctl -n hw.ncpu)
     - name: Test
       working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}
       run: |
@@ -441,7 +442,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch x86_64
+      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch arm64 -j $(sysctl -n hw.ncpu)
 
   emscripten:
     runs-on: ubuntu-latest
@@ -456,10 +457,10 @@ jobs:
         version: ${{env.EMSCRIPTEN_VERSION}}
     - name: Verify emsdk
       run: emcc -v
-    - name: Setup Node.js 18.x
+    - name: Setup Node.js ${{env.NODE_VERSION}}
       uses: actions/setup-node@v6
       with:
-        node-version: 18.x
+        node-version: ${{env.NODE_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_emscripten.sh Distribution -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF
