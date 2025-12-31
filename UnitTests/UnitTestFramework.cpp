@@ -352,7 +352,7 @@ void android_main(struct android_app *ioApp)
 	android_poll_source *source;
 	do
 	{
-		if (ALooper_pollAll(1, nullptr, &events, (void **)&source) >= 0 && source != nullptr)
+		if (ALooper_pollOnce(1, nullptr, &events, (void **)&source) >= 0 && source != nullptr)
 			source->process(ioApp, source);
 	} while (ioApp->destroyRequested == 0);
 }
