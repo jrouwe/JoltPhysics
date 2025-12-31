@@ -13,7 +13,8 @@ on:
       - '**.md'
 
 env:
-  EMSCRIPTEN_VERSION: 3.1.64
+  EMSCRIPTEN_VERSION: 4.0.22
+  NODE_VERSION: 24.x
   UBUNTU_CLANG_VERSION: clang++-18
   UBUNTU_GCC_VERSION: g++-14
 
@@ -227,7 +228,7 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DDOUBLE_PRECISION=${{matrix.double_precision}}
+      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
@@ -253,7 +254,7 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DENABLE_OBJECT_STREAM=NO
+      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 -DENABLE_OBJECT_STREAM=NO
     - name: Build
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
@@ -279,7 +280,7 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DBUILD_SHARED_LIBS=Yes
+      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=Yes
     - name: Build
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
@@ -372,7 +373,7 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/VS2022_Clang -G "Visual Studio 17 2022" -A x64 -T ClangCL Build -DDOUBLE_PRECISION=${{matrix.double_precision}}
+      run: cmake -B ${{github.workspace}}/Build/VS2022_Clang -G "Visual Studio 17 2022" -A x64 -T ClangCL -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
       run: msbuild Build\VS2022_Clang\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
@@ -404,7 +405,7 @@ jobs:
         source ${VULKAN_SDK_INSTALL}/setup-env.sh
         cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=clang++ Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -j $(nproc)
+      run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}} -j $(sysctl -n hw.ncpu)
     - name: Test
       working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}
       run: |
@@ -439,9 +440,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v6
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
+      run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch x86_64
+      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch arm64 -j $(sysctl -n hw.ncpu)
 
   emscripten:
     runs-on: ubuntu-latest
@@ -456,10 +457,10 @@ jobs:
         version: ${{env.EMSCRIPTEN_VERSION}}
     - name: Verify emsdk
       run: emcc -v
-    - name: Setup Node.js 18.x
+    - name: Setup Node.js ${{env.NODE_VERSION}}
       uses: actions/setup-node@v6
       with:
-        node-version: 18.x
+        node-version: ${{env.NODE_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_emscripten.sh Distribution -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF
