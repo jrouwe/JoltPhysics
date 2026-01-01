@@ -6,11 +6,12 @@
 
 #include <Jolt/Compute/VK/IncludeVK.h>
 #include <Jolt/Core/Reference.h>
+#include <Jolt/Core/NonCopyable.h>
 
 JPH_NAMESPACE_BEGIN
 
 /// Simple wrapper class to manage a Vulkan memory block
-class MemoryVK : public RefTarget<MemoryVK>
+class MemoryVK : public RefTarget<MemoryVK>, public NonCopyable
 {
 public:
 								~MemoryVK()
