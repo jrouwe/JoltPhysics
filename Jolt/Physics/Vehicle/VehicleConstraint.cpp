@@ -153,6 +153,10 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Step only if we're in the broadphase
+	if (!mBody->IsInBroadPhase())
+		return;
+
 	// Callback to higher-level systems. We do it before PreCollide, in case steering changes.
 	if (mPreStepCallback != nullptr)
 		mPreStepCallback(*this, inContext);

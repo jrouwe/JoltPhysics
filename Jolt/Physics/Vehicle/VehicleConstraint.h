@@ -183,7 +183,7 @@ public:
 	uint						GetNumStepsBetweenCollisionTestInactive() const { return mNumStepsBetweenCollisionTestInactive; }
 
 	// Generic interface of a constraint
-	virtual bool				IsActive() const override					{ return mIsActive && Constraint::IsActive(); }
+	virtual bool				IsActive() const override					{ return mIsActive && mBody->IsInBroadPhase() && Constraint::IsActive(); }
 	virtual void				NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM) override { /* Do nothing */ }
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
 	virtual void				ResetWarmStart() override;
