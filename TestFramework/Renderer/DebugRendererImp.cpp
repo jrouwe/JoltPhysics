@@ -29,7 +29,7 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 	// Lines
 	Ref<VertexShader> vtx_line = mRenderer->CreateVertexShader("LineVertexShader");
 	Ref<PixelShader> pix_line = mRenderer->CreatePixelShader("LinePixelShader");
-	mLineState = mRenderer->CreatePipelineState(vtx_line, line_vertex_desc, std::size(line_vertex_desc), pix_line, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Line, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	mLineState = mRenderer->CreatePipelineState(vtx_line, line_vertex_desc, (uint)std::size(line_vertex_desc), pix_line, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Line, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 
 	// Create input layout for triangles
 	const PipelineState::EInputDescription triangles_vertex_desc[] =
@@ -46,16 +46,16 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 	// Triangles
 	Ref<VertexShader> vtx_triangle = mRenderer->CreateVertexShader("TriangleVertexShader");
 	Ref<PixelShader> pix_triangle  = mRenderer->CreatePixelShader("TrianglePixelShader");
-	mTriangleStateBF = mRenderer->CreatePipelineState(vtx_triangle, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_triangle, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
-	mTriangleStateFF = mRenderer->CreatePipelineState(vtx_triangle, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_triangle, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
-	mTriangleStateWire = mRenderer->CreatePipelineState(vtx_triangle, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_triangle, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Wireframe, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	mTriangleStateBF = mRenderer->CreatePipelineState(vtx_triangle, triangles_vertex_desc, (uint)std::size(triangles_vertex_desc), pix_triangle, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	mTriangleStateFF = mRenderer->CreatePipelineState(vtx_triangle, triangles_vertex_desc, (uint)std::size(triangles_vertex_desc), pix_triangle, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
+	mTriangleStateWire = mRenderer->CreatePipelineState(vtx_triangle, triangles_vertex_desc, (uint)std::size(triangles_vertex_desc), pix_triangle, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Wireframe, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 
 	// Shadow pass
 	Ref<VertexShader> vtx_shadow = mRenderer->CreateVertexShader("TriangleDepthVertexShader");
 	Ref<PixelShader> pix_shadow = mRenderer->CreatePixelShader("TriangleDepthPixelShader");
-	mShadowStateBF = mRenderer->CreatePipelineState(vtx_shadow, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_shadow, PipelineState::EDrawPass::Shadow, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
-	mShadowStateFF = mRenderer->CreatePipelineState(vtx_shadow, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_shadow, PipelineState::EDrawPass::Shadow, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
-	mShadowStateWire = mRenderer->CreatePipelineState(vtx_shadow, triangles_vertex_desc, std::size(triangles_vertex_desc), pix_shadow, PipelineState::EDrawPass::Shadow, PipelineState::EFillMode::Wireframe, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	mShadowStateBF = mRenderer->CreatePipelineState(vtx_shadow, triangles_vertex_desc, (uint)std::size(triangles_vertex_desc), pix_shadow, PipelineState::EDrawPass::Shadow, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	mShadowStateFF = mRenderer->CreatePipelineState(vtx_shadow, triangles_vertex_desc, (uint)std::size(triangles_vertex_desc), pix_shadow, PipelineState::EDrawPass::Shadow, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
+	mShadowStateWire = mRenderer->CreatePipelineState(vtx_shadow, triangles_vertex_desc, (uint)std::size(triangles_vertex_desc), pix_shadow, PipelineState::EDrawPass::Shadow, PipelineState::EFillMode::Wireframe, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 
 	// Create instances buffer
 	for (uint n = 0; n < Renderer::cFrameCount; ++n)

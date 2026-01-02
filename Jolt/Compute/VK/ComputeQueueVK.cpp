@@ -52,7 +52,7 @@ bool ComputeQueueVK::Initialize(uint32 inComputeQueueIndex, ComputeQueueResult &
 	};
 	VkDescriptorPoolCreateInfo descriptor_info = {};
 	descriptor_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	descriptor_info.poolSizeCount = std::size(descriptor_pool_sizes);
+	descriptor_info.poolSizeCount = (uint32)std::size(descriptor_pool_sizes);
 	descriptor_info.pPoolSizes = descriptor_pool_sizes;
 	descriptor_info.maxSets = 256;
 	if (VKFailed(vkCreateDescriptorPool(device, &descriptor_info, nullptr, &mDescriptorPool), outResult))

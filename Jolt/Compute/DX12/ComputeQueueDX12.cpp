@@ -175,7 +175,7 @@ void ComputeQueueDX12::Execute()
 
 	// Execute the command list
 	ID3D12CommandList *command_lists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(std::size(command_lists), command_lists);
+	mCommandQueue->ExecuteCommandLists((UINT)std::size(command_lists), command_lists);
 
 	// Schedule a Signal command in the queue
 	if (HRFailed(mCommandQueue->Signal(mFence.Get(), mFenceValue)))

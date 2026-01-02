@@ -327,7 +327,7 @@ bool RendererDX12::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Set SRV heap
 	ID3D12DescriptorHeap *heaps[] = { mSRVHeap.Get() };
-	mCommandList->SetDescriptorHeaps(std::size(heaps), heaps);
+	mCommandList->SetDescriptorHeaps((UINT)std::size(heaps), heaps);
 
 	// Indicate that the back buffer will be used as a render target.
 	D3D12_RESOURCE_BARRIER barrier;
@@ -411,7 +411,7 @@ void RendererDX12::EndFrame()
 
 	// Execute the command list
 	ID3D12CommandList* command_lists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(std::size(command_lists), command_lists);
+	mCommandQueue->ExecuteCommandLists((UINT)std::size(command_lists), command_lists);
 
 	// Present the frame
 	FatalErrorIfFailed(mSwapChain->Present(1, 0));

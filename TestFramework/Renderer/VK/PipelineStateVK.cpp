@@ -142,12 +142,12 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 	};
 	VkPipelineDynamicStateCreateInfo dynamic_state = {};
 	dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamic_state.dynamicStateCount = std::size(dynamic_states);
+	dynamic_state.dynamicStateCount = (uint32)std::size(dynamic_states);
 	dynamic_state.pDynamicStates = dynamic_states;
 
 	VkGraphicsPipelineCreateInfo pipeline_info = {};
 	pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipeline_info.stageCount = std::size(shader_stages);
+	pipeline_info.stageCount = (uint32)std::size(shader_stages);
 	pipeline_info.pStages = shader_stages;
 	pipeline_info.pVertexInputState = &vertex_input_info;
 	pipeline_info.pInputAssemblyState = &input_assembly;

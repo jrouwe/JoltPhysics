@@ -180,7 +180,7 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	ubo_layout_binding[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 	VkDescriptorSetLayoutCreateInfo ubo_dsl = {};
 	ubo_dsl.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	ubo_dsl.bindingCount = std::size(ubo_layout_binding);
+	ubo_dsl.bindingCount = (uint32)std::size(ubo_layout_binding);
 	ubo_dsl.pBindings = ubo_layout_binding;
 	FatalErrorIfFailed(vkCreateDescriptorSetLayout(mDevice, &ubo_dsl, nullptr, &mDescriptorSetLayoutUBO));
 
@@ -200,7 +200,7 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	VkPipelineLayoutCreateInfo pipeline_layout = {};
 	VkDescriptorSetLayout layout_handles[] = { mDescriptorSetLayoutUBO, mDescriptorSetLayoutTexture };
 	pipeline_layout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipeline_layout.setLayoutCount = std::size(layout_handles);
+	pipeline_layout.setLayoutCount = (uint32)std::size(layout_handles);
 	pipeline_layout.pSetLayouts = layout_handles;
 	pipeline_layout.pushConstantRangeCount = 0;
 	FatalErrorIfFailed(vkCreatePipelineLayout(mDevice, &pipeline_layout, nullptr, &mPipelineLayout));
@@ -212,7 +212,7 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	};
 	VkDescriptorPoolCreateInfo descriptor_info = {};
 	descriptor_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	descriptor_info.poolSizeCount = std::size(descriptor_pool_sizes);
+	descriptor_info.poolSizeCount = (uint32)std::size(descriptor_pool_sizes);
 	descriptor_info.pPoolSizes = descriptor_pool_sizes;
 	descriptor_info.maxSets = 256;
 	FatalErrorIfFailed(vkCreateDescriptorPool(mDevice, &descriptor_info, nullptr, &mDescriptorPool));
@@ -333,7 +333,7 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	VkFramebufferCreateInfo frame_buffer_info = {};
 	frame_buffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	frame_buffer_info.renderPass = mRenderPassShadow;
-	frame_buffer_info.attachmentCount = std::size(attachments);
+	frame_buffer_info.attachmentCount = (uint32)std::size(attachments);
 	frame_buffer_info.pAttachments = attachments;
 	frame_buffer_info.width = cShadowMapSize;
 	frame_buffer_info.height = cShadowMapSize;
@@ -381,7 +381,7 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 		dependencies_normal.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
 		VkRenderPassCreateInfo render_pass_normal = {};
 		render_pass_normal.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_normal.attachmentCount = std::size(attachments_normal);
+		render_pass_normal.attachmentCount = (uint32)std::size(attachments_normal);
 		render_pass_normal.pAttachments = attachments_normal;
 		render_pass_normal.subpassCount = 1;
 		render_pass_normal.pSubpasses = &subpass_normal;
@@ -548,7 +548,7 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 		VkFramebufferCreateInfo frame_buffer_info = {};
 		frame_buffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		frame_buffer_info.renderPass = mRenderPass;
-		frame_buffer_info.attachmentCount = std::size(attachments);
+		frame_buffer_info.attachmentCount = (uint32)std::size(attachments);
 		frame_buffer_info.pAttachments = attachments;
 		frame_buffer_info.width = mSwapChainExtent.width;
 		frame_buffer_info.height = mSwapChainExtent.height;
@@ -755,7 +755,7 @@ void RendererVK::EndShadowPass()
 	JPH_ASSERT(mImageIndex < mSwapChainFramebuffers.size());
 	render_pass_begin_info.framebuffer = mSwapChainFramebuffers[mImageIndex];
 	render_pass_begin_info.renderArea.extent = mSwapChainExtent;
-	render_pass_begin_info.clearValueCount = std::size(clear_values);
+	render_pass_begin_info.clearValueCount = (uint32)std::size(clear_values);
 	render_pass_begin_info.pClearValues = clear_values;
 	vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 

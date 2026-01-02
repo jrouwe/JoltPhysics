@@ -123,9 +123,9 @@ bool ComputeSystemDX12Impl::Initialize(ComputeSystemResult &outResult)
 			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE,
 		};
 		D3D12_INFO_QUEUE_FILTER filter = { };
-		filter.DenyList.NumIDs = static_cast<UINT>( std::size( hide ) );
+		filter.DenyList.NumIDs = static_cast<UINT>(std::size(hide));
 		filter.DenyList.pIDList = hide;
-		info_queue->AddStorageFilterEntries( &filter );
+		info_queue->AddStorageFilterEntries(&filter);
 	}
 #endif // JPH_DEBUG
 

@@ -150,7 +150,7 @@ try_again:;
 	// Load pixel shader
 	Ref<PixelShader> pix = mRenderer->CreatePixelShader("FontPixelShader");
 
-	mPipelineState = mRenderer->CreatePipelineState(vtx, vertex_desc, std::size(vertex_desc), pix, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
+	mPipelineState = mRenderer->CreatePipelineState(vtx, vertex_desc, (uint)std::size(vertex_desc), pix, PipelineState::EDrawPass::Normal, PipelineState::EFillMode::Solid, PipelineState::ETopology::Triangle, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 
 	// Create texture
 	mTexture = mRenderer->CreateTexture(surface);
