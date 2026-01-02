@@ -64,7 +64,7 @@ inline ComputeSystemResult 				CreateComputeSystem()		{ return CreateComputeSyst
 #else
 
 /// Fallback implementation when no compute system is available
-inline ComputeSystemResult 				CreateComputeSystem()		{ return nullptr; }
+inline ComputeSystemResult 				CreateComputeSystem()		{ ComputeSystemResult result; result.SetError("Not implemented"); return result; }
 
 #endif
 
