@@ -103,6 +103,10 @@ public:
 		{
 		// Include the bindings header only
 		#include JPH_BINDINGS_HEADER_NAME(JPH_SHADER_NAME)
+
+		default:
+			JPH_ASSERT(false, "Buffer cannot be bound to this shader");
+			break;
 		}
 	}
 
