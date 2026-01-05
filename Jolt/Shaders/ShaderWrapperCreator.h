@@ -118,6 +118,9 @@ public:
 };
 /// @endcond
 
+// Stop clang from complaining that the register function is missing a prototype
+JPH_SHADER_WRAPPER_FUNCTION(, JPH_SHADER_NAME);
+
 /// Register this wrapper
 JPH_SHADER_WRAPPER_FUNCTION(inComputeSystem, JPH_SHADER_NAME)
 {
