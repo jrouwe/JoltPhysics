@@ -6,8 +6,8 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Emulates HLSL vector types and operations in C++
-/// Note doesn't emulate things like barriers and group shared memory
+/// Emulates HLSL vector types and operations in C++.
+/// Note doesn't emulate things like barriers and group shared memory.
 namespace HLSLToCPP {
 
 using std::sqrt;
@@ -81,6 +81,8 @@ inline float2			round(const float2 &inV)							{ return float2(round(inV.x), rou
 // float3
 //////////////////////////////////////////////////////////////////////////////////////////
 
+struct uint3;
+
 struct float3
 {
 	// Constructors
@@ -88,7 +90,7 @@ struct float3
 	constexpr			float3(const float2 &inV, float inZ)				: x(inV.x), y(inV.y), z(inZ) { }
 	constexpr			float3(float inX, float inY, float inZ)				: x(inX), y(inY), z(inZ) { }
 	explicit constexpr	float3(float inS)									: x(inS), y(inS), z(inS) { }
-	explicit constexpr	float3(const struct uint3 &inV);
+	explicit constexpr	float3(const uint3 &inV);
 
 	// Operators
 	constexpr float3 &	operator += (const float3 &inRHS)					{ x += inRHS.x; y += inRHS.y; z += inRHS.z; return *this; }
@@ -154,6 +156,8 @@ constexpr float3		cross(const float3 &inA, const float3 &inB)			{ return float3(
 // float4
 //////////////////////////////////////////////////////////////////////////////////////////
 
+struct int4;
+
 struct float4
 {
 	// Constructors
@@ -161,7 +165,7 @@ struct float4
 	constexpr			float4(const float3 &inV, float inW)				: x(inV.x), y(inV.y), z(inV.z), w(inW) { }
 	constexpr			float4(float inX, float inY, float inZ, float inW)	: x(inX), y(inY), z(inZ), w(inW) { }
 	explicit constexpr	float4(float inS)									: x(inS), y(inS), z(inS), w(inS) { }
-	explicit constexpr	float4(const struct int4 &inV);
+	explicit constexpr	float4(const int4 &inV);
 
 	// Operators
 	constexpr float4 &	operator += (const float4 &inRHS)					{ x += inRHS.x; y += inRHS.y; z += inRHS.z; w += inRHS.w; return *this; }
