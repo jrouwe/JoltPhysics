@@ -21,6 +21,8 @@
 	using JPH_Plane = JPH::Float4;
 	using JPH_Mat44 = JPH::Float4[4]; // matrix, column major
 
+	#define JPH_SHADER_CONSTANT(type, name, value)	constexpr type name = value;
+
 	#define JPH_SHADER_CONSTANTS_BEGIN(type, name)	struct type {
 	#define JPH_SHADER_CONSTANTS_MEMBER(type, name)	type c##name;
 	#define JPH_SHADER_CONSTANTS_END				};
@@ -47,6 +49,8 @@
 	typedef float4 JPH_Plane; // xyz = normal, w = constant
 	typedef float4x4 JPH_Mat44; // matrix, column major
 
+	#define JPH_SHADER_CONSTANT(type, name, value)	static const type name = value;
+
 	#define JPH_SHADER_CONSTANTS_BEGIN(type, name)	cbuffer name {
 	#define JPH_SHADER_CONSTANTS_MEMBER(type, name)	type c##name;
 	#define JPH_SHADER_CONSTANTS_END				};
@@ -71,5 +75,9 @@
 #define JPH_SHADER_STRUCT_BEGIN(name)				struct name {
 #define JPH_SHADER_STRUCT_MEMBER(type, name)		type m##name;
 #define JPH_SHADER_STRUCT_END						};
+
+#define JPH_IN(type)								in type
+#define JPH_OUT(type)								out type
+#define JPH_IN_OUT(type)							in out type
 
 #endif // JPH_OVERRIDE_SHADER_MACROS

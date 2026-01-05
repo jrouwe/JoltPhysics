@@ -11,7 +11,7 @@ inline float3 JPH_Vec3DecompressUnit(uint inValue)
 	const float cScale = 2.0f * cOneOverSqrt2 / float(cMaxValue);
 
 	// Restore two components
-	float2 v2 = float2(inValue & cMask, (inValue >> cNumBits) & cMask) * cScale - float2(cOneOverSqrt2, cOneOverSqrt2);
+	float2 v2 = float2(float(inValue & cMask), float((inValue >> cNumBits) & cMask)) * cScale - float2(cOneOverSqrt2, cOneOverSqrt2);
 
 	// Restore the highest component
 	float3 v = float3(v2, sqrt(max(1.0f - dot(v2, v2), 0.0f)));
