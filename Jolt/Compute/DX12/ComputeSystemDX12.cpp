@@ -243,7 +243,15 @@ ComputeShaderResult ComputeSystemDX12::CreateComputeShader(const char *inName, u
 	arguments.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
 	arguments.push_back(DXC_ARG_ALL_RESOURCES_BOUND);
 	if (mDebug == EDebug::DebugSymbols)
+	{
 		arguments.push_back(DXC_ARG_DEBUG);
+		arguments.push_back(L"-Qembed_debug");
+	}
+
+	// Provide file name so tools know what the original shader was called (the actual source comes from the blob)
+	wchar_t w_file_name[MAX_PATH];
+	MultiByteToWideChar(CP_UTF8, 0, file_name.c_str(), -1, w_file_name, MAX_PATH);
+	arguments.push_back(w_file_name);
 
 	// Compile the shader
 	DxcBuffer source_buffer;
@@ -270,30 +278,6 @@ ComputeShaderResult ComputeSystemDX12::CreateComputeShader(const char *inName, u
 	ComPtr<ID3DBlob> shader_blob;
 	if (HRFailed(compile_result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(shader_blob.GetAddressOf()), nullptr), result))
 		return result;
-
-	if (mDebug == EDebug::DebugSymbols)
-	{
-		// Get shader hash and create PDB file name
-		ComPtr<IDxcBlob> hash;
-		if (HRFailed(compile_result->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(hash.GetAddressOf()), nullptr), result))
-			return result;
-		DxcShaderHash *hash_buf = (DxcShaderHash *)hash->GetBufferPointer();
-		String hash_str;
-		for (BYTE b : hash_buf->HashDigest)
-			hash_str += StringFormat("%02x", b);
-		hash_str += ".pdb";
-
-		// Get PDB file from the compiler
-		ComPtr<IDxcBlob> pdb;
-		if (HRFailed(compile_result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(pdb.GetAddressOf()), nullptr), result))
-			return result;
-
-		// Write PDB file to the temp folder
-		char temp_path[MAX_PATH];
-		GetTempPathA(MAX_PATH, temp_path);
-		std::ofstream pdb_stream((temp_path + hash_str).c_str(), std::ios::out | std::ios::binary);
-		pdb_stream.write((const char *)pdb->GetBufferPointer(), pdb->GetBufferSize());
-	}
 
 	// Get reflection data
 	ComPtr<IDxcBlob> reflection_data;
