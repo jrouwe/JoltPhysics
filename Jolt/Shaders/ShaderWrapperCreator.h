@@ -15,7 +15,7 @@ using namespace HLSLToCPP;
 
 #define JPH_SHADER_CONSTANT(type, name, value)	inline static constexpr type name = value;
 
-#define JPH_SHADER_CONSTANTS_BEGIN(type, name)	struct type { alignas(16) int dummy; } name;
+#define JPH_SHADER_CONSTANTS_BEGIN(type, name)	struct type { alignas(16) int dummy; } name; // Ensure that the first constant is 16 byte aligned
 #define JPH_SHADER_CONSTANTS_MEMBER(type, name)	type c##name;
 #define JPH_SHADER_CONSTANTS_END
 
@@ -90,7 +90,7 @@ public:
 		// When a constant buffer is bound, copy the data into the members
 		#undef JPH_SHADER_CONSTANTS_BEGIN
 		#undef JPH_SHADER_CONSTANTS_MEMBER
-		#define JPH_SHADER_CONSTANTS_BEGIN(type, name)	case HashString(#name): memcpy(&name + 1, inData, size_t(inSize));	break;
+		#define JPH_SHADER_CONSTANTS_BEGIN(type, name)	case HashString(#name): memcpy(&name + 1, inData, size_t(inSize));	break; // Very hacky way to get the address of the first constant and to copy the entire block of constants
 		#define JPH_SHADER_CONSTANTS_MEMBER(type, name)
 
 		// When a buffer is bound, set the pointer

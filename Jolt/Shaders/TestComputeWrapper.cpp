@@ -6,4 +6,4 @@
 
 #define JPH_SHADER_NAME TestCompute
 #include "ShaderWrapperCreator.h"
-#undef JPH_SHADER_NAME 
+#undef JPH_SHADER_NAME
