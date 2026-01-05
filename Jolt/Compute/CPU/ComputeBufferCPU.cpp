@@ -10,7 +10,7 @@ JPH_NAMESPACE_BEGIN
 ComputeBufferCPU::ComputeBufferCPU(EType inType, uint64 inSize, uint inStride, const void *inData) :
 	ComputeBuffer(inType, inSize, inStride)
 {
-	uint64 buffer_size = mSize * mStride;
+	size_t buffer_size = size_t(mSize) * mStride;
 	mData = Allocate(buffer_size);
 	if (inData != nullptr)
 		memcpy(mData, inData, buffer_size);

@@ -10,8 +10,6 @@
 
 JPH_NAMESPACE_BEGIN
 
-class ComputeBufferCPU;
-
 /// A command queue for the CPU compute system
 class JPH_EXPORT ComputeQueueCPU final : public ComputeQueue
 {
