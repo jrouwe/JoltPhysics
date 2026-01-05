@@ -18,6 +18,7 @@
 namespace JPH {
 	class JobSystem;
 	class TempAllocator;
+	class ComputeSystemCPU;
 };
 
 // Application class that runs the samples
@@ -92,7 +93,10 @@ private:
 	TempAllocator *			mTempAllocator = nullptr;									// Allocator for temporary allocations
 	JobSystem *				mJobSystem = nullptr;										// The job system that runs physics jobs
 	JobSystem *				mJobSystemValidating = nullptr;								// The job system to use when validating determinism
+	Ref<ComputeSystem>		mComputeSystem = nullptr;									// The compute system to use for compute jobs
 	Ref<ComputeQueue>		mComputeQueue = nullptr;									// The compute queue to use for compute jobs
+	Ref<ComputeSystemCPU>	mComputeSystemCPU = nullptr;								// The compute system to use for CPU compute jobs
+	Ref<ComputeQueue>		mComputeQueueCPU = nullptr;									// The compute queue to use for CPU compute jobs
 	BPLayerInterfaceImpl	mBroadPhaseLayerInterface;									// The broadphase layer interface that maps object layers to broadphase layers
 	ObjectVsBroadPhaseLayerFilterImpl mObjectVsBroadPhaseLayerFilter;					// Class that filters object vs broadphase layers
 	ObjectLayerPairFilterImpl mObjectVsObjectLayerFilter;								// Class that filters object vs object layers
@@ -128,6 +132,7 @@ private:
 
 	// Test settings
 	bool					mInstallContactListener = false;							// When true, the contact listener is installed the next time the test is reset
+	bool					mUseGPUCompute = true;										// When true, uses the GPU compute system for compute jobs
 
 	// State recording and determinism checks
 	bool					mRecordState = false;										// When true, the state of the physics system is recorded in mPlaybackFrames every physics update

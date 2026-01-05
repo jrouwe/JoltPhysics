@@ -4,10 +4,10 @@
 
 inline float3 JPH_QuatMulVec3(JPH_Quat inLHS, float3 inRHS)
 {
-	float3 xyz = inLHS.xyz;
-	float3 yzx = inLHS.yzx;
-	float3 q_cross_p = (inRHS.yzx * xyz - yzx * inRHS).yzx;
-	float3 q_cross_q_cross_p = (q_cross_p.yzx * xyz - yzx * q_cross_p).yzx;
+	float3 v_xyz = inLHS.xyz;
+	float3 v_yzx = inLHS.yzx;
+	float3 q_cross_p = (inRHS.yzx * v_xyz - v_yzx * inRHS).yzx;
+	float3 q_cross_q_cross_p = (q_cross_p.yzx * v_xyz - v_yzx * q_cross_p).yzx;
 	float3 v = inLHS.w * q_cross_p + q_cross_q_cross_p;
 	return inRHS + (v + v);
 }
@@ -49,7 +49,7 @@ inline JPH_Quat JPH_QuatDecompress(uint inValue)
 	const float cScale = 2.0f * cOneOverSqrt2 / float(cMaxValue);
 
 	// Restore two components
-	float3 v3 = float3(inValue & cMask, (inValue >> cNumBits) & cMask, (inValue >> (2 * cNumBits)) & cMask) * cScale - float3(cOneOverSqrt2, cOneOverSqrt2, cOneOverSqrt2);
+	float3 v3 = float3(float(inValue & cMask), float((inValue >> cNumBits) & cMask), float((inValue >> (2 * cNumBits)) & cMask)) * cScale - float3(cOneOverSqrt2, cOneOverSqrt2, cOneOverSqrt2);
 
 	// Restore the highest component
 	float4 v = float4(v3, sqrt(max(1.0f - dot(v3, v3), 0.0f)));

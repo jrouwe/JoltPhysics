@@ -18,6 +18,14 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeQueue.h
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeSystem.h
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeShader.h
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeQueueCPU.cpp
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeQueueCPU.h
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeBufferCPU.cpp
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeBufferCPU.h
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeSystemCPU.cpp
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeSystemCPU.h
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeShaderCPU.h
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/ShaderWrapper.h
 	${JOLT_PHYSICS_ROOT}/Core/ARMNeon.h
 	${JOLT_PHYSICS_ROOT}/Core/Array.h
 	${JOLT_PHYSICS_ROOT}/Core/Atomics.h
@@ -424,6 +432,9 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererRecorder.h
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.cpp
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.h
+	${JOLT_PHYSICS_ROOT}/Shaders/HLSLToCPP.h
+	${JOLT_PHYSICS_ROOT}/Shaders/ShaderWrapperCreator.h
+	${JOLT_PHYSICS_ROOT}/Shaders/TestComputeWrapper.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.h
 	${JOLT_PHYSICS_ROOT}/Skeleton/Skeleton.cpp
@@ -475,7 +486,6 @@ if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL)
 		${JOLT_PHYSICS_ROOT}/Shaders/ShaderPlane.h
 		${JOLT_PHYSICS_ROOT}/Shaders/ShaderQuat.h
 		${JOLT_PHYSICS_ROOT}/Shaders/ShaderVec3.h
-		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute.h
 		${JOLT_PHYSICS_ROOT}/Shaders/TestComputeBindings.h
 	)
 endif()

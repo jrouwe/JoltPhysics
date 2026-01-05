@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include "TestCompute.h"
+#include "ShaderCore.h"
 #include "TestComputeBindings.h"
 
 JPH_SHADER_FUNCTION_BEGIN(void, main, cTestComputeGroupSize, 1, 1)

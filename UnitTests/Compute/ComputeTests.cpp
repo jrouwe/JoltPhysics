@@ -4,11 +4,12 @@
 
 #include "UnitTestFramework.h"
 
-#if defined(JPH_USE_DX12) || defined(JPH_USE_MTL) || defined(JPH_USE_VK)
-
 #include <Jolt/Compute/ComputeSystem.h>
-#include <Jolt/Shaders/TestCompute.h>
+#include <Jolt/Compute/CPU/ComputeSystemCPU.h>
+#include <Jolt/Shaders/ShaderCore.h>
+#include <Jolt/Shaders/TestComputeBindings.h>
 #include <Jolt/Core/IncludeWindows.h>
+#include <Jolt/Core/RTTI.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
@@ -21,6 +22,8 @@ JPH_SUPPRESS_WARNINGS_STD_END
 #if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 #include <CoreFoundation/CoreFoundation.h>
 #endif
+
+JPH_DECLARE_REGISTER_SHADER(TestCompute)
 
 TEST_SUITE("ComputeTests")
 {
@@ -60,7 +63,8 @@ TEST_SUITE("ComputeTests")
 				if (count > 0)
 					application_path[count] = 0;
 			#else
-				#error Unsupported platform
+				// Not implemented
+				const char *application_path = "";
 			#endif
 			String base_path;
 			filesystem::path shader_path(application_path);
@@ -269,6 +273,16 @@ TEST_SUITE("ComputeTests")
 		}
 	}
 #endif // JPH_USE_VK
-}
 
-#endif // defined(JPH_USE_DX12) || defined(JPH_USE_MTL) || defined(JPH_USE_VK)
+	TEST_CASE("TestComputeCPU")
+	{
+		ComputeSystemResult compute_system = CreateComputeSystemCPU();
+		CHECK(!compute_system.HasError());
+		if (!compute_system.HasError())
+		{
+			CHECK(compute_system.Get() != nullptr);
+			JPH_REGISTER_SHADER(StaticCast<ComputeSystemCPU>(compute_system.Get()), TestCompute);
+			RunTests(compute_system.Get());
+		}
+	}
+}
