@@ -7,7 +7,7 @@
 #include <Jolt/Compute/CPU/ComputeShaderCPU.h>
 #include <Jolt/Compute/CPU/ComputeBufferCPU.h>
 #include <Jolt/Compute/CPU/ShaderWrapper.h>
-#include <Jolt/Shaders/HLSLToCPP.h>
+#include <Jolt/Compute/CPU/HLSLToCPP.h>
 
 JPH_NAMESPACE_BEGIN
 

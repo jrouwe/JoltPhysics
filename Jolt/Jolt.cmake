@@ -25,7 +25,11 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeSystemCPU.cpp
 	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeSystemCPU.h
 	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeShaderCPU.h
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/HLSLToCPP.h
 	${JOLT_PHYSICS_ROOT}/Compute/CPU/ShaderWrapper.h
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/WrapShaderBegin.h
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/WrapShaderBindings.h
+	${JOLT_PHYSICS_ROOT}/Compute/CPU/WrapShaderEnd.h
 	${JOLT_PHYSICS_ROOT}/Core/ARMNeon.h
 	${JOLT_PHYSICS_ROOT}/Core/Array.h
 	${JOLT_PHYSICS_ROOT}/Core/Atomics.h
@@ -432,8 +436,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererRecorder.h
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.cpp
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.h
-	${JOLT_PHYSICS_ROOT}/Shaders/HLSLToCPP.h
-	${JOLT_PHYSICS_ROOT}/Shaders/ShaderWrapperCreator.h
 	${JOLT_PHYSICS_ROOT}/Shaders/TestComputeWrapper.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.h
