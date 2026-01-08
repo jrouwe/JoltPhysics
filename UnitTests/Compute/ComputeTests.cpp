@@ -245,10 +245,18 @@ TEST_SUITE("ComputeTests")
 			const Mat44 cMat44Value(Vec4(2, 3, 5, 0), Vec4(7, 11, 13, 0), Vec4(13, 15, 17, 0), Vec4(17, 19, 23, 0));
 			const Vec3 cMat44MulValue(29, 31, 37);
 
+			const Vec3 cDecompressedVec3(Vec3(-2, 3, -5).Normalized());
+			const uint32 cCompressedVec3 = cDecompressedVec3.CompressUnitVector();
+
+			const Quat cDecompressedQuat(Vec4(2, -3, 5, -7).Normalized());
+			const uint32 cCompressedQuat = cDecompressedQuat.CompressUnitQuat();
+
 			// Generate input data
 			TestCompute2Input input;
 			cMat44Value.StoreFloat4x4(input.mMat44Value);
 			cMat44MulValue.StoreFloat3(&input.mMat44MulValue);
+			input.mCompressedVec3 = cCompressedVec3;
+			input.mCompressedQuat = cCompressedQuat;
 
 			// Create input buffer
 			ComputeBufferResult buffer_result = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::Buffer, 1, sizeof(TestCompute2Input), &input);
@@ -283,6 +291,12 @@ TEST_SUITE("ComputeTests")
 
 			const Vec3 expected_mul3x3 = cMat44Value.Multiply3x3(cMat44MulValue);
 			CHECK(Vec3(output->mMul3x3Output) == expected_mul3x3);
+
+			const Vec3 expected_decompressed_vec3 = Vec3::sDecompressUnitVector(cCompressedVec3);
+			CHECK(Vec3(output->mDecompressedVec3).IsClose(expected_decompressed_vec3));
+
+			const Quat expected_decompressed_quat = Quat::sDecompressUnitQuat(cCompressedQuat);
+			CHECK(Quat(output->mDecompressedQuat).IsClose(expected_decompressed_quat));
 
 			readback_buffer->Unmap();
 		}
