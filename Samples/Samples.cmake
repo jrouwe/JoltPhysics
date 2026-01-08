@@ -155,6 +155,12 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/WallTest.h
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.h
+	${SAMPLES_ROOT}/Tests/Hair/HairCollisionTest.cpp
+	${SAMPLES_ROOT}/Tests/Hair/HairCollisionTest.h
+	${SAMPLES_ROOT}/Tests/Hair/HairGravityPreloadTest.cpp
+	${SAMPLES_ROOT}/Tests/Hair/HairGravityPreloadTest.h
+	${SAMPLES_ROOT}/Tests/Hair/HairTest.cpp
+	${SAMPLES_ROOT}/Tests/Hair/HairTest.h
 	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyBendConstraintTest.cpp

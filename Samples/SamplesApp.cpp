@@ -46,6 +46,7 @@
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Jolt/Physics/Constraints/PulleyConstraint.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
+#include <Jolt/Shaders/HairWrapper.h>
 #include <Utils/Log.h>
 #include <Utils/ShapeCreator.h>
 #include <Utils/CustomMemoryHook.h>
@@ -391,6 +392,17 @@ static TestNameAndRTTI sSoftBodyTests[] =
 	{ "Soft Body vs Sensor",				JPH_RTTI(SoftBodySensorTest) }
 };
 
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HairTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HairCollisionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HairGravityPreloadTest)
+
+static TestNameAndRTTI sHairTests[] =
+{
+	{ "Hair",								JPH_RTTI(HairTest) },
+	{ "Hair Collision",						JPH_RTTI(HairCollisionTest) },
+	{ "Hair Gravity Preload",				JPH_RTTI(HairGravityPreloadTest) },
+};
+
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseInsertionTest)
 
@@ -437,6 +449,7 @@ static TestCategory sAllCategories[] =
 	{ "Water", sWaterTests, size(sWaterTests) },
 	{ "Vehicle", sVehicleTests, size(sVehicleTests) },
 	{ "Soft Body", sSoftBodyTests, size(sSoftBodyTests) },
+	{ "Hair", sHairTests, size(sHairTests) },
 	{ "Broad Phase", sBroadPhaseTests, size(sBroadPhaseTests) },
 	{ "Convex Collision", sConvexCollisionTests, size(sConvexCollisionTests) },
 	{ "Tools", sTools, size(sTools) }
@@ -494,6 +507,7 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 
 	// Create compute system CPU
 	mComputeSystemCPU = StaticCast<ComputeSystemCPU>(CreateComputeSystemCPU().Get());
+	HairRegisterShaders(mComputeSystemCPU);
 	mComputeQueueCPU = mComputeSystemCPU->CreateComputeQueue().Get();
 
 	{

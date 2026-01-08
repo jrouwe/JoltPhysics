@@ -372,6 +372,12 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/DeterminismLog.h
 	${JOLT_PHYSICS_ROOT}/Physics/EActivation.h
 	${JOLT_PHYSICS_ROOT}/Physics/EPhysicsUpdateError.h
+	${JOLT_PHYSICS_ROOT}/Physics/Hair/Hair.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Hair/Hair.h
+	${JOLT_PHYSICS_ROOT}/Physics/Hair/HairSettings.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Hair/HairSettings.h
+	${JOLT_PHYSICS_ROOT}/Physics/Hair/HairShaders.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Hair/HairShaders.h
 	${JOLT_PHYSICS_ROOT}/Physics/IslandBuilder.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/IslandBuilder.h
 	${JOLT_PHYSICS_ROOT}/Physics/LargeIslandSplitter.cpp
@@ -436,6 +442,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererRecorder.h
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.cpp
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.h
+	${JOLT_PHYSICS_ROOT}/Shaders/HairWrapper.cpp
+	${JOLT_PHYSICS_ROOT}/Shaders/HairWrapper.h
 	${JOLT_PHYSICS_ROOT}/Shaders/TestComputeWrapper.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.h
@@ -478,11 +486,47 @@ endif()
 if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL)
 	# Compute shaders
 	set(JOLT_PHYSICS_SHADERS
+		${JOLT_PHYSICS_ROOT}/Shaders/HairApplyDeltaTransform.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairApplyGlobalPose.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairCalculateCollisionPlanes.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairCalculateRenderPositions.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairGridAccumulate.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairGridClear.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairGridNormalize.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairIntegrate.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairSkinRoots.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairSkinVertices.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairTeleport.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairUpdateRoots.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairUpdateStrands.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairUpdateVelocity.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/HairUpdateVelocityIntegrate.hlsl
 		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute.hlsl
 		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute2.hlsl
 	)
 
 	set(JOLT_PHYSICS_SHADER_HEADERS
+		${JOLT_PHYSICS_ROOT}/Shaders/HairApplyDeltaTransformBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairApplyGlobalPose.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairApplyGlobalPoseBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairCalculateCollisionPlanesBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairCalculateRenderPositions.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairCalculateRenderPositionsBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairCommon.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairGridAccumulateBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairGridClearBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairGridNormalizeBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairIntegrate.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairIntegrateBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairSkinRootsBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairSkinVerticesBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairStructs.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairTeleportBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairUpdateRootsBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairUpdateStrandsBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairUpdateVelocity.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairUpdateVelocityBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairUpdateVelocityIntegrateBindings.h
 		${JOLT_PHYSICS_ROOT}/Shaders/ShaderCore.h
 		${JOLT_PHYSICS_ROOT}/Shaders/ShaderMat44.h
 		${JOLT_PHYSICS_ROOT}/Shaders/ShaderMath.h
