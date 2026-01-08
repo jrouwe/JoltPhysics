@@ -5,7 +5,7 @@
 float DeltaDensity(uint inIndex)
 {
 	return gVelocityAndDensity[inIndex].w - gNeutralDensity[inIndex];
-};
+}
 
 void ApplyGrid(JPH_IN(JPH_HairPosition) inPos, JPH_IN_OUT(JPH_HairVelocity) ioVel, JPH_IN(JPH_HairMaterial) inMaterial, float inStrandFraction)
 {

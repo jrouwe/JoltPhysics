@@ -19,5 +19,5 @@ JPH_SHADER_BIND_BEGIN(JPH_HairSkinRoots)
 	JPH_SHADER_BIND_BUFFER(JPH_float3, gInitialPositions)
 	JPH_SHADER_BIND_BUFFER(JPH_uint, gInitialBishops)
 	JPH_SHADER_BIND_RW_BUFFER(JPH_HairPosition, gPositions)
-	JPH_SHADER_BIND_RW_BUFFER(JPH_HairGlobalPoseTransform, gGlobalPoseTransforms);
+	JPH_SHADER_BIND_RW_BUFFER(JPH_HairGlobalPoseTransform, gGlobalPoseTransforms)
 JPH_SHADER_BIND_END(JPH_HairSkinRoots)

@@ -4,6 +4,8 @@
 
 #include <Jolt/Jolt.h>
 
+#include <Jolt/Shaders/HairWrapper.h>
+
 #define JPH_SHADER_NAME HairTeleport
 #include <Jolt/Compute/CPU/WrapShaderBegin.h>
 #include "HairTeleport.hlsl"

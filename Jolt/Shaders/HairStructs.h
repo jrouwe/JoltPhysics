@@ -10,6 +10,9 @@
 #define HAIR_STRUCTS_H
 #endif
 
+JPH_SUPPRESS_WARNING_PUSH
+JPH_SUPPRESS_WARNINGS
+
 JPH_SHADER_CONSTANT(int, cHairPerVertexBatch, 64)
 JPH_SHADER_CONSTANT(int, cHairPerGridCellBatch, 32)
 JPH_SHADER_CONSTANT(int, cHairPerStrandBatch, 32)
@@ -111,5 +114,7 @@ JPH_SHADER_CONSTANTS_BEGIN(JPH_HairIterationContext, gIterationContext)
 	JPH_SHADER_CONSTANTS_MEMBER(JPH_float,		AccumulatedDeltaTime)		///< = Iteration * DeltaTime
 	JPH_SHADER_CONSTANTS_MEMBER(JPH_float,		IterationFraction)			///< = 1 / (NumIterations - Iteration) or the fraction to apply to get from current to target for this iteration step
 JPH_SHADER_CONSTANTS_END(JPH_HairIterationContext)
+
+JPH_SUPPRESS_WARNING_POP
 
 #endif // !defined(HAIR_STRUCTS_H) || defined(JPH_SHADER_GENERATE_WRAPPER)
