@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 #include <Jolt/Core/StridedPtr.h>
+#include <Jolt/Core/NonCopyable.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -30,7 +31,7 @@ class HairShaders;
 /// - It is wasteful of memory (e.g. stores everything both on CPU and GPU)
 /// - Only supports a single neutral pose to drive towards
 /// - It could use further optimizations
-class JPH_EXPORT Hair
+class JPH_EXPORT Hair : public NonCopyable
 {
 public:
 	/// Constructor / destructor
@@ -74,7 +75,7 @@ public:
 	/// @param inShaders Preloaded hair compute shaders
 	/// @param inComputeSystem Compute system to use
 	/// @param inComputeQueue Compute queue to use
-	void								Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJointMatrices, PhysicsSystem &inSystem, const HairShaders &inShaders, ComputeSystem *inComputeSystem, ComputeQueue *inComputeQueue);
+	void								Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJointMatrices, const PhysicsSystem &inSystem, const HairShaders &inShaders, ComputeSystem *inComputeSystem, ComputeQueue *inComputeQueue);
 
 	/// Access to the resulting simulation data
 	ComputeBuffer *						GetScalpVerticesCB() const						{ return mScalpVerticesCB; }		///< Skinned scalp vertices
@@ -85,7 +86,7 @@ public:
 	ComputeBuffer *						GetRenderPositionsCB() const					{ return mRenderPositionsCB; }		///< Render positions of the hair strands (see HairSettings::mRenderStrands to see where each strand starts and ends)
 
 	/// Read back the GPU state so that the functions below can be used. For debugging purposes only, this is slow!
-	void								ReadBackGPUState(ComputeSystem *inComputeSystem, ComputeQueue *inComputeQueue);
+	void								ReadBackGPUState(ComputeQueue *inComputeQueue);
 
 	/// Lock/unlock the data buffers so that the functions below return valid values.
 	void								LockReadBackBuffers();
@@ -173,7 +174,7 @@ protected:
 	};
 
 	// Calculate the UpdateContext parameters
-	void								InitializeContext(UpdateContext &outCtx, float inDeltaTime, PhysicsSystem &inSystem);
+	void								InitializeContext(UpdateContext &outCtx, float inDeltaTime, const PhysicsSystem &inSystem);
 
 	RefConst<HairSettings>				mSettings;										// Shared hair settings, must be kept alive during the lifetime of this hair instance
 

@@ -286,8 +286,8 @@ void HairSettings::sResample(Array<SVertex> &ioVertices, Array<SStrand> &ioStran
 
 		// Resample the strand
 		float cur_length = 0.0f;
-		SVertex *v0 = &vertices[strand.mStartVtx];
-		SVertex *v1 = &vertices[strand.mStartVtx + 1];
+		const SVertex *v0 = &vertices[strand.mStartVtx];
+		const SVertex *v1 = &vertices[strand.mStartVtx + 1];
 		float segment_length = (Vec3(v1->mPosition) - Vec3(v0->mPosition)).Length();
 		for (uint32 resampled_point = 1; resampled_point < inNumVerticesPerStrand - 1; ++resampled_point)
 		{

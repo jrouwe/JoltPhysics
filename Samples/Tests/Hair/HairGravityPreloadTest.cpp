@@ -90,7 +90,7 @@ void HairGravityPreloadTest::Initialize()
 	mHair = new Hair(mHairSettings, RVec3::sZero(), Quat::sIdentity(), Layers::MOVING); // Ensure hair is rotated
 	mHair->Init(mComputeSystem);
 	mHair->Update(0.0f, Mat44::sIdentity(), nullptr, *mPhysicsSystem, mHairShaders, mComputeSystem, mComputeQueue);
-	mHair->ReadBackGPUState(mComputeSystem, mComputeQueue);
+	mHair->ReadBackGPUState(mComputeQueue);
 }
 
 void HairGravityPreloadTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -105,5 +105,5 @@ void HairGravityPreloadTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Update the hair
 	mHair->Update(inParams.mDeltaTime, Mat44::sIdentity(), nullptr, *mPhysicsSystem, mHairShaders, mComputeSystem, mComputeQueue);
 	mComputeQueue->ExecuteAndWait();
-	mHair->ReadBackGPUState(mComputeSystem, mComputeQueue);
+	mHair->ReadBackGPUState(mComputeQueue);
 }

@@ -59,7 +59,7 @@ public:
 
 		/// Constructor
 						SVertex() = default;
-						SVertex(const Float3 &inPosition, float inInvMass = 1.0f) : mPosition(inPosition), mInvMass(inInvMass) { }
+		explicit		SVertex(const Float3 &inPosition, float inInvMass = 1.0f) : mPosition(inPosition), mInvMass(inInvMass) { }
 
 		Float3			mPosition { 0, 0, 0 };						///< Initial position of the vertex in its modeled pose
 		float			mInvMass = 1.0f;							///< Inverse of the mass of the vertex
@@ -149,7 +149,7 @@ public:
 	public:
 						GradientSampler() = default;
 
-						GradientSampler(const Gradient &inGradient) :
+		explicit		GradientSampler(const Gradient &inGradient) :
 			mMultiplier((inGradient.mMax - inGradient.mMin) / (inGradient.mMaxFraction - inGradient.mMinFraction)),
 			mOffset(inGradient.mMin - inGradient.mMinFraction * mMultiplier),
 			mMin(min(inGradient.mMin, inGradient.mMax)),
@@ -294,7 +294,7 @@ public:
 		}
 
 		template <typename F>
-		JPH_INLINE void	Sample(UVec4Arg inIndex, Vec3Arg inFraction, const F &inFunc)
+		JPH_INLINE void	Sample(UVec4Arg inIndex, Vec3Arg inFraction, const F &inFunc) const
 		{
 			Vec3 fraction[] = { Vec3::sReplicate(1.0f) - inFraction, inFraction };
 
@@ -310,7 +310,7 @@ public:
 		}
 
 		template <typename F>
-		JPH_INLINE void	Sample(Vec3Arg inPosition, const F &inFunc)
+		JPH_INLINE void	Sample(Vec3Arg inPosition, const F &inFunc) const
 		{
 			UVec4 index;
 			Vec3 fraction;

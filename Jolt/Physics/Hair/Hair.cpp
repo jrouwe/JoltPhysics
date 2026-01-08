@@ -78,7 +78,7 @@ void Hair::Init(ComputeSystem *inComputeSystem)
 		mRenderPositionsCB = inComputeSystem->CreateComputeBuffer(ComputeBuffer::EType::RWBuffer, num_render_vertices, sizeof(Float3)).Get();
 }
 
-void Hair::InitializeContext(UpdateContext &outCtx, float inDeltaTime, PhysicsSystem &inSystem)
+void Hair::InitializeContext(UpdateContext &outCtx, float inDeltaTime, const PhysicsSystem &inSystem)
 {
 	float clamped_delta_time = min(inDeltaTime, mSettings->mMaxDeltaTime);
 	outCtx.mNumIterations = (uint)std::round(clamped_delta_time * mSettings->mNumIterationsPerSecond);
@@ -181,7 +181,7 @@ void Hair::InitializeContext(UpdateContext &outCtx, float inDeltaTime, PhysicsSy
 	}
 }
 
-void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJointMatrices, PhysicsSystem &inSystem, const HairShaders &inShaders, ComputeSystem *inComputeSystem, ComputeQueue *inComputeQueue)
+void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJointMatrices, const PhysicsSystem &inSystem, const HairShaders &inShaders, ComputeSystem *inComputeSystem, ComputeQueue *inComputeQueue)
 {
 	UpdateContext ctx;
 	InitializeContext(ctx, inDeltaTime, inSystem);
@@ -282,12 +282,14 @@ void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJoin
 				{
 					Vec3 v = shape_transform * ch->GetPoint(p);
 					points[p] = v; // Store points in a temporary buffer so we avoid reading from GPU memory
-					v.StoreFloat3(sv++);
+					v.StoreFloat3(sv);
+					++sv;
 				}
 
 				// Store number of faces
 				uint nf = ch->GetNumFaces();
-				*sh++ = nf;
+				*sh = nf;
+				++sh;
 
 				// Store the indices
 				if (ScaleHelpers::IsInsideOut(shape.mScale))
@@ -298,10 +300,12 @@ void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJoin
 						// Store indices
 						uint nv = ch->GetFaceVertices(f, max_vertices_per_face, face_indices);
 						uint32 indices_start = uint32(si - shape_indices);
-						*sh++ = indices_start;
-						*sh++ = indices_start + nv;
-						for (int v = int(nv) - 1; v >= 0; --v)
-							*si++ = face_indices[v] + first_vertex_index;
+						*sh = indices_start;
+						++sh;
+						*sh = indices_start + nv;
+						++sh;
+						for (int v = int(nv) - 1; v >= 0; --v, ++si)
+							*si = face_indices[v] + first_vertex_index;
 
 						// Calculate plane (avoids reading from GPU memory)
 						Plane::sFromPointsCCW(points[face_indices[2]], points[face_indices[1]], points[face_indices[0]]).StoreFloat4(sp++);
@@ -321,11 +325,13 @@ void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJoin
 							*si++ = face_indices[v] + first_vertex_index;
 
 						// Calculate plane (avoids reading from GPU memory)
-						Plane::sFromPointsCCW(points[face_indices[0]], points[face_indices[1]], points[face_indices[2]]).StoreFloat4(sp++);
+						Plane::sFromPointsCCW(points[face_indices[0]], points[face_indices[1]], points[face_indices[2]]).StoreFloat4(sp);
+						++sp;
 					}
 				}
 			}
-		*sh++ = 0; // Terminator
+		*sh = 0; // Terminator
+		++sh;
 		JPH_ASSERT(uint(cs - collision_shapes) == num_shapes);
 		JPH_ASSERT(uint(sp - shape_planes) == num_faces);
 		JPH_ASSERT(uint(sv - shape_vertices) == num_vertices);
@@ -655,7 +661,7 @@ void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJoin
 	}
 }
 
-void Hair::ReadBackGPUState(ComputeSystem *inComputeSystem, ComputeQueue *inComputeQueue)
+void Hair::ReadBackGPUState(ComputeQueue *inComputeQueue)
 {
 	if (mPositionsReadBackCB == nullptr)
 	{
@@ -691,8 +697,8 @@ void Hair::ReadBackGPUState(ComputeSystem *inComputeSystem, ComputeQueue *inComp
 		JPH_PROFILE("Reorder hair data");
 
 		// Reorder position and velocity data
-		JPH_HairPosition *positions = mPositionsReadBackCB->Map<JPH_HairPosition>(ComputeBuffer::EMode::Read);
-		JPH_HairVelocity *velocities = mVelocitiesReadBackCB->Map<JPH_HairVelocity>(ComputeBuffer::EMode::Read);
+		const JPH_HairPosition *positions = mPositionsReadBackCB->Map<JPH_HairPosition>(ComputeBuffer::EMode::Read);
+		const JPH_HairVelocity *velocities = mVelocitiesReadBackCB->Map<JPH_HairVelocity>(ComputeBuffer::EMode::Read);
 		size_t num_vertices = mSettings->mSimVertices.size();
 		if (mPositions == nullptr)
 			mPositions = new Float3 [num_vertices];

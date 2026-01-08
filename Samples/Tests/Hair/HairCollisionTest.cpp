@@ -37,7 +37,7 @@ void HairCollisionTest::Initialize()
 	mHair = new Hair(mHairSettings, RVec3::sZero(), Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI), Layers::MOVING); // Ensure hair is rotated
 	mHair->Init(mComputeSystem);
 	mHair->Update(0.0f, Mat44::sIdentity(), nullptr, *mPhysicsSystem, mHairShaders, mComputeSystem, mComputeQueue);
-	mHair->ReadBackGPUState(mComputeSystem, mComputeQueue);
+	mHair->ReadBackGPUState(mComputeQueue);
 
 	// Create moving body that moves through the strand
 	ConvexHullShapeSettings shape1;
@@ -93,7 +93,7 @@ void HairCollisionTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Update the hair
 	mHair->Update(inParams.mDeltaTime, Mat44::sIdentity(), nullptr, *mPhysicsSystem, mHairShaders, mComputeSystem, mComputeQueue);
 	mComputeQueue->ExecuteAndWait();
-	mHair->ReadBackGPUState(mComputeSystem, mComputeQueue);
+	mHair->ReadBackGPUState(mComputeQueue);
 }
 
 void HairCollisionTest::SaveState(StateRecorder &inStream) const

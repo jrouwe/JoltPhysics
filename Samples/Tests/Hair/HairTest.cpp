@@ -258,7 +258,7 @@ void HairTest::Initialize()
 	mHair = new Hair(mHairSettings, RVec3(neck_transform.GetTranslation()), neck_transform.GetQuaternion(), Layers::MOVING);
 	mHair->Init(mComputeSystem);
 	mHair->Update(0.0f, inv_neck_transform, mFaceAnimation[0].data(), *mPhysicsSystem, mHairShaders, mComputeSystem, mComputeQueue);
-	mHair->ReadBackGPUState(mComputeSystem, mComputeQueue);
+	mHair->ReadBackGPUState(mComputeQueue);
 
 #ifdef JPH_DEBUG_RENDERER
 	// Update drawing range
@@ -349,7 +349,7 @@ void HairTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		JPH_PROFILE("Hair Compute");
 		mComputeQueue->ExecuteAndWait();
 	}
-	mHair->ReadBackGPUState(mComputeSystem, mComputeQueue);
+	mHair->ReadBackGPUState(mComputeQueue);
 }
 
 void HairTest::SaveState(StateRecorder &inStream) const
