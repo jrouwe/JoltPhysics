@@ -275,7 +275,7 @@ public:
 	class GridSampler
 	{
 	public:
-		JPH_INLINE		GridSampler(const HairSettings *inSettings) :
+		inline explicit	GridSampler(const HairSettings *inSettings) :
 			mGridSizeMin2(inSettings->mGridSize - UVec4::sReplicate(2)),
 			mGridSizeMin1((inSettings->mGridSize - UVec4::sReplicate(1)).ToFloat()),
 			mGridStride(1, inSettings->mGridSize.GetX(), inSettings->mGridSize.GetX() * inSettings->mGridSize.GetY(), 0),
@@ -285,7 +285,7 @@ public:
 		}
 
 		/// Convert a position in hair space to a grid index and fraction
-		JPH_INLINE void	PositionToIndexAndFraction(Vec3Arg inPosition, UVec4 &outIndex, Vec3 &outFraction) const
+		inline void		PositionToIndexAndFraction(Vec3Arg inPosition, UVec4 &outIndex, Vec3 &outFraction) const
 		{
 			// Get position in grid space
 			Vec3 grid_pos = Vec3::sMin(Vec3::sMax(inPosition - mOffset, Vec3::sZero()) * mScale, mGridSizeMin1);
@@ -294,7 +294,7 @@ public:
 		}
 
 		template <typename F>
-		JPH_INLINE void	Sample(UVec4Arg inIndex, Vec3Arg inFraction, const F &inFunc) const
+		inline void		Sample(UVec4Arg inIndex, Vec3Arg inFraction, const F &inFunc) const
 		{
 			Vec3 fraction[] = { Vec3::sReplicate(1.0f) - inFraction, inFraction };
 
@@ -310,7 +310,7 @@ public:
 		}
 
 		template <typename F>
-		JPH_INLINE void	Sample(Vec3Arg inPosition, const F &inFunc) const
+		inline void		Sample(Vec3Arg inPosition, const F &inFunc) const
 		{
 			UVec4 index;
 			Vec3 fraction;

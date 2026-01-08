@@ -308,7 +308,8 @@ void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJoin
 							*si = face_indices[v] + first_vertex_index;
 
 						// Calculate plane (avoids reading from GPU memory)
-						Plane::sFromPointsCCW(points[face_indices[2]], points[face_indices[1]], points[face_indices[0]]).StoreFloat4(sp++);
+						Plane::sFromPointsCCW(points[face_indices[2]], points[face_indices[1]], points[face_indices[0]]).StoreFloat4(sp);
+						++sp;
 					}
 				}
 				else
