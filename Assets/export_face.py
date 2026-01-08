@@ -99,9 +99,20 @@ def export_scene_meshes_to_bin(filepath):
 				for bone in bones:
 					pose_bone = armature.object.pose.bones[bone.name]
 					mat = apply_basis(pose_bone.matrix)
-					for i in range(4):
-						for j in range(4):
-							f.write(struct.pack("<f", mat[j][i]))
+
+					# Translation from matrix
+					t = mat.to_translation()
+
+					# Rotation quaternion from matrix
+					q = mat.to_quaternion().normalized()
+
+					# Ensure unique quaternion sign: make W positive
+					if q.w < 0.0:
+						q = -q
+
+					# Export translation (x,y,z) + quaternion real part (x,y,z)
+					f.write(struct.pack("<3f", t.x, t.y, t.z))
+					f.write(struct.pack("<3f", q.x, q.y, q.z))
 		else:
 			print("No animation data found on the armature object.")
 		bpy.context.scene.frame_set(1)

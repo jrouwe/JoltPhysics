@@ -74,10 +74,17 @@ void HairTest::Initialize()
 	uint32 num_frames;
 	stream.Read(num_frames);
 	mFaceAnimation.resize(num_frames);
-	for (uint32_t frame = 0; frame < num_frames; ++frame)
+	for (uint32 frame = 0; frame < num_frames; ++frame)
 	{
 		mFaceAnimation[frame].resize(num_joints);
-		stream.ReadBytes(mFaceAnimation[frame].data(), sizeof(Mat44) * num_joints);
+		for (uint32 joint = 0; joint < num_joints; ++joint)
+		{
+			Float3 translation, rotation;
+			stream.Read(translation);
+			stream.Read(rotation);
+			Quat rotation_quat(rotation.x, rotation.y, rotation.z, sqrt(1.0f - Vec3(rotation).LengthSq()));
+			mFaceAnimation[frame][joint] = Mat44::sRotationTranslation(rotation_quat, Vec3(translation));
+		}
 	}
 
 	// Read collision hulls
