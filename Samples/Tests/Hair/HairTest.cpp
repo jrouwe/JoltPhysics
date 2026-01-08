@@ -17,6 +17,10 @@
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <filesystem>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 JPH_IMPLEMENT_RTTI_VIRTUAL(HairTest)
 {
 	JPH_ADD_BASE_CLASS(HairTest, Test)
@@ -35,6 +39,13 @@ const HairTest::Groom *HairTest::sSelectedGroom = &sGrooms[0];
 
 void HairTest::Initialize()
 {
+	// Check groom file exists
+	String groom_file = "w" + String(sSelectedGroom->mName) + ".hair";
+	String full_path = AssetStream::sGetAssetsBasePath() + groom_file;
+	if (!std::filesystem::exists(full_path))
+		FatalError("File %s not found.\n\n"
+			"wCurly.hair, wStraight.hair and wWavy.hair should be downloaded from https://www.cemyuksel.com/research/hairmodels/ (or by running Assets/download_hair.sh)", full_path.c_str());
+
 	// Read face mesh and animation
 	AssetStream asset_stream("face.bin", std::ios::in | std::ios::binary);
 	StreamInWrapper stream(asset_stream.Get());
@@ -128,8 +139,7 @@ void HairTest::Initialize()
 		m = m * bind_neck;
 
 	// Read hair file
-	Array<uint8> data = ReadData(("w" + String(sSelectedGroom->mName) + ".hair").c_str());
-
+	Array<uint8> data = ReadData(groom_file.c_str());
 	if (data[0] != 'H' || data[1] != 'A' || data[2] != 'I' || data[3] != 'R')
 		FatalError("Invalid hair file");
 

@@ -12,3 +12,4 @@ Permission was granted by Guerrilla Games to release this under the same MIT lic
 The following assets were taken from www.cemyuksel.com/research/hairmodels:
 
 face.bin - Created by Murat Afshar (https://www.cemyuksel.com/research/hairmodels/woman.zip), rigged in Blender 5.0 and exported to a binary file using export_face.py.
+wCurly.hair, wStraight.hair and wWavy.hair should be downloaded from https://www.cemyuksel.com/research/hairmodels/ (or by running download_hair.sh)
