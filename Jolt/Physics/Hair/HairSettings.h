@@ -205,24 +205,24 @@ public:
 
 		bool			mEnableCollision = true;					///< Enable collision detection between hair strands and the environment.
 		bool			mEnableLRA = true;							///< Enable Long Range Attachments to keep hair close to the modeled pose. This prevents excessive stretching when the head moves quickly.
-		float			mLinearDamping = 0.1f;						///< Linear damping coefficient for the simulated rods.
-		float			mAngularDamping = 0.1f;						///< Angular damping coefficient for the simulated rods.
+		float			mLinearDamping = 2.0f;						///< Linear damping coefficient for the simulated rods.
+		float			mAngularDamping = 2.0f;						///< Angular damping coefficient for the simulated rods.
 		float			mMaxLinearVelocity = 10.0f;					///< Maximum linear velocity of a vertex.
 		float			mMaxAngularVelocity = 50.0f;				///< Maximum angular velocity of a vertex.
-		Gradient		mGravityFactor { 1.0f, 1.0f };				///< How much gravity affects the hair along its length, 0 = no gravity, 1 = full gravity. Can be used to reduce the effect of gravity.
+		Gradient		mGravityFactor { 0.1f, 1.0f, 0.2f, 0.8f };	///< How much gravity affects the hair along its length, 0 = no gravity, 1 = full gravity. Can be used to reduce the effect of gravity.
 		float			mFriction = 0.2f;							///< Collision friction coefficient. Usually in the range [0, 1]. 0 = no friction.
-		float			mBendCompliance = 1.0e-6f;					///< Compliance for bend constraints: 1 / stiffness.
+		float			mBendCompliance = 1.0e-7f;					///< Compliance for bend constraints: 1 / stiffness.
 		Float4			mBendComplianceMultiplier = { 1.0f, 100.0f, 100.0f, 1.0f }; ///< Multiplier for bend compliance at 0%, 33%, 66% and 100% of the strand length.
 		float			mStretchCompliance = 1.0e-8f;				///< Compliance for stretch constraints: 1 / stiffness.
 		float			mInertiaMultiplier = 10.0f;					///< Multiplier applied to the mass of a rod to calculate its inertia.
-		Gradient		mHairRadius = { 0.001f, 0.01f };			///< Radius of the hair strand along its length, used for collision detection.
+		Gradient		mHairRadius = { 0.001f, 0.001f };			///< Radius of the hair strand along its length, used for collision detection.
 		Gradient		mWorldTransformInfluence { 0.0f, 1.0f };	///< How much rotating the head influences the hair, 0 = not at all, the hair will move with the head as if it had no inertia. 1 = hair stays in place as the head moves and is correctly simulated. This can be used to reduce the effect of turning the head towards the root of strands.
 		Gradient		mGridVelocityFactor { 0.05f, 0.01f };		///< Every iteration this fraction of the grid velocity will be applied to the vertex velocity. Defined at cDefaultIterationsPerSecond, if this changes, the value will internally be adjusted to result in the same behavior.
 		float			mGridDensityForceFactor = 0.0f;				///< This factor will try to push the density of the hair towards the neutral density defined in the density grid. Note that can result in artifacts so defaults to 0.
 		Gradient		mGlobalPose { 0.01f, 0, 0.0f, 0.3f };		///< Every iteration this fraction of the neutral pose will be applied to the vertex position. Defined at cDefaultIterationsPerSecond, if this changes, the value will internally be adjusted to result in the same behavior.
 		Gradient		mSkinGlobalPose { 1.0f, 0.0f, 0.0f, 0.1f }; ///< How much the global pose follows the skin of the scalp. 0 is not following, 1 is fully following.
 		float			mSimulationStrandsFraction = 0.1f;			///< Used by InitRenderAndSimulationStrands only. Indicates the fraction of strands that should be simulated.
-		float			mGravityPreloadFactor = 0.0f;				///< This controls how much of the gravity we will remove from the modeled pose when initializing. A value of 1 fully removes gravity and should result in no sagging when the simulation starts. A value of 0 doesn't remove gravity.
+		float			mGravityPreloadFactor = 0.0f;				///< Note: Not fully functional yet! This controls how much of the gravity we will remove from the modeled pose when initializing. A value of 1 fully removes gravity and should result in no sagging when the simulation starts. A value of 0 doesn't remove gravity.
 	};
 
 	/// Split the supplied render strands into render and simulation strands and calculate connections between them.

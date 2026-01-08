@@ -24,7 +24,7 @@ void HairCollisionTest::Initialize()
 	// Create a single strand
 	mHairSettings = new HairSettings;
 	HairSettings::Material m;
-	m.mHairRadius = HairSettings::Gradient(0, 0);
+	m.mHairRadius = HairSettings::Gradient(0, 0); // Override radius to 0 so we can see it touch the moving body
 	mHairSettings->mMaterials.push_back(m);
 	mHairSettings->mSimulationBoundsPadding = Vec3::sReplicate(1.0f);
 	Array<HairSettings::SVertex> hair_vertices = { HairSettings::SVertex(Float3(0, 2, 0), 0), HairSettings::SVertex(Float3(0, 0, 0), 1) };

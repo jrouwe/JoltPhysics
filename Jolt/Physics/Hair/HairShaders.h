@@ -14,6 +14,7 @@ class JPH_EXPORT HairShaders : public RefTarget<HairShaders>
 {
 public:
 	/// Loads all shaders
+	/// Note that if you want to run the sim on CPU you need call HairRegisterShaders first.
 	void				Init(ComputeSystem *inComputeSystem);
 
 	Ref<ComputeShader>	mTeleportCS;
