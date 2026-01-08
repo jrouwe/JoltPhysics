@@ -388,11 +388,11 @@ void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJoin
 		HairSettings::GridSampler grid_sampler(mSettings);
 		memcpy(&cdata->cGridSizeMin2, &grid_sampler.mGridSizeMin2, 3 * sizeof(float));
 		cdata->cTwoDivDeltaTime = ctx.mTwoDivDeltaTime;
-		cdata->cGridSizeMin1 = (Float3 &)grid_sampler.mGridSizeMin1;
+		grid_sampler.mGridSizeMin1.StoreFloat3(&cdata->cGridSizeMin1);
 		cdata->cDeltaTime = ctx.mDeltaTime;
-		cdata->cGridOffset = (Float3 &)grid_sampler.mOffset;
+		grid_sampler.mOffset.StoreFloat3(&cdata->cGridOffset);
 		cdata->cHalfDeltaTime = ctx.mHalfDeltaTime;
-		cdata->cGridScale = (Float3 &)grid_sampler.mScale;
+		grid_sampler.mScale.StoreFloat3(&cdata->cGridScale);
 		cdata->cInvDeltaTimeSq = ctx.mInvDeltaTimeSq;
 		ctx.mSubStepGravity.StoreFloat3(&cdata->cSubStepGravity);
 		cdata->cNumSkinVertices = (uint)mSettings->mScalpVertices.size();
