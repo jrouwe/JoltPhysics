@@ -40,6 +40,19 @@ JPH_MSVC_SUPPRESS_WARNING(4062) // enumerator 'X' in switch of enum 'X' is not h
 
 #endif
 
+// Precompile frequently used Jolt Physics headers for better build performance
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Body/BodyLock.h>
+#include <Jolt/Physics/Body/BodyLockInterface.h>
+#include <Jolt/Physics/Body/BodyManager.h>
+#include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Physics/Constraints/ContactConstraintManager.h>
+#include <Jolt/Core/Mutex.h>
+#include <Jolt/Core/Profiler.h>
+#include <Jolt/Skeleton/SkeletonPose.h>
+
 using namespace JPH;
 using namespace JPH::literals;
 using namespace std;
