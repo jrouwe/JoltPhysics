@@ -143,6 +143,6 @@ protected:
 private:
 	bool			mNeedsRestart = false;
 
-	using BodyLabels = unordered_map<BodyID, String>;
+	using BodyLabels = UnorderedMap<BodyID, String>;
 	BodyLabels		mBodyLabels;
 };
