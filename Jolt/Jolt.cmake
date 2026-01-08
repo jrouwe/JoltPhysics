@@ -479,6 +479,7 @@ if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL)
 	# Compute shaders
 	set(JOLT_PHYSICS_SHADERS
 		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute.hlsl
+		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute2.hlsl
 	)
 
 	set(JOLT_PHYSICS_SHADER_HEADERS
@@ -489,6 +490,7 @@ if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL)
 		${JOLT_PHYSICS_ROOT}/Shaders/ShaderQuat.h
 		${JOLT_PHYSICS_ROOT}/Shaders/ShaderVec3.h
 		${JOLT_PHYSICS_ROOT}/Shaders/TestComputeBindings.h
+		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute2Bindings.h
 	)
 endif()
 
