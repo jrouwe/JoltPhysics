@@ -298,7 +298,7 @@ void HairSettings::sResample(Array<SVertex> &ioVertices, Array<SStrand> &ioStran
 				cur_length += segment_length;
 				++v0;
 				++v1;
-				JPH_ASSERT(v1 - vertices.data() < strand.mEndVtx);
+				JPH_ASSERT(uint32(v1 - vertices.data()) < strand.mEndVtx);
 				segment_length = (Vec3(v1->mPosition) - Vec3(v0->mPosition)).Length();
 			}
 
@@ -312,7 +312,7 @@ void HairSettings::sResample(Array<SVertex> &ioVertices, Array<SStrand> &ioStran
 		// Add the last vertex of the strand
 		ioVertices.push_back(vertices[strand.mEndVtx - 1]);
 
-		JPH_ASSERT(ioVertices.size() == out_strand.mEndVtx);
+		JPH_ASSERT(uint32(ioVertices.size()) == out_strand.mEndVtx);
 	}
 }
 

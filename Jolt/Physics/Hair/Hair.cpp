@@ -326,11 +326,11 @@ void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJoin
 				}
 			}
 		*sh++ = 0; // Terminator
-		JPH_ASSERT(cs - collision_shapes == num_shapes);
-		JPH_ASSERT(sp - shape_planes == num_faces);
-		JPH_ASSERT(sv - shape_vertices == num_vertices);
-		JPH_ASSERT(sh - shape_indices == num_header);
-		JPH_ASSERT(si - shape_indices == num_indices);
+		JPH_ASSERT(uint(cs - collision_shapes) == num_shapes);
+		JPH_ASSERT(uint(sp - shape_planes) == num_faces);
+		JPH_ASSERT(uint(sv - shape_vertices) == num_vertices);
+		JPH_ASSERT(uint(sh - shape_indices) == num_header);
+		JPH_ASSERT(uint(si - shape_indices) == num_indices);
 
 		// Unmap buffers
 		mCollisionShapesCB->Unmap();
