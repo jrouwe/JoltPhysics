@@ -43,8 +43,8 @@ struct float2
 	float &				operator [] (uint inIndex)							{ return (&x)[inIndex]; }
 
 	// Swizzling (note return value is const to prevent assignment to swizzled results)
-	const float2		xy() const											{ return float2(x, y); }
-	const float2		yx() const											{ return float2(y, x); }
+	const float2		swizzle_xy() const									{ return float2(x, y); }
+	const float2		swizzle_yx() const									{ return float2(y, x); }
 
 	float				x, y;
 };
@@ -109,14 +109,14 @@ struct float3
 	float &				operator [] (uint inIndex)							{ return (&x)[inIndex]; }
 
 	// Swizzling (note return value is const to prevent assignment to swizzled results)
-	const float2		xy() const											{ return float2(x, y); }
-	const float2		yx() const											{ return float2(y, x); }
-	const float3		xyz() const											{ return float3(x, y, z); }
-	const float3		xzy() const											{ return float3(x, z, y); }
-	const float3		yxz() const											{ return float3(y, x, z); }
-	const float3		yzx() const											{ return float3(y, z, x); }
-	const float3		zxy() const											{ return float3(z, x, y); }
-	const float3		zyx() const											{ return float3(z, y, x); }
+	const float2		swizzle_xy() const									{ return float2(x, y); }
+	const float2		swizzle_yx() const									{ return float2(y, x); }
+	const float3		swizzle_xyz() const									{ return float3(x, y, z); }
+	const float3		swizzle_xzy() const									{ return float3(x, z, y); }
+	const float3		swizzle_yxz() const									{ return float3(y, x, z); }
+	const float3		swizzle_yzx() const									{ return float3(y, z, x); }
+	const float3		swizzle_zxy() const									{ return float3(z, x, y); }
+	const float3		swizzle_zyx() const									{ return float3(z, y, x); }
 
 	float				x, y, z;
 };
@@ -184,17 +184,17 @@ struct float4
 	float &				operator [] (uint inIndex)							{ return (&x)[inIndex]; }
 
 	// Swizzling (note return value is const to prevent assignment to swizzled results)
-	const float2		xy() const											{ return float2(x, y); }
-	const float2		yx() const											{ return float2(y, x); }
-	const float3		xyz() const											{ return float3(x, y, z); }
-	const float3		xzy() const											{ return float3(x, z, y); }
-	const float3		yxz() const											{ return float3(y, x, z); }
-	const float3		yzx() const											{ return float3(y, z, x); }
-	const float3		zxy() const											{ return float3(z, x, y); }
-	const float3		zyx() const											{ return float3(z, y, x); }
-	const float4		xywz() const										{ return float4(x, y, w, z); }
-	const float4		xwyz() const										{ return float4(x, w, y, z); }
-	const float4		wxyz() const										{ return float4(w, x, y, z); }
+	const float2		swizzle_xy() const									{ return float2(x, y); }
+	const float2		swizzle_yx() const									{ return float2(y, x); }
+	const float3		swizzle_xyz() const									{ return float3(x, y, z); }
+	const float3		swizzle_xzy() const									{ return float3(x, z, y); }
+	const float3		swizzle_yxz() const									{ return float3(y, x, z); }
+	const float3		swizzle_yzx() const									{ return float3(y, z, x); }
+	const float3		swizzle_zxy() const									{ return float3(z, x, y); }
+	const float3		swizzle_zyx() const									{ return float3(z, y, x); }
+	const float4		swizzle_xywz() const								{ return float4(x, y, w, z); }
+	const float4		swizzle_xwyz() const								{ return float4(x, w, y, z); }
+	const float4		swizzle_wxyz() const								{ return float4(w, x, y, z); }
 
 	float				x, y, z, w;
 };
@@ -254,12 +254,12 @@ struct uint3
 	uint32 &			operator [] (uint inIndex)							{ return (&x)[inIndex]; }
 
 	// Swizzling (note return value is const to prevent assignment to swizzled results)
-	const uint3			xyz() const											{ return uint3(x, y, z); }
-	const uint3			xzy() const											{ return uint3(x, z, y); }
-	const uint3			yxz() const											{ return uint3(y, x, z); }
-	const uint3			yzx() const											{ return uint3(y, z, x); }
-	const uint3			zxy() const											{ return uint3(z, x, y); }
-	const uint3			zyx() const											{ return uint3(z, y, x); }
+	const uint3			swizzle_xyz() const									{ return uint3(x, y, z); }
+	const uint3			swizzle_xzy() const									{ return uint3(x, z, y); }
+	const uint3			swizzle_yxz() const									{ return uint3(y, x, z); }
+	const uint3			swizzle_yzx() const									{ return uint3(y, z, x); }
+	const uint3			swizzle_zxy() const									{ return uint3(z, x, y); }
+	const uint3			swizzle_zyx() const									{ return uint3(z, y, x); }
 
 	uint32				x, y, z;
 };
@@ -311,15 +311,15 @@ struct uint4
 	uint32 &			operator [] (uint inIndex)							{ return (&x)[inIndex]; }
 
 	// Swizzling (note return value is const to prevent assignment to swizzled results)
-	const uint3			xyz() const											{ return uint3(x, y, z); }
-	const uint3			xzy() const											{ return uint3(x, z, y); }
-	const uint3			yxz() const											{ return uint3(y, x, z); }
-	const uint3			yzx() const											{ return uint3(y, z, x); }
-	const uint3			zxy() const											{ return uint3(z, x, y); }
-	const uint3			zyx() const											{ return uint3(z, y, x); }
-	const uint4			xywz() const										{ return uint4(x, y, w, z); }
-	const uint4			xwyz() const										{ return uint4(x, w, y, z); }
-	const uint4			wxyz() const										{ return uint4(w, x, y, z); }
+	const uint3			swizzle_xyz() const									{ return uint3(x, y, z); }
+	const uint3			swizzle_xzy() const									{ return uint3(x, z, y); }
+	const uint3			swizzle_yxz() const									{ return uint3(y, x, z); }
+	const uint3			swizzle_yzx() const									{ return uint3(y, z, x); }
+	const uint3			swizzle_zxy() const									{ return uint3(z, x, y); }
+	const uint3			swizzle_zyx() const									{ return uint3(z, y, x); }
+	const uint4			swizzle_xywz() const								{ return uint4(x, y, w, z); }
+	const uint4			swizzle_xwyz() const								{ return uint4(x, w, y, z); }
+	const uint4			swizzle_wxyz() const								{ return uint4(w, x, y, z); }
 
 	uint32				x, y, z, w;
 };
@@ -369,12 +369,12 @@ struct int3
 	int &				operator [] (uint inIndex)							{ return (&x)[inIndex]; }
 
 	// Swizzling (note return value is const to prevent assignment to swizzled results)
-	const int3			xyz() const											{ return int3(x, y, z); }
-	const int3			xzy() const											{ return int3(x, z, y); }
-	const int3			yxz() const											{ return int3(y, x, z); }
-	const int3			yzx() const											{ return int3(y, z, x); }
-	const int3			zxy() const											{ return int3(z, x, y); }
-	const int3			zyx() const											{ return int3(z, y, x); }
+	const int3			swizzle_xyz() const									{ return int3(x, y, z); }
+	const int3			swizzle_xzy() const									{ return int3(x, z, y); }
+	const int3			swizzle_yxz() const									{ return int3(y, x, z); }
+	const int3			swizzle_yzx() const									{ return int3(y, z, x); }
+	const int3			swizzle_zxy() const									{ return int3(z, x, y); }
+	const int3			swizzle_zyx() const									{ return int3(z, y, x); }
 
 	int					x, y, z;
 };
@@ -428,15 +428,15 @@ struct int4
 	int &				operator [] (uint inIndex)							{ return (&x)[inIndex]; }
 
 	// Swizzling (note return value is const to prevent assignment to swizzled results)
-	const int3			xyz() const											{ return int3(x, y, z); }
-	const int3			xzy() const											{ return int3(x, z, y); }
-	const int3			yxz() const											{ return int3(y, x, z); }
-	const int3			yzx() const											{ return int3(y, z, x); }
-	const int3			zxy() const											{ return int3(z, x, y); }
-	const int3			zyx() const											{ return int3(z, y, x); }
-	const int4			xywz() const										{ return int4(x, y, w, z); }
-	const int4			xwyz() const										{ return int4(x, w, y, z); }
-	const int4			wxyz() const										{ return int4(w, x, y, z); }
+	const int3			swizzle_xyz() const									{ return int3(x, y, z); }
+	const int3			swizzle_xzy() const									{ return int3(x, z, y); }
+	const int3			swizzle_yxz() const									{ return int3(y, x, z); }
+	const int3			swizzle_yzx() const									{ return int3(y, z, x); }
+	const int3			swizzle_zxy() const									{ return int3(z, x, y); }
+	const int3			swizzle_zyx() const									{ return int3(z, y, x); }
+	const int4			swizzle_xywz() const								{ return int4(x, y, w, z); }
+	const int4			swizzle_xwyz() const								{ return int4(x, w, y, z); }
+	const int4			swizzle_wxyz() const								{ return int4(w, x, y, z); }
 
 	int					x, y, z, w;
 };
@@ -508,17 +508,17 @@ constexpr				float3::float3(const uint3 &inV)					: x(float(inV.x)), y(float(inV
 constexpr				float4::float4(const int4 &inV)						: x(float(inV.x)), y(float(inV.y)), z(float(inV.z)), w(float(inV.w)) { }
 
 // Swizzle operators
-#define xy				xy()
-#define yx				yx()
-#define xyz				xyz()
-#define xzy				xzy()
-#define yxz				yxz()
-#define yzx				yzx()
-#define zxy				zxy()
-#define zyx				zyx()
-#define xywz			xywz()
-#define xwyz			xwyz()
-#define wxyz			wxyz()
+#define xy				swizzle_xy()
+#define yx				swizzle_yx()
+#define xyz				swizzle_xyz()
+#define xzy				swizzle_xzy()
+#define yxz				swizzle_yxz()
+#define yzx				swizzle_yzx()
+#define zxy				swizzle_zxy()
+#define zyx				swizzle_zyx()
+#define xywz			swizzle_xywz()
+#define xwyz			swizzle_xwyz()
+#define wxyz			swizzle_wxyz()
 
 } // HLSLToCPP
 
