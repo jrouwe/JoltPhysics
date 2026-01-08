@@ -9,8 +9,6 @@
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 #include <Jolt/Core/StridedPtr.h>
 
-struct JPH_HairVelocity;
-
 JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
@@ -94,13 +92,13 @@ public:
 	void								UnlockReadBackBuffers();
 
 	/// Access to the resulting simulation data (only valid when ReadBackGPUState has been called and the buffers have been locked)
-	StridedPtr<const Float3>			GetScalpVertices() const;
-	StridedPtr<const Float3>			GetPositions() const;
-	StridedPtr<const Quat>				GetRotations() const;
-	StridedPtr<const Float3>			GetVelocities() const;
-	StridedPtr<const Float3>			GetAngularVelocities() const;
-	StridedPtr<const Float4>			GetGridVelocityAndDensity() const;
-	StridedPtr<const Float3>			GetRenderPositions() const;
+	const Float3 *						GetScalpVertices() const						{ return mScalpVertices; }
+	const Float3 *						GetPositions() const							{ return mPositions; }
+	const Quat *						GetRotations() const							{ return mRotations; }
+	StridedPtr<const Float3>			GetVelocities() const							{ return { &mVelocities->mVelocity, sizeof(JPH_HairVelocity) }; }
+	StridedPtr<const Float3>			GetAngularVelocities() const					{ return { &mVelocities->mAngularVelocity, sizeof(JPH_HairVelocity) }; }
+	const Float4 *						GetGridVelocityAndDensity() const				{ return mVelocityAndDensity; }
+	const Float3 *						GetRenderPositions() const						{ return mRenderPositions; }
 
 #ifdef JPH_DEBUG_RENDERER
 	enum class ERenderStrandColor

@@ -743,54 +743,19 @@ void Hair::UnlockReadBackBuffers()
 		mRenderPositionsReadBackCB->Unmap();
 }
 
-StridedPtr<const Float3> Hair::GetScalpVertices() const
-{
-	return mScalpVertices;
-}
-
-StridedPtr<const Float3> Hair::GetPositions() const
-{
-	return mPositions;
-}
-
-StridedPtr<const Quat> Hair::GetRotations() const
-{
-	return mRotations;
-}
-
-StridedPtr<const Float3> Hair::GetVelocities() const
-{
-	return { &mVelocities->mVelocity, sizeof(JPH_HairVelocity) };
-}
-
-StridedPtr<const Float3> Hair::GetAngularVelocities() const
-{
-	return { &mVelocities->mAngularVelocity, sizeof(JPH_HairVelocity) };
-}
-
-StridedPtr<const Float4> Hair::GetGridVelocityAndDensity() const
-{
-	return mVelocityAndDensity;
-}
-
-StridedPtr<const Float3> Hair::GetRenderPositions() const
-{
-	return mRenderPositions;
-}
-
 #ifdef JPH_DEBUG_RENDERER
 
 void Hair::Draw(const DrawSettings &inSettings, DebugRenderer *inRenderer)
 {
 	LockReadBackBuffers();
 
-	StridedPtr<const Float3> positions = GetPositions();
-	StridedPtr<const Float3> render_positions = GetRenderPositions();
-	StridedPtr<const Quat> rotations = GetRotations();
+	const Float3 *positions = GetPositions();
+	const Float3 *render_positions = GetRenderPositions();
+	const Quat *rotations = GetRotations();
 	StridedPtr<const Float3> velocities = GetVelocities();
 	StridedPtr<const Float3> angular_velocities = GetAngularVelocities();
-	StridedPtr<const Float4> grid_velocity_and_density = GetGridVelocityAndDensity();
-	StridedPtr<const Float3> scalp_vertices = GetScalpVertices();
+	const Float4 *grid_velocity_and_density = GetGridVelocityAndDensity();
+	const Float3 *scalp_vertices = GetScalpVertices();
 
 	float arrow_size = 0.01f * mSettings->mSimulationBounds.GetSize().ReduceMin();
 	RMat44 com = GetWorldTransform();

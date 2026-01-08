@@ -290,7 +290,7 @@ void HairTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 #else
 	// Draw the rods
 	mHair->LockReadBackBuffers();
-	StridedPtr<const Float3> positions = mHair->GetRenderPositions();
+	const Float3 *positions = mHair->GetRenderPositions();
 	RMat44 com = mHair->GetWorldTransform();
 	if (sDrawRenderStrands)
 	{
@@ -320,9 +320,8 @@ void HairTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	{
 		JPH_PROFILE("Draw Head Mesh");
 
-		StridedPtr<const Float3> scalp_vertices = mHair->GetScalpVertices();
-		JPH_ASSERT(scalp_vertices.GetStride() == sizeof(Float3));
-		Ref<DebugRenderer::Geometry> geometry = new DebugRenderer::Geometry(mDebugRenderer->CreateTriangleBatch(scalp_vertices.GetPtr(), (uint)mHairSettings->mScalpVertices.size(), mHairSettings->mScalpTriangles.data(), (uint)mHairSettings->mScalpTriangles.size()), mHairSettings->mSimulationBounds);
+		const Float3 *scalp_vertices = mHair->GetScalpVertices();
+		Ref<DebugRenderer::Geometry> geometry = new DebugRenderer::Geometry(mDebugRenderer->CreateTriangleBatch(scalp_vertices, (uint)mHairSettings->mScalpVertices.size(), mHairSettings->mScalpTriangles.data(), (uint)mHairSettings->mScalpTriangles.size()), mHairSettings->mSimulationBounds);
 		mDebugRenderer->DrawGeometry(neck_transform, Color::sGrey, geometry, DebugRenderer::ECullMode::CullBackFace, DebugRenderer::ECastShadow::On, DebugRenderer::EDrawMode::Solid);
 	}
 
