@@ -34,8 +34,6 @@
 
 	JPH_SUPPRESS_WARNING_POP
 #else
-	#pragma pack_matrix(column_major)
-
 	typedef float JPH_float;
 	typedef float3 JPH_float3;
 	typedef float4 JPH_float4;
@@ -47,7 +45,7 @@
 	typedef int4 JPH_int4;
 	typedef float4 JPH_Quat; // xyz = imaginary part, w = real part
 	typedef float4 JPH_Plane; // xyz = normal, w = constant
-	typedef float4x4 JPH_Mat44; // matrix, column major
+	typedef float4 JPH_Mat44[4]; // matrix, column major
 
 	#define JPH_SHADER_CONSTANT(type, name, value)	static const type name = value;
 

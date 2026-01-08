@@ -10,3 +10,10 @@
 #include <Jolt/Compute/CPU/WrapShaderBindings.h>
 #include "TestComputeBindings.h"
 #include <Jolt/Compute/CPU/WrapShaderEnd.h>
+
+#define JPH_SHADER_NAME TestCompute2
+#include <Jolt/Compute/CPU/WrapShaderBegin.h>
+#include "TestCompute2.hlsl"
+#include <Jolt/Compute/CPU/WrapShaderBindings.h>
+#include "TestCompute2Bindings.h"
+#include <Jolt/Compute/CPU/WrapShaderEnd.h>
