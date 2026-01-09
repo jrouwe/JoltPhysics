@@ -34,6 +34,10 @@
 
 	JPH_SUPPRESS_WARNING_POP
 #else
+	#define JPH_SUPPRESS_WARNING_PUSH
+	#define JPH_SUPPRESS_WARNING_POP
+	#define JPH_SUPPRESS_WARNINGS
+
 	typedef float JPH_float;
 	typedef float3 JPH_float3;
 	typedef float4 JPH_float4;
