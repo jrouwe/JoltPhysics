@@ -11,7 +11,7 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Core/TickCounter.h>
-#include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/UnorderedMapFwd.h>
 
 #if defined(JPH_EXTERNAL_PROFILE)
 

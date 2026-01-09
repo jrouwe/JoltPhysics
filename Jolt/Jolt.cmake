@@ -68,6 +68,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/Mutex.h
 	${JOLT_PHYSICS_ROOT}/Core/MutexArray.h
 	${JOLT_PHYSICS_ROOT}/Core/NonCopyable.h
+	${JOLT_PHYSICS_ROOT}/Core/ObjectToIDMap.h
 	${JOLT_PHYSICS_ROOT}/Core/Profiler.cpp
 	${JOLT_PHYSICS_ROOT}/Core/Profiler.h
 	${JOLT_PHYSICS_ROOT}/Core/Profiler.inl
@@ -95,7 +96,9 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/TickCounter.cpp
 	${JOLT_PHYSICS_ROOT}/Core/TickCounter.h
 	${JOLT_PHYSICS_ROOT}/Core/UnorderedMap.h
+	${JOLT_PHYSICS_ROOT}/Core/UnorderedMapFwd.h
 	${JOLT_PHYSICS_ROOT}/Core/UnorderedSet.h
+	${JOLT_PHYSICS_ROOT}/Core/UnorderedSetFwd.h
 	${JOLT_PHYSICS_ROOT}/Geometry/AABox.h
 	${JOLT_PHYSICS_ROOT}/Geometry/AABox4.h
 	${JOLT_PHYSICS_ROOT}/Geometry/ClipPoly.h

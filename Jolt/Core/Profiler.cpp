@@ -8,6 +8,7 @@
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/QuickSort.h>
+#include <Jolt/Core/UnorderedMap.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
