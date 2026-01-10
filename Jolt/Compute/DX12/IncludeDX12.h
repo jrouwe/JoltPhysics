@@ -4,8 +4,6 @@
 
 #pragma once
 
-#ifdef JPH_USE_DX12
-
 #include <Jolt/Core/IncludeWindows.h>
 #include <Jolt/Core/StringTools.h>
 
@@ -49,5 +47,3 @@ inline bool HRFailed(HRESULT inHR)
 }
 
 JPH_NAMESPACE_END
-
-#endif // JPH_USE_DX12

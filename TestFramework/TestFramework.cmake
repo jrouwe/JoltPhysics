@@ -307,7 +307,7 @@ if (NOT CROSS_COMPILE_ARM AND (JPH_USE_VK OR JPH_USE_DX12 OR JPH_USE_MTL))
 
 	if (WIN32)
 		# Windows configuration
-		target_link_libraries(TestFramework LINK_PUBLIC Jolt dinput8.lib shcore.lib)
+		target_link_libraries(TestFramework LINK_PUBLIC Jolt dinput8.lib shcore.lib dxguid.lib)
 	endif()
 	if (LINUX)
 		# Linux configuration
