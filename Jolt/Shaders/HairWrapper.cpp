@@ -4,6 +4,8 @@
 
 #include <Jolt/Jolt.h>
 
+#ifdef JPH_USE_CPU_COMPUTE
+
 #include <Jolt/Shaders/HairWrapper.h>
 
 #define JPH_SHADER_NAME HairTeleport
@@ -133,3 +135,5 @@ void JPH_EXPORT HairRegisterShaders(ComputeSystemCPU *inComputeSystem)
 }
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_CPU_COMPUTE

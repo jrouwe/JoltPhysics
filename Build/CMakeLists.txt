@@ -130,6 +130,9 @@ option(JPH_USE_VK "Use Vulkan" ON)
 # Option to compile with Metal compute
 option(JPH_USE_MTL "Use Metal" ON)
 
+# Option to compile with CPU fallback compute
+option(JPH_USE_CPU_COMPUTE "Use CPU Compute" ON)
+
 # Determine which configurations exist
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR) # Only do this when we're at the top level, see: https://gitlab.kitware.com/cmake/cmake/-/issues/24181
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")

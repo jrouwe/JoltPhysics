@@ -505,10 +505,12 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 		FatalError(queue_result.GetError().c_str());
 	mComputeQueue = queue_result.Get();
 
+#ifdef JPH_USE_CPU_COMPUTE
 	// Create compute system CPU
 	mComputeSystemCPU = StaticCast<ComputeSystemCPU>(CreateComputeSystemCPU().Get());
 	HairRegisterShaders(mComputeSystemCPU);
 	mComputeQueueCPU = mComputeSystemCPU->CreateComputeQueue().Get();
+#endif // JPH_USE_CPU_COMPUTE
 
 	{
 		// Disable allocation checking
@@ -567,7 +569,9 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 			mDebugUI->CreateCheckBox(phys_settings, "Record State For Playback", mRecordState, [this](UICheckBox::EState inState) { mRecordState = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(phys_settings, "Check Determinism", mCheckDeterminism, [this](UICheckBox::EState inState) { mCheckDeterminism = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(phys_settings, "Install Contact Listener", mInstallContactListener, [this](UICheckBox::EState inState) { mInstallContactListener = inState == UICheckBox::STATE_CHECKED; StartTest(mTestClass); });
+#ifdef JPH_USE_CPU_COMPUTE
 			mDebugUI->CreateCheckBox(phys_settings, "Use GPU Compute System", mUseGPUCompute, [this](UICheckBox::EState inState) { mUseGPUCompute = inState == UICheckBox::STATE_CHECKED; StartTest(mTestClass); });
+#endif // JPH_USE_CPU_COMPUTE
 			mDebugUI->ShowMenu(phys_settings);
 		});
 	#ifdef JPH_DEBUG_RENDERER
@@ -785,10 +789,14 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 	mTest = static_cast<Test *>(inRTTI->CreateObject());
 	mTest->SetPhysicsSystem(mPhysicsSystem);
 	mTest->SetJobSystem(mJobSystem);
+#ifdef JPH_USE_CPU_COMPUTE
 	if (mUseGPUCompute)
+#endif // JPH_USE_CPU_COMPUTE
 		mTest->SetComputeSystem(mComputeSystem, mComputeQueue);
+#ifdef JPH_USE_CPU_COMPUTE
 	else
 		mTest->SetComputeSystem(mComputeSystemCPU, mComputeQueueCPU);
+#endif // JPH_USE_CPU_COMPUTE
 	mTest->SetDebugRenderer(mDebugRenderer);
 	mTest->SetTempAllocator(mTempAllocator);
 	if (mInstallContactListener)

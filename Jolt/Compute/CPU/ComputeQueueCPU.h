@@ -5,6 +5,9 @@
 #pragma once
 
 #include <Jolt/Compute/ComputeQueue.h>
+
+#ifdef JPH_USE_CPU_COMPUTE
+
 #include <Jolt/Compute/CPU/ComputeShaderCPU.h>
 #include <Jolt/Core/UnorderedSet.h>
 
@@ -36,3 +39,5 @@ private:
 };
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_CPU_COMPUTE

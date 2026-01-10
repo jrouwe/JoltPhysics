@@ -4,6 +4,8 @@
 
 #pragma once
 
+#ifdef JPH_USE_CPU_COMPUTE
+
 JPH_NAMESPACE_BEGIN
 
 namespace HLSLToCPP { struct uint3; }
@@ -23,3 +25,5 @@ public:
 };
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_CPU_COMPUTE

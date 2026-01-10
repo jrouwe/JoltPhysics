@@ -18,18 +18,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeQueue.h
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeSystem.h
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeShader.h
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeQueueCPU.cpp
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeQueueCPU.h
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeBufferCPU.cpp
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeBufferCPU.h
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeSystemCPU.cpp
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeSystemCPU.h
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeShaderCPU.h
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/HLSLToCPP.h
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/ShaderWrapper.h
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/WrapShaderBegin.h
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/WrapShaderBindings.h
-	${JOLT_PHYSICS_ROOT}/Compute/CPU/WrapShaderEnd.h
 	${JOLT_PHYSICS_ROOT}/Core/ARMNeon.h
 	${JOLT_PHYSICS_ROOT}/Core/Array.h
 	${JOLT_PHYSICS_ROOT}/Core/Atomics.h
@@ -445,9 +433,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererRecorder.h
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.cpp
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.h
-	${JOLT_PHYSICS_ROOT}/Shaders/HairWrapper.cpp
-	${JOLT_PHYSICS_ROOT}/Shaders/HairWrapper.h
-	${JOLT_PHYSICS_ROOT}/Shaders/TestComputeWrapper.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.h
 	${JOLT_PHYSICS_ROOT}/Skeleton/Skeleton.cpp
@@ -486,7 +471,7 @@ if (ENABLE_OBJECT_STREAM)
 	)
 endif()
 
-if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL)
+if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL OR JPH_USE_CPU_COMPUTE)
 	# Compute shaders
 	set(JOLT_PHYSICS_SHADERS
 		${JOLT_PHYSICS_ROOT}/Shaders/HairApplyDeltaTransform.hlsl
@@ -538,6 +523,28 @@ if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL)
 		${JOLT_PHYSICS_ROOT}/Shaders/ShaderVec3.h
 		${JOLT_PHYSICS_ROOT}/Shaders/TestComputeBindings.h
 		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute2Bindings.h
+	)
+endif()
+
+# CPU compute support
+if (JPH_USE_CPU_COMPUTE)
+	set(JOLT_PHYSICS_SRC_FILES
+		${JOLT_PHYSICS_SRC_FILES}
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeQueueCPU.cpp
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeQueueCPU.h
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeBufferCPU.cpp
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeBufferCPU.h
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeSystemCPU.cpp
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeSystemCPU.h
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/ComputeShaderCPU.h
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/HLSLToCPP.h
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/ShaderWrapper.h
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/WrapShaderBegin.h
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/WrapShaderBindings.h
+		${JOLT_PHYSICS_ROOT}/Compute/CPU/WrapShaderEnd.h
+		${JOLT_PHYSICS_ROOT}/Shaders/HairWrapper.cpp
+		${JOLT_PHYSICS_ROOT}/Shaders/HairWrapper.h
+		${JOLT_PHYSICS_ROOT}/Shaders/TestComputeWrapper.cpp
 	)
 endif()
 
@@ -815,6 +822,11 @@ if (JPH_USE_MTL)
 	target_compile_definitions(Jolt PUBLIC JPH_USE_MTL)
 
 	target_link_libraries(Jolt LINK_PUBLIC "-framework Foundation -framework Metal -framework MetalKit")
+endif()
+
+# Compile CPU compute support
+if (JPH_USE_CPU_COMPUTE)
+	target_compile_definitions(Jolt PUBLIC JPH_USE_CPU_COMPUTE)
 endif()
 
 # Enable the debug renderer

@@ -3,6 +3,9 @@
 // SPDX-License-Identifier: MIT
 
 #include <Jolt/Jolt.h>
+
+#ifdef JPH_USE_CPU_COMPUTE
+
 #include <Jolt/Compute/CPU/ComputeQueueCPU.h>
 #include <Jolt/Compute/CPU/ComputeShaderCPU.h>
 #include <Jolt/Compute/CPU/ComputeBufferCPU.h>
@@ -94,3 +97,5 @@ void ComputeQueueCPU::Wait()
 }
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_CPU_COMPUTE

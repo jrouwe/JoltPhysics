@@ -5,6 +5,9 @@
 #pragma once
 
 #include <Jolt/Compute/ComputeSystem.h>
+
+#ifdef JPH_USE_CPU_COMPUTE
+
 #include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Compute/CPU/ComputeShaderCPU.h>
 
@@ -45,3 +48,5 @@ private:
 #define JPH_REGISTER_SHADER(sys, name)				JPH::JPH_SHADER_WRAPPER_FUNCTION_NAME(name)(sys)
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_CPU_COMPUTE
