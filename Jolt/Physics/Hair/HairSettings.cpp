@@ -10,6 +10,8 @@
 #include <Jolt/TriangleSplitter/TriangleSplitterBinning.h>
 #include <Jolt/AABBTree/AABBTreeBuilder.h>
 #include <Jolt/Core/QuickSort.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
 
 JPH_NAMESPACE_BEGIN
 

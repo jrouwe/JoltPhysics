@@ -11,7 +11,7 @@
 #include <Jolt/Physics/Body/MotionQuality.h>
 #include <Jolt/Physics/Body/AllowedDOFs.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
-#include <Jolt/Core/StreamUtils.h>
+#include <Jolt/Core/ObjectToIDMap.h>
 
 JPH_NAMESPACE_BEGIN
 

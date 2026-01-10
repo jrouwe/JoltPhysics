@@ -135,7 +135,7 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 	}
 
 	// Get initial time
-	mLastUpdateTime = chrono::high_resolution_clock::now();
+	mLastUpdateTime = std::chrono::high_resolution_clock::now();
 }
 
 // Destructor
@@ -223,8 +223,8 @@ bool Application::RenderFrame()
 		}
 
 	// Calculate delta time
-	chrono::high_resolution_clock::time_point time = chrono::high_resolution_clock::now();
-	chrono::microseconds delta = chrono::duration_cast<chrono::microseconds>(time - mLastUpdateTime);
+	std::chrono::high_resolution_clock::time_point time = std::chrono::high_resolution_clock::now();
+	std::chrono::microseconds delta = std::chrono::duration_cast<std::chrono::microseconds>(time - mLastUpdateTime);
 	mLastUpdateTime = time;
 	float clock_delta_time = 1.0e-6f * delta.count();
 	float world_delta_time = 0.0f;

@@ -7,10 +7,8 @@
 #include <Jolt/Physics/SoftBody/SoftBodySharedSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyUpdateContext.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
-#include <Jolt/Core/StreamIn.h>
-#include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/StreamUtils.h>
 #include <Jolt/Core/QuickSort.h>
-#include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Core/UnorderedSet.h>
 #include <Jolt/Core/BinaryHeap.h>
 

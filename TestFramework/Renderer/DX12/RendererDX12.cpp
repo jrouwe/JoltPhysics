@@ -542,9 +542,9 @@ Ref<PixelShader> RendererDX12::CreatePixelShader(const char *inName)
 	return new PixelShaderDX12(shader_blob);
 }
 
-unique_ptr<PipelineState> RendererDX12::CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode)
+std::unique_ptr<PipelineState> RendererDX12::CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode)
 {
-	return make_unique<PipelineStateDX12>(this, static_cast<const VertexShaderDX12 *>(inVertexShader), inInputDescription, inInputDescriptionCount, static_cast<const PixelShaderDX12 *>(inPixelShader), inDrawPass, inFillMode, inTopology, inDepthTest, inBlendMode, inCullMode);
+	return std::make_unique<PipelineStateDX12>(this, static_cast<const VertexShaderDX12 *>(inVertexShader), inInputDescription, inInputDescriptionCount, static_cast<const PixelShaderDX12 *>(inPixelShader), inDrawPass, inFillMode, inTopology, inDepthTest, inBlendMode, inCullMode);
 }
 
 RenderPrimitive *RendererDX12::CreateRenderPrimitive(PipelineState::ETopology inType)

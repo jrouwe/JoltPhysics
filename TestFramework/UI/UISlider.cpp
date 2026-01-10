@@ -177,9 +177,9 @@ void UISlider::UpdateStaticText()
 		else
 		{
 			int num_digits = -int(floor(log10(smallest)));
-			stringstream ss;
+			std::stringstream ss;
 			ss.precision(num_digits);
-			ss << fixed << mCurrentValue;
+			ss << std::fixed << mCurrentValue;
 			mStaticText->SetText(ss.str());
 		}
 	}

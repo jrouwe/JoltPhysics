@@ -14,7 +14,7 @@ void FatalErrorIfFailed(HRESULT inHResult)
 {
 	if (FAILED(inHResult))
 	{
-		string message = system_category().message(inHResult);
+		std::string message = std::system_category().message(inHResult);
 		FatalError("DirectX error returned: %s (%s)", ConvertToString(inHResult).c_str(), message.c_str());
 	}
 }

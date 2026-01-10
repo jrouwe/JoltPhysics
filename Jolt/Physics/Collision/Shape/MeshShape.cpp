@@ -26,6 +26,7 @@
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/UnorderedSet.h>
 #include <Jolt/Geometry/AABox4.h>
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Geometry/Indexify.h>

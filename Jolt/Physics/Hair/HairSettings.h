@@ -5,7 +5,6 @@
 #pragma once
 
 #include <Jolt/Core/Reference.h>
-#include <Jolt/Core/StreamUtils.h>
 #include <Jolt/Geometry/AABox.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
@@ -14,6 +13,9 @@
 #include <Jolt/Shaders/HairStructs.h>
 
 JPH_NAMESPACE_BEGIN
+
+class StreamOut;
+class StreamIn;
 
 /// This class defines the setup of a hair groom, it can be shared between multiple hair instances
 class JPH_EXPORT HairSettings : public RefTarget<HairSettings>

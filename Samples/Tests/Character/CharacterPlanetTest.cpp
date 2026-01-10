@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
+#include <Input/Keyboard.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterPlanetTest)
 {

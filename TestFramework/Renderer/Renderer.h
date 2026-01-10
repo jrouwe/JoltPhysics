@@ -12,22 +12,12 @@
 #include <Renderer/PixelShader.h>
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/RenderInstances.h>
+#include <Renderer/CameraState.h>
 #include <Jolt/Compute/ComputeSystem.h>
 #include <memory>
 
 // Forward declares
 class Texture;
-
-/// Camera setup
-struct CameraState
-{
-									CameraState() : mPos(RVec3::sZero()), mForward(0, 0, -1), mUp(0, 1, 0), mFOVY(DegreesToRadians(70.0f)) { }
-
-	RVec3							mPos;								///< Camera position
-	Vec3							mForward;							///< Camera forward vector
-	Vec3							mUp;								///< Camera up vector
-	float							mFOVY;								///< Field of view in radians in up direction
-};
 
 /// Responsible for rendering primitives to the screen
 class Renderer
@@ -61,7 +51,7 @@ public:
 	virtual Ref<PixelShader>		CreatePixelShader(const char *inName) = 0;
 
 	/// Create pipeline state object that defines the complete state of how primitives should be rendered
-	virtual unique_ptr<PipelineState> CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode) = 0;
+	virtual std::unique_ptr<PipelineState> CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode) = 0;
 
 	/// Create a render primitive
 	virtual RenderPrimitive *		CreateRenderPrimitive(PipelineState::ETopology inType) = 0;

@@ -12,6 +12,7 @@
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
 #include <Jolt/Core/STLTempAllocator.h>
+#include <Jolt/Core/UnorderedMap.h>
 
 JPH_NAMESPACE_BEGIN
 

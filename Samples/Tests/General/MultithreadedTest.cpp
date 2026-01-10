@@ -20,6 +20,10 @@
 #include <Utils/AssetStream.h>
 #include <Renderer/DebugRendererImp.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <chrono>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 JPH_IMPLEMENT_RTTI_VIRTUAL(MultithreadedTest)
 {
 	JPH_ADD_BASE_CLASS(MultithreadedTest, Test)

@@ -69,14 +69,14 @@ private:
 	Renderer *							mRenderer;
 
 	/// Shaders for triangles
-	unique_ptr<PipelineState>			mTriangleStateBF;
-	unique_ptr<PipelineState>			mTriangleStateFF;
-	unique_ptr<PipelineState>			mTriangleStateWire;
+	std::unique_ptr<PipelineState>		mTriangleStateBF;
+	std::unique_ptr<PipelineState>		mTriangleStateFF;
+	std::unique_ptr<PipelineState>		mTriangleStateWire;
 
 	/// Shaders for shadow pass for triangles
-	unique_ptr<PipelineState>			mShadowStateBF;
-	unique_ptr<PipelineState>			mShadowStateFF;
-	unique_ptr<PipelineState>			mShadowStateWire;
+	std::unique_ptr<PipelineState>		mShadowStateBF;
+	std::unique_ptr<PipelineState>		mShadowStateFF;
+	std::unique_ptr<PipelineState>		mShadowStateWire;
 
 	/// Lock that protects the triangle batches from being accessed from multiple threads
 	Mutex								mPrimitivesLock;
@@ -174,5 +174,5 @@ private:
 	Mutex								mLinesLock;
 
 	/// The shaders for the line segments
-	unique_ptr<PipelineState>			mLineState;
+	std::unique_ptr<PipelineState>		mLineState;
 };

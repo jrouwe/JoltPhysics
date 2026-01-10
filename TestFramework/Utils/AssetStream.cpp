@@ -30,14 +30,14 @@ String AssetStream::sGetAssetsBasePath()
 	#endif
 
 		// Find the asset path
-		filesystem::path asset_path(application_path);
+		std::filesystem::path asset_path(application_path);
 		while (!asset_path.empty())
 		{
-			filesystem::path parent_path = asset_path.parent_path();
+			std::filesystem::path parent_path = asset_path.parent_path();
 			if (parent_path == asset_path)
 				break;
 			asset_path = parent_path;
-			if (filesystem::exists(asset_path / "Assets"))
+			if (std::filesystem::exists(asset_path / "Assets"))
 				break;
 		}
 		asset_path /= "Assets";

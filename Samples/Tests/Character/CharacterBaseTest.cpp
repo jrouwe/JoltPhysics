@@ -21,6 +21,7 @@
 #include <Utils/Log.h>
 #include <Utils/AssetStream.h>
 #include <Renderer/DebugRendererImp.h>
+#include <Input/Keyboard.h>
 
 JPH_IMPLEMENT_RTTI_ABSTRACT(CharacterBaseTest)
 {
