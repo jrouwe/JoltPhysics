@@ -15,6 +15,7 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
+#include <Input/Keyboard.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleConstraintTest)
 {

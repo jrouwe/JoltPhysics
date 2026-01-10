@@ -12,22 +12,12 @@
 #include <Renderer/PixelShader.h>
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/RenderInstances.h>
+#include <Renderer/CameraState.h>
 #include <Jolt/Compute/ComputeSystem.h>
 #include <memory>
 
 // Forward declares
 class Texture;
-
-/// Camera setup
-struct CameraState
-{
-									CameraState() : mPos(RVec3::sZero()), mForward(0, 0, -1), mUp(0, 1, 0), mFOVY(DegreesToRadians(70.0f)) { }
-
-	RVec3							mPos;								///< Camera position
-	Vec3							mForward;							///< Camera forward vector
-	Vec3							mUp;								///< Camera up vector
-	float							mFOVY;								///< Field of view in radians in up direction
-};
 
 /// Responsible for rendering primitives to the screen
 class Renderer

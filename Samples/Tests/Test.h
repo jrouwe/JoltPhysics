@@ -5,13 +5,14 @@
 #pragma once
 
 #include <Jolt/Physics/PhysicsSystem.h>
-#include <Renderer/Renderer.h>
-#include <Input/Keyboard.h>
 #include <Jolt/Skeleton/SkeletonPose.h>
 #include <Jolt/Core/RTTI.h>
+#include <Jolt/Core/UnorderedMap.h>
+#include <Renderer/CameraState.h>
 
 class DebugUI;
 class UIElement;
+class Keyboard;
 namespace JPH {
 	class StateRecorder;
 	class JobSystem;
