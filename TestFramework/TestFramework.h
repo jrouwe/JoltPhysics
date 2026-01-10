@@ -42,4 +42,3 @@ JPH_MSVC_SUPPRESS_WARNING(4062) // enumerator 'X' in switch of enum 'X' is not h
 
 using namespace JPH;
 using namespace JPH::literals;
-using namespace std;

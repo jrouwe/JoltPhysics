@@ -848,9 +848,9 @@ Ref<PixelShader> RendererVK::CreatePixelShader(const char *inName)
 	return new PixelShaderVK(mDevice, shader_module);
 }
 
-unique_ptr<PipelineState> RendererVK::CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode)
+std::unique_ptr<PipelineState> RendererVK::CreatePipelineState(const VertexShader *inVertexShader, const PipelineState::EInputDescription *inInputDescription, uint inInputDescriptionCount, const PixelShader *inPixelShader, PipelineState::EDrawPass inDrawPass, PipelineState::EFillMode inFillMode, PipelineState::ETopology inTopology, PipelineState::EDepthTest inDepthTest, PipelineState::EBlendMode inBlendMode, PipelineState::ECullMode inCullMode)
 {
-	return make_unique<PipelineStateVK>(this, static_cast<const VertexShaderVK *>(inVertexShader), inInputDescription, inInputDescriptionCount, static_cast<const PixelShaderVK *>(inPixelShader), inDrawPass, inFillMode, inTopology, inDepthTest, inBlendMode, inCullMode);
+	return std::make_unique<PipelineStateVK>(this, static_cast<const VertexShaderVK *>(inVertexShader), inInputDescription, inInputDescriptionCount, static_cast<const PixelShaderVK *>(inPixelShader), inDrawPass, inFillMode, inTopology, inDepthTest, inBlendMode, inCullMode);
 }
 
 RenderPrimitive *RendererVK::CreateRenderPrimitive(PipelineState::ETopology inType)

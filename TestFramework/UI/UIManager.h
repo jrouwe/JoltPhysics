@@ -77,8 +77,8 @@ private:
 	UIEventListener *			mListener;
 	Array<UIElementVector>		mInactiveElements;
 	bool						mDrawInactiveElements = true;
-	unique_ptr<PipelineState>	mTextured;
-	unique_ptr<PipelineState>	mUntextured;
+	std::unique_ptr<PipelineState> mTextured;
+	std::unique_ptr<PipelineState> mUntextured;
 	function<void()>			mDeactivatedAction;
 
 	EState						mState;

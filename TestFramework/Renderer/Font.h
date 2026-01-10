@@ -66,5 +66,5 @@ private:
 	/// Structures used for drawing
 	Renderer *					mRenderer;											///< Our renderer
 	Ref<Texture>				mTexture;											///< The texture containing all characters
-	unique_ptr<PipelineState>	mPipelineState;										///< The state used to render characters
+	std::unique_ptr<PipelineState> mPipelineState;									///< The state used to render characters
 };

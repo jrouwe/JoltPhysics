@@ -108,7 +108,7 @@ private:
 	/// Draw the frame rate counter
 	void						DrawFPS(float inDeltaTime);
 
-	chrono::high_resolution_clock::time_point mLastUpdateTime;
+	std::chrono::high_resolution_clock::time_point mLastUpdateTime;
 	bool						mIsPaused = false;
 	bool						mSingleStep = false;
 	bool						mDebugRendererCleared = true;

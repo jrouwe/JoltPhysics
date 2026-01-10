@@ -7,3 +7,5 @@
 #include <TestFramework.h>
 
 #include <Jolt/Physics/PhysicsSystem.h>
+
+using namespace std;
