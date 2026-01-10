@@ -42,6 +42,7 @@ There are a number of user configurable defines that turn on/off certain feature
 		<li>JPH_USE_DX12 - Implement the DX12 version of ComputeSystem.</li>
 		<li>JPH_USE_VK - Implement the Vulkan version of ComputeSystem.</li>
 		<li>JPH_USE_MTL - Implement the Metal version of ComputeSystem.</li>
+		<li>JPH_USE_CPU_COMPUTE - Implement the CPU fallback version of ComputeSystem (mainly for debugging purposes).</li>
 	</ul>
 </details>
 

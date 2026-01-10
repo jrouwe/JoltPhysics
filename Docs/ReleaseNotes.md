@@ -6,7 +6,15 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### New functionality
 
-* Added interface to run compute shaders on the GPU with implementations for DX12, Vulkan and Metal. These interfaces can be disabled by setting `JPH_USE_DX12`, `JPH_USE_VK` and `JPH_USE_MTL` to `OFF`. To build on macOS, you'll need to have dxc and spirv-cross installed. The easiest way to install them is by installing the Vulkan SDK.
+* Added interface to run compute shaders on the GPU with implementations for DX12, Vulkan and Metal. These interfaces can be disabled by setting `JPH_USE_DX12`, `JPH_USE_VK`, `JPH_USE_MTL` and `JPH_USE_CPU_COMPUTE` to `OFF`. To build on macOS, you'll need to have dxc and spirv-cross installed. The easiest way to install them is by installing the Vulkan SDK.
+* Added a strand based hair simulation running on GPU
+	* System is based on Cosserad rods.
+	* Can use long range attachment constraints to limit the stretch of hairs.
+	* Supports simulation (guide) and render (follow) hairs.
+	* Hair vs hair collision is handled by accumulating the average velocity in a grid and using those velocities to drive hairs.
+	* Supports collision with the environment, although it only supports ConvexHull and CompoundShapes at the moment.
+	* The roots of the hairs can be skinned to the scalp mesh.
+	* Note that this is still work in progress, some things that still need to be done are listed in Hair.h.
 
 ### Bug Fixes
 
