@@ -86,6 +86,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 	* Internal pressure.
 	* Collision with simulated rigid bodies.
 	* Collision tests against soft bodies.
+* A GPU based hair simulation.
 * Water buoyancy calculations.
 * An optional double precision mode that allows large worlds.
 

@@ -12,3 +12,4 @@
 /detlog.txt
 *.spv
 *.metallib
+/Assets/*.hair

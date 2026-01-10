@@ -155,6 +155,12 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/WallTest.h
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.h
+	${SAMPLES_ROOT}/Tests/Hair/HairCollisionTest.cpp
+	${SAMPLES_ROOT}/Tests/Hair/HairCollisionTest.h
+	${SAMPLES_ROOT}/Tests/Hair/HairGravityPreloadTest.cpp
+	${SAMPLES_ROOT}/Tests/Hair/HairGravityPreloadTest.h
+	${SAMPLES_ROOT}/Tests/Hair/HairTest.cpp
+	${SAMPLES_ROOT}/Tests/Hair/HairTest.h
 	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyBendConstraintTest.cpp
@@ -317,6 +323,7 @@ endif()
 # Assets used by the samples
 set(SAMPLES_ASSETS
 	${PHYSICS_REPO_ROOT}/Assets/convex_hulls.bin
+	${PHYSICS_REPO_ROOT}/Assets/face.bin
 	${PHYSICS_REPO_ROOT}/Assets/heightfield1.bin
 	${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose1.tof
 	${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose2.tof
