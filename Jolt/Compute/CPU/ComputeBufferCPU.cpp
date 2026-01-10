@@ -3,6 +3,9 @@
 // SPDX-License-Identifier: MIT
 
 #include <Jolt/Jolt.h>
+
+#ifdef JPH_USE_CPU_COMPUTE
+
 #include <Jolt/Compute/CPU/ComputeBufferCPU.h>
 
 JPH_NAMESPACE_BEGIN
@@ -29,3 +32,5 @@ ComputeBufferResult ComputeBufferCPU::CreateReadBackBuffer() const
 }
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_CPU_COMPUTE

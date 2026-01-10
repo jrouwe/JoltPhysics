@@ -6,6 +6,8 @@
 
 #include <Jolt/Compute/ComputeShader.h>
 
+#ifdef JPH_USE_CPU_COMPUTE
+
 JPH_NAMESPACE_BEGIN
 
 class ShaderWrapper;
@@ -36,3 +38,5 @@ private:
 };
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_CPU_COMPUTE

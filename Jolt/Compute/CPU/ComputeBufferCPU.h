@@ -6,6 +6,8 @@
 
 #include <Jolt/Compute/ComputeBuffer.h>
 
+#ifdef JPH_USE_CPU_COMPUTE
+
 JPH_NAMESPACE_BEGIN
 
 /// Buffer that can be used with the CPU compute system
@@ -30,3 +32,5 @@ private:
 };
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_CPU_COMPUTE

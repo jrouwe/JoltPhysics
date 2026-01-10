@@ -4,6 +4,8 @@
 
 #include "UnitTestFramework.h"
 
+#if defined(JPH_USE_DX12) || defined(JPH_USE_VK) || defined(JPH_USE_MTL) || defined(JPH_USE_CPU_COMPUTE)
+
 #include <Jolt/Compute/ComputeSystem.h>
 #include <Jolt/Compute/CPU/ComputeSystemCPU.h>
 #include <Jolt/Shaders/TestComputeBindings.h>
@@ -23,8 +25,10 @@ JPH_SUPPRESS_WARNINGS_STD_END
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#ifdef JPH_USE_CPU_COMPUTE
 JPH_DECLARE_REGISTER_SHADER(TestCompute)
 JPH_DECLARE_REGISTER_SHADER(TestCompute2)
+#endif // JPH_USE_CPU_COMPUTE
 
 TEST_SUITE("ComputeTests")
 {
@@ -348,6 +352,7 @@ TEST_SUITE("ComputeTests")
 	}
 #endif // JPH_USE_VK
 
+#ifdef JPH_USE_CPU_COMPUTE
 	TEST_CASE("TestComputeCPU")
 	{
 		ComputeSystemResult compute_system = CreateComputeSystemCPU();
@@ -360,4 +365,7 @@ TEST_SUITE("ComputeTests")
 			RunTests(compute_system.Get());
 		}
 	}
+#endif // JPH_USE_CPU_COMPUTE
 }
+
+#endif // defined(JPH_USE_DX12) || defined(JPH_USE_VK) || defined(JPH_USE_MTL) || defined(JPH_USE_CPU_COMPUTE)

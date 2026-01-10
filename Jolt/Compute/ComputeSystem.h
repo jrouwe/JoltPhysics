@@ -40,9 +40,11 @@ using ComputeSystemResult = Result<Ref<ComputeSystem>>;
 extern JPH_EXPORT ComputeSystemResult	CreateComputeSystemVK();
 #endif
 
+#ifdef JPH_USE_CPU_COMPUTE
 /// Factory function to create a compute system that falls back to CPU.
 /// This is intended mainly for debugging purposes and is not optimized for performance
 extern JPH_EXPORT ComputeSystemResult	CreateComputeSystemCPU();
+#endif
 
 #ifdef JPH_USE_DX12
 

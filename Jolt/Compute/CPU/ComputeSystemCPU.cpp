@@ -3,6 +3,9 @@
 // SPDX-License-Identifier: MIT
 
 #include <Jolt/Jolt.h>
+
+#ifdef JPH_USE_CPU_COMPUTE
+
 #include <Jolt/Compute/CPU/ComputeSystemCPU.h>
 #include <Jolt/Compute/CPU/ComputeQueueCPU.h>
 #include <Jolt/Compute/CPU/ComputeBufferCPU.h>
@@ -44,3 +47,5 @@ ComputeSystemResult CreateComputeSystemCPU()
 }
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_CPU_COMPUTE
