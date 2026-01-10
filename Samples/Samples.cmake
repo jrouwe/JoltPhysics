@@ -5,6 +5,7 @@ set(SAMPLES_ROOT ${PHYSICS_REPO_ROOT}/Samples)
 set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Layers.h
 	${SAMPLES_ROOT}/Samples.cmake
+	${SAMPLES_ROOT}/Samples.h
 	${SAMPLES_ROOT}/SamplesApp.cpp
 	${SAMPLES_ROOT}/SamplesApp.h
 	${SAMPLES_ROOT}/Tests/BroadPhase/BroadPhaseCastRayTest.cpp
@@ -368,6 +369,7 @@ else()
 endif()
 target_include_directories(Samples PUBLIC ${SAMPLES_ROOT})
 target_link_libraries(Samples LINK_PUBLIC TestFramework)
+target_precompile_headers(Samples PUBLIC ${SAMPLES_ROOT}/Samples.h)
 
 # Set the correct working directory
 set_property(TARGET Samples PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")

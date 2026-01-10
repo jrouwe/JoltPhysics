@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/General/DynamicMeshTest.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>

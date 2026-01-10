@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/General/SimShapeFilterTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>

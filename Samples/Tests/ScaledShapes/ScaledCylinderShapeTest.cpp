@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/ScaledShapes/ScaledCylinderShapeTest.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>

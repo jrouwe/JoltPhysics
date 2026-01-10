@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2022 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/Rig/CreateRigTest.h>
 #include <Application/DebugUI.h>
