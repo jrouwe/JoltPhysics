@@ -1,4 +1,4 @@
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/General/ShapeFilterTest.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/SoftBody/SoftBodyContactListenerTest.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>

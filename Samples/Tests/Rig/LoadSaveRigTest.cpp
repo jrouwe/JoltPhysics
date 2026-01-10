@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2023 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/Rig/LoadSaveRigTest.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>

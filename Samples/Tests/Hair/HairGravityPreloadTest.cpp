@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/Hair/HairGravityPreloadTest.h>
 #include <Layers.h>

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/BroadPhase/BroadPhaseCastRayTest.h>
 #include <Jolt/Physics/Collision/RayCast.h>

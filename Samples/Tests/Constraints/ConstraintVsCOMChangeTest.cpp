@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2023 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <TestFramework.h>
+#include <Samples.h>
 
 #include <Tests/Constraints/ConstraintVsCOMChangeTest.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
