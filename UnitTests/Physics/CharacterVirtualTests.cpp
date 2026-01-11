@@ -777,6 +777,53 @@ TEST_SUITE("CharacterVirtualTests")
 		}
 	}
 
+	TEST_CASE("TestInitiallyIntersecting2")
+	{
+		PhysicsTestContext c;
+		c.CreateFloor();
+
+		// Create box that is intersecting with the character
+		c.CreateBox(RVec3(-0.5f, 0.5f, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3::sReplicate(0.5f));
+
+		// Create two very steep sloped floors that are initially intersecting with the character
+		constexpr float cSize = 1.0f;
+		constexpr float cThickness = 0.1f;
+		constexpr float cSlopeAngle = DegreesToRadians(75.0f);
+		RefConst<Shape> box = new BoxShape(Vec3(cSize, cThickness, cSize));
+		BodyCreationSettings settings(box, RVec3(0, 0, 0), Quat::sRotation(Vec3::sAxisZ(), cSlopeAngle), EMotionType::Static, Layers::NON_MOVING);
+		c.GetBodyInterface().CreateAndAddBody(settings, EActivation::DontActivate);
+		settings.mRotation = Quat::sRotation(Vec3::sAxisZ(), -cSlopeAngle);
+		c.GetBodyInterface().CreateAndAddBody(settings, EActivation::DontActivate);
+
+		// Create character
+		Character character(c);
+		character.Create();
+		CHECK_APPROX_EQUAL(character.GetPosition(), RVec3::sZero());
+
+		// Allow the character to step and see that it gets driven upwards
+		Real y = 0;
+		for (int step = 0; step < 10; ++step)
+		{
+			character.Step();
+			Real new_y = character.GetPosition().GetY();
+			CHECK(new_y >= y);
+			y = new_y;
+		}
+		CHECK(abs(character.GetPosition().GetX()) < 1.0e-3_r);
+		CHECK(y > 0.5_r);
+		CHECK(abs(character.GetPosition().GetZ()) < 1.0e-3_r);
+
+		// When moving along the to sloped floors, check that we are not stuck and fall back on the floor when we've passed them
+		character.mHorizontalSpeed = 2.0f * Vec3::sAxisX();
+		constexpr int cNumSteps = 60; // 1 second
+		RVec3 starting_position = character.GetPosition();
+		for (int step = 0; step < cNumSteps; ++step)
+			character.Step();
+		RVec3 expected_position = starting_position + character.mHorizontalSpeed * cNumSteps * c.GetDeltaTime();
+		expected_position.SetY(0);
+		CHECK_APPROX_EQUAL(character.GetPosition(), expected_position, 1e-3f);
+	}
+
 	TEST_CASE("TestCharacterVsCharacter")
 	{
 		PhysicsTestContext c;
