@@ -34,6 +34,7 @@ const char *CharacterBaseTest::sScenes[] =
 	"PerlinHeightField",
 	"ObstacleCourse",
 	"InitiallyIntersecting",
+	"InitiallyIntersecting2",
 #ifdef JPH_OBJECT_STREAM
 	"Terrain1",
 	"Terrain2",
@@ -171,6 +172,17 @@ void CharacterBaseTest::Initialize()
 					settings.mPosition = RVec3(-0.5f + 0.1f * x, 0.1f + 0.1f * y, -0.5f + 0.1f * z);
 					mBodyInterface->CreateAndAddBody(settings, EActivation::DontActivate);
 				}
+	}
+	else if (strcmp(sSceneName, "InitiallyIntersecting2") == 0)
+	{
+		CreateFloor();
+
+		// Create two very steep sloped floors that are initially intersecting with the character
+		RefConst<Shape> box = new BoxShape(Vec3(1, 0.1f, 1));
+		BodyCreationSettings settings(box, RVec3(0, 0, 0), Quat::sRotation(Vec3::sAxisZ(), DegreesToRadians(75.0f)), EMotionType::Static, Layers::NON_MOVING);
+		mBodyInterface->CreateAndAddBody(settings, EActivation::DontActivate);
+		settings.mRotation = Quat::sRotation(Vec3::sAxisZ(), DegreesToRadians(-75.0f));
+		mBodyInterface->CreateAndAddBody(settings, EActivation::DontActivate);
 	}
 	else if (strcmp(sSceneName, "ObstacleCourse") == 0)
 	{

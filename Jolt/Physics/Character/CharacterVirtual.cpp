@@ -925,7 +925,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 
 		// Find the normal of the previous contact that we will violate the most if we move in this new direction
 		float highest_penetration = 0.0f;
-		Constraint *other_constraint = nullptr;
+		const Constraint *other_constraint = nullptr;
 		for (Constraint **c = previous_contacts.data(); c < previous_contacts.data() + num_previous_contacts; ++c)
 			if (*c != constraint)
 			{
@@ -942,6 +942,12 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 						other_constraint = *c;
 					}
 				}
+
+				// Cancel the constraint velocity in the other constraint plane's direction so that we won't try to apply it again and keep ping ponging between planes
+				constraint->mLinearVelocity -= min(0.0f, constraint->mLinearVelocity.Dot(other_normal)) * other_normal;
+
+				// Cancel the other constraints velocity in this constraint plane's direction so that we won't try to apply it again and keep ping ponging between planes
+				(*c)->mLinearVelocity -= min(0.0f, (*c)->mLinearVelocity.Dot(plane_normal)) * plane_normal;
 			}
 
 		// Check if we found a 2nd constraint
@@ -951,12 +957,6 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 			Vec3 other_normal = other_constraint->mPlane.GetNormal();
 			Vec3 slide_dir = plane_normal.Cross(other_normal).Normalized();
 			Vec3 velocity_in_slide_dir = new_velocity.Dot(slide_dir) * slide_dir;
-
-			// Cancel the constraint velocity in the other constraint plane's direction so that we won't try to apply it again and keep ping ponging between planes
-			constraint->mLinearVelocity -= min(0.0f, constraint->mLinearVelocity.Dot(other_normal)) * other_normal;
-
-			// Cancel the other constraints velocity in this constraint plane's direction so that we won't try to apply it again and keep ping ponging between planes
-			other_constraint->mLinearVelocity -= min(0.0f, other_constraint->mLinearVelocity.Dot(plane_normal)) * plane_normal;
 
 			// Calculate the velocity of this constraint perpendicular to the slide direction
 			Vec3 perpendicular_velocity = constraint->mLinearVelocity - constraint->mLinearVelocity.Dot(slide_dir) * slide_dir;

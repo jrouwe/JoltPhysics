@@ -20,6 +20,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 * Made it possible to make a class outside the JPH namespace serializable.
 * `VehicleConstraint`s are automatically disabled when the vehicle body is not in the `PhysicsSystem`.
+* Fixed an issue where a character could get stuck. If the character was teleported inside an area surrounded by slopes that are steeper than mMaxSlopeAngle, the code to stop the constraint solver from ping ponging between two planes didn't work properly.
 
 ## v5.5.0
 
