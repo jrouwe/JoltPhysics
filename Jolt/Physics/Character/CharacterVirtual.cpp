@@ -925,7 +925,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 
 		// Find the normal of the previous contact that we will violate the most if we move in this new direction
 		float highest_penetration = 0.0f;
-		Constraint *other_constraint = nullptr;
+		const Constraint *other_constraint = nullptr;
 		for (Constraint **c = previous_contacts.data(); c < previous_contacts.data() + num_previous_contacts; ++c)
 			if (*c != constraint)
 			{
