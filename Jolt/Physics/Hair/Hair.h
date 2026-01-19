@@ -96,8 +96,8 @@ public:
 	const Float3 *						GetScalpVertices() const						{ return mScalpVertices; }
 	const Float3 *						GetPositions() const							{ return mPositions; }
 	const Quat *						GetRotations() const							{ return mRotations; }
-	StridedPtr<const Float3>			GetVelocities() const							{ return { &mVelocities->mVelocity, sizeof(JPH_HairVelocity) }; }
-	StridedPtr<const Float3>			GetAngularVelocities() const					{ return { &mVelocities->mAngularVelocity, sizeof(JPH_HairVelocity) }; }
+	StridedPtr<const Float3>			GetVelocities() const							{ return { (const Float3 *)&mVelocities->mVelocity, sizeof(JPH_HairVelocity) }; }
+	StridedPtr<const Float3>			GetAngularVelocities() const					{ return { (const Float3 *)&mVelocities->mAngularVelocity, sizeof(JPH_HairVelocity) }; }
 	const Float4 *						GetGridVelocityAndDensity() const				{ return mVelocityAndDensity; }
 	const Float3 *						GetRenderPositions() const						{ return mRenderPositions; }
 
