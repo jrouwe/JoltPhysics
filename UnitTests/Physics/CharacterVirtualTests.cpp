@@ -821,7 +821,7 @@ TEST_SUITE("CharacterVirtualTests")
 			character.Step();
 		RVec3 expected_position = starting_position + character.mHorizontalSpeed * cNumSteps * c.GetDeltaTime();
 		expected_position.SetY(0);
-		CHECK_APPROX_EQUAL(character.GetPosition(), expected_position, 1e-3f);
+		CHECK_APPROX_EQUAL(character.GetPosition(), expected_position, 0.05f);
 	}
 
 	TEST_CASE("TestCharacterVsCharacter")

@@ -683,7 +683,7 @@ void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, float i
 				outConstraints.emplace_back();
 				Constraint &vertical_constraint = outConstraints.back();
 				vertical_constraint.mContact = &c;
-				vertical_constraint.mLinearVelocity = contact_velocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate
+				vertical_constraint.mLinearVelocity = c.mLinearVelocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate. We ignore velocity added to push characters out of collision as that can get characters stuck if they are surrounded on all sides by steep slopes.
 				vertical_constraint.mPlane = Plane(normal, c.mDistance / normal.Dot(c.mContactNormal)); // Calculate the distance we have to travel horizontally to hit the contact plane
 			}
 		}
