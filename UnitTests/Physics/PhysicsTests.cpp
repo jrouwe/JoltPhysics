@@ -553,6 +553,7 @@ TEST_SUITE("PhysicsTests")
 					CHECK(body.GetAccumulatedForce() == Vec3::sZero()); // Should have been reset after the step
 					body.AddForce(cGravity / body.GetMotionProperties()->GetInverseMass());
 				}
+				JPH_UNUSED(body);
 			};
 
 		// Simulate until at floor
