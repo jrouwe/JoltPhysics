@@ -777,6 +777,60 @@ TEST_SUITE("PhysicsTests")
 		}
 	}
 
+
+	// Test a box moving kinematically
+	static void TestPhysicsMoveKinematic(PhysicsTestContext &ioContext)
+	{
+		const int cNumSteps = 60;
+
+		// Create box
+		Body &body = ioContext.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
+
+		UnitTestRandom random;
+		for (int i = 0; i < 10; ++i)
+		{
+			// Remember old position
+			Quat old_rotation = body.GetRotation();
+			RVec3 old_position = body.GetPosition();
+
+			// Move to new spot
+			RVec3 position = RVec3(Vec3::sRandom(random) * 5.0f);
+			Quat rotation = Quat::sRandom(random);
+			ioContext.GetBodyInterface().MoveKinematic(body.GetID(), position, rotation, ioContext.GetDeltaTime() * cNumSteps);
+
+			// Simulate cNumSteps
+			for (int j = 0; j < cNumSteps; ++j)
+			{
+				ioContext.SimulateSingleStep();
+
+				// Check intermediate position
+				float fraction = float(j + 1) / float(cNumSteps);
+				RVec3 expected_pos = old_position + (position - old_position) * fraction;
+				CHECK_APPROX_EQUAL(body.GetPosition(), expected_pos, 1.0e-4f);
+
+				// Check intermediate rotation
+				Quat expected_rot = old_rotation.SLERP(rotation, fraction);
+				CHECK_APPROX_EQUAL(body.GetRotation(), expected_rot, 1.0e-5f);
+			}
+
+			// Check arrived
+			CHECK_APPROX_EQUAL(body.GetPosition(), position, 1.0e-4f);
+			CHECK_APPROX_EQUAL(body.GetRotation(), rotation, 1.0e-5f);
+		}
+	}
+
+	TEST_CASE("TestPhysicsMoveKinematic")
+	{
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
+		TestPhysicsMoveKinematic(c1);
+
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
+		TestPhysicsMoveKinematic(c2);
+
+		PhysicsTestContext c4(4.0f / 60.0f, 4);
+		TestPhysicsMoveKinematic(c4);
+	}
+
 	// Let box intersect with floor by cPenetrationSlop. It should not move, this is the maximum penetration allowed.
 	static void TestPhysicsPenetrationSlop1(PhysicsTestContext &ioContext)
 	{

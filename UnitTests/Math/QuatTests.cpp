@@ -298,6 +298,51 @@ TEST_SUITE("QuatTests")
 		}
 	}
 
+	TEST_CASE("TestQuatGetAngularVelocity")
+	{
+		constexpr float cDeltaTime = 1.0f / 60.0f;
+
+		UnitTestRandom random;
+		uniform_real_distribution<float> angle_range(-JPH_PI, JPH_PI);
+		for (int i = 0; i < 1000; ++i)
+		{
+			Vec3 axis = Vec3::sRandom(random);
+			float angle = angle_range(random);
+			Vec3 expected_angular_velocity = axis * angle / cDeltaTime;
+
+			Quat q = Quat::sRotation(axis, angle);
+
+			float max_error = 1.0e-4f * expected_angular_velocity.Length();
+
+			Vec3 angular_velocity = q.GetAngularVelocity(cDeltaTime);
+			CHECK_APPROX_EQUAL(angular_velocity, expected_angular_velocity, max_error);
+
+			angular_velocity = (-q).GetAngularVelocity(cDeltaTime);
+			CHECK_APPROX_EQUAL(angular_velocity, expected_angular_velocity, max_error);
+		}
+
+		constexpr float cSmallAngle = 1.0e-6f;
+
+		// Test very small angles
+		{
+			Quat q = Quat::sRotation(Vec3::sAxisX(), cSmallAngle);
+			Vec3 angular_velocity = q.GetAngularVelocity(cDeltaTime);
+			CHECK_APPROX_EQUAL(angular_velocity, Vec3(cSmallAngle / cDeltaTime, 0, 0), 1.0e-5f * cSmallAngle);
+		}
+
+		{
+			Quat q = Quat::sRotation(-Vec3::sAxisY(), cSmallAngle);
+			Vec3 angular_velocity = q.GetAngularVelocity(cDeltaTime);
+			CHECK_APPROX_EQUAL(angular_velocity, Vec3(0, -cSmallAngle / cDeltaTime, 0), 1.0e-5f * cSmallAngle);
+		}
+
+		{
+			Quat q = -Quat::sRotation(Vec3::sAxisZ(), -cSmallAngle);
+			Vec3 angular_velocity = q.GetAngularVelocity(cDeltaTime);
+			CHECK_APPROX_EQUAL(angular_velocity, Vec3(0, 0, -cSmallAngle / cDeltaTime), 1.0e-5f * cSmallAngle);
+		}
+	}
+
 	TEST_CASE("TestQuatInverse")
 	{
 		UnitTestRandom random;
