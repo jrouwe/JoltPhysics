@@ -162,7 +162,7 @@ Vec3 Quat::GetAngularVelocity(float inDeltaTime) const
 	// if the length is small use the approximation sin(x) = x to calculate angular velocity
 	Vec3 xyz = w_pos.GetXYZ();
 	float xyz_len_sq = xyz.LengthSq();
-	if (xyz_len_sq < 1.0e-4f) // Max error introduced is sin(0.01) - 0.01 = 1.7e-7 or about 0.001%
+	if (xyz_len_sq < 4.0e-4f) // Max error introduced is sin(0.02) - 0.02 = 7e-5 (when w is near 1 the angle becomes more inaccurate in the code below, so don't make this number too small)
 		return (2.0f / inDeltaTime) * xyz;
 
 	// Otherwise calculate the angle from w = cos(angle / 2) and determine the axis by normalizing the imaginary part
