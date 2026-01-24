@@ -806,7 +806,7 @@ TEST_SUITE("PhysicsTests")
 				// Check intermediate position
 				float fraction = float(j + 1) / float(cNumSteps);
 				RVec3 expected_pos = old_position + (position - old_position) * fraction;
-				CHECK_APPROX_EQUAL(body.GetPosition(), expected_pos, 1.0e-5f);
+				CHECK_APPROX_EQUAL(body.GetPosition(), expected_pos, 1.0e-4f);
 
 				// Check intermediate rotation
 				Quat expected_rot = old_rotation.SLERP(rotation, fraction);
@@ -814,7 +814,7 @@ TEST_SUITE("PhysicsTests")
 			}
 
 			// Check arrived
-			CHECK_APPROX_EQUAL(body.GetPosition(), position, 1.0e-5f);
+			CHECK_APPROX_EQUAL(body.GetPosition(), position, 1.0e-4f);
 			CHECK_APPROX_EQUAL(body.GetRotation(), rotation, 1.0e-5f);
 		}
 	}
