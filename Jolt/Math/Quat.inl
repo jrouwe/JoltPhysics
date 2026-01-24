@@ -166,6 +166,7 @@ Vec3 Quat::GetAngularVelocity(float inDeltaTime) const
 		return (2.0f / inDeltaTime) * xyz;
 
 	// Otherwise calculate the angle from w = cos(angle / 2) and determine the axis by normalizing the imaginary part
+	// Note that it is also possible to calculate the angle through angle = 2 * atan2(|xyz|, w). This is more accurate but also 2x as expensive.
 	float angle = 2.0f * ACos(w_pos.GetW());
 	return (xyz / (sqrt(xyz_len_sq) * inDeltaTime)) * angle;
 }

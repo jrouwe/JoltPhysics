@@ -306,7 +306,7 @@ TEST_SUITE("QuatTests")
 		uniform_real_distribution<float> angle_range(-JPH_PI, JPH_PI);
 		for (int i = 0; i < 1000; ++i)
 		{
-			Vec3 axis = Vec3::sRandom(random).Normalized();
+			Vec3 axis = Vec3::sRandom(random);
 			float angle = angle_range(random);
 			Vec3 expected_angular_velocity = axis * angle / cDeltaTime;
 
