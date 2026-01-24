@@ -151,6 +151,25 @@ void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
 	}
 }
 
+Vec3 Quat::GetAngularVelocity(float inDeltaTime) const
+{
+	JPH_ASSERT(IsNormalized());
+
+	// w = cos(angle / 2), ensure it is positive so that we get an angle in the range [0, PI]
+	Quat w_pos = EnsureWPositive();
+
+	// The imaginary part of the quaternion is axis * sin(angle / 2),
+	// if the length is small use the approximation sin(x) = x to calculate angular velocity
+	Vec3 xyz = w_pos.GetXYZ();
+	float xyz_len = xyz.Length();
+	if (xyz_len < 0.01f) // Max error introduced is sin(0.01) - 0.01 = 1.7e-7 or about 0.001%
+		return (2.0f / inDeltaTime) * xyz;
+
+	// Otherwise calculate the angle from w = cos(angle / 2) and determine the axis by normalizing the imaginary part
+	float angle = 2.0f * ACos(w_pos.GetW());
+	return (xyz / (xyz_len * inDeltaTime)) * angle;
+}
+
 Quat Quat::sFromTo(Vec3Arg inFrom, Vec3Arg inTo)
 {
 	/*

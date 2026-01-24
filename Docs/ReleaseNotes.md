@@ -23,6 +23,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed an issue where a character could get stuck. If the character was teleported inside an area surrounded by slopes that are steeper than `mMaxSlopeAngle`, the code to stop the constraint solver from ping ponging between two planes didn't work properly.
 * Fixed an issue where collide/cast shape against a triangle would return a hit result with `mShape2Face` in incorrect winding order. This caused an incorrect normal in the enhanced internal edge removal algorithm. This in turn resulted in objects not settling properly on dense triangle grids.
 * When using `Body::AddForce` to apply gravity, bodies could gain extra energy during elastic collisions. We now cancel added forces in the direction of the contact normal if the body starts in collision to negate this energy gain.
+* Made `MoveKinematic` more accurate when rotating a body by a very small angle.
 
 ## v5.5.0
 
