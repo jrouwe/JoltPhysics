@@ -13,6 +13,11 @@
 
 JPH_NAMESPACE_BEGIN
 
+JPH_IMPLEMENT_RTTI_ABSTRACT(ComputeSystemVK)
+{
+	JPH_ADD_BASE_CLASS(ComputeSystemVK, ComputeSystem)
+}
+
 bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, VkDevice inDevice, uint32 inComputeQueueIndex, ComputeSystemResult &outResult)
 {
 	mPhysicalDevice = inPhysicalDevice;

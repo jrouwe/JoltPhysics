@@ -17,7 +17,7 @@ JPH_NAMESPACE_BEGIN
 class JPH_EXPORT ComputeSystemVK : public ComputeSystem
 {
 public:
-	JPH_OVERRIDE_NEW_DELETE
+	JPH_DECLARE_RTTI_ABSTRACT(JPH_EXPORT, ComputeSystemVK)
 
 	// Initialize / shutdown the compute system
 	bool							Initialize(VkPhysicalDevice inPhysicalDevice, VkDevice inDevice, uint32 inComputeQueueIndex, ComputeSystemResult &outResult);

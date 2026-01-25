@@ -13,6 +13,11 @@
 
 JPH_NAMESPACE_BEGIN
 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ComputeSystemMTL)
+{
+	JPH_ADD_BASE_CLASS(ComputeSystemMTL, ComputeSystem)
+}
+
 bool ComputeSystemMTL::Initialize(id<MTLDevice> inDevice)
 {
 	mDevice = [inDevice retain];

@@ -14,6 +14,11 @@
 
 JPH_NAMESPACE_BEGIN
 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ComputeSystemDX12Impl)
+{
+	JPH_ADD_BASE_CLASS(ComputeSystemDX12Impl, ComputeSystemDX12)
+}
+
 ComputeSystemDX12Impl::~ComputeSystemDX12Impl()
 {
 	Shutdown();

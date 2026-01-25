@@ -16,7 +16,7 @@ JPH_NAMESPACE_BEGIN
 class JPH_EXPORT ComputeSystemMTL : public ComputeSystem
 {
 public:
-	JPH_OVERRIDE_NEW_DELETE
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_EXPORT, ComputeSystemMTL)
 
 	// Initialize / shutdown the compute system
 	bool							Initialize(id<MTLDevice> inDevice);

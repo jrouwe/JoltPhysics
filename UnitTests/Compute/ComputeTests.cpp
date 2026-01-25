@@ -30,6 +30,27 @@ JPH_DECLARE_REGISTER_SHADER(TestCompute)
 JPH_DECLARE_REGISTER_SHADER(TestCompute2)
 #endif // JPH_USE_CPU_COMPUTE
 
+JPH_NAMESPACE_BEGIN
+#ifdef JPH_USE_DX12
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystem)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemDX12)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemDX12Impl)
+#endif
+#ifdef JPH_USE_VK
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemVK)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemVKWithAllocator)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemVKImpl)
+#endif
+#ifdef JPH_USE_MTL
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemMTL)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemMTLImpl)
+#endif
+#ifdef JPH_USE_CPU_COMPUTE
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemCPU)
+#endif
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ShapeSettings)
+JPH_NAMESPACE_END
+
 TEST_SUITE("ComputeTests")
 {
 	static const char *cInvalidShaderName = "InvalidShader";
@@ -314,6 +335,11 @@ TEST_SUITE("ComputeTests")
 		if (!compute_system.HasError())
 		{
 			CHECK(compute_system.Get() != nullptr);
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystem)));
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystemDX12)));
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystemDX12Impl)));
+			CHECK(!IsKindOf(compute_system.Get(), JPH_RTTI(ShapeSettings)));
+
 			RunTests(compute_system.Get());
 
 			// Test failing shader compilation
@@ -334,6 +360,11 @@ TEST_SUITE("ComputeTests")
 		if (!compute_system.HasError())
 		{
 			CHECK(compute_system.Get() != nullptr);
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystem)));
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystemMTL)));
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystemMTLImpl)));
+			CHECK(!IsKindOf(compute_system.Get(), JPH_RTTI(ShapeSettings)));
+
 			RunTests(compute_system.Get());
 		}
 	}
@@ -347,6 +378,12 @@ TEST_SUITE("ComputeTests")
 		if (!compute_system.HasError())
 		{
 			CHECK(compute_system.Get() != nullptr);
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystem)));
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystemVK)));
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystemVKWithAllocator)));
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystemVKImpl)));
+			CHECK(!IsKindOf(compute_system.Get(), JPH_RTTI(ShapeSettings)));
+
 			RunTests(compute_system.Get());
 		}
 	}
@@ -360,6 +397,10 @@ TEST_SUITE("ComputeTests")
 		if (!compute_system.HasError())
 		{
 			CHECK(compute_system.Get() != nullptr);
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystem)));
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystemCPU)));
+			CHECK(!IsKindOf(compute_system.Get(), JPH_RTTI(ShapeSettings)));
+
 			JPH_REGISTER_SHADER(StaticCast<ComputeSystemCPU>(compute_system.Get()), TestCompute);
 			JPH_REGISTER_SHADER(StaticCast<ComputeSystemCPU>(compute_system.Get()), TestCompute2);
 			RunTests(compute_system.Get());
