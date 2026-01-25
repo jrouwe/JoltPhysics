@@ -26,6 +26,11 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ComputeSystemDX12)
+{
+	JPH_ADD_BASE_CLASS(ComputeSystemDX12, ComputeSystem)
+}
+
 void ComputeSystemDX12::Initialize(ID3D12Device *inDevice, EDebug inDebug)
 {
 	mDevice = inDevice;

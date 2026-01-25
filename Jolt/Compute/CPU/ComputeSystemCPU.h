@@ -18,7 +18,7 @@ JPH_NAMESPACE_BEGIN
 class JPH_EXPORT ComputeSystemCPU : public ComputeSystem
 {
 public:
-	JPH_OVERRIDE_NEW_DELETE
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_EXPORT, ComputeSystemCPU)
 
 	// See: ComputeSystem
 	virtual ComputeShaderResult  	CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) override;

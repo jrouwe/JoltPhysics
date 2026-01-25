@@ -14,7 +14,7 @@ JPH_NAMESPACE_BEGIN
 class JPH_EXPORT ComputeSystemMTLImpl : public ComputeSystemMTL
 {
 public:
-	JPH_OVERRIDE_NEW_DELETE
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_EXPORT, ComputeSystemMTLImpl)
 
 	/// Destructor
 	virtual							~ComputeSystemMTLImpl() override;

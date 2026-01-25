@@ -12,6 +12,11 @@
 
 JPH_NAMESPACE_BEGIN
 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ComputeSystemCPU)
+{
+	JPH_ADD_BASE_CLASS(ComputeSystemCPU, ComputeSystem)
+}
+
 ComputeShaderResult ComputeSystemCPU::CreateComputeShader(const char *inName, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ)
 {
 	ComputeShaderResult result;

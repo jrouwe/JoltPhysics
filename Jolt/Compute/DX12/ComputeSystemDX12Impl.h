@@ -14,7 +14,7 @@ JPH_NAMESPACE_BEGIN
 class JPH_EXPORT ComputeSystemDX12Impl : public ComputeSystemDX12
 {
 public:
-	JPH_OVERRIDE_NEW_DELETE
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_EXPORT, ComputeSystemDX12Impl)
 
 	/// Destructor
 	virtual 						~ComputeSystemDX12Impl() override;

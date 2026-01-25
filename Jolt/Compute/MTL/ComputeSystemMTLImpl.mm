@@ -10,6 +10,11 @@
 
 JPH_NAMESPACE_BEGIN
 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ComputeSystemMTLImpl)
+{
+	JPH_ADD_BASE_CLASS(ComputeSystemMTLImpl, ComputeSystemMTL)
+}
+
 ComputeSystemMTLImpl::~ComputeSystemMTLImpl()
 {
 	Shutdown();

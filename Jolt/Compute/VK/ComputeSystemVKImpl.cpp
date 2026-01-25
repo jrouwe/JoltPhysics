@@ -11,6 +11,11 @@
 
 JPH_NAMESPACE_BEGIN
 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ComputeSystemVKImpl)
+{
+	JPH_ADD_BASE_CLASS(ComputeSystemVKImpl, ComputeSystemVKWithAllocator)
+}
+
 #ifdef JPH_DEBUG
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL sVulkanDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT inSeverity, [[maybe_unused]] VkDebugUtilsMessageTypeFlagsEXT inType, const VkDebugUtilsMessengerCallbackDataEXT *inCallbackData, [[maybe_unused]] void *inUserData)

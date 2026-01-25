@@ -16,6 +16,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/ConfigurationString.h
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeBuffer.h
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeQueue.h
+	${JOLT_PHYSICS_ROOT}/Compute/ComputeSystem.cpp
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeSystem.h
 	${JOLT_PHYSICS_ROOT}/Compute/ComputeShader.h
 	${JOLT_PHYSICS_ROOT}/Core/ARMNeon.h

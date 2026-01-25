@@ -16,7 +16,7 @@ JPH_NAMESPACE_BEGIN
 class JPH_EXPORT ComputeSystemVKWithAllocator : public ComputeSystemVK
 {
 public:
-	JPH_OVERRIDE_NEW_DELETE
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_EXPORT, ComputeSystemVKWithAllocator)
 
 	/// Allow the application to override buffer creation and memory mapping in case it uses its own allocator
 	virtual bool					CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer) override;

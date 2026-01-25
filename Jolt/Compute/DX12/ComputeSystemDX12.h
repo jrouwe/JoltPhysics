@@ -18,7 +18,7 @@ JPH_NAMESPACE_BEGIN
 class JPH_EXPORT ComputeSystemDX12 : public ComputeSystem
 {
 public:
-	JPH_OVERRIDE_NEW_DELETE
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_EXPORT, ComputeSystemDX12)
 
 	/// How we want to compile our shaders
 	enum class EDebug

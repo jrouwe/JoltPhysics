@@ -14,7 +14,7 @@ JPH_NAMESPACE_BEGIN
 class JPH_EXPORT ComputeSystemVKImpl : public ComputeSystemVKWithAllocator
 {
 public:
-	JPH_OVERRIDE_NEW_DELETE
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_EXPORT, ComputeSystemVKImpl)
 
 	/// Destructor
 	virtual							~ComputeSystemVKImpl() override;

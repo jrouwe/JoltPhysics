@@ -13,6 +13,11 @@
 
 JPH_NAMESPACE_BEGIN
 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ComputeSystemVKWithAllocator)
+{
+	JPH_ADD_BASE_CLASS(ComputeSystemVKWithAllocator, ComputeSystemVK)
+}
+
 bool ComputeSystemVKWithAllocator::InitializeMemory()
 {
 	// Get memory properties
