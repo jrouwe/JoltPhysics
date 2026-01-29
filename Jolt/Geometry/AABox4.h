@@ -84,6 +84,9 @@ JPH_INLINE UVec4 AABox4VsPoint(Vec3Arg inPoint, Vec4Arg inBoxMinX, Vec4Arg inBox
 	return UVec4::sAnd(UVec4::sAnd(overlapx, overlapy), overlapz);
 }
 
+#if defined(JPH_ARM_EC)
+	#pragma optimize("g", off)
+#endif
 /// Test if 4 bounding boxes overlap with an oriented box
 JPH_INLINE UVec4 AABox4VsBox(Mat44Arg inOrientation, Vec3Arg inHalfExtents, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ, float inEpsilon = 1.0e-6f)
 {
@@ -188,6 +191,12 @@ JPH_INLINE UVec4 AABox4VsBox(const OrientedBox &inBox, Vec4Arg inBoxMinX, Vec4Ar
 {
 	return AABox4VsBox(inBox.mOrientation, inBox.mHalfExtents, inBoxMinX, inBoxMinY, inBoxMinZ, inBoxMaxX, inBoxMaxY, inBoxMaxZ, inEpsilon);
 }
+
+#if defined(JPH_ARM_EC)
+	#ifndef _DEBUG
+		#pragma optimize("g", on)
+	#endif 
+#endif
 
 /// Get the squared distance between 4 AABoxes and a point
 JPH_INLINE Vec4 AABox4DistanceSqToPoint(Vec4Arg inPointX, Vec4Arg inPointY, Vec4Arg inPointZ, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ)
