@@ -117,21 +117,16 @@
 #endif
 
 // Detect CPU architecture
-#if defined(__aarch64__) || defined(_M_ARM64) || defined(__arm__) || defined(_M_ARM) || defined(_ARM64EC_) || defined(_M_ARM64EC) 
+#if defined(__aarch64__) || defined(_M_ARM64) || defined(__arm__) || defined(_M_ARM) || defined(_M_ARM64EC)
 	// ARM CPU architecture
 	#define JPH_CPU_ARM
-
-	#if defined(_M_ARM64EC) || defined(_ARM64EC_) 
-		#define JPH_ARM_EC
-	#endif
-
-#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC) 
-		#define JPH_CPU_ADDRESS_BITS 64
+	#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
+		#define JPH_CPU_ARCH_BITS 64
 		#define JPH_USE_NEON
 		#define JPH_VECTOR_ALIGNMENT 16
 		#define JPH_DVECTOR_ALIGNMENT 32
 	#else
-		#define JPH_CPU_ADDRESS_BITS 32
+		#define JPH_CPU_ARCH_BITS 32
 		#define JPH_VECTOR_ALIGNMENT 8 // 32-bit ARM does not support aligning on the stack on 16 byte boundaries
 		#define JPH_DVECTOR_ALIGNMENT 8
 	#endif
