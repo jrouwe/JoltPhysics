@@ -297,6 +297,7 @@ function(SET_INTERPROCEDURAL_OPTIMIZATION)
 	# On ARM, whole program optimization triggers an internal compiler error during code gen, so we don't turn it on
 	# When compiling as a shared lib with MinGW, turning on LTO causes errors of the form 'ld.exe: cannot export symbol X wrong type (4 vs 3)'
 	if (INTERPROCEDURAL_OPTIMIZATION
+		AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM64EC")
 		AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM64")
 		AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")
 		AND (NOT CROSS_COMPILE_ARM OR ("${CROSS_COMPILE_ARM_TARGET}" STREQUAL "aarch64-linux-gnu"))
