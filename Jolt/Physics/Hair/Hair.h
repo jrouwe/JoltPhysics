@@ -46,6 +46,9 @@ public:
 	void								SetRotation(QuatArg inRotation)					{ mRotation = inRotation; }
 	RMat44								GetWorldTransform() const						{ return RMat44::sRotationTranslation(mRotation, mPosition); }
 
+	/// Access to the hair settings object which contains the configuration of the hair
+	const HairSettings *				GetHairSettings() const							{ return mSettings; }
+
 	/// The hair will be initialized in its default pose with zero velocity at the new position and rotation during the next update
 	void								OnTeleported()									{ mTeleported = true; }
 
