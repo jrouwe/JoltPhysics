@@ -59,6 +59,7 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, GroupFilter)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, GroupFilterTable)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, BodyCreationSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, SoftBodyCreationSettings)
+JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, HairSettings)
 
 JPH_NAMESPACE_BEGIN
 
@@ -189,6 +190,11 @@ void RegisterTypesInternal(uint64 inVersionID)
 	// Initialize default physics material
 	if (PhysicsMaterial::sDefault == nullptr)
 		PhysicsMaterial::sDefault = new PhysicsMaterialSimple("Default", Color::sGrey);
+}
+
+void RegisterHair()
+{
+	Factory::sInstance->Register(JPH_RTTI(HairSettings));
 }
 
 void UnregisterTypes()

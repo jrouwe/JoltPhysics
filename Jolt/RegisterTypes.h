@@ -23,6 +23,9 @@ JPH_EXPORT extern void RegisterTypesInternal(uint64 inVersionID);
 /// If you implement your own default material (PhysicsMaterial::sDefault) make sure to initialize it before this function or else this function will create one for you.
 JPH_INLINE void RegisterTypes() { RegisterTypesInternal(JPH_VERSION_ID); }
 
+/// The hair system is not registered by default, call this function after RegisterTypes to register it
+JPH_EXPORT void RegisterHair();
+
 /// Unregisters all types with the factory and cleans up the default material
 JPH_EXPORT extern void UnregisterTypes();
 

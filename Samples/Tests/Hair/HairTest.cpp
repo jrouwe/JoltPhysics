@@ -10,6 +10,9 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Core/StreamWrapper.h>
+#include <Jolt/RegisterTypes.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
+#include <Jolt/ObjectStream/ObjectStreamOut.h>
 #include <Utils/ReadData.h>
 #include <Utils/Log.h>
 #include <Utils/AssetStream.h>
@@ -255,6 +258,19 @@ void HairTest::Initialize()
 	mHairSettings->mSimulationBoundsPadding = Vec3::sReplicate(0.1f);
 	mHairSettings->mInitialGravity = inv_bind_neck.Multiply3x3(mPhysicsSystem->GetGravity());
 	mHairSettings->InitRenderAndSimulationStrands(hair_vertices, hair_strands);
+
+#ifdef JPH_OBJECT_STREAM
+	// Write and read back to test ObjectStream
+	RegisterHair();
+	stringstream object_stream_data;
+	if (!ObjectStreamOut::sWriteObject(object_stream_data, ObjectStream::EStreamType::Binary, *mHairSettings))
+		FatalError("Failed to save settings");
+	mHairSettings = nullptr;
+	if (!ObjectStreamIn::sReadObject(object_stream_data, mHairSettings))
+		FatalError("Failed to load settings");
+#endif // JPH_OBJECT_STREAM
+
+	// Initialize the hair settings
 	float max_dist_sq = 0.0f;
 	mHairSettings->Init(max_dist_sq);
 	JPH_ASSERT(max_dist_sq < 1.0e-4f);
