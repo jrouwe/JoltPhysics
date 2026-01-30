@@ -472,7 +472,7 @@ if (ENABLE_OBJECT_STREAM)
 	)
 endif()
 
-if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL OR JPH_USE_CPU_COMPUTE)
+if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL OR JPH_USE_WGPU OR JPH_USE_CPU_COMPUTE)
 	# Compute shaders
 	set(JOLT_PHYSICS_SHADERS
 		${JOLT_PHYSICS_ROOT}/Shaders/HairApplyDeltaTransform.hlsl
@@ -692,6 +692,16 @@ if (JPH_USE_VK)
 	else()
 		set(JPH_USE_VK OFF)
 	endif()
+
+	# WebGPU support
+	if (JPH_USE_WGPU)
+		set(JOLT_PHYSICS_SRC_FILES
+			${JOLT_PHYSICS_SRC_FILES}
+			${JOLT_PHYSICS_ROOT}/Compute/WGPU/ComputeSystemWGPU.cpp
+			${JOLT_PHYSICS_ROOT}/Compute/WGPU/ComputeSystemWGPU.h
+			${JOLT_PHYSICS_ROOT}/Compute/WGPU/IncludeWGPU.h
+		)
+	endif()
 endif()
 
 # Group source files
@@ -823,6 +833,14 @@ if (JPH_USE_MTL)
 	target_compile_definitions(Jolt PUBLIC JPH_USE_MTL)
 
 	target_link_libraries(Jolt LINK_PUBLIC "-framework Foundation -framework Metal -framework MetalKit")
+endif()
+
+# Compile against WebGPU
+if (JPH_USE_WGPU)
+	target_compile_definitions(Jolt PUBLIC JPH_USE_WGPU)
+
+	target_compile_options(Jolt PUBLIC --use-port=emdawnwebgpu)
+	target_link_options(Jolt PUBLIC --use-port=emdawnwebgpu)
 endif()
 
 # Compile CPU compute support

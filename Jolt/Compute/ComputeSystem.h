@@ -68,6 +68,14 @@ inline ComputeSystemResult 				CreateComputeSystem()		{ return CreateComputeSyst
 /// Factory function to create the default compute system for this platform
 inline ComputeSystemResult 				CreateComputeSystem()		{ return CreateComputeSystemVK(); }
 
+#elif JPH_USE_WGPU
+
+/// Factory function to create a compute system using WebGPU (emscripten / browser)
+extern JPH_EXPORT ComputeSystemResult	CreateComputeSystemWGPU();
+
+/// Factory function to create the default compute system for this platform
+inline ComputeSystemResult				CreateComputeSystem()		{ return CreateComputeSystemWGPU(); }
+
 #else
 
 /// Fallback implementation when no compute system is available

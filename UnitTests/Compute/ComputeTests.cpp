@@ -4,7 +4,7 @@
 
 #include "UnitTestFramework.h"
 
-#if defined(JPH_USE_DX12) || defined(JPH_USE_VK) || defined(JPH_USE_MTL) || defined(JPH_USE_CPU_COMPUTE)
+#if defined(JPH_USE_DX12) || defined(JPH_USE_VK) || defined(JPH_USE_MTL) || defined(JPH_USE_WGPU) || defined(JPH_USE_CPU_COMPUTE)
 
 #include <Jolt/Compute/ComputeSystem.h>
 #include <Jolt/Compute/CPU/ComputeSystemCPU.h>
@@ -44,6 +44,9 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemVKImpl)
 #ifdef JPH_USE_MTL
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemMTL)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemMTLImpl)
+#endif
+#ifdef JPH_USE_WGPU
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemWGPU)
 #endif
 #ifdef JPH_USE_CPU_COMPUTE
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_EXPORT, ComputeSystemCPU)
@@ -389,6 +392,24 @@ TEST_SUITE("ComputeTests")
 	}
 #endif // JPH_USE_VK
 
+#ifdef JPH_USE_WGPU
+	TEST_CASE("TestComputeWGPU")
+	{
+		ComputeSystemResult compute_system = CreateComputeSystemWGPU();
+		if (compute_system.HasError())
+			Trace("ComputeSystemWGPU could not be created: %s", compute_system.GetError().c_str());
+		if (!compute_system.HasError())
+		{
+			CHECK(compute_system.Get() != nullptr);
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystem)));
+			CHECK(IsKindOf(compute_system.Get(), JPH_RTTI(ComputeSystemWGPU)));
+			CHECK(!IsKindOf(compute_system.Get(), JPH_RTTI(ShapeSettings)));
+
+			RunTests(compute_system.Get());
+		}
+	}
+#endif // JPH_USE_WGPU
+
 #ifdef JPH_USE_CPU_COMPUTE
 	TEST_CASE("TestComputeCPU")
 	{
@@ -409,4 +430,4 @@ TEST_SUITE("ComputeTests")
 #endif // JPH_USE_CPU_COMPUTE
 }
 
-#endif // defined(JPH_USE_DX12) || defined(JPH_USE_VK) || defined(JPH_USE_MTL) || defined(JPH_USE_CPU_COMPUTE)
+#endif // defined(JPH_USE_DX12) || defined(JPH_USE_VK) || defined(JPH_USE_MTL) || defined(JPH_USE_WGPU) || defined(JPH_USE_CPU_COMPUTE)

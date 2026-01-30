@@ -130,6 +130,9 @@ option(JPH_USE_VK "Use Vulkan" ON)
 # Option to compile with Metal compute
 option(JPH_USE_MTL "Use Metal" ON)
 
+# Option to compile with WebGPU (only for emscripten)
+option(JPH_USE_WGPU "Use WebGPU" ON)
+
 # Option to compile with CPU fallback compute
 option(JPH_USE_CPU_COMPUTE "Use CPU Compute" ON)
 

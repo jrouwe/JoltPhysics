@@ -659,4 +659,9 @@ static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 	#undef JPH_USE_METAL
 #endif // !JPH_PLATFORM_MACOS && !JPH_PLATFORM_IOS
 
+// WebGPU is only supported with emscripten
+#if defined(JPH_USE_WGPU) && !defined(JPH_PLATFORM_WASM)
+	#undef JPH_USE_WGPU
+#endif // defined(JPH_USE_WGPU) && !defined(JPH_PLATFORM_WASM)
+
 JPH_NAMESPACE_END
