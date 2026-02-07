@@ -704,11 +704,39 @@ if (JPH_USE_VK)
 	endif()
 endif()
 
+# WebGPU shader compilation (Emscripten): HLSL -> SPIR-V (dxc) -> WGSL (tint)
+if (JPH_USE_WGPU AND EMSCRIPTEN)
+	find_program(DXC_COMPILER NAMES dxc)
+	find_program(TINT_COMPILER NAMES tint)
+	if (NOT DXC_COMPILER)
+		message("Application 'dxc' not found. Can't compile WebGPU shaders (HLSL -> SPIR-V). Install DXC and ensure it is on PATH.")
+	elseif (NOT TINT_COMPILER)
+		message("Application 'tint' not found. Can't compile WebGPU shaders (SPIR-V -> WGSL). Install Tint and ensure it is on PATH.")
+	else()
+		foreach(SHADER ${JOLT_PHYSICS_SHADERS})
+			cmake_path(GET SHADER STEM SHADER_STEM) # Filename without extension
+			set(WGPU_SPV_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${SHADER_STEM}_wgpu.spv")
+			set(WGPU_WGSL_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${SHADER_STEM}.wgsl")
+
+			add_custom_command(OUTPUT ${WGPU_WGSL_SHADER}
+				COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I Jolt/Shaders -WX -O3 -all_resources_bound ${SHADER} -spirv -fvk-use-dx-layout -fvk-use-scalar-layout -Fo ${WGPU_SPV_SHADER}
+				COMMAND ${TINT_COMPILER} --format wgsl ${WGPU_SPV_SHADER} -o ${WGPU_WGSL_SHADER}
+				DEPENDS ${SHADER} ${JOLT_PHYSICS_SHADER_HEADERS} # Currently don't have a way to detect header dependencies, so making dependent on all
+				COMMENT "Compiling WebGPU ${SHADER} -> ${WGPU_WGSL_SHADER}"
+			)
+
+			list(APPEND JOLT_PHYSICS_WGSL_SHADERS ${WGPU_WGSL_SHADER})
+		endforeach()
+
+		source_group(Intermediate FILES ${JOLT_PHYSICS_WGSL_SHADERS})
+	endif()
+endif()
+
 # Group source files
 source_group(TREE ${JOLT_PHYSICS_ROOT} FILES ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_SHADERS} ${JOLT_PHYSICS_SHADER_HEADERS})
 
 # Create Jolt lib
-add_library(Jolt ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_SHADERS} ${JOLT_PHYSICS_SHADER_HEADERS} ${JOLT_PHYSICS_SPV_SHADERS} ${JOLT_PHYSICS_METAL_LIB})
+add_library(Jolt ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_SHADERS} ${JOLT_PHYSICS_SHADER_HEADERS} ${JOLT_PHYSICS_SPV_SHADERS} ${JOLT_PHYSICS_METAL_LIB} ${JOLT_PHYSICS_WGSL_SHADERS})
 add_library(Jolt::Jolt ALIAS Jolt)
 
 if (BUILD_SHARED_LIBS)
