@@ -35,7 +35,6 @@ inline bool VKFailed(VkResult inResult, Result &outResult)
 
 	String error = StringFormat("Vulkan call failed with error code: %d", (int)inResult);
 	outResult.SetError(error);
-	JPH_ASSERT(false);
 	return true;
 }
 
