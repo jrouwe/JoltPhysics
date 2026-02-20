@@ -52,6 +52,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/LinearCurve.h
 	${JOLT_PHYSICS_ROOT}/Core/LockFreeHashMap.h
 	${JOLT_PHYSICS_ROOT}/Core/LockFreeHashMap.inl
+	${JOLT_PHYSICS_ROOT}/Core/LSANSuppressions.h
 	${JOLT_PHYSICS_ROOT}/Core/Memory.cpp
 	${JOLT_PHYSICS_ROOT}/Core/Memory.h
 	${JOLT_PHYSICS_ROOT}/Core/Mutex.h
