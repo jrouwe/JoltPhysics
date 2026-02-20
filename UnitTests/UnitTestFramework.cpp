@@ -6,6 +6,7 @@
 #include <Jolt/ConfigurationString.h>
 #include <Jolt/Core/FPException.h>
 #include <Jolt/Core/Factory.h>
+#include <Jolt/Core/LSANSuppressions.h>
 #include <Jolt/RegisterTypes.h>
 #ifdef JPH_PLATFORM_WINDOWS
 #include <crtdbg.h>
