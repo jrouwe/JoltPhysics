@@ -264,20 +264,16 @@ void ContactConstraintManager::CachedBodyPair::RestoreState(StateRecorder &inStr
 
 void ContactConstraintManager::ManifoldCache::Init(uint inMaxBodyPairs, uint inMaxContactConstraints, uint inCachedManifoldsSize)
 {
-    // Hash map requires at least 4 buckets and must be a power of 2
-    uint max_body_pairs = max(inMaxBodyPairs, 4u); 
-    uint max_body_pairs_pow2 = GetNextPowerOf2(max_body_pairs);
+	JPH_ASSERT(inMaxContactConstraints <= cMaxContactConstraintsLimit); // Should have been enforced by caller
 
-    // Calculate total size for the linear allocator.
-    // We align the KeyValue storage to 16 bytes to ensure that any vectorized 
-    // operations on the subsequent manifolds buffer stay within bounds.
-    uint64 map_storage = uint64(max_body_pairs_pow2) * sizeof(BodyPairMap::KeyValue);
-    uint64 total_raw = AlignUp(map_storage, 16) + inCachedManifoldsSize;
-    
-    mAllocator.Init(uint(min(total_raw, uint64(~uint(0)))));
+	uint max_body_pairs = min(inMaxBodyPairs, cMaxBodyPairsLimit);
+	JPH_ASSERT(max_body_pairs == inMaxBodyPairs, "Cannot support this many body pairs!");
+	max_body_pairs = max(max_body_pairs, 4u); // Because our hash map requires at least 4 buckets, we need to have a minimum number of body pairs
 
-    mCachedManifolds.Init(GetNextPowerOf2(max(inMaxContactConstraints, 4u)));
-    mCachedBodyPairs.Init(max_body_pairs_pow2); 
+	mAllocator.Init(uint(min(uint64(max_body_pairs) * sizeof(BPKeyValue) + inCachedManifoldsSize, uint64(~uint(0)))));
+
+	mCachedManifolds.Init(GetNextPowerOf2(inMaxContactConstraints));
+	mCachedBodyPairs.Init(GetNextPowerOf2(max_body_pairs));
 }
 
 void ContactConstraintManager::ManifoldCache::Clear()
@@ -702,18 +698,17 @@ ContactConstraintManager::~ContactConstraintManager()
 
 void ContactConstraintManager::Init(uint inMaxBodyPairs, uint inMaxContactConstraints)
 {
-    mMaxConstraints = min(inMaxContactConstraints, cMaxContactConstraintsLimit);
-    JPH_ASSERT(mMaxConstraints == inMaxContactConstraints, "Cannot support this many contact constraints!");
+	// Limit the number of constraints so that the allocation size fits in an unsigned integer
+	mMaxConstraints = min(inMaxContactConstraints, cMaxContactConstraintsLimit);
+	JPH_ASSERT(mMaxConstraints == inMaxContactConstraints, "Cannot support this many contact constraints!");
+	mMaxConstraints = max(mMaxConstraints, 4u); // Because our hash map requires at least 4 buckets, we need to have a minimum number of constraints
 
-    // Calculate worst case cache usage
-    constexpr uint cMaxManifoldSizePerConstraint = sizeof(CachedManifold) + (MaxContactPoints - 1) * sizeof(CachedContactPoint);
-    static_assert(cMaxManifoldSizePerConstraint < sizeof(ContactConstraint));
+	// Calculate worst case cache usage
+	constexpr uint cMaxManifoldSizePerConstraint = sizeof(MKeyValue) + CachedManifold::sGetRequiredExtraSize(MaxContactPoints);
+	static_assert(cMaxManifoldSizePerConstraint < sizeof(ContactConstraint)); // If not true, then the next line can overflow
+	uint cached_manifolds_size = mMaxConstraints * cMaxManifoldSizePerConstraint;
 
-    // Ensure the size of the manifolds buffer is a multiple of 16 bytes.
-    // This prevents SIMD initialization in ManifoldCache from overshooting the buffer.
-    uint64 manifolds_total = uint64(mMaxConstraints) * cMaxManifoldSizePerConstraint;
-    uint cached_manifolds_size = uint(AlignUp(manifolds_total, 16)); 
-
+	// Init the caches
     mCache[0].Init(inMaxBodyPairs, mMaxConstraints, cached_manifolds_size);
     mCache[1].Init(inMaxBodyPairs, mMaxConstraints, cached_manifolds_size);
 }

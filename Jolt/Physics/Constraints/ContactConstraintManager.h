@@ -283,10 +283,10 @@ private:
 	{
 	public:
 		/// Calculate size in bytes needed beyond the size of the class to store inNumContactPoints
-		static int				sGetRequiredExtraSize(int inNumContactPoints)						{ return max(0, inNumContactPoints - 1) * sizeof(CachedContactPoint); }
+		static constexpr int	sGetRequiredExtraSize(int inNumContactPoints)						{ return max(0, inNumContactPoints - 1) * sizeof(CachedContactPoint); }
 
 		/// Calculate total class size needed for storing inNumContactPoints
-		static int				sGetRequiredTotalSize(int inNumContactPoints)						{ return sizeof(CachedManifold) + sGetRequiredExtraSize(inNumContactPoints); }
+		static constexpr int	sGetRequiredTotalSize(int inNumContactPoints)						{ return sizeof(CachedManifold) + sGetRequiredExtraSize(inNumContactPoints); }
 
 		/// Saving / restoring state for replay
 		void					SaveState(StateRecorder &inStream) const;
