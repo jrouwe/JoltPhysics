@@ -709,8 +709,8 @@ void ContactConstraintManager::Init(uint inMaxBodyPairs, uint inMaxContactConstr
 	uint cached_manifolds_size = mMaxConstraints * cMaxManifoldSizePerConstraint;
 
 	// Init the caches
-    mCache[0].Init(inMaxBodyPairs, mMaxConstraints, cached_manifolds_size);
-    mCache[1].Init(inMaxBodyPairs, mMaxConstraints, cached_manifolds_size);
+	mCache[0].Init(inMaxBodyPairs, mMaxConstraints, cached_manifolds_size);
+	mCache[1].Init(inMaxBodyPairs, mMaxConstraints, cached_manifolds_size);
 }
 
 void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inContext)
