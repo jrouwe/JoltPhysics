@@ -649,6 +649,17 @@ static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 	#define JPH_TSAN_NO_SANITIZE
 #endif
 
+// Check if Address Sanitizer is enabled
+#ifdef __has_feature
+	#if __has_feature(address_sanitizer)
+		#define JPH_ASAN_ENABLED
+	#endif
+#else
+	#ifdef __SANITIZE_ADDRESS__
+		#define JPH_ASAN_ENABLED
+	#endif
+#endif
+
 // DirectX 12 is only supported on Windows
 #if defined(JPH_USE_DX12) && !defined(JPH_PLATFORM_WINDOWS)
 	#undef JPH_USE_DX12
