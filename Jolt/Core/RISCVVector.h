@@ -1,9 +1,6 @@
-// Copyright 2004-2026 Primate Labs Inc. All rights reserved.
-//
-// This software is PROPRIETARY and CONFIDENTIAL to Primate Labs and is
-// provided solely under the terms and conditions of a Primate Labs Software
-// License Agreement. Otherwise, you have no rights to use or access this
-// software in any manner.
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
+// SPDX-FileCopyrightText: 2024 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
 
 #pragma once
 
