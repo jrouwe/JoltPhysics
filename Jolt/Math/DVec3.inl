@@ -497,15 +497,6 @@ DVec3 DVec3::sOr(DVec3Arg inV1, DVec3Arg inV2)
 	const vuint64m2_t res = __riscv_vor_vv_u64m2(rvv_inV1, rvv_inV2, 3);
 	__riscv_vse64_v_u64m2(reinterpret_cast<uint64_t*>(or_result.mF64), res, 3);
 	return or_result;
-#elif defined(JPH_USE_RVV)
-	DVec3 or_result;
-	const vuint64m2_t rvv_inV1 =
-		__riscv_vle64_v_u64m2(reinterpret_cast<const uint64_t*>(inV1.mF64), 3);
-	const vuint64m2_t rvv_inV2 =
-		__riscv_vle64_v_u64m2(reinterpret_cast<const uint64_t*>(inV2.mF64), 3);
-	const vuint64m2_t res = __riscv_vor_vv_u64m2(rvv_inV1, rvv_inV2, 3);
-	__riscv_vse64_v_u64m2(reinterpret_cast<uint64_t*>(or_result.mF64), res, 3);
-	return or_result;
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) | BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) | BitCast<uint64>(inV2.mF64[1])),
@@ -556,13 +547,6 @@ DVec3 DVec3::sAnd(DVec3Arg inV1, DVec3Arg inV2)
 	const vuint64m2_t res = __riscv_vand_vv_u64m2(rvv_inV1, rvv_inV2, 3);
 	__riscv_vse64_v_u64m2(reinterpret_cast<uint64_t*>(and_result.mF64), res, 3);
 	return and_result;
-#elif defined(JPH_USE_RVV)
-	const vuint64m2_t src = __riscv_vle64_v_u64m2(
-		reinterpret_cast<const uint64_t*>(this->mF64), 4);
-	const vbool32_t mask = __riscv_vmsgeu_vx_u64m2_b32(src, 0x8000000000000000, 4);
-	const vuint32m1_t as_int = __riscv_vreinterpret_v_b32_u32m1(mask);
-	const uint32_t result = __riscv_vmv_x_s_u32m1_u32(as_int) & 0x7;
-	return result;
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) & BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) & BitCast<uint64>(inV2.mF64[1])),
@@ -639,12 +623,6 @@ DVec3 DVec3::operator * (double inV2) const
 	DVec3 res;
 	const vfloat64m2_t src = __riscv_vle64_v_f64m2(mF64, 3);
 	const vfloat64m2_t mul = __riscv_vfmul_vf_f64m2(src, inV2, 3);
-	__riscv_vse64_v_f64m2(res.mF64, mul, 3);
-	return res;
-#elif defined(JPH_USE_RVV)
-	DVec3 res;
-	const vfloat64m2_t rvv_m1 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t mul = __riscv_vfmul_vf_f64m2(rvv_m1, inV1, 3);
 	__riscv_vse64_v_f64m2(res.mF64, mul, 3);
 	return res;
 #else
