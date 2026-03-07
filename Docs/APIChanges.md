@@ -7,6 +7,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 ## Changes between v5.5.0 and latest
 
 * 20253012 - Added interface to run compute shaders on the GPU with implementations for DX12, Vulkan and Metal. These interfaces can be disabled by setting JPH_USE_DX12, JPH_USE_VK and JPH_USE_MTL to OFF. To build on macOS, you'll need to have dxc and spirv-cross installed. The easiest way to install them is by installing the Vulkan SDK. (5ac132df689fbf88da618181b0f1f73fca8bb1b4)
+* 20260307 - *SBS* - Added support for HeightFieldShapeSettings::mBitsPerSample > 8 which adds 1 byte to the binary serialization format and renders it incompatible with previous saved data. (449b645b71a7a47aa0d7bdcb5f9c197f1ddff5b0)
 
 ## Changes between v5.4.0 and v5.5.0
 
