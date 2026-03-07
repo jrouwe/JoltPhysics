@@ -147,33 +147,33 @@ TEST_SUITE("HeightFieldShapeTests")
 		const float cMinHeight = -5.0f;
 		const float cMaxHeight = 10.0f;
 
-		UnitTestRandom random;
-		uniform_real_distribution<float> height_distribution(cMinHeight, cMaxHeight);
-
-		// Create height field with random samples
-		HeightFieldShapeSettings settings;
-		settings.mOffset = Vec3(0.3f, 0.5f, 0.7f);
-		settings.mScale = Vec3(1.1f, 1.2f, 1.3f);
-		settings.mSampleCount = 32;
-		settings.mBitsPerSample = 8;
-		settings.mBlockSize = 4;
-		settings.mHeightSamples.resize(Square(settings.mSampleCount));
-		for (float &h : settings.mHeightSamples)
-			h = height_distribution(random);
-
 		// Check if bits per sample is ok
-		for (uint32 bits_per_sample = 1; bits_per_sample <= 8; ++bits_per_sample)
+		for (uint32 bits_per_sample = 1; bits_per_sample <= HeightFieldShapeConstants::cMaxBitsPerSample; ++bits_per_sample)
 		{
+			UnitTestRandom random;
+			uniform_real_distribution<float> height_distribution(cMinHeight, cMaxHeight);
+
+			// Create height field with random samples
+			HeightFieldShapeSettings settings;
+			settings.mOffset = Vec3(0.3f, 0.5f, 0.7f);
+			settings.mScale = Vec3(1.1f, 1.2f, 1.3f);
+			settings.mSampleCount = 32;
+			settings.mBitsPerSample = bits_per_sample;
+			settings.mBlockSize = 4;
+			settings.mHeightSamples.resize(Square(settings.mSampleCount));
+			for (float &h : settings.mHeightSamples)
+				h = height_distribution(random);
+
 			// Calculate maximum error you can get if you quantize using bits_per_sample.
 			// We ignore the fact that we have range blocks that give much better compression, although
 			// with random input data there shouldn't be much benefit of that.
 			float max_error = 0.5f * (cMaxHeight - cMinHeight) / ((1 << bits_per_sample) - 1);
 			uint32 calculated_bits_per_sample = settings.CalculateBitsPerSampleForError(max_error);
 			CHECK(calculated_bits_per_sample <= bits_per_sample);
-		}
 
-		sRandomizeMaterials(settings, 1);
-		sValidateGetPosition(settings, settings.mScale.GetY() * (cMaxHeight - cMinHeight) / ((1 << settings.mBitsPerSample) - 1));
+			sRandomizeMaterials(settings, 1);
+			sValidateGetPosition(settings, settings.mScale.GetY() * (cMaxHeight - cMinHeight) / ((1 << settings.mBitsPerSample) - 1));
+		}
 	}
 
 	TEST_CASE("TestEmptyHeightField")
