@@ -187,7 +187,7 @@ uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError
 
 									// Don't go above cMaxBitsPerSample bits per sample
 									if (bits_per_sample == cMaxBitsPerSample)
-										return bits_per_sample;
+										return cMaxBitsPerSample;
 								}
 							}
 						}
@@ -727,7 +727,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 			uint byte_pos = sample >> 3;
 			uint bit_pos = sample & 0b111;
 			output_value <<= bit_pos;
-			JPH_ASSERT(byte_pos + 2 < mHeightSamplesSize);
+			JPH_ASSERT(byte_pos + 2 < mHeightSamplesSize); // We read max 16 bits which could be spread out over 3 bytes
 			mHeightSamples[byte_pos] |= uint8(output_value);
 			mHeightSamples[byte_pos + 1] |= uint8(output_value >> 8);
 			mHeightSamples[byte_pos + 2] |= uint8(output_value >> 16);
@@ -828,7 +828,7 @@ inline uint16 HeightFieldShape::GetHeightSample(uint inX, uint inY) const
 	uint bit_pos = sample & 0b111;
 
 	// Fetch the height sample value
-	JPH_ASSERT(byte_pos + 2 < mHeightSamplesSize);
+	JPH_ASSERT(byte_pos + 2 < mHeightSamplesSize); // We read max 16 bits which could be spread out over 3 bytes
 	const uint8 *height_samples = mHeightSamples + byte_pos;
 	uint32 height_sample = uint32(height_samples[0]) | (uint32(height_samples[1]) << 8) | (uint32(height_samples[2]) << 16);
 	return uint16(height_sample >> bit_pos) & mSampleMask;
@@ -1138,7 +1138,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 					uint bit_pos = sample & 0b111;
 
 					// Update the height value sample
-					JPH_ASSERT(byte_pos + 2 < mHeightSamplesSize);
+					JPH_ASSERT(byte_pos + 2 < mHeightSamplesSize); // We read max 16 bits which could be spread out over 3 bytes
 					uint8 *height_samples = mHeightSamples + byte_pos;
 					uint32 height_sample = uint32(height_samples[0]) | (uint32(height_samples[1]) << 8) | (uint32(height_samples[2]) << 16);
 					height_sample &= ~(uint32(mSampleMask) << bit_pos);
