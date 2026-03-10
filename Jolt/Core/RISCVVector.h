@@ -16,17 +16,15 @@ JPH_INLINE float rvv_elem(vfloat32m1_t src)
 template<unsigned IndexX, unsigned IndexY, unsigned IndexZ, unsigned IndexW>
 JPH_INLINE vfloat32m1_t RVV_shuffle_f32x4(vfloat32m1_t v0, vfloat32m1_t v1)
 {
-  const float x = IndexX > 3 ? rvv_elem<IndexX & 0b11>(v1) : rvv_elem<IndexX>(v0);
-  const float y = IndexY > 3 ? rvv_elem<IndexY & 0b11>(v1) : rvv_elem<IndexY>(v0);
-  const float z = IndexZ > 3 ? rvv_elem<IndexZ & 0b11>(v1) : rvv_elem<IndexZ>(v0);
-  const float w = IndexW > 3 ? rvv_elem<IndexW & 0b11>(v1) : rvv_elem<IndexW>(v0);
+    vfloat32m2_t combined = __riscv_vset_v_f32m1_f32m2(__riscv_vundefined_f32m2(), 0, v0);
+    combined = __riscv_vset_v_f32m1_f32m2(combined, 1, v1);
 
-  vfloat32m1_t res = __riscv_vfmv_v_f_f32m1(w, 4);
-  res = __riscv_vfslide1up_vf_f32m1(res, z, 4);
-  res = __riscv_vfslide1up_vf_f32m1(res, y, 4);
-  res = __riscv_vfslide1up_vf_f32m1(res, x, 4);
+    const uint32_t indices_raw[4] = { IndexX, IndexY, IndexZ, IndexW };
+    const vuint32m1_t v_indices_m1 = __riscv_vle32_v_u32m1(indices_raw, 4);
+    const vuint32m2_t v_indices_m2 = __riscv_vlmul_ext_v_u32m1_u32m2(v_indices_m1);
 
-  return res;
+    const vfloat32m2_t gathered_m2 = __riscv_vrgather_vv_f32m2(combined, v_indices_m2, 4);
+    return __riscv_vlmul_trunc_v_f32m2_f32m1(gathered_m2);
 }
 
 template<>
