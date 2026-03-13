@@ -118,10 +118,10 @@ DVec3::Type DVec3::sFixW(TypeArg inValue)
 		value.val[1] = vdupq_laneq_f64(inValue.val[1], 0);
 		return value;
 	#elif defined(JPH_USE_RVV)
-		DVec3::Type value;
-		const vfloat64m2_t buffer = __riscv_vle64_v_f64m2(inValue.mF64);
-		__riscv_vse64_v_f64m2(value.mData, buffer, 4);
-		value[3] = value[2];
+		Type value;
+		const vfloat64m2_t buffer = __riscv_vle64_v_f64m2(inValue.mData, 3);
+		__riscv_vse64_v_f64m2(value.mData, buffer, 3);
+		value.mData[3] = value.mData[2];
 		return value;
 	#else
 		Type value;

@@ -31,9 +31,11 @@ JPH_INLINE Vec3::Type Vec3::sFixW(Type inValue)
 	#elif defined(JPH_USE_NEON)
 		return JPH_NEON_SHUFFLE_F32x4(inValue, inValue, 0, 1, 2, 2);
 	#elif defined(JPH_USE_RVV)
-		const vfloat32m1_t v = __riscv_vle32_v_f32m1(inValue, 4);
-		__riscv_vse32_v_f32m1(inValue, v, 4);
-		inValue[3] = inValue.mData[2];
+		Type value;
+		const vfloat32m1_t v = __riscv_vle32_v_f32m1(inValue.mData, 3);
+		__riscv_vse32_v_f32m1(value.mData, v, 3);
+		value.mData[3] = value.mData[2];
+		return value;
 	#else
 		Type value;
 		value.mData[0] = inValue.mData[0];
