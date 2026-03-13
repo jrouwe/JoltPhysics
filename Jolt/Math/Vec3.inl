@@ -69,12 +69,12 @@ Vec3::Vec3(const Float3 &inV)
 #elif defined(JPH_USE_RVV)
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(&inV.x, 3);
 	__riscv_vse32_v_f32m1(mF32, v, 3);
-	mF32[3] = inV[2];
+	mF32[3] = inV.z;
 #else
-	mF32[0] = inV[0];
-	mF32[1] = inV[1];
-	mF32[2] = inV[2];
-	mF32[3] = inV[2]; // Not strictly needed when JPH_FLOATING_POINT_EXCEPTIONS_ENABLED is off but prevents warnings about uninitialized variables
+	mF32[0] = inV.x;
+	mF32[1] = inV.y;
+	mF32[2] = inV.z;
+	mF32[3] = inV.z; // Not strictly needed when JPH_FLOATING_POINT_EXCEPTIONS_ENABLED is off but prevents warnings about uninitialized variables
 #endif
 }
 
@@ -677,10 +677,10 @@ Vec3 Vec3::operator - () const
 #elif defined(JPH_USE_RVV)
 	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
 		Vec3 res;
-		const vfloat32m1_t rvv_zero = __riscv_vfmv_v_f_f32m1(0.0f, 4);
-		const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
-		const vfloat32m1_t rvv_neg = __riscv_vfsub_vv_f32m1(rvv_zero, v, 4);
-		__riscv_vse32_v_f32m1(res.mF32, rvv_neg, 4);
+		const vfloat32m1_t rvv_zero = __riscv_vfmv_v_f_f32m1(0.0f, 3);
+		const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
+		const vfloat32m1_t rvv_neg = __riscv_vfsub_vv_f32m1(rvv_zero, v, 3);
+		__riscv_vse32_v_f32m1(res.mF32, rvv_neg, 3);
 		return res;
 	#else
 		Vec3 res;
@@ -855,19 +855,19 @@ Vec3 Vec3::Cross(Vec3Arg inV2) const
 	Type t3 = vsubq_f32(t1, t2);
 	return JPH_NEON_SHUFFLE_F32x4(t3, t3, 1, 2, 0, 0); // Assure Z and W are the same
 #elif defined(JPH_USE_RVV)
-	const uint32 indices[4] = { 1, 2, 0, 0 };
-	const vuint32m1_t gather_indices = __riscv_vle32_v_u32m1(indices, 4);
-	const vfloat32m1_t v0 = __riscv_vle32_v_f32m1(this->mF32, 4);
-	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	vfloat32m1_t t0 = __riscv_vrgather_vv_f32m1(v1, gather_indices, 4);
-	t0 = __riscv_vfmul_vv_f32m1(t0, v0, 4);
-	vfloat32m1_t t1 = __riscv_vrgather_vv_f32m1(v0, gather_indices, 4);
-	t1 = __riscv_vfmul_vv_f32m1(t1, v1, 4);
-	const vfloat32m1_t sub = __riscv_vfsub_vv_f32m1(t0, t1, 4);
-	const vfloat32m1_t cross = __riscv_vrgather_vv_f32m1(sub, gather_indices, 4);
+	const uint32 indices[3] = { 1, 2, 0 };
+	const vuint32m1_t gather_indices = __riscv_vle32_v_u32m1(indices, 3);
+	const vfloat32m1_t v0 = __riscv_vle32_v_f32m1(mF32, 3);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
+	vfloat32m1_t t0 = __riscv_vrgather_vv_f32m1(v1, gather_indices, 3);
+	t0 = __riscv_vfmul_vv_f32m1(t0, v0, 3);
+	vfloat32m1_t t1 = __riscv_vrgather_vv_f32m1(v0, gather_indices, 3);
+	t1 = __riscv_vfmul_vv_f32m1(t1, v1, 3);
+	const vfloat32m1_t sub = __riscv_vfsub_vv_f32m1(t0, t1, 3);
+	const vfloat32m1_t cross = __riscv_vrgather_vv_f32m1(sub, gather_indices, 3);
 
 	Vec3 cross_result;
-	__riscv_vse32_v_f32m1(cross_result.mF32, cross, 4);
+	__riscv_vse32_v_f32m1(cross_result.mF32, cross, 3);
 	return cross_result;
 #else
 	return Vec3(mF32[1] * inV2.mF32[2] - mF32[2] * inV2.mF32[1],
@@ -1062,7 +1062,7 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	uint32x4_t is_zero = vcleq_f32(len_sq, vdupq_n_f32(FLT_MIN));
 	return vbslq_f32(is_zero, inZeroValue.mValue, vdivq_f32(mValue, vsqrtq_f32(len_sq)));
 #elif defined(JPH_USE_RVV)
-	const vfloat32m1_t src = __riscv_vle32_v_f32m1(this->mF32, 4);
+	const vfloat32m1_t src = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(src, src, 3);
 	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 3);

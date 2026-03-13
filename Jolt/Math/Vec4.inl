@@ -878,7 +878,7 @@ Vec3 Vec4::SplatX3() const
 #elif defined(JPH_USE_RVV)
 	Vec3 vec;
 	const vfloat32m1_t splat = __riscv_vfmv_v_f_f32m1(mF32[0], 3);
-	__riscv_vse32_v_f32m1(vec.mF32, splat, 4);
+	__riscv_vse32_v_f32m1(vec.mF32, splat, 3);
 	return vec;
 #else
 	return Vec3(mF32[0], mF32[0], mF32[0]);
@@ -894,7 +894,7 @@ Vec3 Vec4::SplatY3() const
 #elif defined(JPH_USE_RVV)
 	Vec3 vec;
 	const vfloat32m1_t splat = __riscv_vfmv_v_f_f32m1(mF32[1], 3);
-	__riscv_vse32_v_f32m1(vec.mF32, splat, 4);
+	__riscv_vse32_v_f32m1(vec.mF32, splat, 3);
 	return vec;
 #else
 	return Vec3(mF32[1], mF32[1], mF32[1]);
@@ -910,7 +910,7 @@ Vec3 Vec4::SplatZ3() const
 #elif defined(JPH_USE_RVV)
 	Vec3 vec;
 	const vfloat32m1_t splat = __riscv_vfmv_v_f_f32m1(mF32[2], 3);
-	__riscv_vse32_v_f32m1(vec.mF32, splat, 4);
+	__riscv_vse32_v_f32m1(vec.mF32, splat, 3);
 	return vec;
 #else
 	return Vec3(mF32[2], mF32[2], mF32[2]);
@@ -926,7 +926,7 @@ Vec3 Vec4::SplatW3() const
 #elif defined(JPH_USE_RVV)
 	Vec3 vec;
 	const vfloat32m1_t splat = __riscv_vfmv_v_f_f32m1(mF32[3], 3);
-	__riscv_vse32_v_f32m1(vec.mF32, splat, 4);
+	__riscv_vse32_v_f32m1(vec.mF32, splat, 3);
 	return vec;
 #else
 	return Vec3(mF32[3], mF32[3], mF32[3]);

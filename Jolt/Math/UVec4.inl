@@ -636,7 +636,7 @@ int UVec4::GetTrues() const
 	int32x4_t shift = JPH_NEON_INT32x4(0, 1, 2, 3);
 	return vaddvq_u32(vshlq_u32(vshrq_n_u32(mValue, 31), shift));
 #elif defined(JPH_USE_RVV)
-	const vuint32m1_t src = __riscv_vle32_v_u32m1(this->mU32, 4);
+	const vuint32m1_t src = __riscv_vle32_v_u32m1(mU32, 4);
 	const vbool32_t mask = __riscv_vmsgeu_vx_u32m1_b32(src, 0x80000000, 4);
 	const vuint32m1_t as_int = __riscv_vreinterpret_v_b32_u32m1(mask);
 	const uint32 result = __riscv_vmv_x_s_u32m1_u32(as_int) & 0xF;

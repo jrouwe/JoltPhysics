@@ -147,7 +147,7 @@ DVec3 DVec3::sZero()
 	return DVec3({ zero, zero });
 #elif defined(JPH_USE_RVV)
 	DVec3 vec;
-	const vfloat64m2_t v = __riscv_vfmv_v_f_f64m2(0.0f, 3);
+	const vfloat64m2_t v = __riscv_vfmv_v_f_f64m2(0.0, 3);
 	__riscv_vse64_v_f64m2(vec.mF64, v, 3);
 	return vec;
 #else
@@ -224,7 +224,7 @@ DVec3::operator Vec3() const
 	return vcvt_high_f32_f64(vcvtx_f32_f64(mValue.val[0]), mValue.val[1]);
 #elif defined(JPH_USE_RVV)
 	Vec3 v;
-	const vfloat64m2_t src = __riscv_vle64_v_f64m2(this->mF64, 3);
+	const vfloat64m2_t src = __riscv_vle64_v_f64m2(mF64, 3);
 	const vfloat32m1_t narrowed = __riscv_vfncvt_f_f_w_f32m1(src, 3);
 	__riscv_vse32_v_f32m1(v.mF32, narrowed, 3);
 	return v;
@@ -832,9 +832,9 @@ DVec3 DVec3::operator - () const
 #elif defined(JPH_USE_RVV)
 	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
 		DVec3 res;
-		const vfloat64m2_t rvv_zero = __riscv_vfmv_v_f_f64m2(0.0f, 4);
+		const vfloat64m2_t rvv_zero = __riscv_vfmv_v_f_f64m2(0.0, 3);
 		const vfloat64m2_t v = __riscv_vle64_v_f64m2(mF64, 3);
-		const vfloat64m2_t rvv_neg = __riscv_vfsub_vv_f64m2(rvv_zero, v, 4);
+		const vfloat64m2_t rvv_neg = __riscv_vfsub_vv_f64m2(rvv_zero, v, 3);
 		__riscv_vse64_v_f64m2(res.mF64, rvv_neg, 3);
 		return res;
 	#else
@@ -1003,9 +1003,9 @@ DVec3 DVec3::Cross(DVec3Arg inV2) const
 	__m256d t3 = _mm256_sub_pd(t1, t2);
 	return _mm256_permute4x64_pd(t3, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
 #elif defined(JPH_USE_RVV)
-	const uint64 indices[4] = { 1, 2, 0, 0 };
+	const uint64 indices[3] = { 1, 2, 0 };
 	const vuint64m2_t gather_indices = __riscv_vle64_v_u64m2(indices, 3);
-	const vfloat64m2_t v0 = __riscv_vle64_v_f64m2(this->mF64, 3);
+	const vfloat64m2_t v0 = __riscv_vle64_v_f64m2(mF64, 3);
 	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
 	vfloat64m2_t t0 = __riscv_vrgather_vv_f64m2(v1, gather_indices, 3);
 	t0 =  __riscv_vfmul_vv_f64m2(t0, v0, 3);
@@ -1046,7 +1046,7 @@ double DVec3::Dot(DVec3Arg inV2) const
 	float64x2_t mul_high = vmulq_f64(mValue.val[1], inV2.mValue.val[1]);
 	return vaddvq_f64(mul_low) + vgetq_lane_f64(mul_high, 0);
 #elif defined(JPH_USE_RVV)
-	const vfloat64m1_t zeros = __riscv_vfmv_v_f_f64m1(0.0f, 3);
+	const vfloat64m1_t zeros = __riscv_vfmv_v_f_f64m1(0.0, 3);
 	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
 	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
 	const vfloat64m2_t mul = __riscv_vfmul_vv_f64m2(v1, v2, 3);

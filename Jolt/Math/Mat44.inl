@@ -643,9 +643,8 @@ Mat44 Mat44::Transposed3x3() const
 	result.mCol[2].mValue = tmp4.val[0];
 #elif defined(JPH_USE_RVV)
 	const float end_col[4] = { 0, 0, 0, 1 };
-	const float end_row[3] = { 0, 0, 0 };
 	const vfloat32m1_t rvv_end_col = __riscv_vle32_v_f32m1(end_col, 4);
-	const vfloat32m1_t rvv_end_row = __riscv_vle32_v_f32m1(end_row, 3);
+	const vfloat32m1_t rvv_end_row = __riscv_vfmv_v_f_f32m1(0.0f, 3);
 
 	const vfloat32m1_t row0 = __riscv_vlse32_v_f32m1(&mCol[0].mF32[0], sizeof(Vec4), 3);
 	const vfloat32m1_t row1 = __riscv_vlse32_v_f32m1(&mCol[0].mF32[1], sizeof(Vec4), 3);
@@ -1109,9 +1108,8 @@ Mat44 Mat44::GetRotationSafe() const
 				 Vec4(0, 0, 0, 1));
 #elif defined(JPH_USE_RVV)
 	const float end_col[4] = { 0, 0, 0, 1 };
-	const float end_row[3] = { 0, 0, 0 };
 	const vfloat32m1_t rvv_end_col = __riscv_vle32_v_f32m1(end_col, 4);
-	const vfloat32m1_t rvv_end_row = __riscv_vle32_v_f32m1(end_row, 3);
+	const vfloat32m1_t rvv_end_row = __riscv_vfmv_v_f_f32m1(0.0f, 3);
 
 	Mat44 result(*this);
 	__riscv_vse32_v_f32m1(result.mCol[3].mF32, rvv_end_col, 4);
