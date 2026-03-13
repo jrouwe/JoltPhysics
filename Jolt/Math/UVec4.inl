@@ -12,12 +12,6 @@ UVec4::UVec4(uint32 inX, uint32 inY, uint32 inZ, uint32 inW)
 	uint32x2_t xy = vcreate_u32(static_cast<uint64>(inX) | (static_cast<uint64>(inY) << 32));
 	uint32x2_t zw = vcreate_u32(static_cast<uint64>(inZ) | (static_cast<uint64>(inW) << 32));
 	mValue = vcombine_u32(xy, zw);
-#elif defined(JPH_USE_RVV)
-	vuint32m1_t v = __riscv_vmv_v_x_u32m1(inW, 4);
-	v = __riscv_vslide1up_vx_u32m1(v, inZ, 4);
-	v = __riscv_vslide1up_vx_u32m1(v, inY, 4);
-	v = __riscv_vslide1up_vx_u32m1(v, inX, 4);
-	__riscv_vse32_v_u32m1(mU32, v, 4);
 #else
 	mU32[0] = inX;
 	mU32[1] = inY;

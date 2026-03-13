@@ -39,12 +39,6 @@ Vec4::Vec4(float inX, float inY, float inZ, float inW)
 	uint32x2_t xy = vcreate_u32(static_cast<uint64>(BitCast<uint32>(inX)) | (static_cast<uint64>(BitCast<uint32>(inY)) << 32));
 	uint32x2_t zw = vcreate_u32(static_cast<uint64>(BitCast<uint32>(inZ)) | (static_cast<uint64>(BitCast<uint32>(inW)) << 32));
 	mValue = vreinterpretq_f32_u32(vcombine_u32(xy, zw));
-#elif defined(JPH_USE_RVV)
-	vfloat32m1_t v = __riscv_vfmv_v_f_f32m1(inW, 4);
-	v = __riscv_vfslide1up_vf_f32m1(v, inZ, 4);
-	v = __riscv_vfslide1up_vf_f32m1(v, inY, 4);
-	v = __riscv_vfslide1up_vf_f32m1(v, inX, 4);
-	__riscv_vse32_v_f32m1(mF32, v, 4);
 #else
 	mF32[0] = inX;
 	mF32[1] = inY;
