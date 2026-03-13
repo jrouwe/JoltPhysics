@@ -15,6 +15,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 	* Supports collision with the environment, although it only supports ConvexHull and CompoundShapes at the moment.
 	* The roots of the hairs can be skinned to the scalp mesh.
 	* Note that this is still work in progress, some things that still need to be done are listed in Hair.h.
+* Increased maximum value of HeightFieldShape::mBitsPerSample to 16 to be able to create height fields that more closely match the uncompressed height values.
+* Made tolerance that's used in the internal edge removal algorithm configurable in `CollideShapeSettings::mInternalEdgeRemovalVertexToleranceSq` and `PhysicsSettings::mInternalEdgeRemovalVertexToleranceSq`.
 
 ### Bug Fixes
 
