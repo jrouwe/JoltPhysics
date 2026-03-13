@@ -859,10 +859,10 @@ Mat44 Mat44::Inversed() const
 
 	tmp1 = __riscv_vfmul_vv_f32m1(row1, row2, 4);
 	tmp1 = RVVShuffleFloat32x4<1, 0, 3, 2>(tmp1, tmp1);
-	minor0 = __riscv_vfmul_vv_f32m1(row1, tmp1, 4);
+	minor0 = __riscv_vfadd_vv_f32m1(__riscv_vfmul_vv_f32m1(row3, tmp1, 4), minor0, 4);
 	minor3 = __riscv_vfmul_vv_f32m1(row0, tmp1, 4);
 	tmp1 = RVVShuffleFloat32x4<2, 3, 0, 1>(tmp1, tmp1);
-	minor0 = __riscv_vfsub_vv_f32m1(__riscv_vfmul_vv_f32m1(row1, tmp1, 4), minor0, 4);
+	minor0 = __riscv_vfsub_vv_f32m1(minor0, __riscv_vfmul_vv_f32m1(row3, tmp1, 4), 4);
 	minor3 = __riscv_vfsub_vv_f32m1(__riscv_vfmul_vv_f32m1(row0, tmp1, 4), minor3, 4);
 	minor3 = RVVShuffleFloat32x4<2, 3, 0, 1>(minor3, minor3);
 
