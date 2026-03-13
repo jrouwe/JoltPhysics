@@ -539,8 +539,8 @@ UVec4 UVec4::DotV(UVec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE4_1)
 	__m128i mul = _mm_mullo_epi32(mValue, inV2.mValue);
- __m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
- return _mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2)));
+	__m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
+	return _mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2)));
 #elif defined(JPH_USE_NEON)
 	uint32x4_t mul = vmulq_u32(mValue, inV2.mValue);
 	return vdupq_n_u32(vaddvq_u32(mul));
@@ -565,8 +565,8 @@ uint32 UVec4::Dot(UVec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE4_1)
 	__m128i mul = _mm_mullo_epi32(mValue, inV2.mValue);
- __m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
- return _mm_cvtsi128_si32(_mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2))));
+	__m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
+	return _mm_cvtsi128_si32(_mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2))));
 #elif defined(JPH_USE_NEON)
 	uint32x4_t mul = vmulq_u32(mValue, inV2.mValue);
 	return vaddvq_u32(mul);
