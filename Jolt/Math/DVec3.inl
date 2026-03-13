@@ -50,6 +50,12 @@ DVec3::DVec3(double inX, double inY, double inZ)
 #elif defined(JPH_USE_NEON)
 	mValue.val[0] = vcombine_f64(vcreate_f64(BitCast<uint64>(inX)), vcreate_f64(BitCast<uint64>(inY)));
 	mValue.val[1] = vdupq_n_f64(inZ);
+#elif defined(JPH_USE_RVV)
+	vfloat64m2_t v = __riscv_vfmv_v_f_f64m2(inZ, 4);
+	v = __riscv_vfslide1up_vf_f64m2(v, inZ, 4);
+	v = __riscv_vfslide1up_vf_f64m2(v, inY, 4);
+	v = __riscv_vfslide1up_vf_f64m2(v, inX, 4);
+	__riscv_vse64_v_f64m2(mF64, v, 4);
 #else
 	mF64[0] = inX;
 	mF64[1] = inY;
