@@ -31,6 +31,16 @@ bool ContactConstraintManager::sDrawContactManifolds = false;
 
 //#define JPH_MANIFOLD_CACHE_DEBUG
 
+template <typename T>
+inline void prefetch_l1(const T* addr)
+{
+#ifdef _MSC_VER
+	_mm_prefetch(reinterpret_cast<const char*>(addr), _MM_HINT_T0);
+#else
+	__builtin_prefetch(addr, 0, 3);
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ContactConstraintManager::WorldContactPoint
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1556,6 +1566,11 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
+		if (constraint_idx + 1 < inConstraintIdxEnd)
+		{
+			prefetch_l1(&mConstraints[*(constraint_idx + 1)]);
+		}
+
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
 
 		// Fetch bodies
@@ -1659,6 +1674,11 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
+		if (constraint_idx + 1 < inConstraintIdxEnd)
+		{
+			prefetch_l1(&mConstraints[*(constraint_idx + 1)]);
+		}
+
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
 
 		// Fetch bodies
@@ -1718,6 +1738,11 @@ void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintId
 	// Copy back total applied impulse to cache for the next frame
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
+		if (constraint_idx + 1 < inConstraintIdxEnd)
+		{
+			prefetch_l1(&mConstraints[*(constraint_idx + 1)]);
+		}
+
 		const ContactConstraint &constraint = mConstraints[*constraint_idx];
 
 		for (const WorldContactPoint &wcp : constraint.mContactPoints)
@@ -1737,6 +1762,11 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
+		if (constraint_idx + 1 < inConstraintIdxEnd)
+		{
+			prefetch_l1(&mConstraints[*(constraint_idx + 1)]);
+		}
+
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
 
 		// Fetch bodies
