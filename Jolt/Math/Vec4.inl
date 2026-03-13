@@ -68,7 +68,7 @@ Vec4 Vec4::Swizzle() const
 #elif defined(JPH_USE_RVV)
 	Vec4 v;
 	const vfloat32m1_t data = __riscv_vle32_v_f32m1(mF32, 4);
-	const uint32_t stored_indices[4] = {SwizzleX, SwizzleY, SwizzleZ, SwizzleW};
+	const uint32 stored_indices[4] = { SwizzleX, SwizzleY, SwizzleZ, SwizzleW };
 	const vuint32m1_t index = __riscv_vle32_v_u32m1(stored_indices, 4);
 	const vfloat32m1_t swizzled = __riscv_vrgather_vv_f32m1(data, index, 4);
 	__riscv_vse32_v_f32m1(v.mF32, swizzled, 4);
@@ -193,9 +193,9 @@ Vec4 Vec4::sMin(Vec4Arg inV1, Vec4Arg inV2)
 	return vminq_f32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(inV1.mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t min = __riscv_vfmin_vv_f32m1(rvv_a, rvv_b, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV1.mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t min = __riscv_vfmin_vv_f32m1(v1, v2, 4);
 	__riscv_vse32_v_f32m1(res.mF32, min, 4);
 	return res;
 #else
@@ -214,9 +214,9 @@ Vec4 Vec4::sMax(Vec4Arg inV1, Vec4Arg inV2)
 	return vmaxq_f32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(inV1.mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t max = __riscv_vfmax_vv_f32m1(rvv_a, rvv_b, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV1.mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t max = __riscv_vfmax_vv_f32m1(v1, v2, 4);
 	__riscv_vse32_v_f32m1(res.mF32, max, 4);
 	return res;
 #else
@@ -240,14 +240,11 @@ UVec4 Vec4::sEquals(Vec4Arg inV1, Vec4Arg inV2)
 	return vceqq_f32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(inV1.mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-
-	const vbool32_t mask = __riscv_vmfeq_vv_f32m1_b32(rvv_a, rvv_b, 4);
-
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV1.mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vbool32_t mask = __riscv_vmfeq_vv_f32m1_b32(v1, v2, 4);
 	const vuint32m1_t zeros = __riscv_vmv_v_x_u32m1(0x0, 4);
 	const vuint32m1_t merged = __riscv_vmerge_vxm_u32m1(zeros, 0xFFFFFFFF, mask, 4);
-
 	__riscv_vse32_v_u32m1(res.mU32, merged, 4);
 	return res;
 #else
@@ -266,14 +263,11 @@ UVec4 Vec4::sLess(Vec4Arg inV1, Vec4Arg inV2)
 	return vcltq_f32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(inV1.mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-
-	const vbool32_t mask = __riscv_vmflt_vv_f32m1_b32(rvv_a, rvv_b, 4);
-
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV1.mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vbool32_t mask = __riscv_vmflt_vv_f32m1_b32(v1, v2, 4);
 	const vuint32m1_t zeros = __riscv_vmv_v_x_u32m1(0x0, 4);
 	const vuint32m1_t merged = __riscv_vmerge_vxm_u32m1(zeros, 0xFFFFFFFF, mask, 4);
-
 	__riscv_vse32_v_u32m1(res.mU32, merged, 4);
 	return res;
 #else
@@ -292,14 +286,11 @@ UVec4 Vec4::sLessOrEqual(Vec4Arg inV1, Vec4Arg inV2)
 	return vcleq_f32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(inV1.mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-
-	const vbool32_t mask = __riscv_vmfle_vv_f32m1_b32(rvv_a, rvv_b, 4);
-
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV1.mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vbool32_t mask = __riscv_vmfle_vv_f32m1_b32(v1, v2, 4);
 	const vuint32m1_t zeros = __riscv_vmv_v_x_u32m1(0x0, 4);
 	const vuint32m1_t merged = __riscv_vmerge_vxm_u32m1(zeros, 0xFFFFFFFF, mask, 4);
-
 	__riscv_vse32_v_u32m1(res.mU32, merged, 4);
 	return res;
 #else
@@ -318,14 +309,11 @@ UVec4 Vec4::sGreater(Vec4Arg inV1, Vec4Arg inV2)
 	return vcgtq_f32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(inV1.mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-
-	const vbool32_t mask = __riscv_vmfgt_vv_f32m1_b32(rvv_a, rvv_b, 4);
-
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV1.mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vbool32_t mask = __riscv_vmfgt_vv_f32m1_b32(v1, v2, 4);
 	const vuint32m1_t zeros = __riscv_vmv_v_x_u32m1(0x0, 4);
 	const vuint32m1_t merged = __riscv_vmerge_vxm_u32m1(zeros, 0xFFFFFFFF, mask, 4);
-
 	__riscv_vse32_v_u32m1(res.mU32, merged, 4);
 	return res;
 #else
@@ -344,14 +332,11 @@ UVec4 Vec4::sGreaterOrEqual(Vec4Arg inV1, Vec4Arg inV2)
 	return vcgeq_f32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(inV1.mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-
-	const vbool32_t mask = __riscv_vmfge_vv_f32m1_b32(rvv_a, rvv_b, 4);
-
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV1.mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vbool32_t mask = __riscv_vmfge_vv_f32m1_b32(v1, v2, 4);
 	const vuint32m1_t zeros = __riscv_vmv_v_x_u32m1(0x0, 4);
 	const vuint32m1_t merged = __riscv_vmerge_vxm_u32m1(zeros, 0xFFFFFFFF, mask, 4);
-
 	__riscv_vse32_v_u32m1(res.mU32, merged, 4);
 	return res;
 #else
@@ -374,10 +359,10 @@ Vec4 Vec4::sFusedMultiplyAdd(Vec4Arg inMul1, Vec4Arg inMul2, Vec4Arg inAdd)
 	return vmlaq_f32(inAdd.mValue, inMul1.mValue, inMul2.mValue);
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(inMul1.mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inMul2.mF32, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inMul1.mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inMul2.mF32, 4);
 	const vfloat32m1_t rvv_add = __riscv_vle32_v_f32m1(inAdd.mF32, 4);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(rvv_a, rvv_b, 4);
+	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
 	const vfloat32m1_t fmadd = __riscv_vfadd_vv_f32m1(rvv_add, mul, 4);
 	__riscv_vse32_v_f32m1(res.mF32, fmadd, 4);
 	return res;
@@ -400,15 +385,14 @@ Vec4 Vec4::sSelect(Vec4Arg inNotSet, Vec4Arg inSet, UVec4Arg inControl)
 	return vbslq_f32(vreinterpretq_u32_s32(vshrq_n_s32(vreinterpretq_s32_u32(inControl.mValue), 31)), inSet.mValue, inNotSet.mValue);
 #elif defined(JPH_USE_RVV)
 	Vec4 masked;
-	const vuint32m1_t rvv_control = __riscv_vle32_v_u32m1(inControl.mU32, 4);
-	const vfloat32m1_t rvv_inNotSet = __riscv_vle32_v_f32m1(inNotSet.mF32, 4);
-	const vfloat32m1_t rvv_inSet = __riscv_vle32_v_f32m1(inSet.mF32, 4);
+	const vuint32m1_t control = __riscv_vle32_v_u32m1(inControl.mU32, 4);
+	const vfloat32m1_t not_set = __riscv_vle32_v_f32m1(inNotSet.mF32, 4);
+	const vfloat32m1_t set = __riscv_vle32_v_f32m1(inSet.mF32, 4);
 
 	// Generate RVV bool mask from UVec4
-	const vuint32m1_t r = __riscv_vand_vx_u32m1(rvv_control, 0x80000000u, 4);
+	const vuint32m1_t r = __riscv_vand_vx_u32m1(control, 0x80000000u, 4);
 	const vbool32_t rvv_mask = __riscv_vmsne_vx_u32m1_b32(r, 0x0, 4);
-	const vfloat32m1_t merged  =
-		__riscv_vmerge_vvm_f32m1(rvv_inNotSet, rvv_inSet, rvv_mask, 4);
+	const vfloat32m1_t merged = __riscv_vmerge_vvm_f32m1(not_set, set, rvv_mask, 4);
 	__riscv_vse32_v_f32m1(masked.mF32, merged, 4);
 	return masked;
 #else
@@ -427,12 +411,10 @@ Vec4 Vec4::sOr(Vec4Arg inV1, Vec4Arg inV2)
 	return vreinterpretq_f32_u32(vorrq_u32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
 #elif defined(JPH_USE_RVV)
 	Vec4 or_result;
-	const vuint32m1_t rvv_inV1 =
-		__riscv_vle32_v_u32m1(reinterpret_cast<const uint32_t*>(inV1.mF32), 4);
-	const vuint32m1_t rvv_inV2 =
-		__riscv_vle32_v_u32m1(reinterpret_cast<const uint32_t*>(inV2.mF32), 4);
-	const vuint32m1_t res = __riscv_vor_vv_u32m1(rvv_inV1, rvv_inV2, 4);
-	__riscv_vse32_v_u32m1(reinterpret_cast<uint32_t*>(or_result.mF32), res, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(reinterpret_cast<const uint32 *>(inV1.mF32), 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(reinterpret_cast<const uint32 *>(inV2.mF32), 4);
+	const vuint32m1_t res = __riscv_vor_vv_u32m1(v1, v2, 4);
+	__riscv_vse32_v_u32m1(reinterpret_cast<uint32 *>(or_result.mF32), res, 4);
 	return or_result;
 #else
 	return UVec4::sOr(inV1.ReinterpretAsInt(), inV2.ReinterpretAsInt()).ReinterpretAsFloat();
@@ -447,12 +429,10 @@ Vec4 Vec4::sXor(Vec4Arg inV1, Vec4Arg inV2)
 	return vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
 #elif defined(JPH_USE_RVV)
 	Vec4 xor_result;
-	const vuint32m1_t rvv_inV1 =
-		__riscv_vle32_v_u32m1(reinterpret_cast<const uint32_t*>(inV1.mF32), 4);
-	const vuint32m1_t rvv_inV2 =
-		__riscv_vle32_v_u32m1(reinterpret_cast<const uint32_t*>(inV2.mF32), 4);
-	const vuint32m1_t res = __riscv_vxor_vv_u32m1(rvv_inV1, rvv_inV2, 4);
-	__riscv_vse32_v_u32m1(reinterpret_cast<uint32_t*>(xor_result.mF32), res, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(reinterpret_cast<const uint32 *>(inV1.mF32), 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(reinterpret_cast<const uint32 *>(inV2.mF32), 4);
+	const vuint32m1_t res = __riscv_vxor_vv_u32m1(v1, v2, 4);
+	__riscv_vse32_v_u32m1(reinterpret_cast<uint32 *>(xor_result.mF32), res, 4);
 	return xor_result;
 #else
 	return UVec4::sXor(inV1.ReinterpretAsInt(), inV2.ReinterpretAsInt()).ReinterpretAsFloat();
@@ -467,12 +447,10 @@ Vec4 Vec4::sAnd(Vec4Arg inV1, Vec4Arg inV2)
 	return vreinterpretq_f32_u32(vandq_u32(vreinterpretq_u32_f32(inV1.mValue), vreinterpretq_u32_f32(inV2.mValue)));
 #elif defined(JPH_USE_RVV)
 	Vec4 and_result;
-	const vuint32m1_t rvv_inV1 =
-		__riscv_vle32_v_u32m1(reinterpret_cast<const uint32_t*>(inV1.mF32), 4);
-	const vuint32m1_t rvv_inV2 =
-		__riscv_vle32_v_u32m1(reinterpret_cast<const uint32_t*>(inV2.mF32), 4);
-	const vuint32m1_t res = __riscv_vand_vv_u32m1(rvv_inV1, rvv_inV2, 4);
-	__riscv_vse32_v_u32m1(reinterpret_cast<uint32_t*>(and_result.mF32), res, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(reinterpret_cast<const uint32 *>(inV1.mF32), 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(reinterpret_cast<const uint32 *>(inV2.mF32), 4);
+	const vuint32m1_t res = __riscv_vand_vv_u32m1(v1, v2, 4);
+	__riscv_vse32_v_u32m1(reinterpret_cast<uint32 *>(and_result.mF32), res, 4);
 	return and_result;
 #else
 	return UVec4::sAnd(inV1.ReinterpretAsInt(), inV2.ReinterpretAsInt()).ReinterpretAsFloat();
@@ -557,9 +535,9 @@ bool Vec4::IsNaN() const
 	uint32x4_t is_equal = vceqq_f32(mValue, mValue); // If a number is not equal to itself it's a NaN
 	return vaddvq_u32(vshrq_n_u32(is_equal, 31)) != 4;
 #elif defined(JPH_USE_RVV)
-	const vfloat32m1_t rvv_vec = __riscv_vle32_v_f32m1(mF32, 4);
-	const vbool32_t mask = __riscv_vmfeq_vv_f32m1_b32(rvv_vec, rvv_vec, 4);
-	const uint32_t eq = __riscv_vcpop_m_b32(mask, 4);
+	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
+	const vbool32_t mask = __riscv_vmfeq_vv_f32m1_b32(v, v, 4);
+	const uint32 eq = __riscv_vcpop_m_b32(mask, 4);
 	return eq != 4;
 #else
 	return isnan(mF32[0]) || isnan(mF32[1]) || isnan(mF32[2]) || isnan(mF32[3]);
@@ -574,9 +552,9 @@ Vec4 Vec4::operator * (Vec4Arg inV2) const
 	return vmulq_f32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_m1 = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_m2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(rvv_m1, rvv_m2, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
 	__riscv_vse32_v_f32m1(res.mF32, mul, 4);
 	return res;
 #else
@@ -613,8 +591,8 @@ Vec4 operator * (float inV1, Vec4Arg inV2)
 	return vmulq_n_f32(inV2.mValue, inV1);
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_m1 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t mul = __riscv_vfmul_vf_f32m1(rvv_m1, inV1, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t mul = __riscv_vfmul_vf_f32m1(v1, inV1, 4);
 	__riscv_vse32_v_f32m1(res.mF32, mul, 4);
 	return res;
 #else
@@ -633,8 +611,8 @@ Vec4 Vec4::operator / (float inV2) const
 	return vdivq_f32(mValue, vdupq_n_f32(inV2));
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_m1 = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t div = __riscv_vfdiv_vf_f32m1(rvv_m1, inV2, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t div = __riscv_vfdiv_vf_f32m1(v1, inV2, 4);
 	__riscv_vse32_v_f32m1(res.mF32, div, 4);
 	return res;
 #else
@@ -649,8 +627,8 @@ Vec4 &Vec4::operator *= (float inV2)
 #elif defined(JPH_USE_NEON)
 	mValue = vmulq_n_f32(mValue, inV2);
 #elif defined(JPH_USE_RVV)
-	const vfloat32m1_t rvv_m1 = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t res = __riscv_vfmul_vf_f32m1(rvv_m1, inV2, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t res = __riscv_vfmul_vf_f32m1(v1, inV2, 4);
 	__riscv_vse32_v_f32m1(mF32, res, 4);
 #else
 	for (int i = 0; i < 4; ++i)
@@ -666,10 +644,9 @@ Vec4 &Vec4::operator *= (Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	mValue = vmulq_f32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
-	const vfloat32m1_t rvv_m1 = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_m2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-
-	const vfloat32m1_t rvv_res = __riscv_vfmul_vv_f32m1(rvv_m1, rvv_m2, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t rvv_res = __riscv_vfmul_vv_f32m1(v1, v2, 4);
 	__riscv_vse32_v_f32m1(mF32, rvv_res, 4);
 #else
 	for (int i = 0; i < 4; ++i)
@@ -685,8 +662,8 @@ Vec4 &Vec4::operator /= (float inV2)
 #elif defined(JPH_USE_NEON)
 	mValue = vdivq_f32(mValue, vdupq_n_f32(inV2));
 #elif defined(JPH_USE_RVV)
-	const vfloat32m1_t rvv_vec = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t res = __riscv_vfdiv_vf_f32m1(rvv_vec, inV2, 4);
+	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t res = __riscv_vfdiv_vf_f32m1(v, inV2, 4);
 	__riscv_vse32_v_f32m1(mF32, res, 4);
 #else
 	for (int i = 0; i < 4; ++i)
@@ -703,9 +680,9 @@ Vec4 Vec4::operator + (Vec4Arg inV2) const
 	return vaddq_f32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_vec1 = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_vec2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t rvv_add = __riscv_vfadd_vv_f32m1(rvv_vec1, rvv_vec2, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t rvv_add = __riscv_vfadd_vv_f32m1(v1, v2, 4);
 	__riscv_vse32_v_f32m1(res.mF32, rvv_add, 4);
 	return res;
 #else
@@ -723,9 +700,9 @@ Vec4 &Vec4::operator += (Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	mValue = vaddq_f32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t rvv_add = __riscv_vfadd_vv_f32m1(rvv_a, rvv_b, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t rvv_add = __riscv_vfadd_vv_f32m1(v1, v2, 4);
 	__riscv_vse32_v_f32m1(mF32, rvv_add, 4);
 #else
 	for (int i = 0; i < 4; ++i)
@@ -748,14 +725,14 @@ Vec4 Vec4::operator - () const
 	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
 		Vec4 res;
 		const vfloat32m1_t rvv_zero = __riscv_vfmv_v_f_f32m1(0.0f, 4);
-		const vfloat32m1_t rvv_vec = __riscv_vle32_v_f32m1(mF32, 4);
-		const vfloat32m1_t rvv_neg = __riscv_vfsub_vv_f32m1(rvv_zero, rvv_vec, 4);
+		const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
+		const vfloat32m1_t rvv_neg = __riscv_vfsub_vv_f32m1(rvv_zero, v, 4);
 		__riscv_vse32_v_f32m1(res.mF32, rvv_neg, 4);
 		return res;
 	#else
 		Vec4 res;
-		const vfloat32m1_t rvv_vec = __riscv_vle32_v_f32m1(mF32, 4);
-		const vfloat32m1_t rvv_neg = __riscv_vfsgnjn_vv_f32m1(rvv_vec, rvv_vec, 4);
+		const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
+		const vfloat32m1_t rvv_neg = __riscv_vfsgnjn_vv_f32m1(v, v, 4);
 		__riscv_vse32_v_f32m1(res.mF32, rvv_neg, 4);
 		return res;
 	#endif
@@ -776,9 +753,9 @@ Vec4 Vec4::operator - (Vec4Arg inV2) const
 	return vsubq_f32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t rvv_sub = __riscv_vfsub_vv_f32m1(rvv_a, rvv_b, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t rvv_sub = __riscv_vfsub_vv_f32m1(v1, v2, 4);
 	__riscv_vse32_v_f32m1(res.mF32, rvv_sub, 4);
 	return res;
 #else
@@ -796,9 +773,9 @@ Vec4 &Vec4::operator -= (Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	mValue = vsubq_f32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t rvv_sub = __riscv_vfsub_vv_f32m1(rvv_a, rvv_b, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t rvv_sub = __riscv_vfsub_vv_f32m1(v1, v2, 4);
 	__riscv_vse32_v_f32m1(mF32, rvv_sub, 4);
 #else
 	for (int i = 0; i < 4; ++i)
@@ -815,9 +792,9 @@ Vec4 Vec4::operator / (Vec4Arg inV2) const
 	return vdivq_f32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t rvv_div = __riscv_vfdiv_vv_f32m1(rvv_a, rvv_b, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t rvv_div = __riscv_vfdiv_vv_f32m1(v1, v2, 4);
 	__riscv_vse32_v_f32m1(res.mF32, rvv_div, 4);
 	return res;
 #else
@@ -986,8 +963,8 @@ Vec4 Vec4::Abs() const
 	return vabsq_f32(mValue);
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
-	const vfloat32m1_t rvv_vec = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_abs = __riscv_vfsgnj_vf_f32m1(rvv_vec, 1.0, 4);
+	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t rvv_abs = __riscv_vfsgnj_vf_f32m1(v, 1.0, 4);
 	__riscv_vse32_v_f32m1(res.mF32, rvv_abs, 4);
 	return res;
 #else
@@ -1010,13 +987,11 @@ Vec4 Vec4::DotV(Vec4Arg inV2) const
 #elif defined(JPH_USE_RVV)
 	Vec4 res;
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 4);
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(rvv_a, rvv_b, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
 	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 4);
 	float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
-
 	const vfloat32m1_t splat = __riscv_vfmv_v_f_f32m1(dot, 4);
 	__riscv_vse32_v_f32m1(res.mF32, splat, 4);
 	return res;
@@ -1035,10 +1010,9 @@ float Vec4::Dot(Vec4Arg inV2) const
 	return vaddvq_f32(mul);
 #elif defined(JPH_USE_RVV)
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 4);
-	const vfloat32m1_t rvv_a = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t rvv_b = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(rvv_a, rvv_b, 4);
+	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
+	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
 	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 4);
 	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
 	return dot;
@@ -1057,9 +1031,8 @@ float Vec4::LengthSq() const
 	return vaddvq_f32(mul);
 #elif defined(JPH_USE_RVV)
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 4);
-	const vfloat32m1_t rvv_d1 = __riscv_vle32_v_f32m1(mF32, 4);
-
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(rvv_d1, rvv_d1, 4);
+	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
+	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 4);
 	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 4);
 	return __riscv_vfmv_f_s_f32m1_f32(sum);
 #else
@@ -1079,13 +1052,10 @@ float Vec4::Length() const
 #elif defined(JPH_USE_RVV)
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 4);
-
 	const vfloat32m1_t shift1 = __riscv_vslidedown_vx_f32m1(mul, 1, 4);
 	const vfloat32m1_t sum_pairs = __riscv_vfadd_vv_f32m1(mul, shift1, 4);
-
 	const vfloat32m1_t shift2 = __riscv_vslidedown_vx_f32m1(sum_pairs, 2, 4);
 	const vfloat32m1_t final_sum_vec = __riscv_vfadd_vv_f32m1(sum_pairs, shift2, 4);
-
 	const float final_sum = __riscv_vfmv_f_s_f32m1_f32(final_sum_vec);
 	return std::sqrt(final_sum);
 #else
@@ -1160,16 +1130,14 @@ Vec4 Vec4::Normalized() const
 #elif defined(JPH_USE_RVV)
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 4);
-
 	const vfloat32m1_t shift1 = __riscv_vslidedown_vx_f32m1(mul, 1, 4);
 	const vfloat32m1_t sum_pairs = __riscv_vfadd_vv_f32m1(mul, shift1, 4);
-
 	const vfloat32m1_t shift2 = __riscv_vslidedown_vx_f32m1(sum_pairs, 2, 4);
 	const vfloat32m1_t final_sum_vec = __riscv_vfadd_vv_f32m1(sum_pairs, shift2, 4);
-
 	const float final_sum = __riscv_vfmv_f_s_f32m1_f32(final_sum_vec);
 	const float length = std::sqrt(final_sum);
 	const vfloat32m1_t norm_v = __riscv_vfdiv_vf_f32m1(v, length, 4);
+
 	Vec4 vec;
 	__riscv_vse32_v_f32m1(vec.mF32, norm_v, 4);
 	return vec;
@@ -1229,12 +1197,11 @@ int Vec4::GetSignBits() const
 	int32x4_t shift = JPH_NEON_INT32x4(0, 1, 2, 3);
 	return vaddvq_u32(vshlq_u32(vshrq_n_u32(vreinterpretq_u32_f32(mValue), 31), shift));
 #elif defined(JPH_USE_RVV)
-	const vuint32m1_t v =
-		__riscv_vle32_v_u32m1(reinterpret_cast<const uint32_t*>(mF32), 4);
+	const vuint32m1_t v = __riscv_vle32_v_u32m1(reinterpret_cast<const uint32 *>(mF32), 4);
 	const vuint32m1_t shifted = __riscv_vsrl_vx_u32m1(v, 31, 4);
 	const vbool32_t mask = __riscv_vmsne_vx_u32m1_b32(shifted, 0x0, 4);
 	const vuint32m1_t as_int = __riscv_vreinterpret_v_b32_u32m1(mask);
-	const uint32_t result = __riscv_vmv_x_s_u32m1_u32(as_int) & 0xF;
+	const uint32 result = __riscv_vmv_x_s_u32m1_u32(as_int) & 0xF;
 	return result;
 #else
 	return (std::signbit(mF32[0])? 1 : 0) | (std::signbit(mF32[1])? 2 : 0) | (std::signbit(mF32[2])? 4 : 0) | (std::signbit(mF32[3])? 8 : 0);

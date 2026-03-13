@@ -46,7 +46,7 @@ UVec4 UVec4::Swizzle() const
 #elif defined(JPH_USE_RVV)
 	UVec4 v;
 	const vuint32m1_t data = __riscv_vle32_v_u32m1(mU32, 4);
-	const uint32_t stored_indices[4] = {SwizzleX, SwizzleY, SwizzleZ, SwizzleW};
+	const uint32 stored_indices[4] = { SwizzleX, SwizzleY, SwizzleZ, SwizzleW };
 	const vuint32m1_t index = __riscv_vle32_v_u32m1(stored_indices, 4);
 	const vuint32m1_t swizzled = __riscv_vrgather_vv_u32m1(data, index, 4);
 	__riscv_vse32_v_u32m1(v.mU32, swizzled, 4);
@@ -161,9 +161,9 @@ UVec4 UVec4::sMin(UVec4Arg inV1, UVec4Arg inV2)
 	return vminq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vuint32m1_t rvv_a = __riscv_vle32_v_u32m1(inV1.mU32, 4);
-	const vuint32m1_t rvv_b = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t min = __riscv_vminu_vv_u32m1(rvv_a, rvv_b, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(inV1.mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t min = __riscv_vminu_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(res.mU32, min, 4);
 	return res;
 #else
@@ -182,9 +182,9 @@ UVec4 UVec4::sMax(UVec4Arg inV1, UVec4Arg inV2)
 	return vmaxq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vuint32m1_t rvv_a = __riscv_vle32_v_u32m1(inV1.mU32, 4);
-	const vuint32m1_t rvv_b = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t max = __riscv_vmaxu_vv_u32m1(rvv_a, rvv_b, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(inV1.mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t max = __riscv_vmaxu_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(res.mU32, max, 4);
 	return res;
 #else
@@ -203,14 +203,11 @@ UVec4 UVec4::sEquals(UVec4Arg inV1, UVec4Arg inV2)
 	return vceqq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vuint32m1_t rvv_a = __riscv_vle32_v_u32m1(inV1.mU32, 4);
-	const vuint32m1_t rvv_b = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-
-	const vbool32_t mask = __riscv_vmseq_vv_u32m1_b32(rvv_a, rvv_b, 4);
-
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(inV1.mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vbool32_t mask = __riscv_vmseq_vv_u32m1_b32(v1, v2, 4);
 	const vuint32m1_t zeros = __riscv_vmv_v_x_u32m1(0x0, 4);
 	const vuint32m1_t merged = __riscv_vmerge_vxm_u32m1(zeros, 0xFFFFFFFF, mask, 4);
-
 	__riscv_vse32_v_u32m1(res.mU32, merged, 4);
 	return res;
 #else
@@ -232,15 +229,14 @@ UVec4 UVec4::sSelect(UVec4Arg inNotSet, UVec4Arg inSet, UVec4Arg inControl)
 	return vbslq_u32(vreinterpretq_u32_s32(vshrq_n_s32(vreinterpretq_s32_u32(inControl.mValue), 31)), inSet.mValue, inNotSet.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 masked;
-	const vuint32m1_t rvv_control = __riscv_vle32_v_u32m1(inControl.mU32, 4);
-	const vuint32m1_t rvv_inNotSet = __riscv_vle32_v_u32m1(inNotSet.mU32, 4);
-	const vuint32m1_t rvv_inSet = __riscv_vle32_v_u32m1(inSet.mU32, 4);
+	const vuint32m1_t control = __riscv_vle32_v_u32m1(inControl.mU32, 4);
+	const vuint32m1_t not_set = __riscv_vle32_v_u32m1(inNotSet.mU32, 4);
+	const vuint32m1_t set = __riscv_vle32_v_u32m1(inSet.mU32, 4);
 
 	// Generate RVV bool mask from UVec4
-	const vuint32m1_t r = __riscv_vand_vx_u32m1(rvv_control, 0x80000000u, 4);
+	const vuint32m1_t r = __riscv_vand_vx_u32m1(control, 0x80000000u, 4);
 	const vbool32_t rvv_mask = __riscv_vmsne_vx_u32m1_b32(r, 0x0, 4);
-	const vuint32m1_t merged  =
-		__riscv_vmerge_vvm_u32m1(rvv_inNotSet, rvv_inSet, rvv_mask, 4);
+	const vuint32m1_t merged = __riscv_vmerge_vvm_u32m1(not_set, set, rvv_mask, 4);
 	__riscv_vse32_v_u32m1(masked.mU32, merged, 4);
 	return masked;
 #else
@@ -259,9 +255,9 @@ UVec4 UVec4::sOr(UVec4Arg inV1, UVec4Arg inV2)
 	return vorrq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 or_result;
-	const vuint32m1_t rvv_inV1 = __riscv_vle32_v_u32m1(inV1.mU32, 4);
-	const vuint32m1_t rvv_inV2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t res = __riscv_vor_vv_u32m1(rvv_inV1, rvv_inV2, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(inV1.mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t res = __riscv_vor_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(or_result.mU32, res, 4);
 	return or_result;
 #else
@@ -280,9 +276,9 @@ UVec4 UVec4::sXor(UVec4Arg inV1, UVec4Arg inV2)
 	return veorq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 xor_result;
-	const vuint32m1_t rvv_inV1 = __riscv_vle32_v_u32m1(inV1.mU32, 4);
-	const vuint32m1_t rvv_inV2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t res = __riscv_vxor_vv_u32m1(rvv_inV1, rvv_inV2, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(inV1.mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t res = __riscv_vxor_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(xor_result.mU32, res, 4);
 	return xor_result;
 #else
@@ -301,9 +297,9 @@ UVec4 UVec4::sAnd(UVec4Arg inV1, UVec4Arg inV2)
 	return vandq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 and_result;
-	const vuint32m1_t rvv_inV1 = __riscv_vle32_v_u32m1(inV1.mU32, 4);
-	const vuint32m1_t rvv_inV2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t res = __riscv_vand_vv_u32m1(rvv_inV1, rvv_inV2, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(inV1.mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t res = __riscv_vand_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(and_result.mU32, res, 4);
 	return and_result;
 #else
@@ -356,9 +352,9 @@ UVec4 UVec4::operator * (UVec4Arg inV2) const
 	return vmulq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vuint32m1_t rvv_m1 = __riscv_vle32_v_u32m1(mU32, 4);
-	const vuint32m1_t rvv_m2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t mul = __riscv_vmul_vv_u32m1(rvv_m1, rvv_m2, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t mul = __riscv_vmul_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(res.mU32, mul, 4);
 	return res;
 #else
@@ -377,9 +373,9 @@ UVec4 UVec4::operator + (UVec4Arg inV2) const
 	return vaddq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vuint32m1_t rvv_vec1 = __riscv_vle32_v_u32m1(mU32, 4);
-	const vuint32m1_t rvv_vec2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t rvv_add = __riscv_vadd_vv_u32m1(rvv_vec1, rvv_vec2, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t rvv_add = __riscv_vadd_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(res.mU32, rvv_add, 4);
 	return res;
 #else
@@ -397,9 +393,9 @@ UVec4 &UVec4::operator += (UVec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	mValue = vaddq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
-	const vuint32m1_t rvv_a = __riscv_vle32_v_u32m1(mU32, 4);
-	const vuint32m1_t rvv_b = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t rvv_add = __riscv_vadd_vv_u32m1(rvv_a, rvv_b, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t rvv_add = __riscv_vadd_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(mU32, rvv_add, 4);
 #else
 	for (int i = 0; i < 4; ++i)
@@ -416,9 +412,9 @@ UVec4 UVec4::operator - (UVec4Arg inV2) const
 	return vsubq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
-	const vuint32m1_t rvv_vec1 = __riscv_vle32_v_u32m1(mU32, 4);
-	const vuint32m1_t rvv_vec2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t rvv_add = __riscv_vsub_vv_u32m1(rvv_vec1, rvv_vec2, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t rvv_add = __riscv_vsub_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(res.mU32, rvv_add, 4);
 	return res;
 #else
@@ -436,9 +432,9 @@ UVec4 &UVec4::operator -= (UVec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	mValue = vsubq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
-	const vuint32m1_t rvv_a = __riscv_vle32_v_u32m1(mU32, 4);
-	const vuint32m1_t rvv_b = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-	const vuint32m1_t rvv_sub = __riscv_vsub_vv_u32m1(rvv_a, rvv_b, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t rvv_sub = __riscv_vsub_vv_u32m1(v1, v2, 4);
 	__riscv_vse32_v_u32m1(mU32, rvv_sub, 4);
 #else
 	for (int i = 0; i < 4; ++i)
@@ -543,22 +539,19 @@ UVec4 UVec4::DotV(UVec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE4_1)
 	__m128i mul = _mm_mullo_epi32(mValue, inV2.mValue);
-    __m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
-    return _mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2)));
+ __m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
+ return _mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2)));
 #elif defined(JPH_USE_NEON)
 	uint32x4_t mul = vmulq_u32(mValue, inV2.mValue);
 	return vdupq_n_u32(vaddvq_u32(mul));
 #elif defined(JPH_USE_RVV)
 	UVec4 res;
 	const vuint32m1_t zeros = __riscv_vmv_v_x_u32m1(0, 4);
-	const vuint32m1_t rvv_a = __riscv_vle32_v_u32m1(mU32, 4);
-	const vuint32m1_t rvv_b = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-
-	const vuint32m1_t mul = __riscv_vmul_vv_u32m1(rvv_a, rvv_b, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t mul = __riscv_vmul_vv_u32m1(v1, v2, 4);
 	const vuint32m1_t sum = __riscv_vredsum_vs_u32m1_u32m1(mul, zeros, 4);
-
-	const uint32_t dot = __riscv_vmv_x_s_u32m1_u32(sum);
-
+	const uint32 dot = __riscv_vmv_x_s_u32m1_u32(sum);
 	const vuint32m1_t splat = __riscv_vmv_v_x_u32m1(dot, 4);
 	__riscv_vse32_v_u32m1(res.mU32, splat, 4);
 	return res;
@@ -572,19 +565,17 @@ uint32 UVec4::Dot(UVec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE4_1)
 	__m128i mul = _mm_mullo_epi32(mValue, inV2.mValue);
-    __m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
-    return _mm_cvtsi128_si32(_mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2))));
+ __m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
+ return _mm_cvtsi128_si32(_mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2))));
 #elif defined(JPH_USE_NEON)
 	uint32x4_t mul = vmulq_u32(mValue, inV2.mValue);
 	return vaddvq_u32(mul);
 #elif defined(JPH_USE_RVV)
 	const vuint32m1_t zeros = __riscv_vmv_v_x_u32m1(0, 4);
-	const vuint32m1_t rvv_a = __riscv_vle32_v_u32m1(mU32, 4);
-	const vuint32m1_t rvv_b = __riscv_vle32_v_u32m1(inV2.mU32, 4);
-
-	const vuint32m1_t mul = __riscv_vmul_vv_u32m1(rvv_a, rvv_b, 4);
+	const vuint32m1_t v1 = __riscv_vle32_v_u32m1(mU32, 4);
+	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
+	const vuint32m1_t mul = __riscv_vmul_vv_u32m1(v1, v2, 4);
 	const vuint32m1_t sum = __riscv_vredsum_vs_u32m1_u32m1(mul, zeros, 4);
-
 	return __riscv_vmv_x_s_u32m1_u32(sum);
 #else
 	return mU32[0] * inV2.mU32[0] + mU32[1] * inV2.mU32[1] + mU32[2] * inV2.mU32[2] + mU32[3] * inV2.mU32[3];
@@ -598,7 +589,7 @@ void UVec4::StoreInt4(uint32 *outV) const
 #elif defined(JPH_USE_NEON)
 	vst1q_u32(outV, mValue);
 #elif defined(JPH_USE_RVV)
-		const vuint32m1_t v = __riscv_vle32_v_u32m1(mU32, 4);
+	const vuint32m1_t v = __riscv_vle32_v_u32m1(mU32, 4);
 	__riscv_vse32_v_u32m1(outV, v, 4);
 #else
 	for (int i = 0; i < 4; ++i)
@@ -613,7 +604,7 @@ void UVec4::StoreInt4Aligned(uint32 *outV) const
 #elif defined(JPH_USE_NEON)
 	vst1q_u32(outV, mValue); // ARM doesn't make distinction between aligned or not
 #elif defined(JPH_USE_RVV)
-		const vuint32m1_t v = __riscv_vle32_v_u32m1(mU32, 4);
+	const vuint32m1_t v = __riscv_vle32_v_u32m1(mU32, 4);
 	__riscv_vse32_v_u32m1(outV, v, 4);
 #else
 	for (int i = 0; i < 4; ++i)
@@ -630,7 +621,6 @@ int UVec4::CountTrues() const
 #elif defined(JPH_USE_RVV)
 	const vuint32m1_t src = __riscv_vle32_v_u32m1(mU32, 4);
 	const vuint32m1_t filter = __riscv_vand_vx_u32m1(src, 0x80000000, 4);
-
 	const vbool32_t mask = __riscv_vmsne_vx_u32m1_b32(filter, 0, 4);
 	return __riscv_vcpop_m_b32(mask, 4);
 #else
@@ -649,7 +639,7 @@ int UVec4::GetTrues() const
 	const vuint32m1_t src = __riscv_vle32_v_u32m1(this->mU32, 4);
 	const vbool32_t mask = __riscv_vmsgeu_vx_u32m1_b32(src, 0x80000000, 4);
 	const vuint32m1_t as_int = __riscv_vreinterpret_v_b32_u32m1(mask);
-	const uint32_t result = __riscv_vmv_x_s_u32m1_u32(as_int) & 0xF;
+	const uint32 result = __riscv_vmv_x_s_u32m1_u32(as_int) & 0xF;
 	return result;
 #else
 	return (mU32[0] >> 31) | ((mU32[1] >> 31) << 1) | ((mU32[2] >> 31) << 2) | ((mU32[3] >> 31) << 3);
@@ -688,6 +678,7 @@ UVec4 UVec4::LogicalShiftLeft() const
 #elif defined(JPH_USE_RVV)
 	const vuint32m1_t v = __riscv_vle32_v_u32m1(mU32, 4);
 	const vuint32m1_t shifted = __riscv_vsll_vx_u32m1(v, Count, 4);
+
 	UVec4 vec;
 	__riscv_vse32_v_u32m1(vec.mU32, shifted, 4);
 	return vec;
@@ -708,6 +699,7 @@ UVec4 UVec4::LogicalShiftRight() const
 #elif defined(JPH_USE_RVV)
 	const vuint32m1_t v = __riscv_vle32_v_u32m1(mU32, 4);
 	const vuint32m1_t shifted = __riscv_vsrl_vx_u32m1(v, Count, 4);
+
 	UVec4 vec;
 	__riscv_vse32_v_u32m1(vec.mU32, shifted, 4);
 	return vec;
@@ -726,17 +718,17 @@ UVec4 UVec4::ArithmeticShiftRight() const
 #elif defined(JPH_USE_NEON)
 	return vreinterpretq_u32_s32(vshrq_n_s32(vreinterpretq_s32_u32(mValue), Count));
 #elif defined(JPH_USE_RVV)
-	const vint32m1_t v =
-		__riscv_vle32_v_i32m1(reinterpret_cast<const int32_t*>(mU32), 4);
+	const vint32m1_t v = __riscv_vle32_v_i32m1(reinterpret_cast<const int32 *>(mU32), 4);
 	const vint32m1_t shifted = __riscv_vsra_vx_i32m1(v, Count, 4);
+
 	UVec4 vec;
-	__riscv_vse32_v_i32m1(reinterpret_cast<int32_t*>(vec.mU32), shifted, 4);
+	__riscv_vse32_v_i32m1(reinterpret_cast<int32 *>(vec.mU32), shifted, 4);
 	return vec;
 #else
-	return UVec4(uint32(int32_t(mU32[0]) >> Count),
-				 uint32(int32_t(mU32[1]) >> Count),
-				 uint32(int32_t(mU32[2]) >> Count),
-				 uint32(int32_t(mU32[3]) >> Count));
+	return UVec4(uint32(int32(mU32[0]) >> Count),
+				 uint32(int32(mU32[1]) >> Count),
+				 uint32(int32(mU32[2]) >> Count),
+				 uint32(int32(mU32[3]) >> Count));
 #endif
 }
 
@@ -749,9 +741,9 @@ UVec4 UVec4::Expand4Uint16Lo() const
 	uint16x4_t zero = vdup_n_u16(0);
 	return vreinterpretq_u32_u16(vcombine_u16(vzip1_u16(value, zero), vzip2_u16(value, zero)));
 #elif defined(JPH_USE_RVV)
-	const vuint16mf2_t v =
-		__riscv_vle16_v_u16mf2(reinterpret_cast<const uint16_t*>(mU32), 4);
+	const vuint16mf2_t v = __riscv_vle16_v_u16mf2(reinterpret_cast<const uint16 *>(mU32), 4);
 	const vuint32m1_t zext = __riscv_vzext_vf2_u32m1(v, 4);
+
 	UVec4 res;
 	__riscv_vse32_v_u32m1(res.mU32, zext, 4);
 	return res;
@@ -772,9 +764,9 @@ UVec4 UVec4::Expand4Uint16Hi() const
 	uint16x4_t zero = vdup_n_u16(0);
 	return vreinterpretq_u32_u16(vcombine_u16(vzip1_u16(value, zero), vzip2_u16(value, zero)));
 #elif defined(JPH_USE_RVV)
-	const vuint16mf2_t v =
-		__riscv_vle16_v_u16mf2(reinterpret_cast<const uint16_t*>(&mU32[2]), 4);
+	const vuint16mf2_t v = __riscv_vle16_v_u16mf2(reinterpret_cast<const uint16 *>(&mU32[2]), 4);
 	const vuint32m1_t zext = __riscv_vzext_vf2_u32m1(v, 4);
+
 	UVec4 res;
 	__riscv_vse32_v_u32m1(res.mU32, zext, 4);
 	return res;
@@ -794,9 +786,9 @@ UVec4 UVec4::Expand4Byte0() const
 	uint8x16_t idx = JPH_NEON_UINT8x16(0x00, 0x7f, 0x7f, 0x7f, 0x01, 0x7f, 0x7f, 0x7f, 0x02, 0x7f, 0x7f, 0x7f, 0x03, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #elif defined(JPH_USE_RVV)
-	const vuint8mf4_t v =
-		__riscv_vle8_v_u8mf4(reinterpret_cast<const uint8_t*>(mU32), 4);
+	const vuint8mf4_t v = __riscv_vle8_v_u8mf4(reinterpret_cast<const uint8 *>(mU32), 4);
 	const vuint32m1_t zext = __riscv_vzext_vf4_u32m1(v, 4);
+
 	UVec4 res;
 	__riscv_vse32_v_u32m1(res.mU32, zext, 4);
 	return res;
@@ -816,9 +808,9 @@ UVec4 UVec4::Expand4Byte4() const
 	uint8x16_t idx = JPH_NEON_UINT8x16(0x04, 0x7f, 0x7f, 0x7f, 0x05, 0x7f, 0x7f, 0x7f, 0x06, 0x7f, 0x7f, 0x7f, 0x07, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #elif defined(JPH_USE_RVV)
-	const vuint8mf4_t v =
-		__riscv_vle8_v_u8mf4(reinterpret_cast<const uint8_t*>(&mU32[1]), 4);
+	const vuint8mf4_t v = __riscv_vle8_v_u8mf4(reinterpret_cast<const uint8 *>(&mU32[1]), 4);
 	const vuint32m1_t zext = __riscv_vzext_vf4_u32m1(v, 4);
+
 	UVec4 res;
 	__riscv_vse32_v_u32m1(res.mU32, zext, 4);
 	return res;
@@ -838,9 +830,9 @@ UVec4 UVec4::Expand4Byte8() const
 	uint8x16_t idx = JPH_NEON_UINT8x16(0x08, 0x7f, 0x7f, 0x7f, 0x09, 0x7f, 0x7f, 0x7f, 0x0a, 0x7f, 0x7f, 0x7f, 0x0b, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #elif defined(JPH_USE_RVV)
-	const vuint8mf4_t v =
-		__riscv_vle8_v_u8mf4(reinterpret_cast<const uint8_t*>(&mU32[2]), 4);
+	const vuint8mf4_t v = __riscv_vle8_v_u8mf4(reinterpret_cast<const uint8 *>(&mU32[2]), 4);
 	const vuint32m1_t zext = __riscv_vzext_vf4_u32m1(v, 4);
+
 	UVec4 res;
 	__riscv_vse32_v_u32m1(res.mU32, zext, 4);
 	return res;
@@ -860,9 +852,9 @@ UVec4 UVec4::Expand4Byte12() const
 	uint8x16_t idx = JPH_NEON_UINT8x16(0x0c, 0x7f, 0x7f, 0x7f, 0x0d, 0x7f, 0x7f, 0x7f, 0x0e, 0x7f, 0x7f, 0x7f, 0x0f, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #elif defined(JPH_USE_RVV)
-	const vuint8mf4_t v =
-		__riscv_vle8_v_u8mf4(reinterpret_cast<const uint8_t*>(&mU32[3]), 4);
+	const vuint8mf4_t v = __riscv_vle8_v_u8mf4(reinterpret_cast<const uint8 *>(&mU32[3]), 4);
 	const vuint32m1_t zext = __riscv_vzext_vf4_u32m1(v, 4);
+
 	UVec4 res;
 	__riscv_vse32_v_u32m1(res.mU32, zext, 4);
 	return res;
@@ -893,8 +885,9 @@ UVec4 UVec4::ShiftComponents4Minus(int inCount) const
 	uint8x16_t idx = vreinterpretq_u8_u32(*reinterpret_cast<const UVec4::Type *>(sFourMinusXShuffle[inCount]));
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #elif defined(JPH_USE_RVV)
-	const uint32_t* start_ptr = mU32 + (4 - inCount);
+	const uint32 *start_ptr = mU32 + (4 - inCount);
 	const vuint32m1_t v = __riscv_vle32_v_u32m1(start_ptr, inCount);
+
 	UVec4 res = sZero();
 	__riscv_vse32_v_u32m1(res.mU32, v, inCount);
 	return res;

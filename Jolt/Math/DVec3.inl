@@ -117,7 +117,7 @@ DVec3::Type DVec3::sFixW(TypeArg inValue)
 		value.val[0] = inValue.val[0];
 		value.val[1] = vdupq_laneq_f64(inValue.val[1], 0);
 		return value;
-		#elif defined(JPH_USE_RVV)
+	#elif defined(JPH_USE_RVV)
 		DVec3::Type value;
 		const vfloat64m2_t buffer = __riscv_vle64_v_f64m2(inValue.mF64);
 		__riscv_vse64_v_f64m2(value.mData, buffer, 4);
@@ -198,8 +198,8 @@ DVec3 DVec3::sLoadDouble3Unsafe(const Double3 &inV)
 	Type v = vld1q_f64_x2(&inV.x);
 #elif defined(JPH_USE_RVV)
 	Type v;
-	const vfloat64m2_t rvv_vec = __riscv_vle64_v_f64m2(&inV.x, 3);
-	__riscv_vse64_v_f64m2(v.mData, rvv_vec, 3);
+	const vfloat64m2_t vec = __riscv_vle64_v_f64m2(&inV.x, 3);
+	__riscv_vse64_v_f64m2(v.mData, vec, 3);
 #else
 	Type v = { inV.x, inV.y, inV.z };
 #endif
@@ -244,9 +244,9 @@ DVec3 DVec3::sMin(DVec3Arg inV1, DVec3Arg inV2)
 	return DVec3({ vminq_f64(inV1.mValue.val[0], inV2.mValue.val[0]), vminq_f64(inV1.mValue.val[1], inV2.mValue.val[1]) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(inV1.mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t min = __riscv_vfmin_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV1.mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t min = __riscv_vfmin_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(res.mF64, min, 3);
 	return res;
 #else
@@ -266,9 +266,9 @@ DVec3 DVec3::sMax(DVec3Arg inV1, DVec3Arg inV2)
 	return DVec3({ vmaxq_f64(inV1.mValue.val[0], inV2.mValue.val[0]), vmaxq_f64(inV1.mValue.val[1], inV2.mValue.val[1]) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(inV1.mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t max = __riscv_vfmax_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV1.mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t max = __riscv_vfmax_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(res.mF64, max, 3);
 	return res;
 #else
@@ -293,14 +293,11 @@ DVec3 DVec3::sEquals(DVec3Arg inV1, DVec3Arg inV2)
 	return DVec3({ vreinterpretq_f64_u64(vceqq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vceqq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(inV1.mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-
-	const vbool32_t mask = __riscv_vmfeq_vv_f64m2_b32(rvv_a, rvv_b, 3);
-
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV1.mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vbool32_t mask = __riscv_vmfeq_vv_f64m2_b32(v1, v2, 3);
 	const vfloat64m2_t zeros = __riscv_vfmv_v_f_f64m2(cFalse, 3);
 	const vfloat64m2_t merged = __riscv_vfmerge_vfm_f64m2(zeros, cTrue, mask, 3);
-
 	__riscv_vse64_v_f64m2(res.mF64, merged, 3);
 	return res;
 #else
@@ -320,14 +317,11 @@ DVec3 DVec3::sLess(DVec3Arg inV1, DVec3Arg inV2)
 	return DVec3({ vreinterpretq_f64_u64(vcltq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vcltq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(inV1.mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-
-	const vbool32_t mask = __riscv_vmflt_vv_f64m2_b32(rvv_a, rvv_b, 3);
-
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV1.mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vbool32_t mask = __riscv_vmflt_vv_f64m2_b32(v1, v2, 3);
 	const vfloat64m2_t zeros = __riscv_vfmv_v_f_f64m2(cFalse, 3);
 	const vfloat64m2_t merged = __riscv_vfmerge_vfm_f64m2(zeros, cTrue, mask, 3);
-
 	__riscv_vse64_v_f64m2(res.mF64, merged, 3);
 	return res;
 #else
@@ -347,14 +341,11 @@ DVec3 DVec3::sLessOrEqual(DVec3Arg inV1, DVec3Arg inV2)
 	return DVec3({ vreinterpretq_f64_u64(vcleq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vcleq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(inV1.mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-
-	const vbool32_t mask = __riscv_vmfle_vv_f64m2_b32(rvv_a, rvv_b, 3);
-
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV1.mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vbool32_t mask = __riscv_vmfle_vv_f64m2_b32(v1, v2, 3);
 	const vfloat64m2_t zeros = __riscv_vfmv_v_f_f64m2(cFalse, 3);
 	const vfloat64m2_t merged = __riscv_vfmerge_vfm_f64m2(zeros, cTrue, mask, 3);
-
 	__riscv_vse64_v_f64m2(res.mF64, merged, 3);
 	return res;
 #else
@@ -374,14 +365,11 @@ DVec3 DVec3::sGreater(DVec3Arg inV1, DVec3Arg inV2)
 	return DVec3({ vreinterpretq_f64_u64(vcgtq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vcgtq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(inV1.mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-
-	const vbool32_t mask = __riscv_vmfgt_vv_f64m2_b32(rvv_a, rvv_b, 3);
-
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV1.mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vbool32_t mask = __riscv_vmfgt_vv_f64m2_b32(v1, v2, 3);
 	const vfloat64m2_t zeros = __riscv_vfmv_v_f_f64m2(cFalse, 3);
 	const vfloat64m2_t merged = __riscv_vfmerge_vfm_f64m2(zeros, cTrue, mask, 3);
-
 	__riscv_vse64_v_f64m2(res.mF64, merged, 3);
 	return res;
 #else
@@ -401,14 +389,11 @@ DVec3 DVec3::sGreaterOrEqual(DVec3Arg inV1, DVec3Arg inV2)
 	return DVec3({ vreinterpretq_f64_u64(vcgeq_f64(inV1.mValue.val[0], inV2.mValue.val[0])), vreinterpretq_f64_u64(vcgeq_f64(inV1.mValue.val[1], inV2.mValue.val[1])) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(inV1.mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-
-	const vbool32_t mask = __riscv_vmfge_vv_f64m2_b32(rvv_a, rvv_b, 3);
-
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV1.mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vbool32_t mask = __riscv_vmfge_vv_f64m2_b32(v1, v2, 3);
 	const vfloat64m2_t zeros = __riscv_vfmv_v_f_f64m2(cFalse, 3);
 	const vfloat64m2_t merged = __riscv_vfmerge_vfm_f64m2(zeros, cTrue, mask, 3);
-
 	__riscv_vse64_v_f64m2(res.mF64, merged, 3);
 	return res;
 #else
@@ -430,10 +415,10 @@ DVec3 DVec3::sFusedMultiplyAdd(DVec3Arg inMul1, DVec3Arg inMul2, DVec3Arg inAdd)
 	return DVec3({ vmlaq_f64(inAdd.mValue.val[0], inMul1.mValue.val[0], inMul2.mValue.val[0]), vmlaq_f64(inAdd.mValue.val[1], inMul1.mValue.val[1], inMul2.mValue.val[1]) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(inMul1.mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inMul2.mF64, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inMul1.mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inMul2.mF64, 3);
 	const vfloat64m2_t rvv_add = __riscv_vle64_v_f64m2(inAdd.mF64, 3);
-	const vfloat64m2_t fmadd = __riscv_vfmacc_vv_f64m2(rvv_add, rvv_a, rvv_b, 3);
+	const vfloat64m2_t fmadd = __riscv_vfmacc_vv_f64m2(rvv_add, v1, v2, 3);
 	__riscv_vse64_v_f64m2(res.mF64, fmadd, 3);
 	return res;
 #else
@@ -454,20 +439,16 @@ DVec3 DVec3::sSelect(DVec3Arg inNotSet, DVec3Arg inSet, DVec3Arg inControl)
 	return sFixW(v);
 #elif defined(JPH_USE_RVV)
 	DVec3 masked;
-	const vfloat64m2_t rvv_control_double =
-		__riscv_vle64_v_f64m2(inControl.mF64, 3);
-	const vfloat64m2_t rvv_inNotSet = __riscv_vle64_v_f64m2(inNotSet.mF64, 3);
-	const vfloat64m2_t rvv_inSet = __riscv_vle64_v_f64m2(inSet.mF64, 3);
-	const vuint64m2_t rvv_control =
-		__riscv_vreinterpret_v_f64m2_u64m2(rvv_control_double);
+	const vfloat64m2_t control_double = __riscv_vle64_v_f64m2(inControl.mF64, 3);
+	const vfloat64m2_t not_set = __riscv_vle64_v_f64m2(inNotSet.mF64, 3);
+	const vfloat64m2_t set = __riscv_vle64_v_f64m2(inSet.mF64, 3);
+	const vuint64m2_t control = __riscv_vreinterpret_v_f64m2_u64m2(control_double);
 
 	// Generate RVV bool mask from UVec4
-	const uint64_t sign_bit_mask = 0x8000000000000000u;
-	const vuint64m2_t r =
-		__riscv_vand_vx_u64m2(rvv_control, sign_bit_mask, 3);
+	const uint64 sign_bit_mask = 0x8000000000000000u;
+	const vuint64m2_t r = __riscv_vand_vx_u64m2(control, sign_bit_mask, 3);
 	const vbool32_t rvv_mask = __riscv_vmsne_vx_u64m2_b32(r, 0x0, 3);
-	const vfloat64m2_t merged =
-		__riscv_vmerge_vvm_f64m2(rvv_inNotSet, rvv_inSet, rvv_mask, 3);
+	const vfloat64m2_t merged = __riscv_vmerge_vvm_f64m2(not_set, set, rvv_mask, 3);
 	__riscv_vse64_v_f64m2(masked.mF64, merged, 3);
 	return masked;
 #else
@@ -492,12 +473,10 @@ DVec3 DVec3::sOr(DVec3Arg inV1, DVec3Arg inV2)
 				   vreinterpretq_f64_u64(vorrq_u64(vreinterpretq_u64_f64(inV1.mValue.val[1]), vreinterpretq_u64_f64(inV2.mValue.val[1]))) });
 #elif defined(JPH_USE_RVV)
 	DVec3 or_result;
-	const vuint64m2_t rvv_inV1 =
-		__riscv_vle64_v_u64m2(reinterpret_cast<const uint64_t*>(inV1.mF64), 3);
-	const vuint64m2_t rvv_inV2 =
-		__riscv_vle64_v_u64m2(reinterpret_cast<const uint64_t*>(inV2.mF64), 3);
-	const vuint64m2_t res = __riscv_vor_vv_u64m2(rvv_inV1, rvv_inV2, 3);
-	__riscv_vse64_v_u64m2(reinterpret_cast<uint64_t*>(or_result.mF64), res, 3);
+	const vuint64m2_t v1 = __riscv_vle64_v_u64m2(reinterpret_cast<const uint64 *>(inV1.mF64), 3);
+	const vuint64m2_t v2 = __riscv_vle64_v_u64m2(reinterpret_cast<const uint64 *>(inV2.mF64), 3);
+	const vuint64m2_t res = __riscv_vor_vv_u64m2(v1, v2, 3);
+	__riscv_vse64_v_u64m2(reinterpret_cast<uint64 *>(or_result.mF64), res, 3);
 	return or_result;
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) | BitCast<uint64>(inV2.mF64[0])),
@@ -517,12 +496,10 @@ DVec3 DVec3::sXor(DVec3Arg inV1, DVec3Arg inV2)
 				   vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(inV1.mValue.val[1]), vreinterpretq_u64_f64(inV2.mValue.val[1]))) });
 #elif defined(JPH_USE_RVV)
 	DVec3 xor_result;
-	const vuint64m2_t rvv_inV1 =
-		__riscv_vle64_v_u64m2(reinterpret_cast<const uint64_t*>(inV1.mF64), 3);
-	const vuint64m2_t rvv_inV2 =
-		__riscv_vle64_v_u64m2(reinterpret_cast<const uint64_t*>(inV2.mF64), 3);
-	const vuint64m2_t res = __riscv_vxor_vv_u64m2(rvv_inV1, rvv_inV2, 3);
-	__riscv_vse64_v_u64m2(reinterpret_cast<uint64_t*>(xor_result.mF64), res, 3);
+	const vuint64m2_t v1 = __riscv_vle64_v_u64m2(reinterpret_cast<const uint64 *>(inV1.mF64), 3);
+	const vuint64m2_t v2 = __riscv_vle64_v_u64m2(reinterpret_cast<const uint64 *>(inV2.mF64), 3);
+	const vuint64m2_t res = __riscv_vxor_vv_u64m2(v1, v2, 3);
+	__riscv_vse64_v_u64m2(reinterpret_cast<uint64 *>(xor_result.mF64), res, 3);
 	return xor_result;
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) ^ BitCast<uint64>(inV2.mF64[0])),
@@ -542,12 +519,10 @@ DVec3 DVec3::sAnd(DVec3Arg inV1, DVec3Arg inV2)
 				   vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(inV1.mValue.val[1]), vreinterpretq_u64_f64(inV2.mValue.val[1]))) });
 #elif defined(JPH_USE_RVV)
 	DVec3 and_result;
-	const vuint64m2_t rvv_inV1 =
-		__riscv_vle64_v_u64m2(reinterpret_cast<const uint64_t*>(inV1.mF64), 3);
-	const vuint64m2_t rvv_inV2 =
-		__riscv_vle64_v_u64m2(reinterpret_cast<const uint64_t*>(inV2.mF64), 3);
-	const vuint64m2_t res = __riscv_vand_vv_u64m2(rvv_inV1, rvv_inV2, 3);
-	__riscv_vse64_v_u64m2(reinterpret_cast<uint64_t*>(and_result.mF64), res, 3);
+	const vuint64m2_t v1 = __riscv_vle64_v_u64m2(reinterpret_cast<const uint64 *>(inV1.mF64), 3);
+	const vuint64m2_t v2 = __riscv_vle64_v_u64m2(reinterpret_cast<const uint64 *>(inV2.mF64), 3);
+	const vuint64m2_t res = __riscv_vand_vv_u64m2(v1, v2, 3);
+	__riscv_vse64_v_u64m2(reinterpret_cast<uint64 *>(and_result.mF64), res, 3);
 	return and_result;
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) & BitCast<uint64>(inV2.mF64[0])),
@@ -602,9 +577,9 @@ DVec3 DVec3::operator * (DVec3Arg inV2) const
 	return DVec3({ vmulq_f64(mValue.val[0], inV2.mValue.val[0]), vmulq_f64(mValue.val[1], inV2.mValue.val[1]) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_m1 = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_m2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t mul = __riscv_vfmul_vv_f64m2(rvv_m1, rvv_m2, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t mul = __riscv_vfmul_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(res.mF64, mul, 3);
 	return res;
 #else
@@ -643,8 +618,8 @@ DVec3 operator * (double inV1, DVec3Arg inV2)
 	return DVec3({ vmulq_n_f64(inV2.mValue.val[0], inV1), vmulq_n_f64(inV2.mValue.val[1], inV1) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_m1 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t mul = __riscv_vfmul_vf_f64m2(rvv_m1, inV1, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t mul = __riscv_vfmul_vf_f64m2(v1, inV1, 3);
 	__riscv_vse64_v_f64m2(res.mF64, mul, 3);
 	return res;
 #else
@@ -685,8 +660,8 @@ DVec3 &DVec3::operator *= (double inV2)
 	mValue.val[0] = vmulq_n_f64(mValue.val[0], inV2);
 	mValue.val[1] = vmulq_n_f64(mValue.val[1], inV2);
 #elif defined(JPH_USE_RVV)
-	const vfloat64m2_t rvv_m1 = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t res = __riscv_vfmul_vf_f64m2(rvv_m1, inV2, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t res = __riscv_vfmul_vf_f64m2(v1, inV2, 3);
 	__riscv_vse64_v_f64m2(mF64, res, 3);
 #else
 	for (int i = 0; i < 3; ++i)
@@ -709,10 +684,9 @@ DVec3 &DVec3::operator *= (DVec3Arg inV2)
 	mValue.val[0] = vmulq_f64(mValue.val[0], inV2.mValue.val[0]);
 	mValue.val[1] = vmulq_f64(mValue.val[1], inV2.mValue.val[1]);
 #elif defined(JPH_USE_RVV)
-	const vfloat64m2_t rvv_m1 = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_m2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-
-	const vfloat64m2_t rvv_res = __riscv_vfmul_vv_f64m2(rvv_m1, rvv_m2, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t rvv_res = __riscv_vfmul_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(mF64, rvv_res, 3);
 #else
 	for (int i = 0; i < 3; ++i)
@@ -737,8 +711,8 @@ DVec3 &DVec3::operator /= (double inV2)
 	mValue.val[0] = vdivq_f64(mValue.val[0], v);
 	mValue.val[1] = vdivq_f64(mValue.val[1], v);
 #elif defined(JPH_USE_RVV)
-	const vfloat64m2_t rvv_vec = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t res = __riscv_vfdiv_vf_f64m2(rvv_vec, inV2, 3);
+	const vfloat64m2_t v = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t res = __riscv_vfdiv_vf_f64m2(v, inV2, 3);
 	__riscv_vse64_v_f64m2(mF64, res, 3);
 #else
 	for (int i = 0; i < 3; ++i)
@@ -760,10 +734,10 @@ DVec3 DVec3::operator + (Vec3Arg inV2) const
 	return DVec3({ vaddq_f64(mValue.val[0], vcvt_f64_f32(vget_low_f32(inV2.mValue))), vaddq_f64(mValue.val[1], vcvt_high_f64_f32(inV2.mValue)) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_vec1 = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat32m1_t rvv_vec2_f32 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
-	const vfloat64m2_t rvv_vec2 = __riscv_vfwcvt_f_f_v_f64m2(rvv_vec2_f32, 3);
-	const vfloat64m2_t rvv_add = __riscv_vfadd_vv_f64m2(rvv_vec1, rvv_vec2, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat32m1_t v2_f32 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
+	const vfloat64m2_t v2 = __riscv_vfwcvt_f_f_v_f64m2(v2_f32, 3);
+	const vfloat64m2_t rvv_add = __riscv_vfadd_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(res.mF64, rvv_add, 3);
 	return res;
 #else
@@ -781,9 +755,9 @@ DVec3 DVec3::operator + (DVec3Arg inV2) const
 	return DVec3({ vaddq_f64(mValue.val[0], inV2.mValue.val[0]), vaddq_f64(mValue.val[1], inV2.mValue.val[1]) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_vec1 = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_vec2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t rvv_add = __riscv_vfadd_vv_f64m2(rvv_vec1, rvv_vec2, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t rvv_add = __riscv_vfadd_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(res.mF64, rvv_add, 3);
 	return res;
 #else
@@ -802,10 +776,10 @@ DVec3 &DVec3::operator += (Vec3Arg inV2)
 	mValue.val[0] = vaddq_f64(mValue.val[0], vcvt_f64_f32(vget_low_f32(inV2.mValue)));
 	mValue.val[1] = vaddq_f64(mValue.val[1], vcvt_high_f64_f32(inV2.mValue));
 #elif defined(JPH_USE_RVV)
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat32m1_t rvv_b_f32 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
-	const vfloat64m2_t rvv_b = __riscv_vfwcvt_f_f_v_f64m2(rvv_b_f32, 3);
-	const vfloat64m2_t rvv_add = __riscv_vfadd_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat32m1_t v2_f32 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
+	const vfloat64m2_t v2 = __riscv_vfwcvt_f_f_v_f64m2(v2_f32, 3);
+	const vfloat64m2_t rvv_add = __riscv_vfadd_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(mF64, rvv_add, 3);
 #else
 	for (int i = 0; i < 3; ++i)
@@ -828,9 +802,9 @@ DVec3 &DVec3::operator += (DVec3Arg inV2)
 	mValue.val[0] = vaddq_f64(mValue.val[0], inV2.mValue.val[0]);
 	mValue.val[1] = vaddq_f64(mValue.val[1], inV2.mValue.val[1]);
 #elif defined(JPH_USE_RVV)
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t rvv_add = __riscv_vfadd_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t rvv_add = __riscv_vfadd_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(mF64, rvv_add, 3);
 #else
 	for (int i = 0; i < 3; ++i)
@@ -860,14 +834,14 @@ DVec3 DVec3::operator - () const
 	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
 		DVec3 res;
 		const vfloat64m2_t rvv_zero = __riscv_vfmv_v_f_f64m2(0.0f, 4);
-		const vfloat64m2_t rvv_vec = __riscv_vle64_v_f64m2(mF64, 3);
-		const vfloat64m2_t rvv_neg = __riscv_vfsub_vv_f64m2(rvv_zero, rvv_vec, 4);
+		const vfloat64m2_t v = __riscv_vle64_v_f64m2(mF64, 3);
+		const vfloat64m2_t rvv_neg = __riscv_vfsub_vv_f64m2(rvv_zero, v, 4);
 		__riscv_vse64_v_f64m2(res.mF64, rvv_neg, 3);
 		return res;
 	#else
 		DVec3 res;
-		const vfloat64m2_t rvv_vec = __riscv_vle64_v_f64m2(mF64, 3);
-		const vfloat64m2_t rvv_neg = __riscv_vfsgnjn_vv_f64m2(rvv_vec, rvv_vec, 3);
+		const vfloat64m2_t v = __riscv_vle64_v_f64m2(mF64, 3);
+		const vfloat64m2_t rvv_neg = __riscv_vfsgnjn_vv_f64m2(v, v, 3);
 		__riscv_vse64_v_f64m2(res.mF64, rvv_neg, 3);
 		return res;
 	#endif
@@ -890,10 +864,10 @@ DVec3 DVec3::operator - (Vec3Arg inV2) const
 	return DVec3({ vsubq_f64(mValue.val[0], vcvt_f64_f32(vget_low_f32(inV2.mValue))), vsubq_f64(mValue.val[1], vcvt_high_f64_f32(inV2.mValue)) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat32m1_t rvv_b_f32 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
-	const vfloat64m2_t rvv_b = __riscv_vfwcvt_f_f_v_f64m2(rvv_b_f32, 3);
-	const vfloat64m2_t rvv_sub = __riscv_vfsub_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat32m1_t v2_f32 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
+	const vfloat64m2_t v2 = __riscv_vfwcvt_f_f_v_f64m2(v2_f32, 3);
+	const vfloat64m2_t rvv_sub = __riscv_vfsub_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(res.mF64, rvv_sub, 3);
 	return res;
 #else
@@ -911,9 +885,9 @@ DVec3 DVec3::operator - (DVec3Arg inV2) const
 	return DVec3({ vsubq_f64(mValue.val[0], inV2.mValue.val[0]), vsubq_f64(mValue.val[1], inV2.mValue.val[1]) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t rvv_sub = __riscv_vfsub_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t rvv_sub = __riscv_vfsub_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(res.mF64, rvv_sub, 3);
 	return res;
 #else
@@ -932,10 +906,10 @@ DVec3 &DVec3::operator -= (Vec3Arg inV2)
 	mValue.val[0] = vsubq_f64(mValue.val[0], vcvt_f64_f32(vget_low_f32(inV2.mValue)));
 	mValue.val[1] = vsubq_f64(mValue.val[1], vcvt_high_f64_f32(inV2.mValue));
 #elif defined(JPH_USE_RVV)
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat32m1_t rvv_b_f32 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
-	const vfloat64m2_t rvv_b = __riscv_vfwcvt_f_f_v_f64m2(rvv_b_f32, 3);
-	const vfloat64m2_t rvv_sub = __riscv_vfsub_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat32m1_t v2_f32 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
+	const vfloat64m2_t v2 = __riscv_vfwcvt_f_f_v_f64m2(v2_f32, 3);
+	const vfloat64m2_t rvv_sub = __riscv_vfsub_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(mF64, rvv_sub, 3);
 #else
 	for (int i = 0; i < 3; ++i)
@@ -958,9 +932,9 @@ DVec3 &DVec3::operator -= (DVec3Arg inV2)
 	mValue.val[0] = vsubq_f64(mValue.val[0], inV2.mValue.val[0]);
 	mValue.val[1] = vsubq_f64(mValue.val[1], inV2.mValue.val[1]);
 #elif defined(JPH_USE_RVV)
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t rvv_sub = __riscv_vfsub_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t rvv_sub = __riscv_vfsub_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(mF64, rvv_sub, 3);
 #else
 	for (int i = 0; i < 3; ++i)
@@ -983,9 +957,9 @@ DVec3 DVec3::operator / (DVec3Arg inV2) const
 	return DVec3({ vdivq_f64(mValue.val[0], inV2.mValue.val[0]), vdivq_f64(mValue.val[1], inV2.mValue.val[1]) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-	const vfloat64m2_t rvv_div = __riscv_vfdiv_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t rvv_div = __riscv_vfdiv_vv_f64m2(v1, v2, 3);
 	__riscv_vse64_v_f64m2(res.mF64, rvv_div, 3);
 	return res;
 #else
@@ -1006,8 +980,8 @@ DVec3 DVec3::Abs() const
 	return DVec3({ vabsq_f64(mValue.val[0]), vabsq_f64(mValue.val[1]) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_vec = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_abs = __riscv_vfsgnj_vf_f64m2(rvv_vec, 1.0, 3);
+	const vfloat64m2_t v = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t rvv_abs = __riscv_vfsgnj_vf_f64m2(v, 1.0, 3);
 	__riscv_vse64_v_f64m2(res.mF64, rvv_abs, 3);
 	return res;
 #else
@@ -1030,19 +1004,17 @@ DVec3 DVec3::Cross(DVec3Arg inV2) const
 	__m256d t3 = _mm256_sub_pd(t1, t2);
 	return _mm256_permute4x64_pd(t3, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
 #elif defined(JPH_USE_RVV)
-	const uint64_t indices[4] = {1, 2, 0, 0};
+	const uint64 indices[4] = { 1, 2, 0, 0 };
 	const vuint64m2_t gather_indices = __riscv_vle64_v_u64m2(indices, 3);
-
 	const vfloat64m2_t v0 = __riscv_vle64_v_f64m2(this->mF64, 3);
 	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-
 	vfloat64m2_t t0 = __riscv_vrgather_vv_f64m2(v1, gather_indices, 3);
 	t0 =  __riscv_vfmul_vv_f64m2(t0, v0, 3);
 	vfloat64m2_t t1 = __riscv_vrgather_vv_f64m2(v0, gather_indices, 3);
 	t1 =  __riscv_vfmul_vv_f64m2(t1, v1, 3);
-
 	const vfloat64m2_t sub = __riscv_vfsub_vv_f64m2(t0, t1, 3);
 	const vfloat64m2_t cross = __riscv_vrgather_vv_f64m2(sub, gather_indices, 3);
+
 	DVec3 cross_result;
 	__riscv_vse64_v_f64m2(cross_result.mF64, cross, 3);
 	return cross_result;
@@ -1076,10 +1048,9 @@ double DVec3::Dot(DVec3Arg inV2) const
 	return vaddvq_f64(mul_low) + vgetq_lane_f64(mul_high, 0);
 #elif defined(JPH_USE_RVV)
 	const vfloat64m1_t zeros = __riscv_vfmv_v_f_f64m1(0.0f, 3);
-	const vfloat64m2_t rvv_a = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_b = __riscv_vle64_v_f64m2(inV2.mF64, 3);
-
-	const vfloat64m2_t mul = __riscv_vfmul_vv_f64m2(rvv_a, rvv_b, 3);
+	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
+	const vfloat64m2_t mul = __riscv_vfmul_vv_f64m2(v1, v2, 3);
 	const vfloat64m1_t sum = __riscv_vfredusum_vs_f64m2_f64m1(mul, zeros, 3);
 	return __riscv_vfmv_f_s_f64m1_f64(sum);
 #else
@@ -1105,8 +1076,8 @@ DVec3 DVec3::Sqrt() const
 	return DVec3({ vsqrtq_f64(mValue.val[0]), vsqrtq_f64(mValue.val[1]) });
 #elif defined(JPH_USE_RVV)
 	DVec3 res;
-	const vfloat64m2_t rvv_d1 = __riscv_vle64_v_f64m2(mF64, 3);
-	const vfloat64m2_t rvv_sqrt = __riscv_vfsqrt_v_f64m2(rvv_d1, 3);
+	const vfloat64m2_t v = __riscv_vle64_v_f64m2(mF64, 3);
+	const vfloat64m2_t rvv_sqrt = __riscv_vfsqrt_v_f64m2(v, 3);
 	__riscv_vse64_v_f64m2(res.mF64, rvv_sqrt, 3);
 	return res;
 #else
@@ -1138,9 +1109,9 @@ bool DVec3::IsNaN() const
 #elif defined(JPH_USE_SSE)
 	return ((_mm_movemask_pd(_mm_cmpunord_pd(mValue.mLow, mValue.mLow)) + (_mm_movemask_pd(_mm_cmpunord_pd(mValue.mHigh, mValue.mHigh)) << 2)) & 0x7) != 0;
 #elif defined(JPH_USE_RVV)
-	const vfloat64m2_t rvv_vec = __riscv_vle64_v_f64m2(mF64, 3);
-	const vbool32_t mask = __riscv_vmfeq_vv_f64m2_b32(rvv_vec, rvv_vec, 3);
-	const uint32_t eq = __riscv_vcpop_m_b32(mask, 3);
+	const vfloat64m2_t v = __riscv_vle64_v_f64m2(mF64, 3);
+	const vbool32_t mask = __riscv_vmfeq_vv_f64m2_b32(v, v, 3);
+	const uint32 eq = __riscv_vcpop_m_b32(mask, 3);
 	return eq != 3;
 #else
 	return isnan(mF64[0]) || isnan(mF64[1]) || isnan(mF64[2]);
@@ -1195,9 +1166,9 @@ DVec3 DVec3::PrepareRoundToZero() const
 #elif defined(JPH_USE_RVV)
 	const vfloat64m2_t dvec = __riscv_vle64_v_f64m2(mF64, 3);
 	const vuint64m2_t dvec_u64 = __riscv_vreinterpret_v_f64m2_u64m2(dvec);
-	const vuint64m2_t chopped =
-		__riscv_vand_vx_u64m2(dvec_u64, ~cDoubleToFloatMantissaLoss, 3);
+	const vuint64m2_t chopped = __riscv_vand_vx_u64m2(dvec_u64, ~cDoubleToFloatMantissaLoss, 3);
 	const vfloat64m2_t chopped_f64 = __riscv_vreinterpret_v_u64m2_f64m2(chopped);
+
 	DVec3 res;
 	__riscv_vse64_v_f64m2(res.mF64, chopped_f64, 3);
 	return res;
@@ -1251,17 +1222,12 @@ DVec3 DVec3::PrepareRoundToInf() const
 #elif defined(JPH_USE_RVV)
 	const vfloat64m2_t dvec = __riscv_vle64_v_f64m2(mF64, 3);
 	const vuint64m2_t dvec_u64 = __riscv_vreinterpret_v_f64m2_u64m2(dvec);
-
-	const vuint64m2_t and_loss =
-		__riscv_vand_vx_u64m2(dvec_u64, cDoubleToFloatMantissaLoss, 3);
-	const vuint64m2_t or_loss =
-		__riscv_vor_vx_u64m2(dvec_u64, cDoubleToFloatMantissaLoss, 3);
+	const vuint64m2_t and_loss = __riscv_vand_vx_u64m2(dvec_u64, cDoubleToFloatMantissaLoss, 3);
+	const vuint64m2_t or_loss = __riscv_vor_vx_u64m2(dvec_u64, cDoubleToFloatMantissaLoss, 3);
 	const vbool32_t is_zero = __riscv_vmseq_vx_u64m2_b32(and_loss, 0x0, 3);
-
-	const vuint64m2_t select =
-		__riscv_vmerge_vvm_u64m2(or_loss, dvec_u64, is_zero, 3);
-
+	const vuint64m2_t select = __riscv_vmerge_vvm_u64m2(or_loss, dvec_u64, is_zero, 3);
 	const vfloat64m2_t select_f64 = __riscv_vreinterpret_v_u64m2_f64m2(select);
+
 	DVec3 res;
 	__riscv_vse64_v_f64m2(res.mF64, select_f64, 3);
 	return res;
