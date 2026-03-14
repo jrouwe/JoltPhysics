@@ -330,48 +330,48 @@ TEST_SUITE("Mat44Tests")
 
 	TEST_CASE("TestMat44Inversed")
 	{
-		Mat44 mat(Vec4(0, 2, 0, 8), Vec4(4, 0, 16, 0), Vec4(0, 16, 0, 4), Vec4(8, 0, 2, 0));
+		Mat44 mat(Vec4(2, 3, 5, 7), Vec4(11, 13, 17, 19), Vec4(23, 29, 31, 37), Vec4(41, 43, 47, 53));
 		Mat44 inverse = mat.Inversed();
 		Mat44 identity = mat * inverse;
-		CHECK(identity == Mat44::sIdentity());
+		CHECK(identity.IsClose(Mat44::sIdentity(), 2.0e-12f));
 	}
 
 	TEST_CASE("TestMat44Inversed3x3")
 	{
-		Mat44 mat(Vec4(1, 2, 0, 0), Vec4(4, 0, 8, 0), Vec4(0, 16, 0, 0), Vec4(1, 2, 3, 1));
+		Mat44 mat(Vec4(2, 3, 5, 0), Vec4(11, 13, 17, 0), Vec4(23, 29, 31, 0), Vec4(41, 43, 47, 53));
 		Mat44 inverse = mat.Inversed3x3();
 		CHECK(inverse.GetColumn4(3) == Vec4(0, 0, 0, 1));
 		Mat44 identity = mat.Multiply3x3(inverse);
-		CHECK(identity == Mat44::sIdentity());
+		CHECK(identity.IsClose(Mat44::sIdentity(), 2.0e-12f));
 	}
 
 	TEST_CASE("TestMat44SetInversed3x3")
 	{
-		Mat44 mat(Vec4(1, 2, 0, 0), Vec4(4, 0, 8, 0), Vec4(0, 16, 0, 0), Vec4(1, 2, 3, 1));
+		Mat44 mat(Vec4(2, 3, 5, 0), Vec4(11, 13, 17, 0), Vec4(23, 29, 31, 0), Vec4(41, 43, 47, 53));
 
 		// First test succeeding inverse
 		Mat44 inverse;
 		CHECK(inverse.SetInversed3x3(mat));
 		CHECK(inverse.GetColumn4(3) == Vec4(0, 0, 0, 1));
 		Mat44 identity = mat.Multiply3x3(inverse);
-		CHECK(identity == Mat44::sIdentity());
+		CHECK(identity.IsClose(Mat44::sIdentity(), 2.0e-12f));
 
 		// Now make singular
-		mat(0, 0) = 0.0f;
+		mat.SetColumn4(0, Vec4::sZero());
 		CHECK(!inverse.SetInversed3x3(mat));
 	}
 
 	TEST_CASE("TestMat44GetDeterminant3x3")
 	{
-		Mat44 mat(Vec4(1, 2, 0, 0), Vec4(4, 0, 8, 0), Vec4(0, 16, 0, 0), Vec4(1, 2, 3, 1));
-		CHECK(mat.GetDeterminant3x3() == -128);
+		Mat44 mat(Vec4(2, 3, 5, 7), Vec4(11, 13, 17, 19), Vec4(23, 29, 31, 37), Vec4(41, 43, 47, 53));
+		CHECK(mat.GetDeterminant3x3() == 70);
 	}
 
 	TEST_CASE("TestMat44Adjointed3x3")
 	{
-		Mat44 mat(Vec4(1, 2, 3, 0), Vec4(5, 6, 7, 0), Vec4(9, 10, 11, 0), Vec4(13, 14, 15, 16));
+		Mat44 mat(Vec4(2, 3, 5, 7), Vec4(11, 13, 17, 19), Vec4(23, 29, 31, 37), Vec4(41, 43, 47, 53));
 		Mat44 result = mat.Adjointed3x3();
-		CHECK(result == Mat44(Vec4(-4, 8, -4, 0), Vec4(8, -16, 8, 0), Vec4(-4, 8, -4, 0), Vec4(0, 0, 0, 1)));
+		CHECK(result == Mat44(Vec4(-90, 52, -14, 0), Vec4(50, -53, 21, 0), Vec4(20, 11, -7, 0), Vec4(0, 0, 0, 1)));
 	}
 
 	TEST_CASE("TestMat44RotationXYZ")
