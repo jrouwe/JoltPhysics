@@ -879,7 +879,13 @@ Vec3 Vec3::Cross(Vec3Arg inV2) const
 Vec3 Vec3::DotV(Vec3Arg inV2) const
 {
 #if defined(JPH_USE_SSE4_1)
-	return _mm_dp_ps(mValue, inV2.mValue, 0x7f);
+	__m128 mul = _mm_mul_ps(mValue, inV2.mValue);
+	mul = _mm_blend_ps(mul, _mm_setzero_ps(), 0x8);
+	__m128 shuf = _mm_movehdup_ps(mul);
+	__m128 sums = _mm_add_ps(mul, shuf);
+	shuf = _mm_movehl_ps(shuf, sums);
+	sums = _mm_add_ss(sums, shuf);
+	return _mm_shuffle_ps(sums, sums, _MM_SHUFFLE(0, 0, 0, 0));
 #elif defined(JPH_USE_NEON)
 	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
@@ -906,7 +912,13 @@ Vec3 Vec3::DotV(Vec3Arg inV2) const
 Vec4 Vec3::DotV4(Vec3Arg inV2) const
 {
 #if defined(JPH_USE_SSE4_1)
-	return _mm_dp_ps(mValue, inV2.mValue, 0x7f);
+	__m128 mul = _mm_mul_ps(mValue, inV2.mValue);
+	mul = _mm_blend_ps(mul, _mm_setzero_ps(), 0x8);
+	__m128 shuf = _mm_movehdup_ps(mul);
+	__m128 sums = _mm_add_ps(mul, shuf);
+	shuf = _mm_movehl_ps(shuf, sums);
+	sums = _mm_add_ss(sums, shuf);
+	return _mm_shuffle_ps(sums, sums, _MM_SHUFFLE(0, 0, 0, 0));
 #elif defined(JPH_USE_NEON)
 	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
@@ -933,7 +945,13 @@ Vec4 Vec3::DotV4(Vec3Arg inV2) const
 float Vec3::Dot(Vec3Arg inV2) const
 {
 #if defined(JPH_USE_SSE4_1)
-	return _mm_cvtss_f32(_mm_dp_ps(mValue, inV2.mValue, 0x7f));
+	__m128 mul = _mm_mul_ps(mValue, inV2.mValue);
+	mul = _mm_blend_ps(mul, _mm_setzero_ps(), 0x8);
+	__m128 shuf = _mm_movehdup_ps(mul);
+	__m128 sums = _mm_add_ps(mul, shuf);
+	shuf = _mm_movehl_ps(shuf, sums);
+	sums = _mm_add_ss(sums, shuf);
+	return _mm_cvtss_f32(sums);
 #elif defined(JPH_USE_NEON)
 	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
@@ -956,7 +974,13 @@ float Vec3::Dot(Vec3Arg inV2) const
 float Vec3::LengthSq() const
 {
 #if defined(JPH_USE_SSE4_1)
-	return _mm_cvtss_f32(_mm_dp_ps(mValue, mValue, 0x7f));
+	__m128 mul = _mm_mul_ps(mValue, mValue);
+	mul = _mm_blend_ps(mul, _mm_setzero_ps(), 0x8);
+	__m128 shuf = _mm_movehdup_ps(mul);
+	__m128 sums = _mm_add_ps(mul, shuf);
+	shuf = _mm_movehl_ps(shuf, sums);
+	sums = _mm_add_ss(sums, shuf);
+	return _mm_cvtss_f32(sums);
 #elif defined(JPH_USE_NEON)
 	float32x4_t mul = vmulq_f32(mValue, mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
@@ -978,7 +1002,13 @@ float Vec3::LengthSq() const
 float Vec3::Length() const
 {
 #if defined(JPH_USE_SSE4_1)
-	return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(mValue, mValue, 0x7f)));
+	__m128 mul = _mm_mul_ps(mValue, mValue);
+	mul = _mm_blend_ps(mul, _mm_setzero_ps(), 0x8);
+	__m128 shuf = _mm_movehdup_ps(mul);
+	__m128 sums = _mm_add_ps(mul, shuf);
+	shuf = _mm_movehl_ps(shuf, sums);
+	sums = _mm_add_ss(sums, shuf);
+	return _mm_cvtss_f32(_mm_sqrt_ss(sums));
 #elif defined(JPH_USE_NEON)
 	float32x4_t mul = vmulq_f32(mValue, mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
@@ -1016,7 +1046,13 @@ Vec3 Vec3::Sqrt() const
 Vec3 Vec3::Normalized() const
 {
 #if defined(JPH_USE_SSE4_1)
-	return _mm_div_ps(mValue, _mm_sqrt_ps(_mm_dp_ps(mValue, mValue, 0x7f)));
+	__m128 mul = _mm_mul_ps(mValue, mValue);
+	mul = _mm_blend_ps(mul, _mm_setzero_ps(), 0x8);
+	__m128 shuf = _mm_movehdup_ps(mul);
+	__m128 sums = _mm_add_ps(mul, shuf);
+	shuf = _mm_movehl_ps(shuf, sums);
+	sums = _mm_add_ss(sums, shuf);
+	return _mm_div_ps(mValue, _mm_sqrt_ps(_mm_shuffle_ps(sums, sums, _MM_SHUFFLE(0, 0, 0, 0))));
 #elif defined(JPH_USE_NEON)
 	float32x4_t mul = vmulq_f32(mValue, mValue);
 	mul = vsetq_lane_f32(0, mul, 3);
@@ -1042,7 +1078,13 @@ Vec3 Vec3::Normalized() const
 Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 {
 #if defined(JPH_USE_SSE4_1) && !defined(JPH_PLATFORM_WASM) // _mm_blendv_ps has problems on FireFox
-	Type len_sq = _mm_dp_ps(mValue, mValue, 0x7f);
+	__m128 mul = _mm_mul_ps(mValue, mValue);
+	mul = _mm_blend_ps(mul, _mm_setzero_ps(), 0x8);
+	__m128 shuf = _mm_movehdup_ps(mul);
+	__m128 sums = _mm_add_ps(mul, shuf);
+	shuf = _mm_movehl_ps(shuf, sums);
+	sums = _mm_add_ss(sums, shuf);
+	Type len_sq = _mm_shuffle_ps(sums, sums, _MM_SHUFFLE(0, 0, 0, 0));
 	// clang with '-ffast-math' (which you should not use!) can generate _mm_rsqrt_ps
 	// instructions which produce INFs/NaNs when they get a denormal float as input.
 	// We therefore treat denormals as zero here.
