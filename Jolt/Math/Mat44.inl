@@ -827,8 +827,6 @@ Mat44 Mat44::Inversed() const
 	return result;
 #elif defined(JPH_USE_RVV)
 	// Implementation mirrored from SSE and NEON implementations
-	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 1);
-
 	const vfloat32m1_t c0 = __riscv_vle32_v_f32m1(mCol[0].mF32, 4);
 	const vfloat32m1_t c1 = __riscv_vle32_v_f32m1(mCol[1].mF32, 4);
 	const vfloat32m1_t c2 = __riscv_vle32_v_f32m1(mCol[2].mF32, 4);
@@ -901,8 +899,7 @@ Mat44 Mat44::Inversed() const
 	minor3 = __riscv_vfadd_vv_f32m1(__riscv_vfmul_vv_f32m1(row1, tmp1, 4), minor3, 4);
 
 	const vfloat32m1_t v_det = __riscv_vfmul_vv_f32m1(row0, minor0, 4);
-	const vfloat32m1_t sum_vec = __riscv_vfredusum_vs_f32m1_f32m1(v_det, zeros, 4);
-	const float s_det = __riscv_vfmv_f_s_f32m1_f32(sum_vec);
+	const float s_det = RVVSumElementsFloat32x4(v_det);
 	const vfloat32m1_t det_inv = __riscv_vfmv_v_f_f32m1(1.0f / s_det, 4);
 
 	minor0 = __riscv_vfmul_vv_f32m1(det_inv, minor0, 4);

@@ -1050,7 +1050,7 @@ double DVec3::Dot(DVec3Arg inV2) const
 	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(mF64, 3);
 	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inV2.mF64, 3);
 	const vfloat64m2_t mul = __riscv_vfmul_vv_f64m2(v1, v2, 3);
-	const vfloat64m1_t sum = __riscv_vfredusum_vs_f64m2_f64m1(mul, zeros, 3);
+	const vfloat64m1_t sum = __riscv_vfredosum_vs_f64m2_f64m1(mul, zeros, 3);
 	return __riscv_vfmv_f_s_f64m1_f64(sum);
 #else
 	double dot = 0.0;
