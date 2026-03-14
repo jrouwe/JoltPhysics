@@ -16,8 +16,8 @@ JPH_INLINE float RVVElement(vfloat32m1_t inV)
 template <unsigned IndexX, unsigned IndexY, unsigned IndexZ, unsigned IndexW>
 JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4(vfloat32m1_t inV0, vfloat32m1_t inV1)
 {
-	vfloat32m2_t combined = __riscv_vset_v_f32m1_f32m2(__riscv_vundefined_f32m2(), 0, inV0);
-	combined = __riscv_vset_v_f32m1_f32m2(combined, 1, inV1);
+	vfloat32m2_t combined = __riscv_vlmul_ext_v_f32m1_f32m2(inV0);
+	combined = __riscv_vslideup_vx_f32m2(combined, __riscv_vlmul_ext_v_f32m1_f32m2(inV1), 4, 8);
 
 	const uint32_t indices_raw[4] = { IndexX, IndexY, IndexZ, IndexW };
 	const vuint32m1_t v_indices_m1 = __riscv_vle32_v_u32m1(indices_raw, 4);
