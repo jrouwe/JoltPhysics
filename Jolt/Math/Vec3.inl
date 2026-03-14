@@ -896,7 +896,7 @@ Vec3 Vec3::DotV(Vec3Arg inV2) const
 	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 3);
-	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 3);
+	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
 	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
 	const vfloat32m1_t splat = __riscv_vfmv_v_f_f32m1(dot, 3);
 	__riscv_vse32_v_f32m1(res.mF32, splat, 3);
@@ -929,7 +929,7 @@ Vec4 Vec3::DotV4(Vec3Arg inV2) const
 	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 3);
-	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 3);
+	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
 	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
 	const vfloat32m1_t splat = __riscv_vfmv_v_f_f32m1(dot, 4);
 	__riscv_vse32_v_f32m1(res.mF32, splat, 4);
@@ -961,7 +961,7 @@ float Vec3::Dot(Vec3Arg inV2) const
 	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 3);
-	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 3);
+	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
 	return __riscv_vfmv_f_s_f32m1_f32(sum);
 #else
 	float dot = 0.0f;
@@ -989,7 +989,7 @@ float Vec3::LengthSq() const
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
-	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 3);
+	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
 	return __riscv_vfmv_f_s_f32m1_f32(sum);
 #else
 	float len_sq = 0.0f;
@@ -1018,7 +1018,7 @@ float Vec3::Length() const
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
-	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 3);
+	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
 	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
 	return sqrt(dot);
 #else
@@ -1062,7 +1062,7 @@ Vec3 Vec3::Normalized() const
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
-	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 3);
+	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
 	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
 	const float magnitude = sqrt(dot);
 	const vfloat32m1_t norm_v = __riscv_vfdiv_vf_f32m1(v, magnitude, 3);
@@ -1107,7 +1107,7 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	const vfloat32m1_t src = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(src, src, 3);
-	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(mul, zeros, 3);
+	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
 	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
 	if (dot <= FLT_MIN)
 		return inZeroValue;
