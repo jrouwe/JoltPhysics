@@ -4,14 +4,9 @@
 
 #pragma once
 
-#if defined(JPH_USE_RVV)
+JPH_NAMESPACE_BEGIN
 
-template <unsigned Index>
-JPH_INLINE float RVVElement(vfloat32m1_t inV)
-{
-	const vfloat32m1_t moved = __riscv_vslidedown_vx_f32m1(inV, Index, 1);
-	return __riscv_vfmv_f_s_f32m1_f32(moved);
-}
+#ifdef JPH_USE_RVV
 
 template <unsigned IndexX, unsigned IndexY, unsigned IndexZ, unsigned IndexW>
 JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4(vfloat32m1_t inV0, vfloat32m1_t inV1)
@@ -19,7 +14,7 @@ JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4(vfloat32m1_t inV0, vfloat32m1_t inV1
 	vfloat32m2_t combined = __riscv_vlmul_ext_v_f32m1_f32m2(inV0);
 	combined = __riscv_vslideup_vx_f32m2(combined, __riscv_vlmul_ext_v_f32m1_f32m2(inV1), 4, 8);
 
-	const uint32_t indices_raw[4] = { IndexX, IndexY, IndexZ, IndexW };
+	const uint32 indices_raw[4] = { IndexX, IndexY, IndexZ, IndexW };
 	const vuint32m1_t v_indices_m1 = __riscv_vle32_v_u32m1(indices_raw, 4);
 	const vuint32m2_t v_indices_m2 = __riscv_vlmul_ext_v_u32m1_u32m2(v_indices_m1);
 
@@ -34,9 +29,42 @@ JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<0, 1, 2, 3>(vfloat32m1_t inV0, vfloa
 }
 
 template <>
+JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<0, 1, 4, 5>(vfloat32m1_t inV0, vfloat32m1_t inV1)
+{
+	vfloat32m1_t result = inV0;
+	return __riscv_vslideup_vx_f32m1(result, inV1, 2, 4);	
+}
+
+template <>
+JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<1, 0, 3, 2>(vfloat32m1_t inV0, vfloat32m1_t inV1)
+{
+	// Avoids m2 extension overhead that the default implementation of RVVShuffleFloat32x4 has
+	const uint32 indices_raw[4] = { 1, 0, 3, 2 };
+	const vuint32m1_t indices = __riscv_vle32_v_u32m1(indices_raw, 4);
+	return __riscv_vrgather_vv_f32m1(inV0, indices, 4);
+}
+
+template <>
+JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<2, 3, 0, 1>(vfloat32m1_t inV0, vfloat32m1_t inV1)
+{
+	vfloat32m1_t upper = __riscv_vslidedown_vx_f32m1(inV0, 2, 4);
+	return __riscv_vslideup_vx_f32m1(upper, inV0, 2, 4);
+}
+
+template <>
+JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<2, 3, 6, 7>(vfloat32m1_t inV0, vfloat32m1_t inV1)
+{
+	vfloat32m1_t result = __riscv_vslidedown_vx_f32m1(inV0, 2, 4);
+	vfloat32m1_t upper = __riscv_vslidedown_vx_f32m1(inV1, 2, 4);
+	return __riscv_vslideup_vx_f32m1(result, upper, 2, 4);
+}
+
+template <>
 JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<4, 5, 6, 7>(vfloat32m1_t inV0, vfloat32m1_t inV1)
 {
 	return inV1;
 }
 
 #endif // JPH_USE_RVV
+
+JPH_NAMESPACE_END
