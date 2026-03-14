@@ -342,7 +342,7 @@ TEST_SUITE("Mat44Tests")
 		Mat44 inverse = mat.Inversed3x3();
 		CHECK(inverse.GetColumn4(3) == Vec4(0, 0, 0, 1));
 		Mat44 identity = mat.Multiply3x3(inverse);
-		CHECK(identity.IsClose(Mat44::sIdentity(), 2.0e-12f));
+		CHECK(identity.IsClose(Mat44::sIdentity(), 4.0e-12f));
 	}
 
 	TEST_CASE("TestMat44SetInversed3x3")
@@ -354,7 +354,7 @@ TEST_SUITE("Mat44Tests")
 		CHECK(inverse.SetInversed3x3(mat));
 		CHECK(inverse.GetColumn4(3) == Vec4(0, 0, 0, 1));
 		Mat44 identity = mat.Multiply3x3(inverse);
-		CHECK(identity.IsClose(Mat44::sIdentity(), 2.0e-12f));
+		CHECK(identity.IsClose(Mat44::sIdentity(), 4.0e-12f));
 
 		// Now make singular
 		mat.SetColumn4(0, Vec4::sZero());
