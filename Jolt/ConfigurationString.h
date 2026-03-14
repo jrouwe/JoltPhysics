@@ -38,6 +38,9 @@ inline const char *GetConfigurationString()
 		"32-bit "
 #endif
 		"with instructions: "
+#ifdef JPH_USE_RVV
+		"RVV "
+#endif
 #ifdef JPH_USE_NEON
 		"NEON "
 #endif

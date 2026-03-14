@@ -17,6 +17,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 	* Note that this is still work in progress, some things that still need to be done are listed in Hair.h.
 * Increased maximum value of HeightFieldShape::mBitsPerSample to 16 to be able to create height fields that more closely match the uncompressed height values.
 * Made tolerance that's used in the internal edge removal algorithm configurable in `CollideShapeSettings::mInternalEdgeRemovalVertexToleranceSq` and `PhysicsSettings::mInternalEdgeRemovalVertexToleranceSq`.
+* Added support for RISC-V RVV, the SIMD extension for RISC-V.
 
 ### Bug Fixes
 
