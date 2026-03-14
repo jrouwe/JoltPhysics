@@ -14,6 +14,7 @@
 #include <Jolt/Physics/DeterminismLog.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/QuickSort.h>
+#include <Jolt/Core/Prefetch.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -1556,6 +1557,10 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
+		const uint32 *next_constraint = constraint_idx + 1;
+		if (next_constraint < inConstraintIdxEnd)
+			PrefetchL1(&mConstraints[*next_constraint]);
+
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
 
 		// Fetch bodies
@@ -1659,6 +1664,10 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
+		const uint32 *next_constraint = constraint_idx + 1;
+		if (next_constraint < inConstraintIdxEnd)
+			PrefetchL1(&mConstraints[*next_constraint]);
+
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
 
 		// Fetch bodies
@@ -1718,6 +1727,10 @@ void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintId
 	// Copy back total applied impulse to cache for the next frame
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
+		const uint32 *next_constraint = constraint_idx + 1;
+		if (next_constraint < inConstraintIdxEnd)
+			PrefetchL1(&mConstraints[*next_constraint]);
+
 		const ContactConstraint &constraint = mConstraints[*constraint_idx];
 
 		for (const WorldContactPoint &wcp : constraint.mContactPoints)
@@ -1737,6 +1750,10 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
+		const uint32 *next_constraint = constraint_idx + 1;
+		if (next_constraint < inConstraintIdxEnd)
+			PrefetchL1(&mConstraints[*next_constraint]);
+
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
 
 		// Fetch bodies

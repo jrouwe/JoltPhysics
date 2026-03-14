@@ -60,6 +60,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/MutexArray.h
 	${JOLT_PHYSICS_ROOT}/Core/NonCopyable.h
 	${JOLT_PHYSICS_ROOT}/Core/ObjectToIDMap.h
+	${JOLT_PHYSICS_ROOT}/Core/Prefetch.h
 	${JOLT_PHYSICS_ROOT}/Core/Profiler.cpp
 	${JOLT_PHYSICS_ROOT}/Core/Profiler.h
 	${JOLT_PHYSICS_ROOT}/Core/Profiler.inl
