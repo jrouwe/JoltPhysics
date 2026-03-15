@@ -120,9 +120,9 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateF
 
 			// Calculate effect of accumulated forces
 			if constexpr (Type1 == EMotionType::Dynamic)
-				relative_acceleration -= mp1->GetAccumulatedForce() * inInvM1;
+				relative_acceleration -= mp1->GetAccumulatedForce() * mp1->GetInverseMass();
 			if constexpr (Type2 == EMotionType::Dynamic)
-				relative_acceleration += mp2->GetAccumulatedForce() * inInvM2;
+				relative_acceleration += mp2->GetAccumulatedForce() * mp2->GetInverseMass();
 
 			// We only compensate forces towards the contact normal.
 			float force_delta_velocity = min(0.0f, relative_acceleration.Dot(inWorldSpaceNormal) * inDeltaTime);
