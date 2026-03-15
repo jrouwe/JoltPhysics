@@ -63,6 +63,34 @@ JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<4, 5, 6, 7>(vfloat32m1_t inV0, vfloa
 	return inV1;
 }
 
+template <>
+JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<0, 2, 4, 6>(vfloat32m1_t inV0, vfloat32m1_t inV1)
+{
+	vfloat32m2_t combined = __riscv_vlmul_ext_v_f32m1_f32m2(inV0);
+	combined = __riscv_vslideup_vx_f32m2(combined, __riscv_vlmul_ext_v_f32m1_f32m2(inV1), 4, 8);
+
+	vuint64m2_t combined_u64 = __riscv_vreinterpret_v_u32m2_u64m2(__riscv_vreinterpret_v_f32m2_u32m2(combined));
+
+	// vnsrl extracts lower 32 bits from all 4 u64 elements -> [0, 2, 4, 6]
+	vuint32m1_t result = __riscv_vnsrl_wx_u32m1(combined_u64, 0, 4);
+
+	return __riscv_vreinterpret_v_u32m1_f32m1(result);
+}
+
+template <>
+JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<1, 3, 5, 7>(vfloat32m1_t inV0, vfloat32m1_t inV1)
+{
+	vfloat32m2_t combined = __riscv_vlmul_ext_v_f32m1_f32m2(inV0);
+	combined = __riscv_vslideup_vx_f32m2(combined, __riscv_vlmul_ext_v_f32m1_f32m2(inV1), 4, 8);
+
+	vuint64m2_t combined_u64 = __riscv_vreinterpret_v_u32m2_u64m2(__riscv_vreinterpret_v_f32m2_u32m2(combined));
+
+	// vnsrl with shift=32 extracts upper 32 bits from all 4 u64 elements -> [1, 3, 5, 7]
+	vuint32m1_t result = __riscv_vnsrl_wx_u32m1(combined_u64, 32, 4);
+
+	return __riscv_vreinterpret_v_u32m1_f32m1(result);
+}
+
 /// Given inV = (a, b, c, d), calculates (a + b) + (c + d) when cross platform determinism is on, otherwise calculates a + b + c + d (order undefined)
 JPH_INLINE float RVVSumElementsFloat32x4(vfloat32m1_t inV)
 {
