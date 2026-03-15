@@ -47,59 +47,41 @@ class ContactConstraintPart
 	JPH_INLINE float			TemplatedCalculateInverseEffectiveMass(float inInvMass1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, float inInvMass2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
 	{
 		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-5f));
-
-		// Calculate properties used below
-		Vec3 r1_plus_u_x_axis;
-		if constexpr (Type1 != EMotionType::Static)
-		{
-			r1_plus_u_x_axis = inR1PlusU.Cross(inWorldSpaceAxis);
-			r1_plus_u_x_axis.StoreFloat3(&mR1PlusUxAxis);
-		}
-		else
-		{
-		#ifdef JPH_DEBUG
-			Vec3::sNaN().StoreFloat3(&mR1PlusUxAxis);
-		#endif
-		}
-
-		Vec3 r2_x_axis;
-		if constexpr (Type2 != EMotionType::Static)
-		{
-			r2_x_axis = inR2.Cross(inWorldSpaceAxis);
-			r2_x_axis.StoreFloat3(&mR2xAxis);
-		}
-		else
-		{
-		#ifdef JPH_DEBUG
-			Vec3::sNaN().StoreFloat3(&mR2xAxis);
-		#endif
-		}
-
+				
 		// Calculate inverse effective mass: K = J M^-1 J^T
 		float inv_effective_mass;
 
 		if constexpr (Type1 == EMotionType::Dynamic)
 		{
+			Vec3 r1_plus_u_x_axis = inR1PlusU.Cross(inWorldSpaceAxis);
+			r1_plus_u_x_axis.StoreFloat3(&mR1PlusUxAxis);
+
 			Vec3 invi1_r1_plus_u_x_axis = inInvI1.Multiply3x3(r1_plus_u_x_axis);
 			invi1_r1_plus_u_x_axis.StoreFloat3(&mInvI1_R1PlusUxAxis);
+
 			inv_effective_mass = inInvMass1 + invi1_r1_plus_u_x_axis.Dot(r1_plus_u_x_axis);
 		}
 		else
 		{
-			(void)r1_plus_u_x_axis; // Fix compiler warning: Not using this (it's not calculated either)
+			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mR1PlusUxAxis);)
 			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI1_R1PlusUxAxis);)
+
 			inv_effective_mass = 0.0f;
 		}
 
 		if constexpr (Type2 == EMotionType::Dynamic)
 		{
+			Vec3 r2_x_axis = inR2.Cross(inWorldSpaceAxis);
+			r2_x_axis.StoreFloat3(&mR2xAxis);
+
 			Vec3 invi2_r2_x_axis = inInvI2.Multiply3x3(r2_x_axis);
 			invi2_r2_x_axis.StoreFloat3(&mInvI2_R2xAxis);
+
 			inv_effective_mass += inInvMass2 + invi2_r2_x_axis.Dot(r2_x_axis);
 		}
 		else
 		{
-			(void)r2_x_axis; // Fix compiler warning: Not using this (it's not calculated either)
+			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mR2xAxis);)
 			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI2_R2xAxis);)
 		}
 
