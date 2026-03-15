@@ -10,10 +10,11 @@
 #include <Jolt/Physics/Body/BodyPair.h>
 #include <Jolt/Physics/Collision/Shape/SubShapeIDPair.h>
 #include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
-#include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
-#include <Jolt/Physics/Constraints/ConstraintPart/DualAxisConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/ContactConstraintPart.h>
+#include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Core/HashCombine.h>
 #include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Math/Vector.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <atomic>
@@ -430,9 +431,9 @@ private:
 		JPH_INLINE void			TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, Vec3Arg inGravity, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings, float inMinVelocityForRestitution);
 
 		/// The constraint parts
-		AxisConstraintPart		mNonPenetrationConstraint;
-		AxisConstraintPart		mFrictionConstraint1;
-		AxisConstraintPart		mFrictionConstraint2;
+		ContactConstraintPart	mNonPenetrationConstraint;
+		ContactConstraintPart	mFrictionConstraint1;
+		ContactConstraintPart	mFrictionConstraint2;
 
 		/// Contact cache
 		CachedContactPoint *	mContactPoint;
