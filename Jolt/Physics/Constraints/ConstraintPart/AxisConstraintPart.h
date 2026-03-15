@@ -42,8 +42,7 @@ JPH_NAMESPACE_BEGIN
 class AxisConstraintPart
 {
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
-	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE bool				ApplyVelocityStep(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inLambda) const
+	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, Vec3Arg inWorldSpaceAxis, float inLambda) const
 	{
 		// Apply impulse if delta is not zero
 		if (inLambda != 0.0f)
@@ -55,15 +54,17 @@ class AxisConstraintPart
 			//
 			// Euler velocity integration:
 			// v' = v + M^-1 P
-			if constexpr (Type1 == EMotionType::Dynamic)
+			if (ioBody1.GetMotionType() == EMotionType::Dynamic)
 			{
-				ioMotionProperties1->SubLinearVelocityStep((inLambda * inInvMass1) * inWorldSpaceAxis);
-				ioMotionProperties1->SubAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
+				MotionProperties *mp1 = ioBody1.GetMotionPropertiesUnchecked();
+				mp1->SubLinearVelocityStep((inLambda * mp1->GetInverseMass()) * inWorldSpaceAxis);
+				mp1->SubAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
 			}
-			if constexpr (Type2 == EMotionType::Dynamic)
+			if (ioBody2.GetMotionType() == EMotionType::Dynamic)
 			{
-				ioMotionProperties2->AddLinearVelocityStep((inLambda * inInvMass2) * inWorldSpaceAxis);
-				ioMotionProperties2->AddAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
+				MotionProperties *mp2 = ioBody2.GetMotionPropertiesUnchecked();
+				mp2->AddLinearVelocityStep((inLambda * mp2->GetInverseMass()) * inWorldSpaceAxis);
+				mp2->AddAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
 			}
 			return true;
 		}
@@ -179,48 +180,6 @@ class AxisConstraintPart
 		return 0.0f;
 	}
 
-	/// Internal helper function to calculate the inverse effective mass, version that supports mass scaling
-	JPH_INLINE float			CalculateInverseEffectiveMassWithMassOverride(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
-	{
-		// Dispatch to the correct templated form
-		switch (inBody1.GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			{
-				Mat44 inv_i1 = inInvInertiaScale1 * inBody1.GetInverseInertia();
-				switch (inBody2.GetMotionType())
-				{
-				case EMotionType::Dynamic:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Dynamic>(inInvMass1, inv_i1, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
-
-				case EMotionType::Kinematic:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Kinematic>(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
-
-				case EMotionType::Static:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Static>(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
-
-				default:
-					break;
-				}
-				break;
-			}
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(inBody2.IsDynamic());
-			return TemplatedCalculateInverseEffectiveMass<EMotionType::Kinematic, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
-
-		case EMotionType::Static:
-			JPH_ASSERT(inBody2.IsDynamic());
-			return TemplatedCalculateInverseEffectiveMass<EMotionType::Static, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
-
-		default:
-			break;
-		}
-
-		JPH_ASSERT(false);
-		return 0.0f;
-	}
-
 public:
 	/// Calculate properties used during the functions below
 	/// @param inBody1 The first body that this constraint is attached to
@@ -319,48 +278,40 @@ public:
 	{
 		mTotalLambda *= inWarmStartImpulseRatio;
 
-		EMotionType motion_type1 = ioBody1.GetMotionType();
-		MotionProperties *motion_properties1 = ioBody1.GetMotionPropertiesUnchecked();
-
-		EMotionType motion_type2 = ioBody2.GetMotionType();
-		MotionProperties *motion_properties2 = ioBody2.GetMotionPropertiesUnchecked();
-
-		// Dispatch to the correct templated form
-		// Note: Warm starting doesn't differentiate between kinematic/static bodies so we handle both as static bodies
-		if (motion_type1 == EMotionType::Dynamic)
-		{
-			if (motion_type2 == EMotionType::Dynamic)
-				ApplyVelocityStep<EMotionType::Dynamic, EMotionType::Dynamic>(motion_properties1, motion_properties1->GetInverseMass(), motion_properties2, motion_properties2->GetInverseMass(), inWorldSpaceAxis, mTotalLambda);
-			else
-				ApplyVelocityStep<EMotionType::Dynamic, EMotionType::Static>(motion_properties1, motion_properties1->GetInverseMass(), motion_properties2, 0.0f /* Unused */, inWorldSpaceAxis, mTotalLambda);
-		}
-		else
-		{
-			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			ApplyVelocityStep<EMotionType::Static, EMotionType::Dynamic>(motion_properties1, 0.0f /* Unused */, motion_properties2, motion_properties2->GetInverseMass(), inWorldSpaceAxis, mTotalLambda);
-		}
+		ApplyVelocityStep(ioBody1, ioBody2, inWorldSpaceAxis, mTotalLambda);
 	}
 
-	/// Templated form of SolveVelocityConstraint with the motion types baked in
-	template <EMotionType Type1, EMotionType Type2>
-	inline bool					TemplatedSolveVelocityConstraint(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	/// Iteratively update the velocity constraint. Makes sure d/dt C(...) = 0, where C is the constraint equation.
+	/// @param ioBody1 The first body that this constraint is attached to
+	/// @param ioBody2 The second body that this constraint is attached to
+	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized)
+	/// @param inMinLambda Minimum value of constraint impulse to apply (N s)
+	/// @param inMaxLambda Maximum value of constraint impulse to apply (N s)
+	inline bool					SolveVelocityConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
 	{
+		MotionProperties *mp1 = ioBody1.GetMotionPropertiesUnchecked();
+		MotionProperties *mp2 = ioBody2.GetMotionPropertiesUnchecked();
+
 		// Calculate jacobian multiplied by linear velocity
 		float jv;
-		if constexpr (Type1 != EMotionType::Static && Type2 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(ioMotionProperties1->GetLinearVelocity() - ioMotionProperties2->GetLinearVelocity());
-		else if constexpr (Type1 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(ioMotionProperties1->GetLinearVelocity());
-		else if constexpr (Type2 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(-ioMotionProperties2->GetLinearVelocity());
+		if (ioBody1.GetMotionType() != EMotionType::Static)
+		{
+			if (ioBody2.GetMotionType() != EMotionType::Static)
+				jv = inWorldSpaceAxis.Dot(mp1->GetLinearVelocity() - mp2->GetLinearVelocity());
+			else
+				jv = inWorldSpaceAxis.Dot(mp1->GetLinearVelocity());
+		}
 		else
-			JPH_ASSERT(false); // Static vs static is nonsensical!
+		{
+			JPH_ASSERT(ioBody2.GetMotionType() != EMotionType::Static);
+			jv = inWorldSpaceAxis.Dot(-mp2->GetLinearVelocity());
+		}
 
 		// Calculate jacobian multiplied by angular velocity
-		if constexpr (Type1 != EMotionType::Static)
-			jv += Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(ioMotionProperties1->GetAngularVelocity());
-		if constexpr (Type2 != EMotionType::Static)
-			jv -= Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(ioMotionProperties2->GetAngularVelocity());
+		if (ioBody1.GetMotionType() != EMotionType::Static)
+			jv += Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(mp1->GetAngularVelocity());
+		if (ioBody2.GetMotionType() != EMotionType::Static)
+			jv -= Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(mp2->GetAngularVelocity());
 
 		// Lagrange multiplier is:
 		//
@@ -376,58 +327,7 @@ public:
 		float delta_lambda = total_lambda - mTotalLambda; // Calculate change in lambda
 		mTotalLambda = total_lambda; // Store accumulated impulse
 
-		return ApplyVelocityStep<Type1, Type2>(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, delta_lambda);
-	}
-
-	/// Iteratively update the velocity constraint. Makes sure d/dt C(...) = 0, where C is the constraint equation.
-	/// @param ioBody1 The first body that this constraint is attached to
-	/// @param ioBody2 The second body that this constraint is attached to
-	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized)
-	/// @param inMinLambda Minimum value of constraint impulse to apply (N s)
-	/// @param inMaxLambda Maximum value of constraint impulse to apply (N s)
-	inline bool					SolveVelocityConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
-	{
-		EMotionType motion_type1 = ioBody1.GetMotionType();
-		MotionProperties *motion_properties1 = ioBody1.GetMotionPropertiesUnchecked();
-
-		EMotionType motion_type2 = ioBody2.GetMotionType();
-		MotionProperties *motion_properties2 = ioBody2.GetMotionPropertiesUnchecked();
-
-		// Dispatch to the correct templated form
-		switch (motion_type1)
-		{
-		case EMotionType::Dynamic:
-			switch (motion_type2)
-			{
-			case EMotionType::Dynamic:
-				return TemplatedSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(motion_properties1, motion_properties1->GetInverseMass(), motion_properties2, motion_properties2->GetInverseMass(), inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-			case EMotionType::Kinematic:
-				return TemplatedSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(motion_properties1, motion_properties1->GetInverseMass(), motion_properties2, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-			case EMotionType::Static:
-				return TemplatedSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>(motion_properties1, motion_properties1->GetInverseMass(), motion_properties2, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-			default:
-				JPH_ASSERT(false);
-				break;
-			}
-			break;
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			return TemplatedSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(motion_properties1, 0.0f /* Unused */, motion_properties2, motion_properties2->GetInverseMass(), inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-		case EMotionType::Static:
-			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			return TemplatedSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>(motion_properties1, 0.0f /* Unused */, motion_properties2, motion_properties2->GetInverseMass(), inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
-
-		return false;
+		return ApplyVelocityStep(ioBody1, ioBody2, inWorldSpaceAxis, delta_lambda);
 	}
 
 	/// Iteratively update the position constraint. Makes sure C(...) = 0.
