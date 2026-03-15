@@ -54,13 +54,13 @@ class AxisConstraintPart
 			//
 			// Euler velocity integration:
 			// v' = v + M^-1 P
-			if (ioBody1.GetMotionType() == EMotionType::Dynamic)
+			if (ioBody1.IsDynamic())
 			{
 				MotionProperties *mp1 = ioBody1.GetMotionPropertiesUnchecked();
 				mp1->SubLinearVelocityStep((inLambda * mp1->GetInverseMass()) * inWorldSpaceAxis);
 				mp1->SubAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
 			}
-			if (ioBody2.GetMotionType() == EMotionType::Dynamic)
+			if (ioBody2.IsDynamic())
 			{
 				MotionProperties *mp2 = ioBody2.GetMotionPropertiesUnchecked();
 				mp2->AddLinearVelocityStep((inLambda * mp2->GetInverseMass()) * inWorldSpaceAxis);
@@ -80,7 +80,7 @@ class AxisConstraintPart
 		// Calculate inverse effective mass: K = J M^-1 J^T
 		float inv_effective_mass;
 
-		if (inBody1.GetMotionType() == EMotionType::Dynamic)
+		if (inBody1.IsDynamic())
 		{
 			const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
 
@@ -100,7 +100,7 @@ class AxisConstraintPart
 			inv_effective_mass = 0.0f;
 		}
 
-		if (inBody2.GetMotionType() == EMotionType::Dynamic)
+		if (inBody2.IsDynamic())
 		{
 			const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
 
@@ -235,40 +235,40 @@ public:
 
 		// Calculate jacobian multiplied by linear velocity
 		float jv;
-		if (ioBody1.GetMotionType() != EMotionType::Static)
+		if (!ioBody1.IsStatic())
 		{
-			if (ioBody2.GetMotionType() != EMotionType::Static)
+			if (!ioBody2.IsStatic())
 				jv = inWorldSpaceAxis.Dot(mp1->GetLinearVelocity() - mp2->GetLinearVelocity());
 			else
 				jv = inWorldSpaceAxis.Dot(mp1->GetLinearVelocity());
 		}
 		else
 		{
-			JPH_ASSERT(ioBody2.GetMotionType() != EMotionType::Static);
+			JPH_ASSERT(!ioBody2.IsStatic());
 			jv = inWorldSpaceAxis.Dot(-mp2->GetLinearVelocity());
 		}
 
 		// Calculate jacobian multiplied by angular velocity
-		if (ioBody1.GetMotionType() != EMotionType::Static)
+		if (!ioBody1.IsStatic())
 			jv += Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(mp1->GetAngularVelocity());
-		if (ioBody2.GetMotionType() != EMotionType::Static)
+		if (!ioBody2.IsStatic())
 			jv -= Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(mp2->GetAngularVelocity());
 
 		// Lagrange multiplier is:
 		//
 		// lambda = -K^-1 (J v + b)
 		float lambda = mEffectiveMass * (jv - mSpringPart.GetBias(mTotalLambda));
+		float new_lambda = Clamp(mTotalLambda + lambda, inMinLambda, inMaxLambda); // Clamp impulse
+		lambda = new_lambda - mTotalLambda; // Lambda potentially got clamped, calculate the new impulse to apply
+		mTotalLambda = new_lambda; // Store accumulated impulse
 
-		// Get the total accumulated lambda
-		float total_lambda = mTotalLambda + lambda;
+		return ApplyVelocityStep(ioBody1, ioBody2, inWorldSpaceAxis, lambda);
+	}
 
-		// Clamp impulse to specified range
-		total_lambda = Clamp(total_lambda, inMinLambda, inMaxLambda);
-
-		float delta_lambda = total_lambda - mTotalLambda; // Calculate change in lambda
-		mTotalLambda = total_lambda; // Store accumulated impulse
-
-		return ApplyVelocityStep(ioBody1, ioBody2, inWorldSpaceAxis, delta_lambda);
+	/// Return lagrange multiplier
+	float						GetTotalLambda() const
+	{
+		return mTotalLambda;
 	}
 
 	/// Iteratively update the position constraint. Makes sure C(...) = 0.
@@ -318,18 +318,6 @@ public:
 		}
 
 		return false;
-	}
-
-	/// Override total lagrange multiplier, can be used to set the initial value for warm starting
-	inline void					SetTotalLambda(float inLambda)
-	{
-		mTotalLambda = inLambda;
-	}
-
-	/// Return lagrange multiplier
-	inline float				GetTotalLambda() const
-	{
-		return mTotalLambda;
 	}
 
 	/// Save state of this constraint part
