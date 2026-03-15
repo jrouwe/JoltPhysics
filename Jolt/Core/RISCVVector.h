@@ -54,9 +54,7 @@ JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<2, 3, 0, 1>(vfloat32m1_t inV0, vfloa
 template <>
 JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<2, 3, 6, 7>(vfloat32m1_t inV0, vfloat32m1_t inV1)
 {
-	vfloat32m1_t result = __riscv_vslidedown_vx_f32m1(inV0, 2, 4);
-	vfloat32m1_t upper = __riscv_vslidedown_vx_f32m1(inV1, 2, 4);
-	return __riscv_vslideup_vx_f32m1(result, upper, 2, 4);
+	return __riscv_vslidedown_vx_f32m1_tu(inV1, inV0, 2, 2);
 }
 
 template <>
