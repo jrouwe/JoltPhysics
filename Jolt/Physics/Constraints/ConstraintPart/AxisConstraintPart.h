@@ -222,23 +222,6 @@ class AxisConstraintPart
 	}
 
 public:
-	/// Templated form of CalculateConstraintProperties with the motion types baked in
-	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE void				TemplatedCalculateConstraintProperties(float inInvMass1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, float inInvMass2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
-	{
-		float inv_effective_mass = TemplatedCalculateInverseEffectiveMass<Type1, Type2>(inInvMass1, inInvI1, inR1PlusU, inInvMass2, inInvI2, inR2, inWorldSpaceAxis);
-
-		if (inv_effective_mass == 0.0f)
-			Deactivate();
-		else
-		{
-			mEffectiveMass = 1.0f / inv_effective_mass;
-			mSpringPart.CalculateSpringPropertiesWithBias(inBias);
-		}
-
-		JPH_DET_LOG("TemplatedCalculateConstraintProperties: invM1: " << inInvMass1 << " invI1: " << inInvI1 << " r1PlusU: " << inR1PlusU << " invM2: " << inInvMass2 << " invI2: " << inInvI2 << " r2: " << inR2 << " bias: " << inBias << " r1PlusUxAxis: " << mR1PlusUxAxis << " r2xAxis: " << mR2xAxis << " invI1_R1PlusUxAxis: " << mInvI1_R1PlusUxAxis << " invI2_R2xAxis: " << mInvI2_R2xAxis << " effectiveMass: " << mEffectiveMass << " totalLambda: " << mTotalLambda);
-	}
-
 	/// Calculate properties used during the functions below
 	/// @param inBody1 The first body that this constraint is attached to
 	/// @param inBody2 The second body that this constraint is attached to
@@ -249,30 +232,6 @@ public:
 	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
-
-		if (inv_effective_mass == 0.0f)
-			Deactivate();
-		else
-		{
-			mEffectiveMass = 1.0f / inv_effective_mass;
-			mSpringPart.CalculateSpringPropertiesWithBias(inBias);
-		}
-	}
-
-	/// Calculate properties used during the functions below, version that supports mass scaling
-	/// @param inBody1 The first body that this constraint is attached to
-	/// @param inBody2 The second body that this constraint is attached to
-	/// @param inInvMass1 The inverse mass of body 1 (only used when body 1 is dynamic)
-	/// @param inInvMass2 The inverse mass of body 2 (only used when body 2 is dynamic)
-	/// @param inInvInertiaScale1 Scale factor for the inverse inertia of body 1
-	/// @param inInvInertiaScale2 Scale factor for the inverse inertia of body 2
-	/// @param inR1PlusU See equations above (r1 + u)
-	/// @param inR2 See equations above (r2)
-	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized, pointing from body 1 to 2)
-	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
-	inline void					CalculateConstraintPropertiesWithMassOverride(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
-	{
-		float inv_effective_mass = CalculateInverseEffectiveMassWithMassOverride(inBody1, inInvMass1, inInvInertiaScale1, inR1PlusU, inBody2, inInvMass2, inInvInertiaScale2, inR2, inWorldSpaceAxis);
 
 		if (inv_effective_mass == 0.0f)
 			Deactivate();
