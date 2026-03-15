@@ -663,7 +663,8 @@ If you want cross platform determinism then please turn on the CROSS_PLATFORM_DE
 * Compiler used to compile the library (tested MSVC2022, clang, gcc and emscripten)
 * Configuration (Debug, Release or Distribution)
 * OS (tested Windows, macOS, Linux)
-* Architecture (x86 or ARM).
+* Architecture (x86, ARM, RISC-V, PowerPC, LoongArch)
+* Word size (32 / 64 bit)
 
 Some caveats:
 
@@ -672,7 +673,7 @@ Some caveats:
 * Broadphase queries (BroadPhaseQuery) are NOT deterministic because the broad phase can be modified from multiple threads. As bodies are modified, their bounding boxes get widened until the next maintenance update. This may be several calls to PhysicsSystem::Update later. If you want to do a broadphase query determinisically then create a custom CollisionCollector that in its AddHit function repeats the query against the actual bounding box of the body (Body::GetWorldSpaceBounds) and accept only hits that collide with this bounding box. Also ensure that you order the results consistently.
 * Narrowphase queries (NarrowPhaseQuery) will return consistent results, but the order in which the results are received can change. This is again due the fact that the broadphase can be modified from multiple threads.
 
-It is quite difficult to verify cross platform determinism, so this feature is less tested than other features. With every build, the following architectures are verified to produce the same results:
+It is quite difficult to verify cross platform determinism, so this feature is less tested than other features. With every build, the following architectures are verified to produce the same results for a number of scenes:
 
 * Windows MSVC x86 64-bit with AVX2
 * Windows MSVC x86 32-bit with SSE2
@@ -683,6 +684,7 @@ It is quite difficult to verify cross platform determinism, so this feature is l
 * Linux gcc x86 64-bit with AVX2
 * Linux gcc ARM 64-bit with NEON
 * Linux gcc RISC-V 64-bit
+* Linux clang RISC-V 64-bit with RVV
 * Linux gcc PowerPC (Little Endian) 64-bit
 * Linux gcc LoongArch 64-bit
 * WASM32 emscripten running in nodejs
