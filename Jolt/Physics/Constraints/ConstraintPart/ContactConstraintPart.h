@@ -106,50 +106,6 @@ class ContactConstraintPart
 		return inv_effective_mass;
 	}
 
-	/// Internal helper function to calculate the inverse effective mass
-	JPH_INLINE float			CalculateInverseEffectiveMass(const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
-	{
-		// Dispatch to the correct templated form
-		switch (inBody1.GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			{
-				const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-				float inv_m1 = mp1->GetInverseMass();
-				Mat44 inv_i1 = inBody1.GetInverseInertia();
-				switch (inBody2.GetMotionType())
-				{
-				case EMotionType::Dynamic:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Dynamic>(inv_m1, inv_i1, inR1PlusU, inBody2.GetMotionPropertiesUnchecked()->GetInverseMass(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
-
-				case EMotionType::Kinematic:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Kinematic>(inv_m1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
-
-				case EMotionType::Static:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Static>(inv_m1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
-
-				default:
-					break;
-				}
-				break;
-			}
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(inBody2.IsDynamic());
-			return TemplatedCalculateInverseEffectiveMass<EMotionType::Kinematic, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inBody2.GetMotionPropertiesUnchecked()->GetInverseMass(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
-
-		case EMotionType::Static:
-			JPH_ASSERT(inBody2.IsDynamic());
-			return TemplatedCalculateInverseEffectiveMass<EMotionType::Static, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inBody2.GetMotionPropertiesUnchecked()->GetInverseMass(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
-
-		default:
-			break;
-		}
-
-		JPH_ASSERT(false);
-		return 0.0f;
-	}
-
 	/// Internal helper function to calculate the inverse effective mass, version that supports mass scaling
 	JPH_INLINE float			CalculateInverseEffectiveMassWithMassOverride(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
 	{
@@ -208,26 +164,6 @@ public:
 		}
 
 		JPH_DET_LOG("TemplatedCalculateConstraintProperties: invM1: " << inInvMass1 << " invI1: " << inInvI1 << " r1PlusU: " << inR1PlusU << " invM2: " << inInvMass2 << " invI2: " << inInvI2 << " r2: " << inR2 << " bias: " << inBias << " r1PlusUxAxis: " << mR1PlusUxAxis << " r2xAxis: " << mR2xAxis << " invI1_R1PlusUxAxis: " << mInvI1_R1PlusUxAxis << " invI2_R2xAxis: " << mInvI2_R2xAxis << " effectiveMass: " << mEffectiveMass << " totalLambda: " << mTotalLambda);
-	}
-
-	/// Calculate properties used during the functions below
-	/// @param inBody1 The first body that this constraint is attached to
-	/// @param inBody2 The second body that this constraint is attached to
-	/// @param inR1PlusU See equations above (r1 + u)
-	/// @param inR2 See equations above (r2)
-	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized, pointing from body 1 to 2)
-	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
-	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
-	{
-		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
-
-		if (inv_effective_mass == 0.0f)
-			Deactivate();
-		else
-		{
-			mEffectiveMass = 1.0f / inv_effective_mass;
-			mBias = inBias;
-		}
 	}
 
 	/// Calculate properties used during the functions below, version that supports mass scaling
