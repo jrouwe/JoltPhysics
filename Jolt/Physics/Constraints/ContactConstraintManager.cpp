@@ -737,6 +737,7 @@ JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetr
 	}
 	else
 	{
+		ioConstraint.mInvMass1 = 0.0f;
 		inv_i1 = Mat44::sZero();
 	}
 
@@ -749,6 +750,7 @@ JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetr
 	}
 	else
 	{
+		ioConstraint.mInvMass2 = 0.0f;
 		inv_i2 = Mat44::sZero();
 	}
 
