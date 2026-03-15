@@ -103,12 +103,12 @@ private:
 			if constexpr (Type1 == EMotionType::Dynamic)
 			{
 				ioMotionProperties1->SubLinearVelocityStep((inLambda * inInvMass1) * inWorldSpaceAxis);
-				ioMotionProperties1->SubAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
+				ioMotionProperties1->SubAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(this->mInvI1_R1PlusUxAxis));
 			}
 			if constexpr (Type2 == EMotionType::Dynamic)
 			{
 				ioMotionProperties2->AddLinearVelocityStep((inLambda * inInvMass2) * inWorldSpaceAxis);
-				ioMotionProperties2->AddAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
+				ioMotionProperties2->AddAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(this->mInvI2_R2xAxis));
 			}
 			return true;
 		}
@@ -127,12 +127,12 @@ public:
 		if constexpr (Type1 != EMotionType::Static)
 		{
 			Vec3 r1_plus_u_x_axis = inR1PlusU.Cross(inWorldSpaceAxis);
-			r1_plus_u_x_axis.StoreFloat3(&mR1PlusUxAxis);
+			r1_plus_u_x_axis.StoreFloat3(&this->mR1PlusUxAxis);
 
 			if constexpr (Type1 == EMotionType::Dynamic)
 			{
 				Vec3 invi1_r1_plus_u_x_axis = inInvI1.Multiply3x3(r1_plus_u_x_axis);
-				invi1_r1_plus_u_x_axis.StoreFloat3(&mInvI1_R1PlusUxAxis);
+				invi1_r1_plus_u_x_axis.StoreFloat3(&this->mInvI1_R1PlusUxAxis);
 
 				inv_effective_mass = inInvMass1 + invi1_r1_plus_u_x_axis.Dot(r1_plus_u_x_axis);
 			}
@@ -145,32 +145,32 @@ public:
 		if constexpr (Type2 != EMotionType::Static)
 		{
 			Vec3 r2_x_axis = inR2.Cross(inWorldSpaceAxis);
-			r2_x_axis.StoreFloat3(&mR2xAxis);
+			r2_x_axis.StoreFloat3(&this->mR2xAxis);
 
 			if constexpr (Type2 == EMotionType::Dynamic)
 			{
 				Vec3 invi2_r2_x_axis = inInvI2.Multiply3x3(r2_x_axis);
-				invi2_r2_x_axis.StoreFloat3(&mInvI2_R2xAxis);
+				invi2_r2_x_axis.StoreFloat3(&this->mInvI2_R2xAxis);
 
 				inv_effective_mass += inInvMass2 + invi2_r2_x_axis.Dot(r2_x_axis);
 			}
 		}
 
 		if (inv_effective_mass== 0.0f)
-			Deactivate();
+			this->Deactivate();
 		else
 		{
-			mEffectiveMass = 1.0f / inv_effective_mass;
-			mBias = inBias;
+			this->mEffectiveMass = 1.0f / inv_effective_mass;
+			this->mBias = inBias;
 		}
 	}
 
 	/// Templated form of WarmStart with the motion types baked in
 	inline void					WarmStart(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inWarmStartImpulseRatio)
 	{
-		mTotalLambda *= inWarmStartImpulseRatio;
+		this->mTotalLambda *= inWarmStartImpulseRatio;
 
-		ApplyVelocityStep(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, mTotalLambda);
+		ApplyVelocityStep(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, this->mTotalLambda);
 	}
 
 	/// Templated form of SolveVelocityConstraint with the motion types baked in, part 1: get the total lambda
@@ -189,24 +189,24 @@ public:
 
 		// Calculate jacobian multiplied by angular velocity
 		if constexpr (Type1 != EMotionType::Static)
-			jv += Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(ioMotionProperties1->GetAngularVelocity());
+			jv += Vec3::sLoadFloat3Unsafe(this->mR1PlusUxAxis).Dot(ioMotionProperties1->GetAngularVelocity());
 		if constexpr (Type2 != EMotionType::Static)
-			jv -= Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(ioMotionProperties2->GetAngularVelocity());
+			jv -= Vec3::sLoadFloat3Unsafe(this->mR2xAxis).Dot(ioMotionProperties2->GetAngularVelocity());
 
 		// Lagrange multiplier is:
 		//
 		// lambda = -K^-1 (J v + b)
-		float lambda = mEffectiveMass * (jv - mBias);
+		float lambda = this->mEffectiveMass * (jv - this->mBias);
 
 		// Return the total accumulated lambda
-		return mTotalLambda + lambda;
+		return this->mTotalLambda + lambda;
 	}
 
 	/// Templated form of SolveVelocityConstraint with the motion types baked in, part 2: apply new lambda
 	JPH_INLINE bool				SolveVelocityConstraintApplyLambda(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inTotalLambda)
 	{
-		float delta_lambda = inTotalLambda - mTotalLambda; // Calculate change in lambda
-		mTotalLambda = inTotalLambda; // Store accumulated impulse
+		float delta_lambda = inTotalLambda - this->mTotalLambda; // Calculate change in lambda
+		this->mTotalLambda = inTotalLambda; // Store accumulated impulse
 
 		return ApplyVelocityStep(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, delta_lambda);
 	}
@@ -240,7 +240,7 @@ public:
 			// lambda = -K^-1 * beta / dt * C
 			//
 			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			float lambda = -mEffectiveMass * inBaumgarte * inC;
+			float lambda = -this->mEffectiveMass * inBaumgarte * inC;
 
 			// Directly integrate velocity change for one time step
 			//
@@ -260,12 +260,12 @@ public:
 			if constexpr (Type1 == EMotionType::Dynamic)
 			{
 				ioBody1.SubPositionStep((lambda * inInvMass1) * inWorldSpaceAxis);
-				ioBody1.SubRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
+				ioBody1.SubRotationStep(lambda * Vec3::sLoadFloat3Unsafe(this->mInvI1_R1PlusUxAxis));
 			}
 			if constexpr (Type2 == EMotionType::Dynamic)
 			{
 				ioBody2.AddPositionStep((lambda * inInvMass2) * inWorldSpaceAxis);
-				ioBody2.AddRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
+				ioBody2.AddRotationStep(lambda * Vec3::sLoadFloat3Unsafe(this->mInvI2_R2xAxis));
 			}
 			return true;
 		}
@@ -452,6 +452,7 @@ private:
 		TemplatedContactConstraintPart<EMotionType::Kinematic, EMotionType::Dynamic>	mKD;
 		TemplatedContactConstraintPart<EMotionType::Static, EMotionType::Dynamic>		mSD;
 	};
+	[[maybe_unused]] float		mPadding; // Pad an extra float so that we can use Vec3::sLoadFloat3Unsafe on the last Float3 member without worrying about reading past the end of the struct
 };
 
 JPH_NAMESPACE_END
