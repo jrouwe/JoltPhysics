@@ -310,15 +310,6 @@ public:
 		return mEffectiveMass != 0.0f;
 	}
 
-	/// Templated form of WarmStart with the motion types baked in
-	template <EMotionType Type1, EMotionType Type2>
-	inline void					TemplatedWarmStart(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inWarmStartImpulseRatio)
-	{
-		mTotalLambda *= inWarmStartImpulseRatio;
-
-		ApplyVelocityStep<Type1, Type2>(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, mTotalLambda);
-	}
-
 	/// Must be called from the WarmStartVelocityConstraint call to apply the previous frame's impulses
 	/// @param ioBody1 The first body that this constraint is attached to
 	/// @param ioBody2 The second body that this constraint is attached to
@@ -326,6 +317,8 @@ public:
 	/// @param inWarmStartImpulseRatio Ratio of new step to old time step (dt_new / dt_old) for scaling the lagrange multiplier of the previous frame
 	inline void					WarmStart(Body &ioBody1, Body &ioBody2, Vec3Arg inWorldSpaceAxis, float inWarmStartImpulseRatio)
 	{
+		mTotalLambda *= inWarmStartImpulseRatio;
+
 		EMotionType motion_type1 = ioBody1.GetMotionType();
 		MotionProperties *motion_properties1 = ioBody1.GetMotionPropertiesUnchecked();
 
@@ -337,20 +330,20 @@ public:
 		if (motion_type1 == EMotionType::Dynamic)
 		{
 			if (motion_type2 == EMotionType::Dynamic)
-				TemplatedWarmStart<EMotionType::Dynamic, EMotionType::Dynamic>(motion_properties1, motion_properties1->GetInverseMass(), motion_properties2, motion_properties2->GetInverseMass(), inWorldSpaceAxis, inWarmStartImpulseRatio);
+				ApplyVelocityStep<EMotionType::Dynamic, EMotionType::Dynamic>(motion_properties1, motion_properties1->GetInverseMass(), motion_properties2, motion_properties2->GetInverseMass(), inWorldSpaceAxis, mTotalLambda);
 			else
-				TemplatedWarmStart<EMotionType::Dynamic, EMotionType::Static>(motion_properties1, motion_properties1->GetInverseMass(), motion_properties2, 0.0f /* Unused */, inWorldSpaceAxis, inWarmStartImpulseRatio);
+				ApplyVelocityStep<EMotionType::Dynamic, EMotionType::Static>(motion_properties1, motion_properties1->GetInverseMass(), motion_properties2, 0.0f /* Unused */, inWorldSpaceAxis, mTotalLambda);
 		}
 		else
 		{
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			TemplatedWarmStart<EMotionType::Static, EMotionType::Dynamic>(motion_properties1, 0.0f /* Unused */, motion_properties2, motion_properties2->GetInverseMass(), inWorldSpaceAxis, inWarmStartImpulseRatio);
+			ApplyVelocityStep<EMotionType::Static, EMotionType::Dynamic>(motion_properties1, 0.0f /* Unused */, motion_properties2, motion_properties2->GetInverseMass(), inWorldSpaceAxis, mTotalLambda);
 		}
 	}
 
-	/// Templated form of SolveVelocityConstraint with the motion types baked in, part 1: get the total lambda
+	/// Templated form of SolveVelocityConstraint with the motion types baked in
 	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE float			TemplatedSolveVelocityConstraintGetTotalLambda(const MotionProperties *ioMotionProperties1, const MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis) const
+	inline bool					TemplatedSolveVelocityConstraint(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
 	{
 		// Calculate jacobian multiplied by linear velocity
 		float jv;
@@ -374,30 +367,16 @@ public:
 		// lambda = -K^-1 (J v + b)
 		float lambda = mEffectiveMass * (jv - mSpringPart.GetBias(mTotalLambda));
 
-		// Return the total accumulated lambda
-		return mTotalLambda + lambda;
-	}
-
-	/// Templated form of SolveVelocityConstraint with the motion types baked in, part 2: apply new lambda
-	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE bool				TemplatedSolveVelocityConstraintApplyLambda(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inTotalLambda)
-	{
-		float delta_lambda = inTotalLambda - mTotalLambda; // Calculate change in lambda
-		mTotalLambda = inTotalLambda; // Store accumulated impulse
-
-		return ApplyVelocityStep<Type1, Type2>(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, delta_lambda);
-	}
-
-	/// Templated form of SolveVelocityConstraint with the motion types baked in
-	template <EMotionType Type1, EMotionType Type2>
-	inline bool					TemplatedSolveVelocityConstraint(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
-	{
-		float total_lambda = TemplatedSolveVelocityConstraintGetTotalLambda<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inWorldSpaceAxis);
+		// Get the total accumulated lambda
+		float total_lambda = mTotalLambda + lambda;
 
 		// Clamp impulse to specified range
 		total_lambda = Clamp(total_lambda, inMinLambda, inMaxLambda);
 
-		return TemplatedSolveVelocityConstraintApplyLambda<Type1, Type2>(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, total_lambda);
+		float delta_lambda = total_lambda - mTotalLambda; // Calculate change in lambda
+		mTotalLambda = total_lambda; // Store accumulated impulse
+
+		return ApplyVelocityStep<Type1, Type2>(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, delta_lambda);
 	}
 
 	/// Iteratively update the velocity constraint. Makes sure d/dt C(...) = 0, where C is the constraint equation.
