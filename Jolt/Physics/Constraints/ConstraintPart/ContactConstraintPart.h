@@ -8,7 +8,9 @@
 
 JPH_NAMESPACE_BEGIN
 
-class ContactConstraintPartShared
+/// Decide which members this constraint part needs based on motion type
+template <EMotionType Type1>
+class ContactConstraintPart1
 {
 public:
 	/// Deactivate this constraint
@@ -22,18 +24,6 @@ public:
 	inline bool					IsActive() const
 	{
 		return mEffectiveMass != 0.0f;
-	}
-
-	/// Set the inverse of the effective mass
-	inline void					SetInvEffectiveMass(float inInvEffectiveMass, float inBias)
-	{
-		if (inInvEffectiveMass == 0.0f)
-			Deactivate();
-		else
-		{
-			mEffectiveMass = 1.0f / inInvEffectiveMass;
-			mBias = inBias;
-		}
 	}
 
 	/// Override total lagrange multiplier, can be used to set the initial value for warm starting
@@ -54,9 +44,47 @@ protected:
 	float						mBias;
 };
 
+template <>
+class ContactConstraintPart1<EMotionType::Kinematic> : public ContactConstraintPart1<EMotionType::Static>
+{
+protected:
+	Float3						mR1PlusUxAxis;
+};
+
+template <>
+class ContactConstraintPart1<EMotionType::Dynamic> : public ContactConstraintPart1<EMotionType::Kinematic>
+{
+protected:
+	Float3						mInvI1_R1PlusUxAxis;
+};
+
+template <EMotionType Type2>
+class ContactConstraintPart2
+{
+};
+
+template <>
+class ContactConstraintPart2<EMotionType::Kinematic> : public ContactConstraintPart2<EMotionType::Static>
+{
+protected:
+	Float3						mR2xAxis;
+};
+
+template <>
+class ContactConstraintPart2<EMotionType::Dynamic> : public ContactConstraintPart2<EMotionType::Kinematic>
+{
+protected:
+	Float3						mInvI2_R2xAxis;
+};
+
+static_assert(sizeof(ContactConstraintPart1<EMotionType::Kinematic>) == 3 * sizeof(float) + sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart1<EMotionType::Dynamic>) == 3 * sizeof(float) + 2 * sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart2<EMotionType::Kinematic>) == sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart2<EMotionType::Dynamic>) == 2 * sizeof(Float3));
+
 /// This is a copy of AxisConstraintPart, specialized to handle contact constraints. See the documentation of AxisConstraintPart for more documentation behind the math.
 template <EMotionType Type1, EMotionType Type2>
-class TemplatedContactConstraintPart : public ContactConstraintPartShared
+class TemplatedContactConstraintPart : public ContactConstraintPart1<Type1>, public ContactConstraintPart2<Type2>
 {
 private:
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
@@ -89,8 +117,7 @@ private:
 	}
 
 public:
-	/// Internal helper function to calculate the inverse effective mass
-	JPH_INLINE float			CalculateInverseEffectiveMass(float inInvMass1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, float inInvMass2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
+	JPH_INLINE void				CalculateConstraintProperties(float inInvMass1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, float inInvMass2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
 		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-5f));
 				
@@ -110,19 +137,10 @@ public:
 				inv_effective_mass = inInvMass1 + invi1_r1_plus_u_x_axis.Dot(r1_plus_u_x_axis);
 			}
 			else
-			{
-				JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI1_R1PlusUxAxis);)
-
 				inv_effective_mass = 0.0f;
-			}
 		}
 		else
-		{
-			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mR1PlusUxAxis);)
-			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI1_R1PlusUxAxis);)
-
 			inv_effective_mass = 0.0f;
-		}
 
 		if constexpr (Type2 != EMotionType::Static)
 		{
@@ -136,27 +154,15 @@ public:
 
 				inv_effective_mass += inInvMass2 + invi2_r2_x_axis.Dot(r2_x_axis);
 			}
-			else
-			{
-				JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI2_R2xAxis);)
-			}
 		}
+
+		if (inv_effective_mass== 0.0f)
+			Deactivate();
 		else
 		{
-			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mR2xAxis);)
-			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI2_R2xAxis);)
+			mEffectiveMass = 1.0f / inv_effective_mass;
+			mBias = inBias;
 		}
-
-		return inv_effective_mass;
-	}
-
-public:
-	/// Templated form of CalculateConstraintProperties with the motion types baked in
-	JPH_INLINE void				CalculateConstraintProperties(float inInvMass1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, float inInvMass2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
-	{
-		float inv_effective_mass = CalculateInverseEffectiveMass(inInvMass1, inInvI1, inR1PlusU, inInvMass2, inInvI2, inR2, inWorldSpaceAxis);
-
-		SetInvEffectiveMass(inv_effective_mass, inBias);
 	}
 
 	/// Templated form of WarmStart with the motion types baked in
@@ -251,12 +257,12 @@ public:
 			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
 			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
-			if (Type1 == EMotionType::Dynamic)
+			if constexpr (Type1 == EMotionType::Dynamic)
 			{
 				ioBody1.SubPositionStep((lambda * inInvMass1) * inWorldSpaceAxis);
 				ioBody1.SubRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
 			}
-			if (Type2 == EMotionType::Dynamic)
+			if constexpr (Type2 == EMotionType::Dynamic)
 			{
 				ioBody2.AddPositionStep((lambda * inInvMass2) * inWorldSpaceAxis);
 				ioBody2.AddRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
@@ -266,26 +272,27 @@ public:
 
 		return false;
 	}
-
-private:
-	Float3						mR1PlusUxAxis;
-	Float3						mR2xAxis;
-	Float3						mInvI1_R1PlusUxAxis;
-	Float3						mInvI2_R2xAxis;
 };
+
+static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>) == 3 * sizeof(float) + 4 * sizeof(Float3));
+static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Kinematic>) == 3 * sizeof(float) + 3 * sizeof(Float3));
+static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Static>) == 3 * sizeof(float) + 2 * sizeof(Float3));
+static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Kinematic, EMotionType::Kinematic>) == 3 * sizeof(float) + 2 * sizeof(Float3));
+static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Kinematic, EMotionType::Static>) == 3 * sizeof(float) + sizeof(Float3));
+static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Static, EMotionType::Dynamic>) == 3 * sizeof(float) + 2 * sizeof(Float3));
+static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Static, EMotionType::Kinematic>) == 3 * sizeof(float) + sizeof(Float3));
+static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Static, EMotionType::Static>) == 3 * sizeof(float));
 
 /// Concrete contact constraint part that dispatches to the correct templated form based on the motion types of the bodies
 class ContactConstraintPart
 {
 public:
 	/// Constructor / destructor
-								ContactConstraintPart() : mShared() { }
+								ContactConstraintPart() : mDD() { }
 								~ContactConstraintPart() { }
 
 	inline void					CalculateConstraintProperties(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
-		float inv_effective_mass = 0.0f;
-
 		// Dispatch to the correct templated form
 		switch (inBody1.GetMotionType())
 		{
@@ -295,15 +302,15 @@ public:
 				switch (inBody2.GetMotionType())
 				{
 				case EMotionType::Dynamic:
-					inv_effective_mass = mDD.CalculateInverseEffectiveMass(inInvMass1, inv_i1, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
+					mDD.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias);
 					break;
 
 				case EMotionType::Kinematic:
-					inv_effective_mass = mDK.CalculateInverseEffectiveMass(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
+					mDK.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias);
 					break;
 
 				case EMotionType::Static:
-					inv_effective_mass = mDS.CalculateInverseEffectiveMass(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
+					mDS.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias);
 					break;
 
 				default:
@@ -315,20 +322,18 @@ public:
 
 		case EMotionType::Kinematic:
 			JPH_ASSERT(inBody2.IsDynamic());
-			inv_effective_mass = mKD.CalculateInverseEffectiveMass(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
+			mKD.CalculateConstraintProperties(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias);
 			break;
 
 		case EMotionType::Static:
 			JPH_ASSERT(inBody2.IsDynamic());
-			inv_effective_mass = mSD.CalculateInverseEffectiveMass(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
+			mSD.CalculateConstraintProperties(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias);
 			break;
 
 		default:
 			JPH_ASSERT(false);
 			break;
 		}
-
-		mShared.SetInvEffectiveMass(inv_effective_mass, inBias);
 	}
 
 	inline bool					SolveVelocityConstraint(Body &ioBody1, float inInvMass1, Body &ioBody2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
@@ -349,10 +354,10 @@ public:
 				return mDD.SolveVelocityConstraint(motion_properties1, inInvMass1, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 			case EMotionType::Kinematic:
-				return mDK.SolveVelocityConstraint(motion_properties1, inInvMass1, motion_properties2, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+				return mDK.SolveVelocityConstraint(motion_properties1, inInvMass1, nullptr /* Unused */, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 			case EMotionType::Static:
-				return mDS.SolveVelocityConstraint(motion_properties1, inInvMass1, motion_properties2, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+				return mDS.SolveVelocityConstraint(motion_properties1, inInvMass1, nullptr /* Unused */, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 			default:
 				JPH_ASSERT(false);
@@ -362,11 +367,11 @@ public:
 
 		case EMotionType::Kinematic:
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			return mKD.SolveVelocityConstraint(motion_properties1, 0.0f /* Unused */, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+			return mKD.SolveVelocityConstraint(nullptr /* Unused */, 0.0f /* Unused */, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 		case EMotionType::Static:
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			return mSD.SolveVelocityConstraint(motion_properties1, 0.0f /* Unused */, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+			return mSD.SolveVelocityConstraint(nullptr /* Unused */, 0.0f /* Unused */, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 		default:
 			JPH_ASSERT(false);
@@ -420,28 +425,27 @@ public:
 
 	inline void					Deactivate()
 	{
-		mShared.Deactivate();
+		mDD.Deactivate(); // Using the fact that all templated forms have the same layout for the first few members
 	}
 
 	inline bool					IsActive() const
 	{
-		return mShared.IsActive();
+		return mDD.IsActive();
 	}
 
 	inline void					SetTotalLambda(float inLambda)
 	{
-		mShared.SetTotalLambda(inLambda);
+		mDD.SetTotalLambda(inLambda);
 	}
 
 	inline float				GetTotalLambda() const
 	{
-		return mShared.GetTotalLambda();
+		return mDD.GetTotalLambda();
 	}
 
 private:
 	union
 	{
-		ContactConstraintPartShared														mShared;
 		TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>		mDD;
 		TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Kinematic>	mDK;
 		TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Static>		mDS;
