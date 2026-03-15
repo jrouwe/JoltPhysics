@@ -97,15 +97,24 @@ public:
 		// Calculate inverse effective mass: K = J M^-1 J^T
 		float inv_effective_mass;
 
-		if constexpr (Type1 == EMotionType::Dynamic)
+		if constexpr (Type1 != EMotionType::Static)
 		{
 			Vec3 r1_plus_u_x_axis = inR1PlusU.Cross(inWorldSpaceAxis);
 			r1_plus_u_x_axis.StoreFloat3(&mR1PlusUxAxis);
 
-			Vec3 invi1_r1_plus_u_x_axis = inInvI1.Multiply3x3(r1_plus_u_x_axis);
-			invi1_r1_plus_u_x_axis.StoreFloat3(&mInvI1_R1PlusUxAxis);
+			if constexpr (Type1 == EMotionType::Dynamic)
+			{
+				Vec3 invi1_r1_plus_u_x_axis = inInvI1.Multiply3x3(r1_plus_u_x_axis);
+				invi1_r1_plus_u_x_axis.StoreFloat3(&mInvI1_R1PlusUxAxis);
 
-			inv_effective_mass = inInvMass1 + invi1_r1_plus_u_x_axis.Dot(r1_plus_u_x_axis);
+				inv_effective_mass = inInvMass1 + invi1_r1_plus_u_x_axis.Dot(r1_plus_u_x_axis);
+			}
+			else
+			{
+				JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI1_R1PlusUxAxis);)
+
+				inv_effective_mass = 0.0f;
+			}
 		}
 		else
 		{
@@ -115,15 +124,22 @@ public:
 			inv_effective_mass = 0.0f;
 		}
 
-		if constexpr (Type2 == EMotionType::Dynamic)
+		if constexpr (Type2 != EMotionType::Static)
 		{
 			Vec3 r2_x_axis = inR2.Cross(inWorldSpaceAxis);
 			r2_x_axis.StoreFloat3(&mR2xAxis);
 
-			Vec3 invi2_r2_x_axis = inInvI2.Multiply3x3(r2_x_axis);
-			invi2_r2_x_axis.StoreFloat3(&mInvI2_R2xAxis);
+			if constexpr (Type2 == EMotionType::Dynamic)
+			{
+				Vec3 invi2_r2_x_axis = inInvI2.Multiply3x3(r2_x_axis);
+				invi2_r2_x_axis.StoreFloat3(&mInvI2_R2xAxis);
 
-			inv_effective_mass += inInvMass2 + invi2_r2_x_axis.Dot(r2_x_axis);
+				inv_effective_mass += inInvMass2 + invi2_r2_x_axis.Dot(r2_x_axis);
+			}
+			else
+			{
+				JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI2_R2xAxis);)
+			}
 		}
 		else
 		{

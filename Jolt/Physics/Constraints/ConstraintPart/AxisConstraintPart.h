@@ -79,17 +79,25 @@ class AxisConstraintPart
 		// Calculate inverse effective mass: K = J M^-1 J^T
 		float inv_effective_mass;
 
-		if (inBody1.IsDynamic())
+		if (!inBody1.IsStatic())
 		{
-			const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-
 			Vec3 r1_plus_u_x_axis = inR1PlusU.Cross(inWorldSpaceAxis);
 			r1_plus_u_x_axis.StoreFloat3(&mR1PlusUxAxis);
 
-			Vec3 invi1_r1_plus_u_x_axis = mp1->MultiplyWorldSpaceInverseInertiaByVector(inBody1.GetRotation(), r1_plus_u_x_axis);
-			invi1_r1_plus_u_x_axis.StoreFloat3(&mInvI1_R1PlusUxAxis);
+			if (inBody1.IsDynamic())
+			{
+				const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
+				Vec3 invi1_r1_plus_u_x_axis = mp1->MultiplyWorldSpaceInverseInertiaByVector(inBody1.GetRotation(), r1_plus_u_x_axis);
+				invi1_r1_plus_u_x_axis.StoreFloat3(&mInvI1_R1PlusUxAxis);
 
-			inv_effective_mass = mp1->GetInverseMass() + invi1_r1_plus_u_x_axis.Dot(r1_plus_u_x_axis);
+				inv_effective_mass = mp1->GetInverseMass() + invi1_r1_plus_u_x_axis.Dot(r1_plus_u_x_axis);
+			}
+			else
+			{
+				JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI1_R1PlusUxAxis);)
+
+				inv_effective_mass = 0.0f;
+			}
 		}
 		else
 		{
@@ -99,17 +107,23 @@ class AxisConstraintPart
 			inv_effective_mass = 0.0f;
 		}
 
-		if (inBody2.IsDynamic())
+		if (!inBody2.IsStatic())
 		{
-			const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
-
 			Vec3 r2_x_axis = inR2.Cross(inWorldSpaceAxis);
 			r2_x_axis.StoreFloat3(&mR2xAxis);
 
-			Vec3 invi2_r2_x_axis = mp2->MultiplyWorldSpaceInverseInertiaByVector(inBody2.GetRotation(), r2_x_axis);
-			invi2_r2_x_axis.StoreFloat3(&mInvI2_R2xAxis);
+			if (inBody2.IsDynamic())
+			{
+				const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
+				Vec3 invi2_r2_x_axis = mp2->MultiplyWorldSpaceInverseInertiaByVector(inBody2.GetRotation(), r2_x_axis);
+				invi2_r2_x_axis.StoreFloat3(&mInvI2_R2xAxis);
 
-			inv_effective_mass += mp2->GetInverseMass() + invi2_r2_x_axis.Dot(r2_x_axis);
+				inv_effective_mass += mp2->GetInverseMass() + invi2_r2_x_axis.Dot(r2_x_axis);
+			}
+			else
+			{
+				JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mR2xAxis);)
+			}
 		}
 		else
 		{
