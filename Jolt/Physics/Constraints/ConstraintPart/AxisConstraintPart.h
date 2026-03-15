@@ -8,7 +8,6 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/SpringPart.h>
 #include <Jolt/Physics/Constraints/SpringSettings.h>
 #include <Jolt/Physics/StateRecorder.h>
-#include <Jolt/Physics/DeterminismLog.h>
 
 JPH_NAMESPACE_BEGIN
 

@@ -88,48 +88,6 @@ class ContactConstraintPart
 		return inv_effective_mass;
 	}
 
-	/// Internal helper function to calculate the inverse effective mass, version that supports mass scaling
-	JPH_INLINE float			CalculateInverseEffectiveMassWithMassOverride(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
-	{
-		// Dispatch to the correct templated form
-		switch (inBody1.GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			{
-				Mat44 inv_i1 = inInvInertiaScale1 * inBody1.GetInverseInertia();
-				switch (inBody2.GetMotionType())
-				{
-				case EMotionType::Dynamic:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Dynamic>(inInvMass1, inv_i1, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
-
-				case EMotionType::Kinematic:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Kinematic>(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
-
-				case EMotionType::Static:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Static>(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
-
-				default:
-					break;
-				}
-				break;
-			}
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(inBody2.IsDynamic());
-			return TemplatedCalculateInverseEffectiveMass<EMotionType::Kinematic, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
-
-		case EMotionType::Static:
-			JPH_ASSERT(inBody2.IsDynamic());
-			return TemplatedCalculateInverseEffectiveMass<EMotionType::Static, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
-
-		default:
-			break;
-		}
-
-		JPH_ASSERT(false);
-		return 0.0f;
-	}
-
 public:
 	/// Templated form of CalculateConstraintProperties with the motion types baked in
 	template <EMotionType Type1, EMotionType Type2>
@@ -161,7 +119,49 @@ public:
 	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
 	inline void					CalculateConstraintPropertiesWithMassOverride(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
-		float inv_effective_mass = CalculateInverseEffectiveMassWithMassOverride(inBody1, inInvMass1, inInvInertiaScale1, inR1PlusU, inBody2, inInvMass2, inInvInertiaScale2, inR2, inWorldSpaceAxis);
+		float inv_effective_mass = 0.0f;
+
+		// Dispatch to the correct templated form
+		switch (inBody1.GetMotionType())
+		{
+		case EMotionType::Dynamic:
+			{
+				Mat44 inv_i1 = inInvInertiaScale1 * inBody1.GetInverseInertia();
+				switch (inBody2.GetMotionType())
+				{
+				case EMotionType::Dynamic:
+					inv_effective_mass = TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Dynamic>(inInvMass1, inv_i1, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
+					break;
+
+				case EMotionType::Kinematic:
+					inv_effective_mass = TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Kinematic>(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
+					break;
+
+				case EMotionType::Static:
+					inv_effective_mass = TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Static>(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
+					break;
+
+				default:
+					JPH_ASSERT(false);
+					break;
+				}
+				break;
+			}
+
+		case EMotionType::Kinematic:
+			JPH_ASSERT(inBody2.IsDynamic());
+			inv_effective_mass = TemplatedCalculateInverseEffectiveMass<EMotionType::Kinematic, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
+			break;
+
+		case EMotionType::Static:
+			JPH_ASSERT(inBody2.IsDynamic());
+			inv_effective_mass = TemplatedCalculateInverseEffectiveMass<EMotionType::Static, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
+			break;
+
+		default:
+			JPH_ASSERT(false);
+			break;
+		}
 
 		if (inv_effective_mass == 0.0f)
 			Deactivate();
