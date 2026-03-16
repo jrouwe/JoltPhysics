@@ -6,8 +6,9 @@ JPH_NAMESPACE_BEGIN
 
 Quat Quat::operator * (QuatArg inRHS) const
 {
-#if defined(JPH_USE_SSE4_1)
+#if defined(JPH_CROSS_PLATFORM_DETERMINISTIC) && defined(JPH_USE_SSE4_1)
 	// Taken from: http://momchil-velikov.blogspot.nl/2013/10/fast-sse-quternion-multiplication.html
+	// Slower than implementation below, but consistent floating-point results with scalar version.
 	__m128 abcd = mValue.mValue;
 	__m128 xyzw = inRHS.mValue.mValue;
 
@@ -51,6 +52,42 @@ Quat Quat::operator * (QuatArg inRHS) const
 
 	// [dw-ax-by-cz,dz+ay-bx+cw,dy-az+bw+cx,dx+aw+bz-cy]
 	return Quat(Vec4(_mm_shuffle_ps(e, e, _MM_SHUFFLE(2, 3, 1, 0))));
+#elif !defined(JPH_CROSS_PLATFORM_DETERMINISTIC) && defined(JPH_USE_SSE)
+	__m128 abcd = mValue.mValue;
+	__m128 xyzw = inRHS.mValue.mValue;
+
+	// Names based on logical order, opposite of shuffle order.
+	__m128 abca = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(0, 2, 1, 0));
+	__m128 bcab = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(1, 0, 2, 1));
+	__m128 cabc = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(2, 1, 0, 2));
+	__m128 dddd = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(3, 3, 3, 3));
+
+	__m128 wwwx = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(0, 3, 3, 3));
+	__m128 zxyy = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(1, 1, 0, 2));
+	__m128 yzxz = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(2, 0, 2, 1));
+
+	__m128 m2 = _mm_mul_ps(bcab, zxyy);
+#if defined(JPH_USE_FMADD)
+	__m128 m3 = _mm_fmadd_ps(abca, wwwx, m2);
+#else
+	__m128 m1 = _mm_mul_ps(abca, wwwx);
+	__m128 m3 = _mm_add_ps(m1, m2);
+#endif
+	// Negate last (logical) component.
+	m3 = _mm_xor_ps(_mm_set_ps(-0.0f, 0.0f, 0.0f, 0.0f), m3);
+
+#if defined(JPH_USE_FMADD)
+	__m128 m5 = _mm_fnmadd_ps(cabc, yzxz, m3);
+	__m128 m7 = _mm_fmadd_ps(dddd, xyzw, m5);
+#else
+	__m128 m4 = _mm_mul_ps(dddd, xyzw);
+	__m128 m5 = _mm_mul_ps(cabc, yzxz);
+	__m128 m6 = _mm_sub_ps(m4, m5);
+	__m128 m7 = _mm_add_ps(m3, m6);
+#endif
+
+	// [aw+bz+dx-cy,bw+cx+dy-az,cw+ay+dz-bx,-ax-by+dw-cz]
+	return Quat(Vec4(m7));
 #else
 	float lx = mValue.GetX();
 	float ly = mValue.GetY();
@@ -73,7 +110,8 @@ Quat Quat::operator * (QuatArg inRHS) const
 
 Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 {
-#if defined(JPH_USE_SSE4_1)
+#if defined(JPH_CROSS_PLATFORM_DETERMINISTIC) && defined(JPH_USE_SSE4_1)
+	// Slower than implementation below, but consistent floating-point results with scalar version.
 	__m128 abc0 = inLHS.mValue;
 	__m128 xyzw = inRHS.mValue.mValue;
 
@@ -106,6 +144,33 @@ Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 
 	// [-ax-by-cz,+ay-bx+cw,-az+bw+cx,+aw+bz-cy]
 	return Quat(Vec4(_mm_shuffle_ps(e, e, _MM_SHUFFLE(2, 3, 1, 0))));
+#elif !defined(JPH_CROSS_PLATFORM_DETERMINISTIC) && defined(JPH_USE_SSE)
+	__m128 abc0 = inLHS.mValue;
+	__m128 xyzw = inRHS.mValue.mValue;
+
+	// Names based on logical order, opposite of shuffle order.
+	__m128 abca = _mm_shuffle_ps(abc0, abc0, _MM_SHUFFLE(0, 2, 1, 0));
+	__m128 bcab = _mm_shuffle_ps(abc0, abc0, _MM_SHUFFLE(1, 0, 2, 1));
+	__m128 cabc = _mm_shuffle_ps(abc0, abc0, _MM_SHUFFLE(2, 1, 0, 2));
+
+	__m128 wwwx = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(0, 3, 3, 3));
+	__m128 zxyy = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(1, 1, 0, 2));
+	__m128 yzxz = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(2, 0, 2, 1));
+
+	__m128 m2 = _mm_mul_ps(bcab, zxyy);
+#if defined(JPH_USE_FMADD)
+	__m128 m3 = _mm_fmadd_ps(abca, wwwx, m2);
+#else
+	__m128 m1 = _mm_mul_ps(abca, wwwx);
+	__m128 m3 = _mm_add_ps(m1, m2);
+#endif
+	// Negate last (logical) component.
+	m3 = _mm_xor_ps(_mm_set_ps(-0.0f, 0.0f, 0.0f, 0.0f), m3);
+
+	__m128 m4 = _mm_mul_ps(cabc, yzxz);
+
+	// [aw+bz-cy,bw+cx-az,cw+ay-bx,-ax-by-cz]
+	return Quat(Vec4(_mm_sub_ps(m3, m4)));
 #else
 	float lx = inLHS.GetX();
 	float ly = inLHS.GetY();
