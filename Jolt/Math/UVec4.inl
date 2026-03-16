@@ -551,8 +551,7 @@ UVec4 UVec4::DotV(UVec4Arg inV2) const
 	const vuint32m1_t v2 = __riscv_vle32_v_u32m1(inV2.mU32, 4);
 	const vuint32m1_t mul = __riscv_vmul_vv_u32m1(v1, v2, 4);
 	const vuint32m1_t sum = __riscv_vredsum_vs_u32m1_u32m1(mul, zeros, 4);
-	const uint32 dot = __riscv_vmv_x_s_u32m1_u32(sum);
-	const vuint32m1_t splat = __riscv_vmv_v_x_u32m1(dot, 4);
+	const vuint32m1_t splat = __riscv_vrgather_vx_u32m1(sum, 0, 4);
 	__riscv_vse32_v_u32m1(res.mU32, splat, 4);
 	return res;
 
