@@ -6,53 +6,7 @@ JPH_NAMESPACE_BEGIN
 
 Quat Quat::operator * (QuatArg inRHS) const
 {
-#if defined(JPH_CROSS_PLATFORM_DETERMINISTIC) && defined(JPH_USE_SSE4_1)
-	// Taken from: http://momchil-velikov.blogspot.nl/2013/10/fast-sse-quternion-multiplication.html
-	// Slower than implementation below, but consistent floating-point results with scalar version.
-	__m128 abcd = mValue.mValue;
-	__m128 xyzw = inRHS.mValue.mValue;
-
-	__m128 t0 = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(3, 3, 3, 3));
-	__m128 t1 = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(2, 3, 0, 1));
-
-	__m128 t3 = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(0, 0, 0, 0));
-	__m128 t4 = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(1, 0, 3, 2));
-
-	__m128 t5 = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(1, 1, 1, 1));
-	__m128 t6 = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(2, 0, 3, 1));
-
-	// [d,d,d,d] * [z,w,x,y] = [dz,dw,dx,dy]
-	__m128 m0 = _mm_mul_ps(t0, t1);
-
-	// [a,a,a,a] * [y,x,w,z] = [ay,ax,aw,az]
-	__m128 m1 = _mm_mul_ps(t3, t4);
-
-	// [b,b,b,b] * [z,x,w,y] = [bz,bx,bw,by]
-	__m128 m2 = _mm_mul_ps(t5, t6);
-
-	// [c,c,c,c] * [w,z,x,y] = [cw,cz,cx,cy]
-	__m128 t7 = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(2, 2, 2, 2));
-	__m128 t8 = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(3, 2, 0, 1));
-	__m128 m3 = _mm_mul_ps(t7, t8);
-
-	// [dz,dw,dx,dy] + -[ay,ax,aw,az] = [dz+ay,dw-ax,dx+aw,dy-az]
-	__m128 e = _mm_addsub_ps(m0, m1);
-
-	// [dx+aw,dz+ay,dy-az,dw-ax]
-	e = _mm_shuffle_ps(e, e, _MM_SHUFFLE(1, 3, 0, 2));
-
-	// [dx+aw,dz+ay,dy-az,dw-ax] + -[bz,bx,bw,by] = [dx+aw+bz,dz+ay-bx,dy-az+bw,dw-ax-by]
-	e = _mm_addsub_ps(e, m2);
-
-	// [dz+ay-bx,dw-ax-by,dy-az+bw,dx+aw+bz]
-	e = _mm_shuffle_ps(e, e, _MM_SHUFFLE(2, 0, 1, 3));
-
-	// [dz+ay-bx,dw-ax-by,dy-az+bw,dx+aw+bz] + -[cw,cz,cx,cy] = [dz+ay-bx+cw,dw-ax-by-cz,dy-az+bw+cx,dx+aw+bz-cy]
-	e = _mm_addsub_ps(e, m3);
-
-	// [dw-ax-by-cz,dz+ay-bx+cw,dy-az+bw+cx,dx+aw+bz-cy]
-	return Quat(Vec4(_mm_shuffle_ps(e, e, _MM_SHUFFLE(2, 3, 1, 0))));
-#elif !defined(JPH_CROSS_PLATFORM_DETERMINISTIC) && defined(JPH_USE_SSE)
+#ifdef JPH_USE_SSE
 	__m128 abcd = mValue.mValue;
 	__m128 xyzw = inRHS.mValue.mValue;
 
@@ -67,16 +21,17 @@ Quat Quat::operator * (QuatArg inRHS) const
 	__m128 yzxz = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(2, 0, 2, 1));
 
 	__m128 m2 = _mm_mul_ps(bcab, zxyy);
-#if defined(JPH_USE_FMADD)
+#ifdef JPH_USE_FMADD
 	__m128 m3 = _mm_fmadd_ps(abca, wwwx, m2);
 #else
 	__m128 m1 = _mm_mul_ps(abca, wwwx);
 	__m128 m3 = _mm_add_ps(m1, m2);
 #endif
+
 	// Negate last (logical) component.
 	m3 = _mm_xor_ps(_mm_set_ps(-0.0f, 0.0f, 0.0f, 0.0f), m3);
 
-#if defined(JPH_USE_FMADD)
+#ifdef JPH_USE_FMADD
 	__m128 m5 = _mm_fnmadd_ps(cabc, yzxz, m3);
 	__m128 m7 = _mm_fmadd_ps(dddd, xyzw, m5);
 #else
@@ -86,65 +41,29 @@ Quat Quat::operator * (QuatArg inRHS) const
 	__m128 m7 = _mm_add_ps(m3, m6);
 #endif
 
-	// [aw+bz+dx-cy,bw+cx+dy-az,cw+ay+dz-bx,-ax-by+dw-cz]
+	// [(aw+bz)+(dx-cy),(bw+cx)+(dy-az),(cw+ay)+(dz-bx),-(ax+by)+(dw-cz)]
 	return Quat(Vec4(m7));
 #else
-	float lx = mValue.GetX();
-	float ly = mValue.GetY();
-	float lz = mValue.GetZ();
-	float lw = mValue.GetW();
+	float a = mValue.GetX();
+	float b = mValue.GetY();
+	float c = mValue.GetZ();
+	float d = mValue.GetW();
 
-	float rx = inRHS.mValue.GetX();
-	float ry = inRHS.mValue.GetY();
-	float rz = inRHS.mValue.GetZ();
-	float rw = inRHS.mValue.GetW();
+	float x = inRHS.mValue.GetX();
+	float y = inRHS.mValue.GetY();
+	float z = inRHS.mValue.GetZ();
+	float w = inRHS.mValue.GetW();
 
-	float x = lw * rx + lx * rw + ly * rz - lz * ry;
-	float y = lw * ry - lx * rz + ly * rw + lz * rx;
-	float z = lw * rz + lx * ry - ly * rx + lz * rw;
-	float w = lw * rw - lx * rx - ly * ry - lz * rz;
-
-	return Quat(x, y, z, w);
+	return Quat((a * w + b * z) + (d * x - c * y),
+				(b * w + c * x) + (d * y - a * z),
+				(c * w + a * y) + (d * z - b * x),
+				-(a * x + b * y) + (d * w - c * z));
 #endif
 }
 
 Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 {
-#if defined(JPH_CROSS_PLATFORM_DETERMINISTIC) && defined(JPH_USE_SSE4_1)
-	// Slower than implementation below, but consistent floating-point results with scalar version.
-	__m128 abc0 = inLHS.mValue;
-	__m128 xyzw = inRHS.mValue.mValue;
-
-	// [a,a,a,a] * [w,y,z,x] = [aw,ay,az,ax]
-	__m128 aaaa = _mm_shuffle_ps(abc0, abc0, _MM_SHUFFLE(0, 0, 0, 0));
-	__m128 xzyw = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(3, 1, 2, 0));
-	__m128 axazayaw = _mm_mul_ps(aaaa, xzyw);
-
-	// [b,b,b,b] * [z,x,w,y] = [bz,bx,bw,by]
-	__m128 bbbb = _mm_shuffle_ps(abc0, abc0, _MM_SHUFFLE(1, 1, 1, 1));
-	__m128 ywxz = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(2, 0, 3, 1));
-	__m128 bybwbxbz = _mm_mul_ps(bbbb, ywxz);
-
-	// [c,c,c,c] * [w,z,x,y] = [cw,cz,cx,cy]
-	__m128 cccc = _mm_shuffle_ps(abc0, abc0, _MM_SHUFFLE(2, 2, 2, 2));
-	__m128 yxzw = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(3, 2, 0, 1));
-	__m128 cycxczcw = _mm_mul_ps(cccc, yxzw);
-
-	// [+aw,+ay,-az,-ax]
-	__m128 e = _mm_xor_ps(axazayaw, _mm_set_ps(0.0f, 0.0f, -0.0f, -0.0f));
-
-	// [+aw,+ay,-az,-ax] + -[bz,bx,bw,by] = [+aw+bz,+ay-bx,-az+bw,-ax-by]
-	e = _mm_addsub_ps(e, bybwbxbz);
-
-	// [+ay-bx,-ax-by,-az+bw,+aw+bz]
-	e = _mm_shuffle_ps(e, e, _MM_SHUFFLE(2, 0, 1, 3));
-
-	// [+ay-bx,-ax-by,-az+bw,+aw+bz] + -[cw,cz,cx,cy] = [+ay-bx+cw,-ax-by-cz,-az+bw+cx,+aw+bz-cy]
-	e = _mm_addsub_ps(e, cycxczcw);
-
-	// [-ax-by-cz,+ay-bx+cw,-az+bw+cx,+aw+bz-cy]
-	return Quat(Vec4(_mm_shuffle_ps(e, e, _MM_SHUFFLE(2, 3, 1, 0))));
-#elif !defined(JPH_CROSS_PLATFORM_DETERMINISTIC) && defined(JPH_USE_SSE)
+#ifdef JPH_USE_SSE
 	__m128 abc0 = inLHS.mValue;
 	__m128 xyzw = inRHS.mValue.mValue;
 
@@ -158,35 +77,34 @@ Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 	__m128 yzxz = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(2, 0, 2, 1));
 
 	__m128 m2 = _mm_mul_ps(bcab, zxyy);
-#if defined(JPH_USE_FMADD)
+#ifdef JPH_USE_FMADD
 	__m128 m3 = _mm_fmadd_ps(abca, wwwx, m2);
 #else
 	__m128 m1 = _mm_mul_ps(abca, wwwx);
 	__m128 m3 = _mm_add_ps(m1, m2);
 #endif
+
 	// Negate last (logical) component.
 	m3 = _mm_xor_ps(_mm_set_ps(-0.0f, 0.0f, 0.0f, 0.0f), m3);
 
 	__m128 m4 = _mm_mul_ps(cabc, yzxz);
 
-	// [aw+bz-cy,bw+cx-az,cw+ay-bx,-ax-by-cz]
+	// [(aw+bz)-cy,(bw+cx)-az,(cw+ay)-bx,-(ax+by)-cz]
 	return Quat(Vec4(_mm_sub_ps(m3, m4)));
 #else
-	float lx = inLHS.GetX();
-	float ly = inLHS.GetY();
-	float lz = inLHS.GetZ();
+	float a = inLHS.GetX();
+	float b = inLHS.GetY();
+	float c = inLHS.GetZ();
 
-	float rx = inRHS.mValue.GetX();
-	float ry = inRHS.mValue.GetY();
-	float rz = inRHS.mValue.GetZ();
-	float rw = inRHS.mValue.GetW();
+	float x = inRHS.mValue.GetX();
+	float y = inRHS.mValue.GetY();
+	float z = inRHS.mValue.GetZ();
+	float w = inRHS.mValue.GetW();
 
-	float x =  (lx * rw) + ly * rz - lz * ry;
-	float y = -(lx * rz) + ly * rw + lz * rx;
-	float z =  (lx * ry) - ly * rx + lz * rw;
-	float w = -(lx * rx) - ly * ry - lz * rz;
-
-	return Quat(x, y, z, w);
+	return Quat((a * w + b * z) - c * y,
+				(b * w + c * x) - a * z,
+				(c * w + a * y) - b * x,
+				-(a * x + b * y) - c * z);
 #endif
 }
 
