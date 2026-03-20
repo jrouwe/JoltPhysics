@@ -109,6 +109,9 @@ inline const char *GetConfigurationString()
 #if defined(__cpp_exceptions) && __cpp_exceptions
 		"(C++ Exceptions) "
 #endif
+#ifdef JPH_SHARED_LIBRARY
+		"(Shared Library) "
+#endif
 		;
 }
 
