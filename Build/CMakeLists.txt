@@ -26,15 +26,8 @@ option(CROSS_COMPILE_ARM "Cross compile to the CROSS_COMPILE_ARM_TARGET architec
 # When cross compiling to ARM this specifies which target to use. Can be 'aarch64-linux-gnu' for 64-bit or 'arm-linux-gnueabihf' for 32-bit
 set(CROSS_COMPILE_ARM_TARGET "aarch64-linux-gnu" CACHE STRING "The target to use")
 
-# Default based on BUILD_SHARED_LIBS, explicitly setting to handle whether the value is unset.
-if (BUILD_SHARED_LIBS)
-	set(JPH_BUILD_SHARED_LIBS_DEFAULT ON)
-else()
-	set(JPH_BUILD_SHARED_LIBS_DEFAULT OFF)
-endif()
-
 # When turning this option on, Jolt will be compiled as a shared library and public symbols will be exported.
-option(JPH_BUILD_SHARED_LIBS "Compile Jolt as a shared library" ${JPH_BUILD_SHARED_LIBS_DEFAULT})
+option(JPH_BUILD_SHARED_LIBS "Compile Jolt as a shared library" ${BUILD_SHARED_LIBS})
 
 # When turning this option on, the library will be compiled with interprocedural optimizations enabled, also known as link-time optimizations or link-time code generation.
 # Note that if you turn this on you need to use SET_INTERPROCEDURAL_OPTIMIZATION() or set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON) to enable LTO specifically for your own project as well.
