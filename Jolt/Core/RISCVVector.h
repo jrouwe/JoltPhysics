@@ -32,7 +32,7 @@ template <>
 JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<0, 1, 4, 5>(vfloat32m1_t inV0, vfloat32m1_t inV1)
 {
 	vfloat32m1_t result = inV0;
-	return __riscv_vslideup_vx_f32m1(result, inV1, 2, 4);	
+	return __riscv_vslideup_vx_f32m1(result, inV1, 2, 4);
 }
 
 template <>

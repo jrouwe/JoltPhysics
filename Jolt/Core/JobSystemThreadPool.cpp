@@ -301,7 +301,7 @@ void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 
 #if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_PLATFORM_LINUX)
 	SetThreadName(name);
-#endif // JPH_PLATFORM_WINDOWS && !JPH_COMPILER_MINGW
+#endif // JPH_PLATFORM_WINDOWS || JPH_PLATFORM_LINUX
 
 	// Enable floating point exceptions
 	FPExceptionsEnable enable_exceptions;
