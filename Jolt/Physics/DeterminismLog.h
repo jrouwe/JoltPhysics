@@ -50,7 +50,7 @@ public:
 		return *this;
 	}
 
-	DeterminismLog &		operator << (const string &inValue)
+	DeterminismLog &		operator << (const String &inValue)
 	{
 		mLog << std::dec << inValue;
 		return *this;
