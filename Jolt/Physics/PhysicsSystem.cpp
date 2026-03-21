@@ -1507,6 +1507,9 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			uint64 start_tick = GetProcessorTickCount();
 		#endif
 
+			// Convert indices to offsets so that we lose one indirection in the solver. We couldn't do this earlier as we need constraint indices to build islands.
+			mContactManager.ConstraintIdxToConstraintOffset(contacts_begin, contacts_end);
+
 			// Sorting is costly but needed for a deterministic simulation, allow the user to turn this off
 			if (mPhysicsSettings.mDeterministicSimulation)
 			{

@@ -88,6 +88,7 @@ static_assert(sizeof(ContactConstraintPart2<EMotionType::Kinematic>) == sizeof(F
 static_assert(sizeof(ContactConstraintPart2<EMotionType::Dynamic>) == 2 * sizeof(Float3));
 
 /// This is a copy of AxisConstraintPart, specialized to handle contact constraints. See the documentation of AxisConstraintPart for more documentation behind the math.
+/// Warning: Make sure there is 1 float of padding after this class because we read using Vec3::sLoadFloat3Unsafe and a Float3 is the last member.
 template <EMotionType Type1, EMotionType Type2>
 class ContactConstraintPart : public ContactConstraintPart1<Type1>, public ContactConstraintPart2<Type2>
 {
