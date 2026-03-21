@@ -894,8 +894,8 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 
 		JPH_ASSERT(settings.mIsSensor || !(inBody1.IsSensor() || inBody2.IsSensor()), "Sensors cannot be converted into regular bodies by a contact callback!");
 		if (!settings.mIsSensor // If one of the bodies is a sensor, don't actually create the constraint
-			&& ((inBody1.IsDynamic() && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
-				|| (inBody2.IsDynamic() && settings.mInvMassScale2 != 0.0f)))
+			&& ((Type1 == EMotionType::Dynamic && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
+				|| (Type2 == EMotionType::Dynamic && settings.mInvMassScale2 != 0.0f)))
 		{
 			// Create a new constraint
 			uint32 constraint_idx;
@@ -923,9 +923,9 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 
 		#ifdef JPH_TRACK_SIMULATION_STATS
 			// Track new contact constraints
-			if (!body1->IsStatic())
+			if constexpr (Type1 != EMotionType::Static)
 				body1->GetMotionPropertiesUnchecked()->GetSimulationStats().mNumContactConstraints.fetch_add(1, memory_order_relaxed);
-			if (!body2->IsStatic())
+			if constexpr (Type2 != EMotionType::Static)
 				body2->GetMotionPropertiesUnchecked()->GetSimulationStats().mNumContactConstraints.fetch_add(1, memory_order_relaxed);
 		#endif
 		}
@@ -1178,8 +1178,8 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	// If one of the bodies is a sensor, don't actually create the constraint
 	JPH_ASSERT(settings.mIsSensor || !(inBody1.IsSensor() || inBody2.IsSensor()), "Sensors cannot be converted into regular bodies by a contact callback!");
 	if (!settings.mIsSensor
-		&& ((inBody1.IsDynamic() && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
-			|| (inBody2.IsDynamic() && settings.mInvMassScale2 != 0.0f)))
+		&& ((Type1 == EMotionType::Dynamic && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
+			|| (Type2 == EMotionType::Dynamic && settings.mInvMassScale2 != 0.0f)))
 	{
 		// Create a new constraint
 		uint32 constraint_idx;
