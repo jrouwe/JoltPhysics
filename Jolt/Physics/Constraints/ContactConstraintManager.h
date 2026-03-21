@@ -167,7 +167,7 @@ public:
 	/// Get the affected bodies for a given constraint
 	inline void					GetAffectedBodies(uint32 inConstraintIdx, const Body *&outBody1, const Body *&outBody2) const
 	{
-		const ContactConstraint &constraint = mConstraints[inConstraintIdx];
+		const ContactConstraintBase &constraint = *reinterpret_cast<const ContactConstraintBase *>(mConstraints + mConstraintIdxToOffset[inConstraintIdx]);
 		outBody1 = constraint.mBody1;
 		outBody2 = constraint.mBody2;
 	}
@@ -421,35 +421,29 @@ private:
 	int							mCacheWriteIdx = 0;							///< Which cache we're currently writing to
 
 	/// World space contact point, used for solving penetrations
+	template <EMotionType Type1, EMotionType Type2>
 	class WorldContactPoint
 	{
 	public:
-		/// Calculate constraint properties below
-		void					CalculateNonPenetrationConstraintProperties(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal);
+		using ConstraintPart = ContactConstraintPart<Type1, Type2>;
 
-		template <EMotionType Type1, EMotionType Type2>
-		JPH_INLINE void			TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, Vec3Arg inGravity, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings, float inMinVelocityForRestitution);
+		/// Calculate constraint properties below
+		void					CalculateNonPenetrationConstraintProperties(const Body &inBody1, float inInvMass1, Mat44Arg inInvI1, const Body &inBody2, float inInvMass2, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal);
+
+		JPH_INLINE void			CalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, Vec3Arg inGravity, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings, float inMinVelocityForRestitution);
 
 		/// The constraint parts
-		ContactConstraintPart	mNonPenetrationConstraint;
-		ContactConstraintPart	mFrictionConstraint1;
-		ContactConstraintPart	mFrictionConstraint2;
+		ConstraintPart			mNonPenetrationConstraint;
+		ConstraintPart			mFrictionConstraint1;
+		ConstraintPart			mFrictionConstraint2;
 
 		/// Contact cache
 		CachedContactPoint *	mContactPoint;
 	};
 
-	using WorldContactPoints = StaticArray<WorldContactPoint, MaxContactPoints>;
-
-	/// Contact constraint class, used for solving penetrations
-	class ContactConstraint
+	class ContactConstraintBase
 	{
 	public:
-	#ifdef JPH_DEBUG_RENDERER
-		/// Draw the state of the contact constraint
-		void					Draw(DebugRenderer *inRenderer, ColorArg inManifoldColor) const;
-	#endif // JPH_DEBUG_RENDERER
-
 		/// Convert the world space normal to a Vec3
 		JPH_INLINE Vec3			GetWorldSpaceNormal() const
 		{
@@ -473,12 +467,28 @@ private:
 		float					mInvInertiaScale1;
 		float					mInvMass2;
 		float					mInvInertiaScale2;
-		WorldContactPoints		mContactPoints;
+		uint32					mNumContactPoints;
+	};
+
+	/// Contact constraint class, used for solving penetrations
+	template <EMotionType Type1, EMotionType Type2>
+	class ContactConstraint : public ContactConstraintBase
+	{
+	public:
+	#ifdef JPH_DEBUG_RENDERER
+		/// Draw the state of the contact constraint
+		void					Draw(DebugRenderer *inRenderer, ColorArg inManifoldColor) const;
+	#endif // JPH_DEBUG_RENDERER
+
+		WorldContactPoint<Type1, Type2> mContactPoints[1];
 	};
 
 public:
+	/// Maximum size a single constraint can take
+	static constexpr uint32		cMaxConstraintSize = sizeof(ContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic>) + (MaxContactPoints - 1) * sizeof(WorldContactPoint<EMotionType::Dynamic, EMotionType::Dynamic>);
+
 	/// The maximum value that can be passed to Init for inMaxContactConstraints. Note you should really use a lower value, using this value will cost a lot of memory!
-	static constexpr uint		cMaxContactConstraintsLimit = ~uint(0) / sizeof(ContactConstraint);
+	static constexpr uint		cMaxContactConstraintsLimit = ~uint(0) / cMaxConstraintSize;
 
 	/// The maximum value that can be passed to Init for inMaxBodyPairs. Note you should really use a lower value, using this value will cost a lot of memory!
 	static constexpr uint		cMaxBodyPairsLimit = ~uint(0) / sizeof(BodyPairMap::KeyValue);
@@ -486,22 +496,27 @@ public:
 private:
 	/// Internal helper function to calculate the friction and non-penetration constraint properties. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE void				TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint &ioConstraint, const ContactSettings &inSettings, float inDeltaTime, Vec3Arg inGravity, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2);
-
-	/// Internal helper function to calculate the friction and non-penetration constraint properties.
-	inline void					CalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint &ioConstraint, const ContactSettings &inSettings, float inDeltaTime, Vec3Arg inGravity, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2);
+	inline void					CalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint<Type1, Type2> &ioConstraint, const ContactSettings &inSettings, float inDeltaTime, Vec3Arg inGravity, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, CachedManifold &inCachedManifold);
 
 	/// Internal helper function to add a contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	bool						TemplatedAddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold);
+	bool						AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold);
 
 	/// Internal helper function to warm start contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE static void		sWarmStartConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio);
+	inline static void			sWarmStartConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio);
 
-	/// Internal helper function to solve a single contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
+	/// Internal helper function to solve a single velocity constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE static bool		sSolveVelocityConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2);
+	inline static bool			sSolveVelocityConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2);
+
+	/// Internal helper function to store lambdas applied during sSolveVelocityConstraint.
+	template <EMotionType Type1, EMotionType Type2>
+	inline static void			sStoreAppliedImpulses(ContactConstraint<Type1, Type2> &ioConstraint);
+
+	/// Internal helper function to solve a single position constraint. Templated to the motion type to reduce the amount of branches and calculations.
+	template <EMotionType Type1, EMotionType Type2>
+	inline bool					SolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2);
 
 	/// The main physics settings instance
 	const PhysicsSettings &		mPhysicsSettings;
@@ -514,9 +529,11 @@ private:
 	CombineFunction				mCombineRestitution = [](const Body &inBody1, const SubShapeID &, const Body &inBody2, const SubShapeID &) { return max(inBody1.GetRestitution(), inBody2.GetRestitution()); };
 
 	/// The constraints that were added this frame
-	ContactConstraint *			mConstraints = nullptr;
+	uint8 *						mConstraints = nullptr; ///< Cast to ContactConstraint<MotionType1, MotionType2> depending on the motion types of the bodies in the constraint
+	uint32 *					mConstraintIdxToOffset = nullptr; ///< Maps from constraint index to offset in mConstraints
 	uint32						mMaxConstraints = 0;
-	atomic<uint32>				mNumConstraints { 0 };
+	atomic<uint32>				mNumConstraints { 0 }; // fix: can use 1 uint64 to combine this and mNextConstraintAddress
+	atomic<uint32>				mNextConstraintAddress { 0 };
 
 	/// Context used for this physics update
 	PhysicsUpdateContext *		mUpdateContext;

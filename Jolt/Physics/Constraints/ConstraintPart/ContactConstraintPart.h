@@ -84,7 +84,7 @@ static_assert(sizeof(ContactConstraintPart2<EMotionType::Dynamic>) == 2 * sizeof
 
 /// This is a copy of AxisConstraintPart, specialized to handle contact constraints. See the documentation of AxisConstraintPart for more documentation behind the math.
 template <EMotionType Type1, EMotionType Type2>
-class TemplatedContactConstraintPart : public ContactConstraintPart1<Type1>, public ContactConstraintPart2<Type2>
+class ContactConstraintPart : public ContactConstraintPart1<Type1>, public ContactConstraintPart2<Type2>
 {
 private:
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
@@ -274,22 +274,22 @@ public:
 	}
 };
 
-static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>) == 3 * sizeof(float) + 4 * sizeof(Float3));
-static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Kinematic>) == 3 * sizeof(float) + 3 * sizeof(Float3));
-static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Static>) == 3 * sizeof(float) + 2 * sizeof(Float3));
-static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Kinematic, EMotionType::Kinematic>) == 3 * sizeof(float) + 2 * sizeof(Float3));
-static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Kinematic, EMotionType::Static>) == 3 * sizeof(float) + sizeof(Float3));
-static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Static, EMotionType::Dynamic>) == 3 * sizeof(float) + 2 * sizeof(Float3));
-static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Static, EMotionType::Kinematic>) == 3 * sizeof(float) + sizeof(Float3));
-static_assert(sizeof(TemplatedContactConstraintPart<EMotionType::Static, EMotionType::Static>) == 3 * sizeof(float));
+static_assert(sizeof(ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>) == 3 * sizeof(float) + 4 * sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart<EMotionType::Dynamic, EMotionType::Kinematic>) == 3 * sizeof(float) + 3 * sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart<EMotionType::Dynamic, EMotionType::Static>) == 3 * sizeof(float) + 2 * sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart<EMotionType::Kinematic, EMotionType::Kinematic>) == 3 * sizeof(float) + 2 * sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart<EMotionType::Kinematic, EMotionType::Static>) == 3 * sizeof(float) + sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart<EMotionType::Static, EMotionType::Dynamic>) == 3 * sizeof(float) + 2 * sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart<EMotionType::Static, EMotionType::Kinematic>) == 3 * sizeof(float) + sizeof(Float3));
+static_assert(sizeof(ContactConstraintPart<EMotionType::Static, EMotionType::Static>) == 3 * sizeof(float));
 
 /// Concrete contact constraint part that dispatches to the correct templated form based on the motion types of the bodies
-class ContactConstraintPart
+class ConcreteContactConstraintPart
 {
 public:
 	/// Constructor / destructor
-								ContactConstraintPart() : mDD() { }
-								~ContactConstraintPart() { }
+								ConcreteContactConstraintPart() : mDD() { }
+								~ConcreteContactConstraintPart() { }
 
 	inline void					CalculateConstraintProperties(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
@@ -446,11 +446,11 @@ public:
 private:
 	union
 	{
-		TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>		mDD;
-		TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Kinematic>	mDK;
-		TemplatedContactConstraintPart<EMotionType::Dynamic, EMotionType::Static>		mDS;
-		TemplatedContactConstraintPart<EMotionType::Kinematic, EMotionType::Dynamic>	mKD;
-		TemplatedContactConstraintPart<EMotionType::Static, EMotionType::Dynamic>		mSD;
+		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>		mDD;
+		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Kinematic>		mDK;
+		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Static>		mDS;
+		ContactConstraintPart<EMotionType::Kinematic, EMotionType::Dynamic>		mKD;
+		ContactConstraintPart<EMotionType::Static, EMotionType::Dynamic>		mSD;
 	};
 	[[maybe_unused]] float		mPadding; // Pad an extra float so that we can use Vec3::sLoadFloat3Unsafe on the last Float3 member without worrying about reading past the end of the struct
 };
