@@ -498,15 +498,20 @@ public:
 
 private:
 	/// Create a new contact constraint
-	inline ContactConstraintBase *CreateConstraint(Body &inBody1, Body &inBody2, uint64 inSortKey, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints, uint32 &outConstraintIdx);
+	template <EMotionType Type1, EMotionType Type2>
+	JPH_INLINE ContactConstraint<Type1, Type2> *CreateConstraint(Body &inBody1, Body &inBody2, uint64 inSortKey, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints, uint32 &outConstraintIdx);
 
 	/// Internal helper function to calculate the friction and non-penetration constraint properties. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
 	inline void					CalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint<Type1, Type2> &ioConstraint, const ContactSettings &inSettings, float inDeltaTime, Vec3Arg inGravity, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, CachedManifold &inCachedManifold);
 
+	/// Internal helper function to add a contact constraint from the cache. Templated to the motion type to reduce the amount of branches and calculations.
+	template <EMotionType Type1, EMotionType Type2>
+	inline void					TemplatedGetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, const CachedBodyPair &inCachedBodyPair, CachedBodyPair &outCachedBodyPair, bool &outConstraintCreated);
+
 	/// Internal helper function to add a contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	bool						AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold);
+	bool						TemplatedAddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold);
 
 	/// Internal helper function to warm start contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
