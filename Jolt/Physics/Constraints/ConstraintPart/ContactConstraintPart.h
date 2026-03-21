@@ -39,8 +39,9 @@ public:
 	}
 
 protected:
-	float						mEffectiveMass = 0.0f;
-	float						mTotalLambda = 0.0f;
+	// Note: Constructor will not be called
+	float						mEffectiveMass;
+	float						mTotalLambda;
 	float						mBias;
 };
 
@@ -48,6 +49,7 @@ template <>
 class ContactConstraintPart1<EMotionType::Kinematic> : public ContactConstraintPart1<EMotionType::Static>
 {
 protected:
+	// Note: Constructor will not be called
 	Float3						mR1PlusUxAxis;
 };
 
@@ -55,6 +57,7 @@ template <>
 class ContactConstraintPart1<EMotionType::Dynamic> : public ContactConstraintPart1<EMotionType::Kinematic>
 {
 protected:
+	// Note: Constructor will not be called
 	Float3						mInvI1_R1PlusUxAxis;
 };
 
@@ -67,6 +70,7 @@ template <>
 class ContactConstraintPart2<EMotionType::Kinematic> : public ContactConstraintPart2<EMotionType::Static>
 {
 protected:
+	// Note: Constructor will not be called
 	Float3						mR2xAxis;
 };
 
@@ -74,6 +78,7 @@ template <>
 class ContactConstraintPart2<EMotionType::Dynamic> : public ContactConstraintPart2<EMotionType::Kinematic>
 {
 protected:
+	// Note: Constructor will not be called
 	Float3						mInvI2_R2xAxis;
 };
 
@@ -354,7 +359,7 @@ public:
 				return mDD.SolveVelocityConstraint(motion_properties1, inInvMass1, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 			case EMotionType::Kinematic:
-				return mDK.SolveVelocityConstraint(motion_properties1, inInvMass1, nullptr /* Unused */, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+				return mDK.SolveVelocityConstraint(motion_properties1, inInvMass1, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 			case EMotionType::Static:
 				return mDS.SolveVelocityConstraint(motion_properties1, inInvMass1, nullptr /* Unused */, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
@@ -367,53 +372,11 @@ public:
 
 		case EMotionType::Kinematic:
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			return mKD.SolveVelocityConstraint(nullptr /* Unused */, 0.0f /* Unused */, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+			return mKD.SolveVelocityConstraint(motion_properties1, inInvMass1, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 		case EMotionType::Static:
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
 			return mSD.SolveVelocityConstraint(nullptr /* Unused */, 0.0f /* Unused */, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
-
-		return false;
-	}
-
-	inline bool					SolvePositionConstraint(Body &ioBody1, float inInvMass1, Body &ioBody2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inC, float inBaumgarte) const
-	{
-		EMotionType motion_type1 = ioBody1.GetMotionType();
-		EMotionType motion_type2 = ioBody2.GetMotionType();
-
-		// Dispatch to the correct templated form
-		switch (motion_type1)
-		{
-		case EMotionType::Dynamic:
-			switch (motion_type2)
-			{
-			case EMotionType::Dynamic:
-				return mDD.SolvePositionConstraint(ioBody1, inInvMass1, ioBody2, inInvMass2, inWorldSpaceAxis, inC, inBaumgarte);
-
-			case EMotionType::Kinematic:
-				return mDK.SolvePositionConstraint(ioBody1, inInvMass1, ioBody2, 0.0f /* Unused */, inWorldSpaceAxis, inC, inBaumgarte);
-
-			case EMotionType::Static:
-				return mDS.SolvePositionConstraint(ioBody1, inInvMass1, ioBody2, 0.0f /* Unused */, inWorldSpaceAxis, inC, inBaumgarte);
-
-			default:
-				JPH_ASSERT(false);
-				break;
-			}
-			break;
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			return mKD.SolvePositionConstraint(ioBody1, 0.0f /* Unused */, ioBody2, inInvMass2, inWorldSpaceAxis, inC, inBaumgarte);
-
-		case EMotionType::Static:
-			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			return mSD.SolvePositionConstraint(ioBody1, 0.0f /* Unused */, ioBody2, inInvMass2, inWorldSpaceAxis, inC, inBaumgarte);
 
 		default:
 			JPH_ASSERT(false);

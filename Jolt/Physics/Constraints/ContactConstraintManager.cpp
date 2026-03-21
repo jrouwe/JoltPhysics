@@ -1155,7 +1155,7 @@ bool ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		contact_constraint_created = true;
 
 		ContactConstraint<Type1, Type2> &constraint = *reinterpret_cast<ContactConstraint<Type1, Type2> *>(mConstraints + constraint_offset);
-		new (&constraint) ContactConstraint<Type1, Type2>();
+		new (&constraint) ContactConstraintBase();
 		constraint.mBody1 = &inBody1;
 		constraint.mBody2 = &inBody2;
 		constraint.mSortKey = key_hash;
@@ -1588,27 +1588,46 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
 
 		// Dispatch to the correct templated form
-		// Note: Warm starting doesn't differentiate between kinematic/static bodies so we handle both as static bodies
-		if (body1.GetMotionType() == EMotionType::Dynamic)
+		switch (body1.GetMotionType())
 		{
-			if (body2.GetMotionType() == EMotionType::Dynamic)
+		case EMotionType::Dynamic:
+			switch (body2.GetMotionType())
 			{
+			case EMotionType::Dynamic:
 				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
-
 				ioCallback(motion_properties2);
-			}
-			else
+				break;
+
+			case EMotionType::Kinematic:
+				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
+				break;
+
+			case EMotionType::Static:
 				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Static> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
+				break;
 
+			default:
+				JPH_ASSERT(false);
+				break;
+			}
 			ioCallback(motion_properties1);
-		}
-		else
-		{
+			break;
+
+		case EMotionType::Kinematic:
 			JPH_ASSERT(body2.IsDynamic());
-
-			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Static, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
-
+			sWarmStartConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
 			ioCallback(motion_properties2);
+			break;
+
+		case EMotionType::Static:
+			JPH_ASSERT(body2.IsDynamic());
+			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Static, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
+			ioCallback(motion_properties2);
+			break;
+
+		default:
+			JPH_ASSERT(false);
+			break;
 		}
 	}
 }
