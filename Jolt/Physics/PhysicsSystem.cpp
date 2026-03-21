@@ -211,7 +211,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 	// Calculate ratio between current and previous frame delta time to scale initial constraint forces
 	float step_delta_time = inDeltaTime / inCollisionSteps;
-	float warm_start_impulse_ratio = mPhysicsSettings.mConstraintWarmStart && mPreviousStepDeltaTime > 0.0f? step_delta_time / mPreviousStepDeltaTime : 0.0f;
+	float warm_start_impulse_ratio = mPreviousStepDeltaTime > 0.0f? step_delta_time / mPreviousStepDeltaTime : 0.0f;
 	mPreviousStepDeltaTime = step_delta_time;
 
 	// Create the context used for passing information between jobs
@@ -1408,7 +1408,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	Constraint **active_constraints = ioContext->mActiveConstraints;
 
 	// Only the first step to correct for the delta time difference in the previous update
-	float warm_start_impulse_ratio = ioStep->mIsFirst? ioContext->mWarmStartImpulseRatio : 1.0f;
+	float warm_start_impulse_ratio = mPhysicsSettings.mConstraintWarmStart? (ioStep->mIsFirst? ioContext->mWarmStartImpulseRatio : 1.0f) : 0.0f;
 
 	bool check_islands = true, check_split_islands = mPhysicsSettings.mUseLargeIslandSplitter;
 	for (;;)
