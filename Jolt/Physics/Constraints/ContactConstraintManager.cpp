@@ -786,6 +786,75 @@ JPH_INLINE void ContactConstraintManager::CalculateFrictionAndNonPenetrationCons
 	}
 }
 
+ContactConstraintManager::ContactConstraintBase *ContactConstraintManager::CreateConstraint(Body &inBody1, Body &inBody2, uint64 inSortKey, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints, uint32 &outConstraintIdx)
+{
+	uint32 constraint_size;
+	switch (inBody1.GetMotionType())
+	{
+	case EMotionType::Dynamic:
+		switch (inBody2.GetMotionType())
+		{
+		case EMotionType::Dynamic:
+			constraint_size = sizeof(ContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic>) + (inNumContactPoints - 1) * sizeof(WorldContactPoint<EMotionType::Dynamic, EMotionType::Dynamic>);
+			break;
+
+		case EMotionType::Kinematic:
+			constraint_size = sizeof(ContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic>) + (inNumContactPoints - 1) * sizeof(WorldContactPoint<EMotionType::Dynamic, EMotionType::Kinematic>);
+			break;
+
+		case EMotionType::Static:
+			constraint_size = sizeof(ContactConstraint<EMotionType::Dynamic, EMotionType::Static>) + (inNumContactPoints - 1) * sizeof(WorldContactPoint<EMotionType::Dynamic, EMotionType::Static>);
+			break;
+
+		default:
+			JPH_ASSERT(false);
+			constraint_size = 0;
+			break;
+		}
+		break;
+
+	case EMotionType::Kinematic:
+		JPH_ASSERT(inBody2.IsDynamic());
+		constraint_size = sizeof(ContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic>) + (inNumContactPoints - 1) * sizeof(WorldContactPoint<EMotionType::Kinematic, EMotionType::Dynamic>);
+		break;
+
+	case EMotionType::Static:
+		JPH_ASSERT(inBody2.IsDynamic());
+		constraint_size = sizeof(ContactConstraint<EMotionType::Static, EMotionType::Dynamic>) + (inNumContactPoints - 1) * sizeof(WorldContactPoint<EMotionType::Static, EMotionType::Dynamic>);
+		break;
+
+	default:
+		JPH_ASSERT(false);
+		constraint_size = 0;
+		break;
+	}
+	JPH_ASSERT(constraint_size <= cMaxConstraintSize);
+
+	// Reserve space for constraint
+	uint64 constraint_idx_and_constraint_offset = mNumConstraintsAndNextConstraintOffset.fetch_add((uint64(constraint_size) << 32) + 1, memory_order_relaxed);
+	outConstraintIdx = uint32(constraint_idx_and_constraint_offset);
+	if (outConstraintIdx >= mMaxConstraints)
+		return nullptr;
+
+	// Store offset for constraint
+	uint32 constraint_offset = uint32(constraint_idx_and_constraint_offset >> 32);
+	JPH_ASSERT(constraint_offset + constraint_size < mMaxConstraints * cMaxConstraintSize);
+	mConstraintIdxToOffset[outConstraintIdx] = constraint_offset;
+
+	// Construct constraint
+	ContactConstraintBase *constraint = reinterpret_cast<ContactConstraintBase *>(mConstraints + constraint_offset);
+	new (constraint) ContactConstraintBase();
+	constraint->mBody1 = &inBody1;
+	constraint->mBody2 = &inBody2;
+	constraint->mSortKey = inSortKey;
+	inWorldSpaceNormal.StoreFloat3(&constraint->mWorldSpaceNormal);
+	constraint->mCombinedFriction = inSettings.mCombinedFriction;
+	constraint->mInvInertiaScale1 = inSettings.mInvInertiaScale1;
+	constraint->mInvInertiaScale2 = inSettings.mInvInertiaScale2;
+	constraint->mNumContactPoints = inNumContactPoints;
+	return constraint;
+}
+
 void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outConstraintCreated)
 {
 	// Start with nothing found and not handled
@@ -926,34 +995,17 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 			&& ((body1->IsDynamic() && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
 				|| (body2->IsDynamic() && settings.mInvMassScale2 != 0.0f)))
 		{
-			// Add contact constraint in world space for the solver
-			uint32 constraint_idx = mNumConstraints.fetch_add(1, memory_order_relaxed);
-			if (constraint_idx >= mMaxConstraints)
+			// Create a new constraint
+			uint32 constraint_idx;
+			ContactConstraintBase *constraint = CreateConstraint(*body1, *body2, input_hash, world_space_normal, settings, output_cm->mNumContactPoints, constraint_idx);
+			if (constraint == nullptr)
 			{
 				ioContactAllocator.mErrors |= EPhysicsUpdateError::ContactConstraintsFull;
 				break;
 			}
-
-			// Calculate offset for constraint
-			uint32 constraint_offset = mNextConstraintAddress.fetch_add(cMaxConstraintSize, memory_order_relaxed); // fix
-			JPH_ASSERT(constraint_offset + cMaxConstraintSize < mMaxConstraints * cMaxConstraintSize);
-			mConstraintIdxToOffset[constraint_idx] = constraint_offset;
-
-			// A constraint will be created
 			outConstraintCreated = true;
 
-			ContactConstraintBase &constraint = *reinterpret_cast<ContactConstraintBase *>(mConstraints + constraint_offset);
-			new (&constraint) ContactConstraintBase();
-			constraint.mBody1 = body1;
-			constraint.mBody2 = body2;
-			constraint.mSortKey = input_hash;
-			world_space_normal.StoreFloat3(&constraint.mWorldSpaceNormal);
-			constraint.mCombinedFriction = settings.mCombinedFriction;
-			constraint.mInvInertiaScale1 = settings.mInvInertiaScale1;
-			constraint.mInvInertiaScale2 = settings.mInvInertiaScale2;
-			constraint.mNumContactPoints = output_cm->mNumContactPoints;
-
-			JPH_DET_LOG("GetContactsFromCache: id1: " << constraint.mBody1->GetID() << " id2: " << constraint.mBody2->GetID() << " key: " << constraint.mSortKey);
+			JPH_DET_LOG("GetContactsFromCache: id1: " << constraint->mBody1->GetID() << " id2: " << constraint->mBody2->GetID() << " key: " << constraint->mSortKey);
 
 			// Calculate friction and non-penetration constraint properties for all contact points
 			switch (body1->GetMotionType())
@@ -962,15 +1014,15 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 				switch (body2->GetMotionType())
 				{
 				case EMotionType::Dynamic:
-					CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic> &>(constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
+					CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic> &>(*constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
 					break;
 
 				case EMotionType::Kinematic:
-					CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Kinematic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic> &>(constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
+					CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Kinematic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic> &>(*constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
 					break;
 
 				case EMotionType::Static:
-					CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Static>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Static> &>(constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
+					CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Static>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Static> &>(*constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
 					break;
 
 				default:
@@ -981,12 +1033,12 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 
 			case EMotionType::Kinematic:
 				JPH_ASSERT(body2->IsDynamic());
-				CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Kinematic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic> &>(constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
+				CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Kinematic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic> &>(*constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
 				break;
 
 			case EMotionType::Static:
 				JPH_ASSERT(body2->IsDynamic());
-				CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Static, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Static, EMotionType::Dynamic> &>(constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
+				CalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Static, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Static, EMotionType::Dynamic> &>(*constraint), settings, delta_time, gravity, transform_body1, transform_body2, *body1, *body2, *output_cm);
 				break;
 
 			default:
@@ -1134,9 +1186,10 @@ bool ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		&& ((inBody1.IsDynamic() && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
 			|| (inBody2.IsDynamic() && settings.mInvMassScale2 != 0.0f)))
 	{
-		// Add contact constraint
-		uint32 constraint_idx = mNumConstraints.fetch_add(1, memory_order_relaxed);
-		if (constraint_idx >= mMaxConstraints)
+		// Create a new constraint
+		uint32 constraint_idx;
+		ContactConstraint<Type1, Type2> *constraint = static_cast<ContactConstraint<Type1, Type2> *>(CreateConstraint(inBody1, inBody2, key_hash, inManifold.mWorldSpaceNormal, settings, num_contact_points, constraint_idx));
+		if (constraint == nullptr)
 		{
 			ioContactAllocator.mErrors |= EPhysicsUpdateError::ContactConstraintsFull;
 
@@ -1145,27 +1198,9 @@ bool ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 			new_manifold->mNumContactPoints = 0;
 			return false;
 		}
-
-		// Calculate offset for constraint
-		uint32 constraint_offset = mNextConstraintAddress.fetch_add(cMaxConstraintSize, memory_order_relaxed); // fix
-		JPH_ASSERT(constraint_offset + cMaxConstraintSize < mMaxConstraints * cMaxConstraintSize);
-		mConstraintIdxToOffset[constraint_idx] = constraint_offset;
-
-		// We will create a contact constraint
 		contact_constraint_created = true;
 
-		ContactConstraint<Type1, Type2> &constraint = *reinterpret_cast<ContactConstraint<Type1, Type2> *>(mConstraints + constraint_offset);
-		new (&constraint) ContactConstraintBase();
-		constraint.mBody1 = &inBody1;
-		constraint.mBody2 = &inBody2;
-		constraint.mSortKey = key_hash;
-		inManifold.mWorldSpaceNormal.StoreFloat3(&constraint.mWorldSpaceNormal);
-		constraint.mCombinedFriction = settings.mCombinedFriction;
-		constraint.mInvInertiaScale1 = settings.mInvInertiaScale1;
-		constraint.mInvInertiaScale2 = settings.mInvInertiaScale2;
-		constraint.mNumContactPoints = num_contact_points;
-
-		JPH_DET_LOG("AddContactConstraint: id1: " << constraint.mBody1->GetID() << " id2: " << constraint.mBody2->GetID() << " key: " << constraint.mSortKey);
+		JPH_DET_LOG("AddContactConstraint: id1: " << constraint->mBody1->GetID() << " id2: " << constraint->mBody2->GetID() << " key: " << constraint->mSortKey);
 
 		// Notify island builder
 		mUpdateContext->mIslandBuilder->LinkContact(constraint_idx, inBody1.GetIndexInActiveBodiesInternal(), inBody2.GetIndexInActiveBodiesInternal());
@@ -1179,12 +1214,12 @@ bool ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		if constexpr (Type1 == EMotionType::Dynamic)
 		{
 			const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-			constraint.mInvMass1 = settings.mInvMassScale1 * mp1->GetInverseMass();
+			constraint->mInvMass1 = settings.mInvMassScale1 * mp1->GetInverseMass();
 			inv_i1 = settings.mInvInertiaScale1 * mp1->GetInverseInertiaForRotation(inverse_transform_body1.Transposed3x3());
 		}
 		else
 		{
-			constraint.mInvMass1 = 0.0f;
+			constraint->mInvMass1 = 0.0f;
 			inv_i1 = Mat44::sZero();
 		}
 
@@ -1192,23 +1227,23 @@ bool ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		if constexpr (Type2 == EMotionType::Dynamic)
 		{
 			const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
-			constraint.mInvMass2 = settings.mInvMassScale2 * mp2->GetInverseMass();
+			constraint->mInvMass2 = settings.mInvMassScale2 * mp2->GetInverseMass();
 			inv_i2 = settings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inverse_transform_body2.Transposed3x3());
 		}
 		else
 		{
-			constraint.mInvMass2 = 0.0f;
+			constraint->mInvMass2 = 0.0f;
 			inv_i2 = Mat44::sZero();
 		}
 
 		// Calculate tangents
 		Vec3 t1, t2;
-		constraint.GetTangents(t1, t2);
+		constraint->GetTangents(t1, t2);
 
 		for (int i = 0; i < num_contact_points; ++i)
 		{
 			// Convert to world space and set positions
-			WorldContactPoint<Type1, Type2> &wcp = constraint.mContactPoints[i];
+			WorldContactPoint<Type1, Type2> &wcp = constraint->mContactPoints[i];
 			RVec3 p1_ws = inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn1[i];
 			RVec3 p2_ws = inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn2[i];
 
@@ -1243,7 +1278,7 @@ bool ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 			wcp.mContactPoint = &cp;
 
 			// Setup velocity constraint
-			wcp.CalculateFrictionAndNonPenetrationConstraintProperties(delta_time, gravity, inBody1, inBody2, constraint.mInvMass1, constraint.mInvMass2, inv_i1, inv_i2, p1_ws, p2_ws, inManifold.mWorldSpaceNormal, t1, t2, settings, mPhysicsSettings.mMinVelocityForRestitution);
+			wcp.CalculateFrictionAndNonPenetrationConstraintProperties(delta_time, gravity, inBody1, inBody2, constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, p1_ws, p2_ws, inManifold.mWorldSpaceNormal, t1, t2, settings, mPhysicsSettings.mMinVelocityForRestitution);
 		}
 
 	#ifdef JPH_DEBUG_RENDERER
@@ -1971,8 +2006,7 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 void ContactConstraintManager::RecycleConstraintBuffer()
 {
 	// Reset constraint array
-	mNumConstraints = 0;
-	mNextConstraintAddress = 0;
+	mNumConstraintsAndNextConstraintOffset = 0;
 }
 
 void ContactConstraintManager::FinishConstraintBuffer()
@@ -1982,8 +2016,7 @@ void ContactConstraintManager::FinishConstraintBuffer()
 	mConstraintIdxToOffset = nullptr;
 	mUpdateContext->mTempAllocator->Free(mConstraints, mMaxConstraints * cMaxConstraintSize + sizeof(float)); // One extra float because we read using Vec3::sLoadFloat3Unsafe
 	mConstraints = nullptr;
-	mNumConstraints = 0;
-	mNextConstraintAddress = 0;
+	mNumConstraintsAndNextConstraintOffset = 0;
 
 	// Reset update context
 	mUpdateContext = nullptr;

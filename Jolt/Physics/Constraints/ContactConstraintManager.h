@@ -159,7 +159,7 @@ public:
 	bool						WereBodiesInContact(const BodyID &inBody1ID, const BodyID &inBody2ID) const;
 
 	/// Get the number of contact constraints that were found
-	uint32						GetNumConstraints() const											{ return min<uint32>(mNumConstraints, mMaxConstraints); }
+	uint32						GetNumConstraints() const											{ return min<uint32>(uint32(mNumConstraintsAndNextConstraintOffset.load(memory_order_relaxed)), mMaxConstraints); }
 
 	/// Update constraint indices to constraint offsets
 	void						ConstraintIdxToConstraintOffset(uint32 *ioConstraintIdxBegin, const uint32 *inConstraintIdxEnd) const;
@@ -497,6 +497,9 @@ public:
 	static constexpr uint		cMaxBodyPairsLimit = ~uint(0) / sizeof(BodyPairMap::KeyValue);
 
 private:
+	/// Create a new contact constraint
+	inline ContactConstraintBase *CreateConstraint(Body &inBody1, Body &inBody2, uint64 inSortKey, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints, uint32 &outConstraintIdx);
+
 	/// Internal helper function to calculate the friction and non-penetration constraint properties. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
 	inline void					CalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint<Type1, Type2> &ioConstraint, const ContactSettings &inSettings, float inDeltaTime, Vec3Arg inGravity, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, CachedManifold &inCachedManifold);
@@ -535,8 +538,7 @@ private:
 	uint8 *						mConstraints = nullptr; ///< Cast to ContactConstraint<MotionType1, MotionType2> depending on the motion types of the bodies in the constraint
 	uint32 *					mConstraintIdxToOffset = nullptr; ///< Maps from constraint index to offset in mConstraints
 	uint32						mMaxConstraints = 0;
-	atomic<uint32>				mNumConstraints { 0 }; // fix: can use 1 uint64 to combine this and mNextConstraintAddress
-	atomic<uint32>				mNextConstraintAddress { 0 };
+	atomic<uint64>				mNumConstraintsAndNextConstraintOffset { 0 }; // Lower 32 bits: number of constraints, upper 32 bits next constraint offset
 
 	/// Context used for this physics update
 	PhysicsUpdateContext *		mUpdateContext;
