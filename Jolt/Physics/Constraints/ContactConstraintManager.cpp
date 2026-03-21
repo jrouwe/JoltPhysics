@@ -726,7 +726,7 @@ void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inC
 
 	// Allocate temporary constraint buffer
 	JPH_ASSERT(mConstraints == nullptr);
-	mConstraints = (uint8 *)inContext->mTempAllocator->Allocate(mMaxConstraints * cMaxConstraintSize + sizeof(uint32)); // One extra float because we read using Vec3::sLoadFloat3Unsafe
+	mConstraints = (uint8 *)inContext->mTempAllocator->Allocate(mMaxConstraints * cMaxConstraintSize + sizeof(float)); // One extra float because we read using Vec3::sLoadFloat3Unsafe
 	JPH_ASSERT(mConstraintIdxToOffset == nullptr);
 	mConstraintIdxToOffset = (uint32 *)inContext->mTempAllocator->Allocate(mMaxConstraints * sizeof(uint32));
 }
