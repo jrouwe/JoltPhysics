@@ -1575,6 +1575,26 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Build dispatch table
+	using WarmStartConstraint = void (*)(ContactConstraintBase &, MotionProperties *, MotionProperties *, float);
+	static const WarmStartConstraint table[3][3] = {
+		{
+			nullptr, // Static vs static doesn't exist
+			nullptr, // Static vs kinematic doesn't exist
+			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>
+		},
+		{
+			nullptr, // Kinematic vs static doesn't exist
+			nullptr, // Kinematic vs kinematic doesn't exist
+			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+		},
+		{
+			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+		}
+	};
+
 	if (inConstraintOffsetBegin >= inConstraintOffsetEnd)
 		return;
 
@@ -1590,55 +1610,18 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 		else
 			next_constraint = nullptr;
 
-		// Fetch bodies
-		Body &body1 = *constraint.mBody1;
-		MotionProperties *motion_properties1 = body1.GetMotionPropertiesUnchecked();
-
-		Body &body2 = *constraint.mBody2;
-		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
-
 		// Dispatch to the correct templated form
-		switch (body1.GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			switch (body2.GetMotionType())
-			{
-			case EMotionType::Dynamic:
-				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
-				ioCallback(motion_properties2);
-				break;
+		Body &body1 = *constraint.mBody1;
+		Body &body2 = *constraint.mBody2;
+		MotionProperties *motion_properties1 = body1.GetMotionPropertiesUnchecked();
+		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
+		table[(int)body1.GetMotionType()][(int)body2.GetMotionType()](constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
 
-			case EMotionType::Kinematic:
-				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
-				break;
-
-			case EMotionType::Static:
-				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Static> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
-				break;
-
-			default:
-				JPH_ASSERT(false);
-				break;
-			}
+		// Call callbacks
+		if (body1.IsDynamic())
 			ioCallback(motion_properties1);
-			break;
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(body2.IsDynamic());
-			sWarmStartConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
+		if (body2.IsDynamic())
 			ioCallback(motion_properties2);
-			break;
-
-		case EMotionType::Static:
-			JPH_ASSERT(body2.IsDynamic());
-			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Static, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2, inWarmStartImpulseRatio);
-			ioCallback(motion_properties2);
-			break;
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
 	}
 }
 
@@ -1708,6 +1691,26 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Build dispatch table
+	using SolveVelocityConstraint = bool (*)(ContactConstraintBase &, MotionProperties *, MotionProperties *);
+	static const SolveVelocityConstraint table[3][3] = {
+		{
+			nullptr, // Static vs static doesn't exist
+			nullptr, // Static vs kinematic doesn't exist
+			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>
+		},
+		{
+			nullptr, // Kinematic vs static doesn't exist
+			nullptr, // Kinematic vs kinematic doesn't exist
+			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+		},
+		{
+			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+		}
+	};
+
 	if (inConstraintOffsetBegin >= inConstraintOffsetEnd)
 		return false;
 
@@ -1725,51 +1728,10 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 		else
 			next_constraint = nullptr;
 
-		// Fetch bodies
-		Body &body1 = *constraint.mBody1;
-		MotionProperties *motion_properties1 = body1.GetMotionPropertiesUnchecked();
-
-		Body &body2 = *constraint.mBody2;
-		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
-
 		// Dispatch to the correct templated form
-		switch (body1.GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			switch (body2.GetMotionType())
-			{
-			case EMotionType::Dynamic:
-				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2);
-				break;
-
-			case EMotionType::Kinematic:
-				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic> &>(constraint), motion_properties1, motion_properties2);
-				break;
-
-			case EMotionType::Static:
-				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Static> &>(constraint), motion_properties1, motion_properties2);
-				break;
-
-			default:
-				JPH_ASSERT(false);
-				break;
-			}
-			break;
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(body2.IsDynamic());
-			any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2);
-			break;
-
-		case EMotionType::Static:
-			JPH_ASSERT(body2.IsDynamic());
-			any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Static, EMotionType::Dynamic> &>(constraint), motion_properties1, motion_properties2);
-			break;
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
+		Body &body1 = *constraint.mBody1;
+		Body &body2 = *constraint.mBody2;
+		any_impulse_applied |= table[(int)body1.GetMotionType()][(int)body2.GetMotionType()](constraint, body1.GetMotionPropertiesUnchecked(), body2.GetMotionPropertiesUnchecked());
 	}
 
 	return any_impulse_applied;
@@ -1790,6 +1752,26 @@ JPH_INLINE void ContactConstraintManager::sStoreAppliedImpulses(ContactConstrain
 
 void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintOffsetBegin, const uint32 *inConstraintOffsetEnd) const
 {
+	// Build dispatch table
+	using StoreImpulses = void (*)(ContactConstraintBase &);
+	static const StoreImpulses table[3][3] = {
+		{
+			nullptr, // Static vs static doesn't exist
+			nullptr, // Static vs kinematic doesn't exist
+			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Static, EMotionType::Dynamic>
+		},
+		{
+			nullptr, // Kinematic vs static doesn't exist
+			nullptr, // Kinematic vs kinematic doesn't exist
+			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Kinematic, EMotionType::Dynamic>
+		},
+		{
+			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Static>,
+			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Kinematic>,
+			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Dynamic>
+		}
+	};
+
 	if (inConstraintOffsetBegin >= inConstraintOffsetEnd)
 		return;
 
@@ -1806,48 +1788,10 @@ void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintOf
 		else
 			next_constraint = nullptr;
 
-		// Fetch bodies
+		// Dispatch to the correct templated form
 		Body &body1 = *constraint.mBody1;
 		Body &body2 = *constraint.mBody2;
-
-		// Dispatch to the correct templated form
-		switch (body1.GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			switch (body2.GetMotionType())
-			{
-			case EMotionType::Dynamic:
-				sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic> &>(constraint));
-				break;
-
-			case EMotionType::Kinematic:
-				sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Kinematic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic> &>(constraint));
-				break;
-
-			case EMotionType::Static:
-				sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Static>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Static> &>(constraint));
-				break;
-
-			default:
-				JPH_ASSERT(false);
-				break;
-			}
-			break;
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(body2.IsDynamic());
-			sStoreAppliedImpulses<EMotionType::Kinematic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic> &>(constraint));
-			break;
-
-		case EMotionType::Static:
-			JPH_ASSERT(body2.IsDynamic());
-			sStoreAppliedImpulses<EMotionType::Static, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Static, EMotionType::Dynamic> &>(constraint));
-			break;
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
+		table[(int)body1.GetMotionType()][(int)body2.GetMotionType()](constraint);
 	}
 }
 
@@ -1912,6 +1856,26 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Build dispatch table
+	using SolvePositionConstraint = bool (ContactConstraintManager::*)(ContactConstraintBase &, Body &, Body &);
+	static const SolvePositionConstraint table[3][3] = {
+		{
+			nullptr, // Static vs static doesn't exist
+			nullptr, // Static vs kinematic doesn't exist
+			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Static, EMotionType::Dynamic>
+		},
+		{
+			nullptr, // Kinematic vs static doesn't exist
+			nullptr, // Kinematic vs kinematic doesn't exist
+			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+		},
+		{
+			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+		}
+	};
+
 	if (inConstraintOffsetBegin >= inConstraintOffsetEnd)
 		return false;
 
@@ -1934,43 +1898,7 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 		Body &body2 = *constraint.mBody2;
 
 		// Dispatch to the correct templated form
-		switch (body1.GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			switch (body2.GetMotionType())
-			{
-			case EMotionType::Dynamic:
-				any_impulse_applied |= SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic> &>(constraint), body1, body2);
-				break;
-
-			case EMotionType::Kinematic:
-				any_impulse_applied |= SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic> &>(constraint), body1, body2);
-				break;
-
-			case EMotionType::Static:
-				any_impulse_applied |= SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Static>(static_cast<ContactConstraint<EMotionType::Dynamic, EMotionType::Static> &>(constraint), body1, body2);
-				break;
-
-			default:
-				JPH_ASSERT(false);
-				break;
-			}
-			break;
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(body2.IsDynamic());
-			any_impulse_applied |= SolvePositionConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic> &>(constraint), body1, body2);
-			break;
-
-		case EMotionType::Static:
-			JPH_ASSERT(body2.IsDynamic());
-			any_impulse_applied |= SolvePositionConstraint<EMotionType::Static, EMotionType::Dynamic>(static_cast<ContactConstraint<EMotionType::Static, EMotionType::Dynamic> &>(constraint), body1, body2);
-			break;
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
+		any_impulse_applied |= (this->*table[(int)body1.GetMotionType()][(int)body2.GetMotionType()])(constraint, body1, body2);
 	}
 
 	return any_impulse_applied;
