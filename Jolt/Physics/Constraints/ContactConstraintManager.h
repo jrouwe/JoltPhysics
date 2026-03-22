@@ -501,7 +501,7 @@ private:
 
 	/// Internal helper function to add a contact constraint from the cache. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	inline void					TemplatedGetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, const CachedBodyPair &inCachedBodyPair, CachedBodyPair &outCachedBodyPair, bool &outConstraintCreated);
+	void						TemplatedGetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, const CachedBodyPair &inCachedBodyPair, CachedBodyPair &outCachedBodyPair, bool &outConstraintCreated);
 
 	/// Internal helper function to add a contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
@@ -509,19 +509,19 @@ private:
 
 	/// Internal helper function to warm start contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	inline static void			sWarmStartConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio);
+	static void					sWarmStartConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio);
 
 	/// Internal helper function to solve a single velocity constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	inline static bool			sSolveVelocityConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2);
+	static bool					sSolveVelocityConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2);
 
 	/// Internal helper function to store lambdas applied during sSolveVelocityConstraint.
 	template <EMotionType Type1, EMotionType Type2>
-	inline static void			sStoreAppliedImpulses(ContactConstraint<Type1, Type2> &ioConstraint);
+	static void					sStoreAppliedImpulses(ContactConstraint<Type1, Type2> &ioConstraint);
 
 	/// Internal helper function to solve a single position constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	inline bool					SolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2);
+	bool						SolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2);
 
 	/// The main physics settings instance
 	const PhysicsSettings &		mPhysicsSettings;

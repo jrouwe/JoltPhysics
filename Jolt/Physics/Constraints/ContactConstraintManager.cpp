@@ -721,7 +721,7 @@ void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inC
 }
 
 template <EMotionType Type1, EMotionType Type2>
-ContactConstraintManager::ContactConstraint<Type1, Type2> *ContactConstraintManager::CreateConstraint(Body &inBody1, Body &inBody2, uint64 inSortKey, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints, uint32 &outConstraintIdx)
+JPH_INLINE ContactConstraintManager::ContactConstraint<Type1, Type2> *ContactConstraintManager::CreateConstraint(Body &inBody1, Body &inBody2, uint64 inSortKey, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints, uint32 &outConstraintIdx)
 {
 	// Calculate the size of this constraint
 	uint32 constraint_size = sizeof(ContactConstraint<Type1, Type2>) + (inNumContactPoints - 1) * sizeof(WorldContactPoint<Type1, Type2>);
@@ -1472,7 +1472,7 @@ bool ContactConstraintManager::WereBodiesInContact(const BodyID &inBody1ID, cons
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE void ContactConstraintManager::sWarmStartConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio)
+void ContactConstraintManager::sWarmStartConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio)
 {
 	// Calculate tangents
 	Vec3 t1, t2;
@@ -1554,7 +1554,7 @@ template void ContactConstraintManager::WarmStartVelocityConstraints<CalculateSo
 template void ContactConstraintManager::WarmStartVelocityConstraints<DummyCalculateSolverSteps>(const uint32 *inConstraintOffsetBegin, const uint32 *inConstraintOffsetEnd, float inWarmStartImpulseRatio, DummyCalculateSolverSteps &ioCallback);
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2)
+bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2)
 {
 	bool any_impulse_applied = false;
 
@@ -1662,7 +1662,7 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE void ContactConstraintManager::sStoreAppliedImpulses(ContactConstraint<Type1, Type2> &ioConstraint)
+void ContactConstraintManager::sStoreAppliedImpulses(ContactConstraint<Type1, Type2> &ioConstraint)
 {
 	for (uint32 i = 0; i < ioConstraint.mNumContactPoints; ++i)
 	{
@@ -1720,7 +1720,7 @@ void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintOf
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE bool ContactConstraintManager::SolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2)
+bool ContactConstraintManager::SolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2)
 {
 	// Get transforms
 	RMat44 transform1 = ioBody1.GetCenterOfMassTransform();
