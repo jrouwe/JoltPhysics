@@ -1,5 +1,5 @@
 // Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
-// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-FileCopyrightText: 2026 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -93,19 +93,11 @@ template <EMotionType Type1, EMotionType Type2>
 class ContactConstraintPart : public ContactConstraintPart1<Type1>, public ContactConstraintPart2<Type2>
 {
 private:
-	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
+	/// See AxisConstraintPart::ApplyVelocityStep
 	JPH_INLINE bool				ApplyVelocityStep(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inLambda) const
 	{
-		// Apply impulse if delta is not zero
 		if (inLambda != 0.0f)
 		{
-			// Calculate velocity change due to constraint
-			//
-			// Impulse:
-			// P = J^T lambda
-			//
-			// Euler velocity integration:
-			// v' = v + M^-1 P
 			if constexpr (Type1 == EMotionType::Dynamic)
 			{
 				ioMotionProperties1->SubLinearVelocityStep((inLambda * inInvMass1) * inWorldSpaceAxis);
@@ -123,6 +115,7 @@ private:
 	}
 
 public:
+	/// See AxisConstraintPart::CalculateConstraintProperties
 	JPH_INLINE void				CalculateConstraintProperties(float inInvMass1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, float inInvMass2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
 		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-5f));
@@ -171,7 +164,7 @@ public:
 		}
 	}
 
-	/// Templated form of WarmStart with the motion types baked in
+	/// See AxisConstraintPart::WarmStart
 	inline void					WarmStart(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inWarmStartImpulseRatio)
 	{
 		this->mTotalLambda *= inWarmStartImpulseRatio;
@@ -179,7 +172,7 @@ public:
 		ApplyVelocityStep(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, this->mTotalLambda);
 	}
 
-	/// Templated form of SolveVelocityConstraint with the motion types baked in, part 1: get the total lambda
+	/// Part 1 of AxisConstraint::SolveVelocityConstraint: get the total lambda
 	JPH_INLINE float			SolveVelocityConstraintGetTotalLambda(const MotionProperties *ioMotionProperties1, const MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis) const
 	{
 		// Calculate jacobian multiplied by linear velocity
@@ -208,7 +201,7 @@ public:
 		return this->mTotalLambda + lambda;
 	}
 
-	/// Templated form of SolveVelocityConstraint with the motion types baked in, part 2: apply new lambda
+	/// Part 2 of AxisConstraint::SolveVelocityConstraint: apply new lambda
 	JPH_INLINE bool				SolveVelocityConstraintApplyLambda(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inTotalLambda)
 	{
 		float delta_lambda = inTotalLambda - this->mTotalLambda; // Calculate change in lambda
@@ -217,8 +210,8 @@ public:
 		return ApplyVelocityStep(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, delta_lambda);
 	}
 
-	/// Templated form of SolveVelocityConstraint with the motion types baked in
-	inline bool					SolveVelocityConstraint(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	/// See: AxisConstraintPart::SolveVelocityConstraint
+	JPH_INLINE bool				SolveVelocityConstraint(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
 	{
 		float total_lambda = SolveVelocityConstraintGetTotalLambda(ioMotionProperties1, ioMotionProperties2, inWorldSpaceAxis);
 
@@ -228,41 +221,12 @@ public:
 		return SolveVelocityConstraintApplyLambda(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, total_lambda);
 	}
 
-	/// Iteratively update the position constraint. Makes sure C(...) = 0.
-	/// @param ioBody1 The first body that this constraint is attached to
-	/// @param ioBody2 The second body that this constraint is attached to
-	/// @param inInvMass1 The inverse mass of body 1 (only used when body 1 is dynamic)
-	/// @param inInvMass2 The inverse mass of body 2 (only used when body 2 is dynamic)
-	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized)
-	/// @param inC Value of the constraint equation (C)
-	/// @param inBaumgarte Baumgarte constant (fraction of the error to correct)
+	/// See: AxisConstraintPart::SolvePositionConstraint
 	inline bool					SolvePositionConstraint(Body &ioBody1, float inInvMass1, Body &ioBody2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inC, float inBaumgarte) const
 	{
-		// Only apply position constraint when the constraint is hard, otherwise the velocity bias will fix the constraint
 		if (inC != 0.0f)
 		{
-			// Calculate lagrange multiplier (lambda) for Baumgarte stabilization:
-			//
-			// lambda = -K^-1 * beta / dt * C
-			//
-			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
 			float lambda = -this->mEffectiveMass * inBaumgarte * inC;
-
-			// Directly integrate velocity change for one time step
-			//
-			// Euler velocity integration:
-			// dv = M^-1 P
-			//
-			// Impulse:
-			// P = J^T lambda
-			//
-			// Euler position integration:
-			// x' = x + dv * dt
-			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
-			// integrate + a position integrate and then discard the velocity change.
 			if constexpr (Type1 == EMotionType::Dynamic)
 			{
 				ioBody1.SubPositionStep((lambda * inInvMass1) * inWorldSpaceAxis);
@@ -297,7 +261,7 @@ public:
 								ConcreteContactConstraintPart() : mDD() { }
 								~ConcreteContactConstraintPart() { }
 
-	inline void					CalculateConstraintProperties(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
+	inline bool					SolveVelocityConstraint(Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias, float inMinLambda, float inMaxLambda)
 	{
 		// Dispatch to the correct templated form
 		switch (inBody1.GetMotionType())
@@ -309,15 +273,15 @@ public:
 				{
 				case EMotionType::Dynamic:
 					mDD.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias);
-					break;
-
+					return mDD.SolveVelocityConstraint(inBody1.GetMotionPropertiesUnchecked(), inInvMass1, inBody2.GetMotionPropertiesUnchecked(), inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+	
 				case EMotionType::Kinematic:
 					mDK.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias);
-					break;
+					return mDK.SolveVelocityConstraint(inBody1.GetMotionPropertiesUnchecked(), inInvMass1, inBody2.GetMotionPropertiesUnchecked(), inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 				case EMotionType::Static:
 					mDS.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias);
-					break;
+					return mDS.SolveVelocityConstraint(inBody1.GetMotionPropertiesUnchecked(), inInvMass1, nullptr /* Unused */, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 				default:
 					JPH_ASSERT(false);
@@ -329,55 +293,12 @@ public:
 		case EMotionType::Kinematic:
 			JPH_ASSERT(inBody2.IsDynamic());
 			mKD.CalculateConstraintProperties(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias);
-			break;
+			return mKD.SolveVelocityConstraint(inBody1.GetMotionPropertiesUnchecked(), inInvMass1, inBody2.GetMotionPropertiesUnchecked(), inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 		case EMotionType::Static:
 			JPH_ASSERT(inBody2.IsDynamic());
 			mSD.CalculateConstraintProperties(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias);
-			break;
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
-	}
-
-	inline bool					SolveVelocityConstraint(Body &ioBody1, float inInvMass1, Body &ioBody2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
-	{
-		EMotionType motion_type1 = ioBody1.GetMotionType();
-		MotionProperties *motion_properties1 = ioBody1.GetMotionPropertiesUnchecked();
-
-		EMotionType motion_type2 = ioBody2.GetMotionType();
-		MotionProperties *motion_properties2 = ioBody2.GetMotionPropertiesUnchecked();
-
-		// Dispatch to the correct templated form
-		switch (motion_type1)
-		{
-		case EMotionType::Dynamic:
-			switch (motion_type2)
-			{
-			case EMotionType::Dynamic:
-				return mDD.SolveVelocityConstraint(motion_properties1, inInvMass1, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-			case EMotionType::Kinematic:
-				return mDK.SolveVelocityConstraint(motion_properties1, inInvMass1, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-			case EMotionType::Static:
-				return mDS.SolveVelocityConstraint(motion_properties1, inInvMass1, nullptr /* Unused */, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-			default:
-				JPH_ASSERT(false);
-				break;
-			}
-			break;
-
-		case EMotionType::Kinematic:
-			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			return mKD.SolveVelocityConstraint(motion_properties1, inInvMass1, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
-
-		case EMotionType::Static:
-			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			return mSD.SolveVelocityConstraint(nullptr /* Unused */, 0.0f /* Unused */, motion_properties2, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+			return mSD.SolveVelocityConstraint(nullptr /* Unused */, 0.0f /* Unused */, inBody2.GetMotionPropertiesUnchecked(), inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
 
 		default:
 			JPH_ASSERT(false);
@@ -385,21 +306,6 @@ public:
 		}
 
 		return false;
-	}
-
-	inline void					Deactivate()
-	{
-		mDD.Deactivate(); // Using the fact that all templated forms have the same layout for the first few members
-	}
-
-	inline bool					IsActive() const
-	{
-		return mDD.IsActive();
-	}
-
-	inline void					SetTotalLambda(float inLambda)
-	{
-		mDD.SetTotalLambda(inLambda);
 	}
 
 	inline float				GetTotalLambda() const
@@ -410,11 +316,11 @@ public:
 private:
 	union
 	{
-		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>		mDD;
-		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Kinematic>		mDK;
-		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Static>		mDS;
-		ContactConstraintPart<EMotionType::Kinematic, EMotionType::Dynamic>		mKD;
-		ContactConstraintPart<EMotionType::Static, EMotionType::Dynamic>		mSD;
+		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>	mDD;
+		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Kinematic>	mDK;
+		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Static>	mDS;
+		ContactConstraintPart<EMotionType::Kinematic, EMotionType::Dynamic>	mKD;
+		ContactConstraintPart<EMotionType::Static, EMotionType::Dynamic>	mSD;
 	};
 	[[maybe_unused]] float		mPadding; // Pad an extra float so that we can use Vec3::sLoadFloat3Unsafe on the last Float3 member without worrying about reading past the end of the struct
 };

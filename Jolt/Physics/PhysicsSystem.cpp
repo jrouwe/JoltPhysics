@@ -2219,8 +2219,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 
 						// Solve contact constraint
 						ConcreteContactConstraintPart contact_constraint;
-						contact_constraint.CalculateConstraintProperties(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, ccd_body->mContactNormal, normal_velocity_bias);
-						contact_constraint.SolveVelocityConstraint(body1, inv_m1, body2, inv_m2, ccd_body->mContactNormal, -FLT_MAX, FLT_MAX);
+						contact_constraint.SolveVelocityConstraint(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, ccd_body->mContactNormal, normal_velocity_bias, -FLT_MAX, FLT_MAX);
 
 						// Apply friction
 						if (contact_settings.mCombinedFriction > 0.0f)
@@ -2237,8 +2236,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 								float max_lambda_f = contact_settings.mCombinedFriction * contact_constraint.GetTotalLambda();
 
 								ConcreteContactConstraintPart friction;
-								friction.CalculateConstraintProperties(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, friction_direction);
-								friction.SolveVelocityConstraint(body1, inv_m1, body2, inv_m2, friction_direction, -max_lambda_f, max_lambda_f);
+								friction.SolveVelocityConstraint(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, friction_direction, 0.0f, -max_lambda_f, max_lambda_f);
 							}
 						}
 
