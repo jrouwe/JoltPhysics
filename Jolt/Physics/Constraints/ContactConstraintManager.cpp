@@ -37,17 +37,6 @@ bool ContactConstraintManager::sDrawContactManifolds = false;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <EMotionType Type1, EMotionType Type2>
-void ContactConstraintManager::WorldContactPoint<Type1, Type2>::CalculateNonPenetrationConstraintProperties(const Body &inBody1, float inInvMass1, Mat44Arg inInvI1, const Body &inBody2, float inInvMass2, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal)
-{
-	// Calculate collision points relative to body
-	RVec3 p = 0.5_r * (inWorldSpacePosition1 + inWorldSpacePosition2);
-	Vec3 r1 = Vec3(p - inBody1.GetCenterOfMassPosition());
-	Vec3 r2 = Vec3(p - inBody2.GetCenterOfMassPosition());
-
-	mNonPenetrationConstraint.CalculateConstraintProperties(inInvMass1, inInvI1, r1, inInvMass2, inInvI2, r2, inWorldSpaceNormal);
-}
-
-template <EMotionType Type1, EMotionType Type2>
 JPH_INLINE void ContactConstraintManager::WorldContactPoint<Type1, Type2>::CalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, Vec3Arg inGravity, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings, float inMinVelocityForRestitution)
 {
 	JPH_DET_LOG("CalculateFrictionAndNonPenetrationConstraintProperties: p1: " << inWorldSpacePosition1 << " p2: " << inWorldSpacePosition2
@@ -1911,8 +1900,13 @@ JPH_INLINE bool ContactConstraintManager::SolvePositionConstraint(ContactConstra
 			else
 				inv_i2 = Mat44::sZero();
 
+			// Calculate collision points relative to body
+			RVec3 p = 0.5_r * (p1 + p2);
+			Vec3 r1 = Vec3(p - ioBody1.GetCenterOfMassPosition());
+			Vec3 r2 = Vec3(p - ioBody2.GetCenterOfMassPosition());
+
 			// Update constraint properties (bodies may have moved)
-			wcp.CalculateNonPenetrationConstraintProperties(ioBody1, ioConstraint.mInvMass1, inv_i1, ioBody2, ioConstraint.mInvMass2, inv_i2, p1, p2, ws_normal);
+			wcp.mNonPenetrationConstraint.CalculateConstraintProperties(ioConstraint.mInvMass1, inv_i1, r1, ioConstraint.mInvMass2, inv_i2, r2, ws_normal);
 
 			// Solve position errors
 			if (wcp.mNonPenetrationConstraint.SolvePositionConstraint(ioBody1, ioConstraint.mInvMass1, ioBody2, ioConstraint.mInvMass2, ws_normal, separation, mPhysicsSettings.mBaumgarte))
