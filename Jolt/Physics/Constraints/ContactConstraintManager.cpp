@@ -815,6 +815,15 @@ ContactConstraintManager::ContactConstraint<Type1, Type2> *ContactConstraintMana
 	constraint->mInvInertiaScale1 = inSettings.mInvInertiaScale1;
 	constraint->mInvInertiaScale2 = inSettings.mInvInertiaScale2;
 	constraint->mNumContactPoints = inNumContactPoints;
+
+#ifdef JPH_TRACK_SIMULATION_STATS
+	// Track new contact constraints
+	if constexpr (Type1 != EMotionType::Static)
+		inBody1.GetMotionPropertiesUnchecked()->GetSimulationStats().mNumContactConstraints.fetch_add(1, memory_order_relaxed);
+	if constexpr (Type2 != EMotionType::Static)
+		inBody2.GetMotionPropertiesUnchecked()->GetSimulationStats().mNumContactConstraints.fetch_add(1, memory_order_relaxed);
+#endif
+
 	return constraint;
 }
 
@@ -920,14 +929,6 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 			if (sDrawContactManifolds)
 				constraint->Draw(DebugRenderer::sInstance, Color::sYellow);
 		#endif // JPH_DEBUG_RENDERER
-
-		#ifdef JPH_TRACK_SIMULATION_STATS
-			// Track new contact constraints
-			if constexpr (Type1 != EMotionType::Static)
-				body1->GetMotionPropertiesUnchecked()->GetSimulationStats().mNumContactConstraints.fetch_add(1, memory_order_relaxed);
-			if constexpr (Type2 != EMotionType::Static)
-				body2->GetMotionPropertiesUnchecked()->GetSimulationStats().mNumContactConstraints.fetch_add(1, memory_order_relaxed);
-		#endif
 		}
 
 		// Mark contact as persisted so that we won't fire OnContactRemoved callbacks
@@ -1281,14 +1282,6 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		if (sDrawContactManifolds)
 			constraint->Draw(DebugRenderer::sInstance, Color::sOrange);
 	#endif // JPH_DEBUG_RENDERER
-
-	#ifdef JPH_TRACK_SIMULATION_STATS
-		// Track new contact constraints
-		if constexpr (Type1 != EMotionType::Static)
-			inBody1.GetMotionPropertiesUnchecked()->GetSimulationStats().mNumContactConstraints.fetch_add(1, memory_order_relaxed);
-		if constexpr (Type2 != EMotionType::Static)
-			inBody2.GetMotionPropertiesUnchecked()->GetSimulationStats().mNumContactConstraints.fetch_add(1, memory_order_relaxed);
-	#endif
 	}
 	else
 	{
