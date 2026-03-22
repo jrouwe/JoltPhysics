@@ -988,66 +988,29 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 	if (input_cbp.mFirstCachedManifold == ManifoldMap::cInvalidHandle)
 		return;
 
+	// Build dispatch table
+	// Note: Non-dynamic vs non-dynamic can happen in this case due to one body being a sensor, so we need to have an extended table here
+	using DispatchFunc = void (ContactConstraintManager::*)(ContactAllocator &, Body &, Body &, const CachedBodyPair &, CachedBodyPair &, bool &);
+	static const DispatchFunc table[3][3] = {
+		{
+			nullptr, // Static vs static doesn't exist
+			&ContactConstraintManager::TemplatedGetContactsFromCache<EMotionType::Static, EMotionType::Kinematic>,
+			&ContactConstraintManager::TemplatedGetContactsFromCache<EMotionType::Static, EMotionType::Dynamic>
+		},
+		{
+			&ContactConstraintManager::TemplatedGetContactsFromCache<EMotionType::Kinematic, EMotionType::Static>,
+			&ContactConstraintManager::TemplatedGetContactsFromCache<EMotionType::Kinematic, EMotionType::Kinematic>,
+			&ContactConstraintManager::TemplatedGetContactsFromCache<EMotionType::Kinematic, EMotionType::Dynamic>
+		},
+		{
+			&ContactConstraintManager::TemplatedGetContactsFromCache<EMotionType::Dynamic, EMotionType::Static>,
+			&ContactConstraintManager::TemplatedGetContactsFromCache<EMotionType::Dynamic, EMotionType::Kinematic>,
+			&ContactConstraintManager::TemplatedGetContactsFromCache<EMotionType::Dynamic, EMotionType::Dynamic>
+		}
+	};
+
 	// Dispatch to the correct templated form
-	// Note: Non-dynamic vs non-dynamic can happen in this case due to one body being a sensor, so we need to have an extended switch case here
-	switch (body1->GetMotionType())
-	{
-	case EMotionType::Dynamic:
-		switch (body2->GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			return TemplatedGetContactsFromCache<EMotionType::Dynamic, EMotionType::Dynamic>(ioContactAllocator, *body1, *body2, input_cbp, *output_cbp, outConstraintCreated);
-
-		case EMotionType::Kinematic:
-			return TemplatedGetContactsFromCache<EMotionType::Dynamic, EMotionType::Kinematic>(ioContactAllocator, *body1, *body2, input_cbp, *output_cbp, outConstraintCreated);
-
-		case EMotionType::Static:
-			return TemplatedGetContactsFromCache<EMotionType::Dynamic, EMotionType::Static>(ioContactAllocator, *body1, *body2, input_cbp, *output_cbp, outConstraintCreated);
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
-		break;
-
-	case EMotionType::Kinematic:
-		switch (body2->GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			return TemplatedGetContactsFromCache<EMotionType::Kinematic, EMotionType::Dynamic>(ioContactAllocator, *body1, *body2, input_cbp, *output_cbp, outConstraintCreated);
-
-		case EMotionType::Kinematic:
-			return TemplatedGetContactsFromCache<EMotionType::Kinematic, EMotionType::Kinematic>(ioContactAllocator, *body1, *body2, input_cbp, *output_cbp, outConstraintCreated);
-
-		case EMotionType::Static:
-			return TemplatedGetContactsFromCache<EMotionType::Kinematic, EMotionType::Static>(ioContactAllocator, *body1, *body2, input_cbp, *output_cbp, outConstraintCreated);
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
-		break;
-
-	case EMotionType::Static:
-		switch (body2->GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			return TemplatedGetContactsFromCache<EMotionType::Static, EMotionType::Dynamic>(ioContactAllocator, *body1, *body2, input_cbp, *output_cbp, outConstraintCreated);
-
-		case EMotionType::Kinematic:
-			return TemplatedGetContactsFromCache<EMotionType::Static, EMotionType::Kinematic>(ioContactAllocator, *body1, *body2, input_cbp, *output_cbp, outConstraintCreated);
-
-		case EMotionType::Static: // Static vs static not possible
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
-		break;
-
-	default:
-		JPH_ASSERT(false);
-		break;
-	}
+	(this->*table[(int)body1->GetMotionType()][(int)body2->GetMotionType()])(ioContactAllocator, *body1, *body2, input_cbp, *output_cbp, outConstraintCreated);
 }
 
 ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2)
@@ -1321,68 +1284,29 @@ bool ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		manifold = &inManifold;
 	}
 
+	// Build dispatch table
+	// Note: Non-dynamic vs non-dynamic can happen in this case due to one body being a sensor, so we need to have an extended table here
+	using DispatchFunc = bool (ContactConstraintManager::*)(ContactAllocator &, BodyPairHandle, Body &, Body &, const ContactManifold &);
+	static const DispatchFunc table[3][3] = {
+		{
+			nullptr, // Static vs static doesn't exist
+			&ContactConstraintManager::TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Kinematic>,
+			&ContactConstraintManager::TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Dynamic>
+		},
+		{
+			&ContactConstraintManager::TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Static>,
+			&ContactConstraintManager::TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Kinematic>,
+			&ContactConstraintManager::TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+		},
+		{
+			&ContactConstraintManager::TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			&ContactConstraintManager::TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			&ContactConstraintManager::TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+		}
+	};
+
 	// Dispatch to the correct templated form
-	// Note: Non-dynamic vs non-dynamic can happen in this case due to one body being a sensor, so we need to have an extended switch case here
-	switch (body1->GetMotionType())
-	{
-	case EMotionType::Dynamic:
-		switch (body2->GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			return TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold);
-
-		case EMotionType::Kinematic:
-			return TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold);
-
-		case EMotionType::Static:
-			return TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold);
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
-		break;
-
-	case EMotionType::Kinematic:
-		switch (body2->GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			return TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold);
-
-		case EMotionType::Kinematic:
-			return TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold);
-
-		case EMotionType::Static:
-			return TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold);
-
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
-		break;
-
-	case EMotionType::Static:
-		switch (body2->GetMotionType())
-		{
-		case EMotionType::Dynamic:
-			return TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold);
-
-		case EMotionType::Kinematic:
-			return TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold);
-
-		case EMotionType::Static: // Static vs static not possible
-		default:
-			JPH_ASSERT(false);
-			break;
-		}
-		break;
-
-	default:
-		JPH_ASSERT(false);
-		break;
-	}
-
-	return false;
+	return (this->*table[(int)body1->GetMotionType()][(int)body2->GetMotionType()])(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold);
 }
 
 void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings)
@@ -1576,22 +1500,22 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 	JPH_PROFILE_FUNCTION();
 
 	// Build dispatch table
-	using WarmStartConstraint = void (*)(ContactConstraintBase &, MotionProperties *, MotionProperties *, float);
-	static const WarmStartConstraint table[3][3] = {
+	using DispatchFunc = void (*)(ContactConstraintBase &, MotionProperties *, MotionProperties *, float);
+	static const DispatchFunc table[3][3] = {
 		{
 			nullptr, // Static vs static doesn't exist
 			nullptr, // Static vs kinematic doesn't exist
-			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>
+			(DispatchFunc)sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>
 		},
 		{
 			nullptr, // Kinematic vs static doesn't exist
 			nullptr, // Kinematic vs kinematic doesn't exist
-			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+			(DispatchFunc)sWarmStartConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
 		},
 		{
-			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>,
-			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
-			(WarmStartConstraint)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+			(DispatchFunc)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			(DispatchFunc)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			(DispatchFunc)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
 		}
 	};
 
@@ -1692,22 +1616,22 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 	JPH_PROFILE_FUNCTION();
 
 	// Build dispatch table
-	using SolveVelocityConstraint = bool (*)(ContactConstraintBase &, MotionProperties *, MotionProperties *);
-	static const SolveVelocityConstraint table[3][3] = {
+	using DispatchFunc = bool (*)(ContactConstraintBase &, MotionProperties *, MotionProperties *);
+	static const DispatchFunc table[3][3] = {
 		{
 			nullptr, // Static vs static doesn't exist
 			nullptr, // Static vs kinematic doesn't exist
-			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>
+			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>
 		},
 		{
 			nullptr, // Kinematic vs static doesn't exist
 			nullptr, // Kinematic vs kinematic doesn't exist
-			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
 		},
 		{
-			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>,
-			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
-			(SolveVelocityConstraint)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
 		}
 	};
 
@@ -1753,22 +1677,22 @@ JPH_INLINE void ContactConstraintManager::sStoreAppliedImpulses(ContactConstrain
 void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintOffsetBegin, const uint32 *inConstraintOffsetEnd) const
 {
 	// Build dispatch table
-	using StoreImpulses = void (*)(ContactConstraintBase &);
-	static const StoreImpulses table[3][3] = {
+	using DispatchFunc = void (*)(ContactConstraintBase &);
+	static const DispatchFunc table[3][3] = {
 		{
 			nullptr, // Static vs static doesn't exist
 			nullptr, // Static vs kinematic doesn't exist
-			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Static, EMotionType::Dynamic>
+			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Static, EMotionType::Dynamic>
 		},
 		{
 			nullptr, // Kinematic vs static doesn't exist
 			nullptr, // Kinematic vs kinematic doesn't exist
-			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Kinematic, EMotionType::Dynamic>
+			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Kinematic, EMotionType::Dynamic>
 		},
 		{
-			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Static>,
-			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Kinematic>,
-			(StoreImpulses)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Dynamic>
+			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Static>,
+			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Kinematic>,
+			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Dynamic>
 		}
 	};
 
@@ -1857,22 +1781,22 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 	JPH_PROFILE_FUNCTION();
 
 	// Build dispatch table
-	using SolvePositionConstraint = bool (ContactConstraintManager::*)(ContactConstraintBase &, Body &, Body &);
-	static const SolvePositionConstraint table[3][3] = {
+	using DispatchFunc = bool (ContactConstraintManager::*)(ContactConstraintBase &, Body &, Body &);
+	static const DispatchFunc table[3][3] = {
 		{
 			nullptr, // Static vs static doesn't exist
 			nullptr, // Static vs kinematic doesn't exist
-			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Static, EMotionType::Dynamic>
+			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Static, EMotionType::Dynamic>
 		},
 		{
 			nullptr, // Kinematic vs static doesn't exist
 			nullptr, // Kinematic vs kinematic doesn't exist
-			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
 		},
 		{
-			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Static>,
-			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
-			(SolvePositionConstraint)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
 		}
 	};
 
