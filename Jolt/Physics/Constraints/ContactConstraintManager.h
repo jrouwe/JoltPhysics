@@ -521,7 +521,7 @@ private:
 
 	/// Internal helper function to solve a single position constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	bool						SolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2);
+	static bool					sSolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2, const PhysicsSettings &inSettings);
 
 	/// The main physics settings instance
 	const PhysicsSettings &		mPhysicsSettings;

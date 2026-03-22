@@ -1720,7 +1720,7 @@ void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintOf
 }
 
 template <EMotionType Type1, EMotionType Type2>
-bool ContactConstraintManager::SolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2)
+bool ContactConstraintManager::sSolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2, const PhysicsSettings &inSettings)
 {
 	// Get transforms
 	RMat44 transform1 = ioBody1.GetCenterOfMassTransform();
@@ -1741,7 +1741,7 @@ bool ContactConstraintManager::SolvePositionConstraint(ContactConstraint<Type1, 
 		// Calculate separation along the normal (negative if interpenetrating)
 		// Allow a little penetration by default (PhysicsSettings::mPenetrationSlop) to avoid jittering between contact/no-contact which wipes out the contact cache and warm start impulses
 		// Clamp penetration to a max PhysicsSettings::mMaxPenetrationDistance so that we don't apply a huge impulse if we're penetrating a lot
-		float separation = max(Vec3(p2 - p1).Dot(ws_normal) + mPhysicsSettings.mPenetrationSlop, -mPhysicsSettings.mMaxPenetrationDistance);
+		float separation = max(Vec3(p2 - p1).Dot(ws_normal) + inSettings.mPenetrationSlop, -inSettings.mMaxPenetrationDistance);
 
 		// Only enforce constraint when separation < 0 (otherwise we're apart)
 		if (separation < 0.0f)
@@ -1768,7 +1768,7 @@ bool ContactConstraintManager::SolvePositionConstraint(ContactConstraint<Type1, 
 			wcp.mNonPenetrationConstraint.CalculateConstraintProperties(ioConstraint.mInvMass1, inv_i1, r1, ioConstraint.mInvMass2, inv_i2, r2, ws_normal);
 
 			// Solve position errors
-			if (wcp.mNonPenetrationConstraint.SolvePositionConstraint(ioBody1, ioConstraint.mInvMass1, ioBody2, ioConstraint.mInvMass2, ws_normal, separation, mPhysicsSettings.mBaumgarte))
+			if (wcp.mNonPenetrationConstraint.SolvePositionConstraint(ioBody1, ioConstraint.mInvMass1, ioBody2, ioConstraint.mInvMass2, ws_normal, separation, inSettings.mBaumgarte))
 				any_impulse_applied = true;
 		}
 	}
@@ -1781,22 +1781,22 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 	JPH_PROFILE_FUNCTION();
 
 	// Build dispatch table
-	using DispatchFunc = bool (ContactConstraintManager::*)(ContactConstraintBase &, Body &, Body &);
+	using DispatchFunc = bool (*)(ContactConstraintBase &, Body &, Body &, const PhysicsSettings &);
 	static const DispatchFunc table[3][3] = {
 		{
 			nullptr, // Static vs static doesn't exist
 			nullptr, // Static vs kinematic doesn't exist
-			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Static, EMotionType::Dynamic>
+			(DispatchFunc)sSolvePositionConstraint<EMotionType::Static, EMotionType::Dynamic>
 		},
 		{
 			nullptr, // Kinematic vs static doesn't exist
 			nullptr, // Kinematic vs kinematic doesn't exist
-			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+			(DispatchFunc)sSolvePositionConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
 		},
 		{
-			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Static>,
-			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
-			(DispatchFunc)&ContactConstraintManager::SolvePositionConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+			(DispatchFunc)sSolvePositionConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			(DispatchFunc)sSolvePositionConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			(DispatchFunc)sSolvePositionConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
 		}
 	};
 
@@ -1822,7 +1822,7 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 		Body &body2 = *constraint.mBody2;
 
 		// Dispatch to the correct templated form
-		any_impulse_applied |= (this->*table[(int)body1.GetMotionType()][(int)body2.GetMotionType()])(constraint, body1, body2);
+		any_impulse_applied |= table[(int)body1.GetMotionType()][(int)body2.GetMotionType()](constraint, body1, body2, mPhysicsSettings);
 	}
 
 	return any_impulse_applied;
