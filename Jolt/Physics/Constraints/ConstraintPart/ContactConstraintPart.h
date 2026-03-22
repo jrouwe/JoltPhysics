@@ -259,7 +259,7 @@ class ConcreteContactConstraintPart
 public:
 	/// Constructor / destructor
 								ConcreteContactConstraintPart() : mDD() { }
-								~ConcreteContactConstraintPart() { }
+								~ConcreteContactConstraintPart() = default;
 
 	inline bool					SolveVelocityConstraint(Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias, float inMinLambda, float inMaxLambda)
 	{

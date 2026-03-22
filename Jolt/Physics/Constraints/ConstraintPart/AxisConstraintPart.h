@@ -243,8 +243,8 @@ public:
 	/// @param inMaxLambda Maximum value of constraint impulse to apply (N s)
 	inline bool					SolveVelocityConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
 	{
-		MotionProperties *mp1 = ioBody1.GetMotionPropertiesUnchecked();
-		MotionProperties *mp2 = ioBody2.GetMotionPropertiesUnchecked();
+		const MotionProperties *mp1 = ioBody1.GetMotionPropertiesUnchecked();
+		const MotionProperties *mp2 = ioBody2.GetMotionPropertiesUnchecked();
 
 		// Calculate jacobian multiplied by linear velocity
 		float jv;

@@ -1719,9 +1719,7 @@ void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintOf
 			next_constraint = nullptr;
 
 		// Dispatch to the correct templated form
-		Body &body1 = *constraint.mBody1;
-		Body &body2 = *constraint.mBody2;
-		table[(int)body1.GetMotionType()][(int)body2.GetMotionType()](constraint);
+		table[(int)constraint.mBody1->GetMotionType()][(int)constraint.mBody2->GetMotionType()](constraint);
 	}
 }
 
