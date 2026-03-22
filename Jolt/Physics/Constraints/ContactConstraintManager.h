@@ -430,7 +430,7 @@ private:
 	public:
 		using ConstraintPart = ContactConstraintPart<Type1, Type2>;
 
-		/// Calculate constraint properties below
+		/// Calculate constraint properties for the parts below
 		JPH_INLINE void			CalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, Vec3Arg inGravity, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings, float inMinVelocityForRestitution);
 
 		/// The constraint parts
@@ -498,10 +498,6 @@ private:
 	/// Create a new contact constraint
 	template <EMotionType Type1, EMotionType Type2>
 	JPH_INLINE ContactConstraint<Type1, Type2> *CreateConstraint(Body &inBody1, Body &inBody2, uint64 inSortKey, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints, uint32 &outConstraintIdx);
-
-	/// Internal helper function to calculate the friction and non-penetration constraint properties. Templated to the motion type to reduce the amount of branches and calculations.
-	template <EMotionType Type1, EMotionType Type2>
-	inline void					CalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint<Type1, Type2> &ioConstraint, const ContactSettings &inSettings, float inDeltaTime, Vec3Arg inGravity, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, CachedManifold &inCachedManifold);
 
 	/// Internal helper function to add a contact constraint from the cache. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>

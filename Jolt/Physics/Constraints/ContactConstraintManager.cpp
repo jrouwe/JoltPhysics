@@ -721,61 +721,6 @@ void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inC
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE void ContactConstraintManager::CalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint<Type1, Type2> &ioConstraint, const ContactSettings &inSettings, float inDeltaTime, Vec3Arg inGravity, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, CachedManifold &inCachedManifold)
-{
-	// Calculate scaled mass and inertia
-	Mat44 inv_i1;
-	if constexpr (Type1 == EMotionType::Dynamic)
-	{
-		const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-		ioConstraint.mInvMass1 = inSettings.mInvMassScale1 * mp1->GetInverseMass();
-		inv_i1 = inSettings.mInvInertiaScale1 * mp1->GetInverseInertiaForRotation(inTransformBody1.GetRotation());
-	}
-	else
-	{
-		ioConstraint.mInvMass1 = 0.0f;
-		inv_i1 = Mat44::sZero();
-	}
-
-	Mat44 inv_i2;
-	if constexpr (Type2 == EMotionType::Dynamic)
-	{
-		const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
-		ioConstraint.mInvMass2 = inSettings.mInvMassScale2 * mp2->GetInverseMass();
-		inv_i2 = inSettings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inTransformBody2.GetRotation());
-	}
-	else
-	{
-		ioConstraint.mInvMass2 = 0.0f;
-		inv_i2 = Mat44::sZero();
-	}
-
-	// Calculate tangents
-	Vec3 t1, t2;
-	ioConstraint.GetTangents(t1, t2);
-
-	Vec3 ws_normal = ioConstraint.GetWorldSpaceNormal();
-
-	// Setup velocity constraint properties
-	float min_velocity_for_restitution = mPhysicsSettings.mMinVelocityForRestitution;
-	for (uint32 i = 0; i < ioConstraint.mNumContactPoints; ++i)
-	{
-		CachedContactPoint &ccp = inCachedManifold.mContactPoints[i];
-		WorldContactPoint<Type1, Type2> &wcp = ioConstraint.mContactPoints[i];
-
-		RVec3 p1 = inTransformBody1 * Vec3::sLoadFloat3Unsafe(ccp.mPosition1);
-		RVec3 p2 = inTransformBody2 * Vec3::sLoadFloat3Unsafe(ccp.mPosition2);
-
-		wcp.mNonPenetrationConstraint.SetTotalLambda(ccp.mNonPenetrationLambda);
-		wcp.mFrictionConstraint1.SetTotalLambda(ccp.mFrictionLambda[0]);
-		wcp.mFrictionConstraint2.SetTotalLambda(ccp.mFrictionLambda[1]);
-		wcp.mContactPoint = &ccp;
-
-		wcp.CalculateFrictionAndNonPenetrationConstraintProperties(inDeltaTime, inGravity, inBody1, inBody2, ioConstraint.mInvMass1, ioConstraint.mInvMass2, inv_i1, inv_i2, p1, p2, ws_normal, t1, t2, inSettings, min_velocity_for_restitution);
-	}
-}
-
-template <EMotionType Type1, EMotionType Type2>
 ContactConstraintManager::ContactConstraint<Type1, Type2> *ContactConstraintManager::CreateConstraint(Body &inBody1, Body &inBody2, uint64 inSortKey, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints, uint32 &outConstraintIdx)
 {
 	// Calculate the size of this constraint
@@ -907,11 +852,57 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 
 			JPH_DET_LOG("GetContactsFromCache: id1: " << constraint->minBody1.GetID() << " id2: " << constraint->mBody2->GetID() << " key: " << constraint->mSortKey);
 
-			// Calculate friction and non-penetration constraint properties for all contact points
-			CalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(*constraint, settings, delta_time, gravity, transform_body1, transform_body2, inBody1, inBody2, *output_cm);
-
 			// Notify island builder
 			mUpdateContext->mIslandBuilder->LinkContact(constraint_idx, inBody1.GetIndexInActiveBodiesInternal(), inBody2.GetIndexInActiveBodiesInternal());
+
+			// Calculate scaled mass and inertia
+			Mat44 inv_i1;
+			if constexpr (Type1 == EMotionType::Dynamic)
+			{
+				const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
+				constraint->mInvMass1 = settings.mInvMassScale1 * mp1->GetInverseMass();
+				inv_i1 = settings.mInvInertiaScale1 * mp1->GetInverseInertiaForRotation(transform_body1.GetRotation());
+			}
+			else
+			{
+				constraint->mInvMass1 = 0.0f;
+				inv_i1 = Mat44::sZero();
+			}
+
+			Mat44 inv_i2;
+			if constexpr (Type2 == EMotionType::Dynamic)
+			{
+				const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
+				constraint->mInvMass2 = settings.mInvMassScale2 * mp2->GetInverseMass();
+				inv_i2 = settings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(transform_body2.GetRotation());
+			}
+			else
+			{
+				constraint->mInvMass2 = 0.0f;
+				inv_i2 = Mat44::sZero();
+			}
+
+			// Calculate tangents
+			Vec3 t1, t2;
+			constraint->GetTangents(t1, t2);
+
+			// Setup velocity constraint properties
+			float min_velocity_for_restitution = mPhysicsSettings.mMinVelocityForRestitution;
+			for (uint32 i = 0; i < constraint->mNumContactPoints; ++i)
+			{
+				CachedContactPoint &ccp = output_cm->mContactPoints[i];
+				WorldContactPoint<Type1, Type2> &wcp = constraint->mContactPoints[i];
+
+				RVec3 p1_ws = transform_body1 * Vec3::sLoadFloat3Unsafe(ccp.mPosition1);
+				RVec3 p2_ws = transform_body2 * Vec3::sLoadFloat3Unsafe(ccp.mPosition2);
+
+				wcp.mNonPenetrationConstraint.SetTotalLambda(ccp.mNonPenetrationLambda);
+				wcp.mFrictionConstraint1.SetTotalLambda(ccp.mFrictionLambda[0]);
+				wcp.mFrictionConstraint2.SetTotalLambda(ccp.mFrictionLambda[1]);
+				wcp.mContactPoint = &ccp;
+
+				wcp.CalculateFrictionAndNonPenetrationConstraintProperties(delta_time, gravity, inBody1, inBody2, constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, p1_ws, p2_ws, world_space_normal, t1, t2, settings, min_velocity_for_restitution);
+			}
 
 		#ifdef JPH_DEBUG_RENDERER
 			// Draw the manifold
