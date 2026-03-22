@@ -1472,25 +1472,27 @@ bool ContactConstraintManager::WereBodiesInContact(const BodyID &inBody1ID, cons
 }
 
 template <EMotionType Type1, EMotionType Type2>
-void ContactConstraintManager::sWarmStartConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio)
+void ContactConstraintManager::sWarmStartConstraint(ContactConstraintBase &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio)
 {
+	ContactConstraint<Type1, Type2> &constraint = static_cast<ContactConstraint<Type1, Type2> &>(ioConstraint);
+
 	// Calculate tangents
 	Vec3 t1, t2;
-	ioConstraint.GetTangents(t1, t2);
+	constraint.GetTangents(t1, t2);
 
-	Vec3 ws_normal = ioConstraint.GetWorldSpaceNormal();
+	Vec3 ws_normal = constraint.GetWorldSpaceNormal();
 
-	for (uint32 i = 0; i < ioConstraint.mNumContactPoints; ++i)
+	for (uint32 i = 0; i < constraint.mNumContactPoints; ++i)
 	{
-		WorldContactPoint<Type1, Type2> &wcp = ioConstraint.mContactPoints[i];
+		WorldContactPoint<Type1, Type2> &wcp = constraint.mContactPoints[i];
 
 		// Warm starting: Apply impulse from last frame
 		if (wcp.mFrictionConstraint1.IsActive() || wcp.mFrictionConstraint2.IsActive())
 		{
-			wcp.mFrictionConstraint1.WarmStart(ioMotionProperties1, ioConstraint.mInvMass1, ioMotionProperties2, ioConstraint.mInvMass2, t1, inWarmStartImpulseRatio);
-			wcp.mFrictionConstraint2.WarmStart(ioMotionProperties1, ioConstraint.mInvMass1, ioMotionProperties2, ioConstraint.mInvMass2, t2, inWarmStartImpulseRatio);
+			wcp.mFrictionConstraint1.WarmStart(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, t1, inWarmStartImpulseRatio);
+			wcp.mFrictionConstraint2.WarmStart(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, t2, inWarmStartImpulseRatio);
 		}
-		wcp.mNonPenetrationConstraint.WarmStart(ioMotionProperties1, ioConstraint.mInvMass1, ioMotionProperties2, ioConstraint.mInvMass2, ws_normal, inWarmStartImpulseRatio);
+		wcp.mNonPenetrationConstraint.WarmStart(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, ws_normal, inWarmStartImpulseRatio);
 	}
 }
 
@@ -1505,17 +1507,17 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 		{
 			nullptr, // Static vs static doesn't exist
 			nullptr, // Static vs kinematic doesn't exist
-			(DispatchFunc)sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>
+			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>
 		},
 		{
 			nullptr, // Kinematic vs static doesn't exist
 			nullptr, // Kinematic vs kinematic doesn't exist
-			(DispatchFunc)sWarmStartConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+			sWarmStartConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
 		},
 		{
-			(DispatchFunc)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>,
-			(DispatchFunc)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
-			(DispatchFunc)sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+			sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
 		}
 	};
 
@@ -1554,18 +1556,20 @@ template void ContactConstraintManager::WarmStartVelocityConstraints<CalculateSo
 template void ContactConstraintManager::WarmStartVelocityConstraints<DummyCalculateSolverSteps>(const uint32 *inConstraintOffsetBegin, const uint32 *inConstraintOffsetEnd, float inWarmStartImpulseRatio, DummyCalculateSolverSteps &ioCallback);
 
 template <EMotionType Type1, EMotionType Type2>
-bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint<Type1, Type2> &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2)
+bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraintBase &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2)
 {
+	ContactConstraint<Type1, Type2> &constraint = static_cast<ContactConstraint<Type1, Type2> &>(ioConstraint);
+
 	bool any_impulse_applied = false;
 
 	// Calculate tangents
 	Vec3 t1, t2;
-	ioConstraint.GetTangents(t1, t2);
+	constraint.GetTangents(t1, t2);
 
 	// First apply all friction constraints (non-penetration is more important than friction)
-	for (uint32 i = 0; i < ioConstraint.mNumContactPoints; ++i)
+	for (uint32 i = 0; i < constraint.mNumContactPoints; ++i)
 	{
-		WorldContactPoint<Type1, Type2> &wcp = ioConstraint.mContactPoints[i];
+		WorldContactPoint<Type1, Type2> &wcp = constraint.mContactPoints[i];
 
 		// Check if friction is enabled
 		if (wcp.mFrictionConstraint1.IsActive() || wcp.mFrictionConstraint2.IsActive())
@@ -1578,7 +1582,7 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint<Type1,
 			// Calculate max impulse that can be applied. Note that we're using the non-penetration impulse from the previous iteration here.
 			// We do this because non-penetration is more important so is solved last (the last things that are solved in an iterative solver
 			// contribute the most).
-			float max_lambda_f = ioConstraint.mCombinedFriction * wcp.mNonPenetrationConstraint.GetTotalLambda();
+			float max_lambda_f = constraint.mCombinedFriction * wcp.mNonPenetrationConstraint.GetTotalLambda();
 
 			// If the total lambda that we will apply is too large, scale it back
 			if (total_lambda_sq > Square(max_lambda_f))
@@ -1589,22 +1593,22 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint<Type1,
 			}
 
 			// Apply the friction impulse
-			if (wcp.mFrictionConstraint1.SolveVelocityConstraintApplyLambda(ioMotionProperties1, ioConstraint.mInvMass1, ioMotionProperties2, ioConstraint.mInvMass2, t1, lambda1))
+			if (wcp.mFrictionConstraint1.SolveVelocityConstraintApplyLambda(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, t1, lambda1))
 				any_impulse_applied = true;
-			if (wcp.mFrictionConstraint2.SolveVelocityConstraintApplyLambda(ioMotionProperties1, ioConstraint.mInvMass1, ioMotionProperties2, ioConstraint.mInvMass2, t2, lambda2))
+			if (wcp.mFrictionConstraint2.SolveVelocityConstraintApplyLambda(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, t2, lambda2))
 				any_impulse_applied = true;
 		}
 	}
 
-	Vec3 ws_normal = ioConstraint.GetWorldSpaceNormal();
+	Vec3 ws_normal = constraint.GetWorldSpaceNormal();
 
 	// Then apply all non-penetration constraints
-	for (uint32 i = 0; i < ioConstraint.mNumContactPoints; ++i)
+	for (uint32 i = 0; i < constraint.mNumContactPoints; ++i)
 	{
-		WorldContactPoint<Type1, Type2> &wcp = ioConstraint.mContactPoints[i];
+		WorldContactPoint<Type1, Type2> &wcp = constraint.mContactPoints[i];
 
 		// Solve non penetration velocities
-		if (wcp.mNonPenetrationConstraint.SolveVelocityConstraint(ioMotionProperties1, ioConstraint.mInvMass1, ioMotionProperties2, ioConstraint.mInvMass2, ws_normal, 0.0f, FLT_MAX))
+		if (wcp.mNonPenetrationConstraint.SolveVelocityConstraint(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, ws_normal, 0.0f, FLT_MAX))
 			any_impulse_applied = true;
 	}
 
@@ -1621,17 +1625,17 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 		{
 			nullptr, // Static vs static doesn't exist
 			nullptr, // Static vs kinematic doesn't exist
-			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>
+			sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>
 		},
 		{
 			nullptr, // Kinematic vs static doesn't exist
 			nullptr, // Kinematic vs kinematic doesn't exist
-			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+			sSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
 		},
 		{
-			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>,
-			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
-			(DispatchFunc)sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+			sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
 		}
 	};
 
@@ -1662,11 +1666,13 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 }
 
 template <EMotionType Type1, EMotionType Type2>
-void ContactConstraintManager::sStoreAppliedImpulses(ContactConstraint<Type1, Type2> &ioConstraint)
+void ContactConstraintManager::sStoreAppliedImpulses(ContactConstraintBase &ioConstraint)
 {
-	for (uint32 i = 0; i < ioConstraint.mNumContactPoints; ++i)
+	ContactConstraint<Type1, Type2> &constraint = static_cast<ContactConstraint<Type1, Type2> &>(ioConstraint);
+
+	for (uint32 i = 0; i < constraint.mNumContactPoints; ++i)
 	{
-		WorldContactPoint<Type1, Type2> &wcp = ioConstraint.mContactPoints[i];
+		WorldContactPoint<Type1, Type2> &wcp = constraint.mContactPoints[i];
 
 		wcp.mContactPoint->mNonPenetrationLambda = wcp.mNonPenetrationConstraint.GetTotalLambda();
 		wcp.mContactPoint->mFrictionLambda[0] = wcp.mFrictionConstraint1.GetTotalLambda();
@@ -1682,17 +1688,17 @@ void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintOf
 		{
 			nullptr, // Static vs static doesn't exist
 			nullptr, // Static vs kinematic doesn't exist
-			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Static, EMotionType::Dynamic>
+			sStoreAppliedImpulses<EMotionType::Static, EMotionType::Dynamic>
 		},
 		{
 			nullptr, // Kinematic vs static doesn't exist
 			nullptr, // Kinematic vs kinematic doesn't exist
-			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Kinematic, EMotionType::Dynamic>
+			sStoreAppliedImpulses<EMotionType::Kinematic, EMotionType::Dynamic>
 		},
 		{
-			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Static>,
-			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Kinematic>,
-			(DispatchFunc)sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Dynamic>
+			sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Static>,
+			sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Kinematic>,
+			sStoreAppliedImpulses<EMotionType::Dynamic, EMotionType::Dynamic>
 		}
 	};
 
@@ -1720,19 +1726,21 @@ void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintOf
 }
 
 template <EMotionType Type1, EMotionType Type2>
-bool ContactConstraintManager::sSolvePositionConstraint(ContactConstraint<Type1, Type2> &ioConstraint, Body &ioBody1, Body &ioBody2, const PhysicsSettings &inSettings)
+bool ContactConstraintManager::sSolvePositionConstraint(ContactConstraintBase &ioConstraint, Body &ioBody1, Body &ioBody2, const PhysicsSettings &inSettings)
 {
+	ContactConstraint<Type1, Type2> &constraint = static_cast<ContactConstraint<Type1, Type2> &>(ioConstraint);
+
 	// Get transforms
 	RMat44 transform1 = ioBody1.GetCenterOfMassTransform();
 	RMat44 transform2 = ioBody2.GetCenterOfMassTransform();
 
-	Vec3 ws_normal = ioConstraint.GetWorldSpaceNormal();
+	Vec3 ws_normal = constraint.GetWorldSpaceNormal();
 
 	bool any_impulse_applied = false;
 
-	for (uint32 i = 0; i < ioConstraint.mNumContactPoints; ++i)
+	for (uint32 i = 0; i < constraint.mNumContactPoints; ++i)
 	{
-		WorldContactPoint<Type1, Type2> &wcp = ioConstraint.mContactPoints[i];
+		WorldContactPoint<Type1, Type2> &wcp = constraint.mContactPoints[i];
 
 		// Calculate new contact point positions in world space (the bodies may have moved)
 		RVec3 p1 = transform1 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition1);
@@ -1749,13 +1757,13 @@ bool ContactConstraintManager::sSolvePositionConstraint(ContactConstraint<Type1,
 			// Calculate scaled inertia
 			Mat44 inv_i1;
 			if constexpr (Type1 == EMotionType::Dynamic)
-				inv_i1 = ioConstraint.mInvInertiaScale1 * ioBody1.GetInverseInertia();
+				inv_i1 = constraint.mInvInertiaScale1 * ioBody1.GetInverseInertia();
 			else
 				inv_i1 = Mat44::sZero();
 
 			Mat44 inv_i2;
 			if constexpr (Type2 == EMotionType::Dynamic)
-				inv_i2 = ioConstraint.mInvInertiaScale2 * ioBody2.GetInverseInertia();
+				inv_i2 = constraint.mInvInertiaScale2 * ioBody2.GetInverseInertia();
 			else
 				inv_i2 = Mat44::sZero();
 
@@ -1765,10 +1773,10 @@ bool ContactConstraintManager::sSolvePositionConstraint(ContactConstraint<Type1,
 			Vec3 r2 = Vec3(p - ioBody2.GetCenterOfMassPosition());
 
 			// Update constraint properties (bodies may have moved)
-			wcp.mNonPenetrationConstraint.CalculateConstraintProperties(ioConstraint.mInvMass1, inv_i1, r1, ioConstraint.mInvMass2, inv_i2, r2, ws_normal);
+			wcp.mNonPenetrationConstraint.CalculateConstraintProperties(constraint.mInvMass1, inv_i1, r1, constraint.mInvMass2, inv_i2, r2, ws_normal);
 
 			// Solve position errors
-			if (wcp.mNonPenetrationConstraint.SolvePositionConstraint(ioBody1, ioConstraint.mInvMass1, ioBody2, ioConstraint.mInvMass2, ws_normal, separation, inSettings.mBaumgarte))
+			if (wcp.mNonPenetrationConstraint.SolvePositionConstraint(ioBody1, constraint.mInvMass1, ioBody2, constraint.mInvMass2, ws_normal, separation, inSettings.mBaumgarte))
 				any_impulse_applied = true;
 		}
 	}
@@ -1786,17 +1794,17 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 		{
 			nullptr, // Static vs static doesn't exist
 			nullptr, // Static vs kinematic doesn't exist
-			(DispatchFunc)sSolvePositionConstraint<EMotionType::Static, EMotionType::Dynamic>
+			sSolvePositionConstraint<EMotionType::Static, EMotionType::Dynamic>
 		},
 		{
 			nullptr, // Kinematic vs static doesn't exist
 			nullptr, // Kinematic vs kinematic doesn't exist
-			(DispatchFunc)sSolvePositionConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
+			sSolvePositionConstraint<EMotionType::Kinematic, EMotionType::Dynamic>
 		},
 		{
-			(DispatchFunc)sSolvePositionConstraint<EMotionType::Dynamic, EMotionType::Static>,
-			(DispatchFunc)sSolvePositionConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
-			(DispatchFunc)sSolvePositionConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
+			sSolvePositionConstraint<EMotionType::Dynamic, EMotionType::Static>,
+			sSolvePositionConstraint<EMotionType::Dynamic, EMotionType::Kinematic>,
+			sSolvePositionConstraint<EMotionType::Dynamic, EMotionType::Dynamic>
 		}
 	};
 
