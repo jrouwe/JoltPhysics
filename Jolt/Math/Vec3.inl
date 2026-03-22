@@ -1216,6 +1216,35 @@ float Vec3::ReduceMax() const
 
 Vec3 Vec3::GetNormalizedPerpendicular() const
 {
+#ifdef JPH_USE_SSE4_1
+	// Compute -value and |value| and check if |x| > |y|
+	__m128 neg_val = _mm_sub_ps(_mm_setzero_ps(), mValue);
+	__m128 abs_val = _mm_max_ps(mValue, neg_val);
+	__m128 abs_x = _mm_shuffle_ps(abs_val, abs_val, _MM_SHUFFLE(0, 0, 0, 0));
+	__m128 abs_y = _mm_shuffle_ps(abs_val, abs_val, _MM_SHUFFLE(1, 1, 1, 1));
+	__m128 x_gt_y = _mm_cmpgt_ps(abs_x, abs_y);
+
+	// |x| > |y|: perpendicular is [z, 0, -x, 0]
+	__m128 case_x_gt_y = _mm_shuffle_ps(mValue, neg_val, _MM_SHUFFLE(0, 0, 2, 2));
+	case_x_gt_y = _mm_and_ps(case_x_gt_y, _mm_castsi128_ps(_mm_set_epi32(0, -1, 0, -1)));
+
+	// |x| <= |y|: perpendicular is [0, z, -y, 0]
+	__m128 case_x_le_y = _mm_shuffle_ps(mValue, neg_val, _MM_SHUFFLE(1, 1, 2, 2));
+	case_x_le_y = _mm_and_ps(case_x_le_y, _mm_castsi128_ps(_mm_set_epi32(0, -1, -1,  0)));
+
+	// Select result based on |x| > |y|
+	__m128 result = _mm_or_ps(_mm_and_ps(x_gt_y, case_x_gt_y), _mm_andnot_ps(x_gt_y, case_x_le_y));
+
+	// Normalize result
+	__m128 mul = _mm_mul_ps(result, result);
+	__m128 shuf = _mm_movehdup_ps(mul);
+	__m128 sums = _mm_add_ps(mul, shuf);
+	shuf = _mm_movehl_ps(shuf, sums);
+	sums = _mm_add_ss(sums, shuf);
+	__m128 len = _mm_sqrt_ss(sums);
+	len = _mm_shuffle_ps(len, len, _MM_SHUFFLE(0, 0, 0, 0));
+	return sFixW(_mm_div_ps(result, len));
+#else
 	if (abs(mF32[0]) > abs(mF32[1]))
 	{
 		float len = sqrt(mF32[0] * mF32[0] + mF32[2] * mF32[2]);
@@ -1226,6 +1255,7 @@ Vec3 Vec3::GetNormalizedPerpendicular() const
 		float len = sqrt(mF32[1] * mF32[1] + mF32[2] * mF32[2]);
 		return Vec3(0.0f, mF32[2], -mF32[1]) / len;
 	}
+#endif
 }
 
 Vec3 Vec3::GetSign() const
