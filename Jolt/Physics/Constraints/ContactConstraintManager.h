@@ -507,6 +507,14 @@ private:
 	template <EMotionType Type1, EMotionType Type2>
 	bool						TemplatedAddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold);
 
+	/// Read the velocities from the motion properties
+	template <EMotionType Type1, EMotionType Type2>
+	static JPH_INLINE void		sGetVelocities(const MotionProperties *inMotionProperties1, const MotionProperties *inMotionProperties2, Vec3 &outLinearVelocity1, Vec3 &outAngularVelocity1, Vec3 &outLinearVelocity2, Vec3 &outAngularVelocity2);
+
+	/// Apply changed velocities to the motion properties
+	template <EMotionType Type1, EMotionType Type2>
+	static JPH_INLINE void		sSetVelocities(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inLinearVelocity1, Vec3Arg inAngularVelocity1, Vec3Arg inLinearVelocity2, Vec3Arg inAngularVelocity2);
+
 	/// Internal helper function to warm start contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
 	static void					sWarmStartConstraint(ContactConstraintBase &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio);

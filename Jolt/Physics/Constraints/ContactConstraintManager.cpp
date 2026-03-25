@@ -850,7 +850,7 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 			}
 			outConstraintCreated = true;
 
-			JPH_DET_LOG("GetContactsFromCache: id1: " << constraint->minBody1.GetID() << " id2: " << constraint->mBody2->GetID() << " key: " << constraint->mSortKey);
+			JPH_DET_LOG("GetContactsFromCache: id1: " << inBody1.GetID() << " id2: " << inBody2.GetID() << " key: " << constraint->mSortKey);
 
 			// Notify island builder
 			mUpdateContext->mIslandBuilder->LinkContact(constraint_idx, inBody1.GetIndexInActiveBodiesInternal(), inBody2.GetIndexInActiveBodiesInternal());
@@ -1472,13 +1472,61 @@ bool ContactConstraintManager::WereBodiesInContact(const BodyID &inBody1ID, cons
 }
 
 template <EMotionType Type1, EMotionType Type2>
+void ContactConstraintManager::sGetVelocities(const MotionProperties *inMotionProperties1, const MotionProperties *inMotionProperties2, Vec3 &outLinearVelocity1, Vec3 &outAngularVelocity1, Vec3 &outLinearVelocity2, Vec3 &outAngularVelocity2)
+{
+	if constexpr (Type1 != EMotionType::Static)
+	{
+		outLinearVelocity1 = inMotionProperties1->GetLinearVelocity();
+		outAngularVelocity1 = inMotionProperties1->GetAngularVelocity();
+	}
+	else
+	{
+		JPH_IF_DEBUG(outLinearVelocity1 = Vec3::sNaN();)
+		JPH_IF_DEBUG(outAngularVelocity1 = Vec3::sNaN();)
+	}
+
+	if constexpr (Type2 != EMotionType::Static)
+	{
+		outLinearVelocity2 = inMotionProperties2->GetLinearVelocity();
+		outAngularVelocity2 = inMotionProperties2->GetAngularVelocity();
+	}
+	else
+	{
+		JPH_IF_DEBUG(outLinearVelocity2 = Vec3::sNaN();)
+		JPH_IF_DEBUG(outAngularVelocity2 = Vec3::sNaN();)
+	}
+}
+
+template <EMotionType Type1, EMotionType Type2>
+void ContactConstraintManager::sSetVelocities(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inLinearVelocity1, Vec3Arg inAngularVelocity1, Vec3Arg inLinearVelocity2, Vec3Arg inAngularVelocity2)
+{
+	if constexpr (Type1 == EMotionType::Dynamic)
+	{
+		ioMotionProperties1->ApplyLinearVelocityStep(inLinearVelocity1);
+		ioMotionProperties1->ApplyAngularVelocityStep(inAngularVelocity1);
+	}
+
+	if constexpr (Type2 == EMotionType::Dynamic)
+	{
+		ioMotionProperties2->ApplyLinearVelocityStep(inLinearVelocity2);
+		ioMotionProperties2->ApplyAngularVelocityStep(inAngularVelocity2);
+	}
+}
+
+template <EMotionType Type1, EMotionType Type2>
 void ContactConstraintManager::sWarmStartConstraint(ContactConstraintBase &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio)
 {
 	ContactConstraint<Type1, Type2> &constraint = static_cast<ContactConstraint<Type1, Type2> &>(ioConstraint);
 
+	bool any_impulse_applied = false;
+
 	// Calculate tangents
 	Vec3 t1, t2;
 	constraint.GetTangents(t1, t2);
+
+	// Get velocities
+	Vec3 linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2;
+	sGetVelocities<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2);
 
 	Vec3 ws_normal = constraint.GetWorldSpaceNormal();
 
@@ -1489,11 +1537,18 @@ void ContactConstraintManager::sWarmStartConstraint(ContactConstraintBase &ioCon
 		// Warm starting: Apply impulse from last frame
 		if (wcp.mFrictionConstraint1.IsActive() || wcp.mFrictionConstraint2.IsActive())
 		{
-			wcp.mFrictionConstraint1.WarmStart(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, t1, inWarmStartImpulseRatio);
-			wcp.mFrictionConstraint2.WarmStart(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, t2, inWarmStartImpulseRatio);
+			if (wcp.mFrictionConstraint1.WarmStart(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, constraint.mInvMass1, constraint.mInvMass2, t1, inWarmStartImpulseRatio))
+				any_impulse_applied = true;
+			if (wcp.mFrictionConstraint2.WarmStart(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, constraint.mInvMass1, constraint.mInvMass2, t2, inWarmStartImpulseRatio))
+				any_impulse_applied = true;
 		}
-		wcp.mNonPenetrationConstraint.WarmStart(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, ws_normal, inWarmStartImpulseRatio);
+		if (wcp.mNonPenetrationConstraint.WarmStart(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, constraint.mInvMass1, constraint.mInvMass2, ws_normal, inWarmStartImpulseRatio))
+			any_impulse_applied = true;
 	}
+
+	// Apply changed velocities
+	if (any_impulse_applied)
+		sSetVelocities<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2);
 }
 
 template <class MotionPropertiesCallback>
@@ -1566,6 +1621,10 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraintBase &i
 	Vec3 t1, t2;
 	constraint.GetTangents(t1, t2);
 
+	// Get velocities
+	Vec3 linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2;
+	sGetVelocities<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2);
+
 	// First apply all friction constraints (non-penetration is more important than friction)
 	for (uint32 i = 0; i < constraint.mNumContactPoints; ++i)
 	{
@@ -1575,8 +1634,8 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraintBase &i
 		if (wcp.mFrictionConstraint1.IsActive() || wcp.mFrictionConstraint2.IsActive())
 		{
 			// Calculate impulse to stop motion in tangential direction
-			float lambda1 = wcp.mFrictionConstraint1.SolveVelocityConstraintGetTotalLambda(ioMotionProperties1, ioMotionProperties2, t1);
-			float lambda2 = wcp.mFrictionConstraint2.SolveVelocityConstraintGetTotalLambda(ioMotionProperties1, ioMotionProperties2, t2);
+			float lambda1 = wcp.mFrictionConstraint1.SolveVelocityConstraintGetTotalLambda(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, t1);
+			float lambda2 = wcp.mFrictionConstraint2.SolveVelocityConstraintGetTotalLambda(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, t2);
 			float total_lambda_sq = Square(lambda1) + Square(lambda2);
 
 			// Calculate max impulse that can be applied. Note that we're using the non-penetration impulse from the previous iteration here.
@@ -1593,9 +1652,9 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraintBase &i
 			}
 
 			// Apply the friction impulse
-			if (wcp.mFrictionConstraint1.SolveVelocityConstraintApplyLambda(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, t1, lambda1))
+			if (wcp.mFrictionConstraint1.SolveVelocityConstraintApplyLambda(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, constraint.mInvMass1, constraint.mInvMass2, t1, lambda1))
 				any_impulse_applied = true;
-			if (wcp.mFrictionConstraint2.SolveVelocityConstraintApplyLambda(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, t2, lambda2))
+			if (wcp.mFrictionConstraint2.SolveVelocityConstraintApplyLambda(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, constraint.mInvMass1, constraint.mInvMass2, t2, lambda2))
 				any_impulse_applied = true;
 		}
 	}
@@ -1608,11 +1667,15 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraintBase &i
 		WorldContactPoint<Type1, Type2> &wcp = constraint.mContactPoints[i];
 
 		// Solve non penetration velocities
-		if (wcp.mNonPenetrationConstraint.SolveVelocityConstraint(ioMotionProperties1, constraint.mInvMass1, ioMotionProperties2, constraint.mInvMass2, ws_normal, 0.0f, FLT_MAX))
+		if (wcp.mNonPenetrationConstraint.SolveVelocityConstraint(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, constraint.mInvMass1, constraint.mInvMass2, ws_normal, 0.0f, FLT_MAX))
 			any_impulse_applied = true;
 	}
 
-	return any_impulse_applied;
+	if (!any_impulse_applied)
+		return false;
+
+	sSetVelocities<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2);
+	return true;
 }
 
 bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstraintOffsetBegin, const uint32 *inConstraintOffsetEnd)

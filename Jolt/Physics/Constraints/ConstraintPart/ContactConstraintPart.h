@@ -94,19 +94,19 @@ class ContactConstraintPart : public ContactConstraintPart1<Type1>, public Conta
 {
 private:
 	/// See AxisConstraintPart::ApplyVelocityStep
-	JPH_INLINE bool				ApplyVelocityStep(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inLambda) const
+	JPH_INLINE bool				ApplyVelocityStep(Vec3 &ioLinearVelocity1, Vec3 &ioAngularVelocity1, Vec3 &ioLinearVelocity2, Vec3 &ioAngularVelocity2, float inInvMass1, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inLambda) const
 	{
 		if (inLambda != 0.0f)
 		{
 			if constexpr (Type1 == EMotionType::Dynamic)
 			{
-				ioMotionProperties1->SubLinearVelocityStep((inLambda * inInvMass1) * inWorldSpaceAxis);
-				ioMotionProperties1->SubAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(this->mInvI1_R1PlusUxAxis));
+				ioLinearVelocity1 -= (inLambda * inInvMass1) * inWorldSpaceAxis;
+				ioAngularVelocity1 -= inLambda * Vec3::sLoadFloat3Unsafe(this->mInvI1_R1PlusUxAxis);
 			}
 			if constexpr (Type2 == EMotionType::Dynamic)
 			{
-				ioMotionProperties2->AddLinearVelocityStep((inLambda * inInvMass2) * inWorldSpaceAxis);
-				ioMotionProperties2->AddAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(this->mInvI2_R2xAxis));
+				ioLinearVelocity2 += (inLambda * inInvMass2) * inWorldSpaceAxis;
+				ioAngularVelocity2 += inLambda * Vec3::sLoadFloat3Unsafe(this->mInvI2_R2xAxis);
 			}
 			return true;
 		}
@@ -165,32 +165,32 @@ public:
 	}
 
 	/// See AxisConstraintPart::WarmStart
-	inline void					WarmStart(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inWarmStartImpulseRatio)
+	JPH_INLINE bool				WarmStart(Vec3 &ioLinearVelocity1, Vec3 &ioAngularVelocity1, Vec3 &ioLinearVelocity2, Vec3 &ioAngularVelocity2, float inInvMass1, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inWarmStartImpulseRatio)
 	{
 		this->mTotalLambda *= inWarmStartImpulseRatio;
 
-		ApplyVelocityStep(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, this->mTotalLambda);
+		return ApplyVelocityStep(ioLinearVelocity1, ioAngularVelocity1, ioLinearVelocity2, ioAngularVelocity2, inInvMass1, inInvMass2, inWorldSpaceAxis, this->mTotalLambda);
 	}
 
 	/// Part 1 of AxisConstraint::SolveVelocityConstraint: get the total lambda
-	JPH_INLINE float			SolveVelocityConstraintGetTotalLambda(const MotionProperties *ioMotionProperties1, const MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis) const
+	JPH_INLINE float			SolveVelocityConstraintGetTotalLambda(Vec3Arg inLinearVelocity1, Vec3Arg inAngularVelocity1, Vec3Arg inLinearVelocity2, Vec3Arg inAngularVelocity2, Vec3Arg inWorldSpaceAxis) const
 	{
 		// Calculate jacobian multiplied by linear velocity
 		float jv;
 		if constexpr (Type1 != EMotionType::Static && Type2 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(ioMotionProperties1->GetLinearVelocity() - ioMotionProperties2->GetLinearVelocity());
+			jv = inWorldSpaceAxis.Dot(inLinearVelocity1 - inLinearVelocity2);
 		else if constexpr (Type1 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(ioMotionProperties1->GetLinearVelocity());
+			jv = inWorldSpaceAxis.Dot(inLinearVelocity1);
 		else if constexpr (Type2 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(-ioMotionProperties2->GetLinearVelocity());
+			jv = inWorldSpaceAxis.Dot(-inLinearVelocity2);
 		else
 			JPH_ASSERT(false); // Static vs static is nonsensical!
 
 		// Calculate jacobian multiplied by angular velocity
 		if constexpr (Type1 != EMotionType::Static)
-			jv += Vec3::sLoadFloat3Unsafe(this->mR1PlusUxAxis).Dot(ioMotionProperties1->GetAngularVelocity());
+			jv += Vec3::sLoadFloat3Unsafe(this->mR1PlusUxAxis).Dot(inAngularVelocity1);
 		if constexpr (Type2 != EMotionType::Static)
-			jv -= Vec3::sLoadFloat3Unsafe(this->mR2xAxis).Dot(ioMotionProperties2->GetAngularVelocity());
+			jv -= Vec3::sLoadFloat3Unsafe(this->mR2xAxis).Dot(inAngularVelocity2);
 
 		// Lagrange multiplier is:
 		//
@@ -202,27 +202,27 @@ public:
 	}
 
 	/// Part 2 of AxisConstraint::SolveVelocityConstraint: apply new lambda
-	JPH_INLINE bool				SolveVelocityConstraintApplyLambda(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inTotalLambda)
+	JPH_INLINE bool				SolveVelocityConstraintApplyLambda(Vec3 &ioLinearVelocity1, Vec3 &ioAngularVelocity1, Vec3 &ioLinearVelocity2, Vec3 &ioAngularVelocity2, float inInvMass1, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inTotalLambda)
 	{
 		float delta_lambda = inTotalLambda - this->mTotalLambda; // Calculate change in lambda
 		this->mTotalLambda = inTotalLambda; // Store accumulated impulse
 
-		return ApplyVelocityStep(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, delta_lambda);
+		return ApplyVelocityStep(ioLinearVelocity1, ioAngularVelocity1, ioLinearVelocity2, ioAngularVelocity2, inInvMass1, inInvMass2, inWorldSpaceAxis, delta_lambda);
 	}
 
 	/// See: AxisConstraintPart::SolveVelocityConstraint
-	JPH_INLINE bool				SolveVelocityConstraint(MotionProperties *ioMotionProperties1, float inInvMass1, MotionProperties *ioMotionProperties2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	JPH_INLINE bool				SolveVelocityConstraint(Vec3 &ioLinearVelocity1, Vec3 &ioAngularVelocity1, Vec3 &ioLinearVelocity2, Vec3 &ioAngularVelocity2, float inInvMass1, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
 	{
-		float total_lambda = SolveVelocityConstraintGetTotalLambda(ioMotionProperties1, ioMotionProperties2, inWorldSpaceAxis);
+		float total_lambda = SolveVelocityConstraintGetTotalLambda(ioLinearVelocity1, ioAngularVelocity1, ioLinearVelocity2, ioAngularVelocity2, inWorldSpaceAxis);
 
 		// Clamp impulse to specified range
 		total_lambda = Clamp(total_lambda, inMinLambda, inMaxLambda);
 
-		return SolveVelocityConstraintApplyLambda(ioMotionProperties1, inInvMass1, ioMotionProperties2, inInvMass2, inWorldSpaceAxis, total_lambda);
+		return SolveVelocityConstraintApplyLambda(ioLinearVelocity1, ioAngularVelocity1, ioLinearVelocity2, ioAngularVelocity2, inInvMass1, inInvMass2, inWorldSpaceAxis, total_lambda);
 	}
 
 	/// See: AxisConstraintPart::SolvePositionConstraint
-	inline bool					SolvePositionConstraint(Body &ioBody1, float inInvMass1, Body &ioBody2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inC, float inBaumgarte) const
+	JPH_INLINE bool				SolvePositionConstraint(Body &ioBody1, float inInvMass1, Body &ioBody2, float inInvMass2, Vec3Arg inWorldSpaceAxis, float inC, float inBaumgarte) const
 	{
 		if (inC != 0.0f)
 		{
@@ -263,49 +263,84 @@ public:
 
 	inline bool					SolveVelocityConstraint(Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias, float inMinLambda, float inMaxLambda)
 	{
+		bool rv = false;
+		Vec3 linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2;
+
+		MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
+		MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
+
 		// Dispatch to the correct templated form
 		switch (inBody1.GetMotionType())
 		{
 		case EMotionType::Dynamic:
 			{
 				Mat44 inv_i1 = inInvInertiaScale1 * inBody1.GetInverseInertia();
+				linear_velocity1 = mp1->GetLinearVelocity();
+				angular_velocity1 = mp1->GetAngularVelocity();
 				switch (inBody2.GetMotionType())
 				{
 				case EMotionType::Dynamic:
 					mDD.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias);
-					return mDD.SolveVelocityConstraint(inBody1.GetMotionPropertiesUnchecked(), inInvMass1, inBody2.GetMotionPropertiesUnchecked(), inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+					linear_velocity2 = mp2->GetLinearVelocity();
+					angular_velocity2 = mp2->GetAngularVelocity();
+					rv = mDD.SolveVelocityConstraint(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, inInvMass1, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+					mp2->ApplyLinearVelocityStep(linear_velocity2);
+					mp2->ApplyAngularVelocityStep(angular_velocity2);
+					break;
 
 				case EMotionType::Kinematic:
-					mDK.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias);
-					return mDK.SolveVelocityConstraint(inBody1.GetMotionPropertiesUnchecked(), inInvMass1, inBody2.GetMotionPropertiesUnchecked(), inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+					mDK.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, 0.0f /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias);
+					linear_velocity2 = mp2->GetLinearVelocity();
+					angular_velocity2 = mp2->GetAngularVelocity();
+					rv = mDK.SolveVelocityConstraint(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, inInvMass1, 0.0f /* Will not be used */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+					break;
 
 				case EMotionType::Static:
-					mDS.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias);
-					return mDS.SolveVelocityConstraint(inBody1.GetMotionPropertiesUnchecked(), inInvMass1, nullptr /* Unused */, 0.0f /* Unused */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+					JPH_IF_DEBUG(linear_velocity2 = Vec3::sNaN();)
+					JPH_IF_DEBUG(angular_velocity2 = Vec3::sNaN();)
+					mDS.CalculateConstraintProperties(inInvMass1, inv_i1, inR1PlusU, 0.0f /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias);
+					rv = mDS.SolveVelocityConstraint(linear_velocity1, angular_velocity1, linear_velocity2 /* Will not be used */, angular_velocity2 /* Will not be used */, inInvMass1, 0.0f /* Will not be used */, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+					break;
 
 				default:
 					JPH_ASSERT(false);
 					break;
 				}
+				mp1->ApplyLinearVelocityStep(linear_velocity1);
+				mp1->ApplyAngularVelocityStep(angular_velocity1);
 				break;
 			}
 
 		case EMotionType::Kinematic:
 			JPH_ASSERT(inBody2.IsDynamic());
 			mKD.CalculateConstraintProperties(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias);
-			return mKD.SolveVelocityConstraint(inBody1.GetMotionPropertiesUnchecked(), inInvMass1, inBody2.GetMotionPropertiesUnchecked(), inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+			linear_velocity1 = mp1->GetLinearVelocity();
+			angular_velocity1 = mp1->GetAngularVelocity();
+			linear_velocity2 = mp2->GetLinearVelocity();
+			angular_velocity2 = mp2->GetAngularVelocity();
+			rv = mKD.SolveVelocityConstraint(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, 0.0f /* Will not be used */, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+			mp2->ApplyLinearVelocityStep(linear_velocity2);
+			mp2->ApplyAngularVelocityStep(angular_velocity2);
+			break;
 
 		case EMotionType::Static:
 			JPH_ASSERT(inBody2.IsDynamic());
 			mSD.CalculateConstraintProperties(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias);
-			return mSD.SolveVelocityConstraint(nullptr /* Unused */, 0.0f /* Unused */, inBody2.GetMotionPropertiesUnchecked(), inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+			JPH_IF_DEBUG(linear_velocity1 = Vec3::sNaN();)
+			JPH_IF_DEBUG(angular_velocity1 = Vec3::sNaN();)
+			linear_velocity2 = mp2->GetLinearVelocity();
+			angular_velocity2 = mp2->GetAngularVelocity();
+			rv = mSD.SolveVelocityConstraint(linear_velocity1 /* Will not be used */, angular_velocity1 /* Will not be used */, linear_velocity2, angular_velocity2, 0.0f /* Unused */, inInvMass2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+			mp2->ApplyLinearVelocityStep(linear_velocity2);
+			mp2->ApplyAngularVelocityStep(angular_velocity2);
+			break;
 
 		default:
 			JPH_ASSERT(false);
 			break;
 		}
 
-		return false;
+		return rv;
 	}
 
 	inline float				GetTotalLambda() const
