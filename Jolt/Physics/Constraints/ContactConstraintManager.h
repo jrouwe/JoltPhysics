@@ -437,6 +437,7 @@ private:
 		ConstraintPart			mNonPenetrationConstraint;
 		ConstraintPart			mFrictionConstraint1;
 		ConstraintPart			mFrictionConstraint2;
+		// Note that this needs to be followed by data of size float, see comment at ContactConstraintPart
 
 		/// Contact cache
 		CachedContactPoint *	mContactPoint;
