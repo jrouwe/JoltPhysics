@@ -1535,7 +1535,7 @@ void ContactConstraintManager::sWarmStartConstraint(ContactConstraintBase &ioCon
 		WorldContactPoint<Type1, Type2> &wcp = constraint.mContactPoints[i];
 
 		// Warm starting: Apply impulse from last frame
-		if (wcp.mFrictionConstraint1.IsAnyActive(wcp.mFrictionConstraint2))
+		if (wcp.mFrictionConstraint1.IsActive() || wcp.mFrictionConstraint2.IsActive())
 		{
 			if (wcp.mFrictionConstraint1.WarmStart(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, constraint.mInvMass1, constraint.mInvMass2, t1, inWarmStartImpulseRatio))
 				any_impulse_applied = true;
@@ -1631,7 +1631,7 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraintBase &i
 		WorldContactPoint<Type1, Type2> &wcp = constraint.mContactPoints[i];
 
 		// Check if friction is enabled
-		if (wcp.mFrictionConstraint1.IsAnyActive(wcp.mFrictionConstraint2))
+		if (wcp.mFrictionConstraint1.IsActive() || wcp.mFrictionConstraint2.IsActive())
 		{
 			// Calculate impulse to stop motion in tangential direction
 			float lambda1 = wcp.mFrictionConstraint1.SolveVelocityConstraintGetTotalLambda(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, t1);

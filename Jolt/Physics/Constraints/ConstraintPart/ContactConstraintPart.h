@@ -14,27 +14,26 @@ class ContactConstraintPart1
 {
 public:
 	/// Deactivate this constraint
-	JPH_INLINE void				Deactivate()
+	inline void					Deactivate()
 	{
 		mEffectiveMass = 0.0f;
 		mTotalLambda = 0.0f;
 	}
 
-	/// Checks if this or inOther are active
-	JPH_INLINE bool				IsAnyActive(const ContactConstraintPart1 &inOther) const
+	/// Check if constraint is active
+	inline bool					IsActive() const
 	{
-		// Don't use the floating point unit here, we only need to check if any of the values is non-zero
-		return *(uint32 *)&mEffectiveMass | *(uint32 *)&inOther.mEffectiveMass;
+		return mEffectiveMass != 0.0f;
 	}
 
 	/// Override total lagrange multiplier, can be used to set the initial value for warm starting
-	JPH_INLINE void				SetTotalLambda(float inLambda)
+	inline void					SetTotalLambda(float inLambda)
 	{
 		mTotalLambda = inLambda;
 	}
 
 	/// Return lagrange multiplier
-	JPH_INLINE float			GetTotalLambda() const
+	inline float				GetTotalLambda() const
 	{
 		return mTotalLambda;
 	}
