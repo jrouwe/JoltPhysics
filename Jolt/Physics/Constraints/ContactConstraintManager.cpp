@@ -1664,7 +1664,7 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraintBase &i
 			// If the total lambda that we will apply is too large, scale it back
 			if (total_lambda_sq > Square(max_lambda_f))
 			{
-				float scale = max_lambda_f / sqrt(total_lambda_sq);
+				float scale = max_lambda_f / Sqrt(total_lambda_sq);
 				lambda1 *= scale;
 				lambda2 *= scale;
 			}

@@ -1020,7 +1020,7 @@ float Vec3::Length() const
 	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(sum, 1);
 	return __riscv_vfmv_f_s_f32m1_f32(sqrt);
 #else
-	return sqrt(LengthSq());
+	return Sqrt(LengthSq());
 #endif
 }
 
@@ -1037,7 +1037,7 @@ Vec3 Vec3::Sqrt() const
 	__riscv_vse32_v_f32m1(res.mF32, rvv_sqrt, 3);
 	return res;
 #else
-	return Vec3(sqrt(mF32[0]), sqrt(mF32[1]), sqrt(mF32[2]));
+	return Vec3(Sqrt(mF32[0]), Sqrt(mF32[1]), Sqrt(mF32[2]));
 #endif
 }
 
@@ -1122,7 +1122,7 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	if (len_sq <= FLT_MIN)
 		return inZeroValue;
 	else
-		return *this / sqrt(len_sq);
+		return *this / Sqrt(len_sq);
 #endif
 }
 
@@ -1253,7 +1253,7 @@ Vec3 Vec3::GetNormalizedPerpendicular() const
 	Vec3 perp_x(z, 0.0f, -x);
 	Vec3 perp_y(0.0f, z, -y);
 #endif // JPH_CROSS_PLATFORM_DETERMINISTIC
-	return (xx > yy ? perp_x : perp_y) / sqrt(max(xx, yy) + zz);
+	return (xx > yy ? perp_x : perp_y) / Sqrt(max(xx, yy) + zz);
 #endif // JPH_USE_SSE
 }
 
@@ -1345,7 +1345,7 @@ Vec3 Vec3::sDecompressUnitVector(uint32 inValue)
 	JPH_ASSERT(v.GetZ() == 0.0f);
 
 	// Restore the highest component
-	v.SetZ(sqrt(max(1.0f - v.LengthSq(), 0.0f)));
+	v.SetZ(JPH::Sqrt(max(1.0f - v.LengthSq(), 0.0f)));
 
 	// Extract sign
 	if ((inValue & 0x80000000u) != 0)

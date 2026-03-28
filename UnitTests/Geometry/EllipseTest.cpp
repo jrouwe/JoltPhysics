@@ -35,6 +35,6 @@ TEST_SUITE("EllipseTests")
 		Ellipse e2(2.0f, 2.0f);
 
 		c = e2.GetClosestPoint(Float2(4.0f, 4.0f));
-		CHECK_APPROX_EQUAL(c, Float2(sqrt(2.0f), sqrt(2.0f)));
+		CHECK_APPROX_EQUAL(c, Float2(Sqrt(2.0f), Sqrt(2.0f)));
 	}
 }

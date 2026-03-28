@@ -1010,7 +1010,7 @@ Quat Mat44::GetQuaternion() const
 
 	if (tr >= 0.0f)
 	{
-		float s = sqrt(tr + 1.0f);
+		float s = Sqrt(tr + 1.0f);
 		float is = 0.5f / s;
 		return Quat(
 			(mCol[1].mF32[2] - mCol[2].mF32[1]) * is,
@@ -1026,7 +1026,7 @@ Quat Mat44::GetQuaternion() const
 
 		if (i == 0)
 		{
-			float s = sqrt(mCol[0].mF32[0] - (mCol[1].mF32[1] + mCol[2].mF32[2]) + 1);
+			float s = Sqrt(mCol[0].mF32[0] - (mCol[1].mF32[1] + mCol[2].mF32[2]) + 1);
 			float is = 0.5f / s;
 			return Quat(
 				0.5f * s,
@@ -1036,7 +1036,7 @@ Quat Mat44::GetQuaternion() const
 		}
 		else if (i == 1)
 		{
-			float s = sqrt(mCol[1].mF32[1] - (mCol[2].mF32[2] + mCol[0].mF32[0]) + 1);
+			float s = Sqrt(mCol[1].mF32[1] - (mCol[2].mF32[2] + mCol[0].mF32[0]) + 1);
 			float is = 0.5f / s;
 			return Quat(
 				(mCol[1].mF32[0] + mCol[0].mF32[1]) * is,
@@ -1048,7 +1048,7 @@ Quat Mat44::GetQuaternion() const
 		{
 			JPH_ASSERT(i == 2);
 
-			float s = sqrt(mCol[2].mF32[2] - (mCol[0].mF32[0] + mCol[1].mF32[1]) + 1);
+			float s = Sqrt(mCol[2].mF32[2] - (mCol[0].mF32[0] + mCol[1].mF32[1]) + 1);
 			float is = 0.5f / s;
 			return Quat(
 				(mCol[0].mF32[2] + mCol[2].mF32[0]) * is,

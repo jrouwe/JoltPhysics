@@ -1712,7 +1712,7 @@ TEST_SUITE("PhysicsTests")
 	{
 		const float friction_floor = 0.9f;
 		const float friction_box = 0.8f;
-		const float combined_friction = sqrt(friction_floor * friction_box);
+		const float combined_friction = Sqrt(friction_floor * friction_box);
 
 		for (float angle = 0; angle < 360.0f; angle += 30.0f)
 		{
@@ -1764,7 +1764,7 @@ TEST_SUITE("PhysicsTests")
 
 			// Create box
 			RVec3 initial_position(1, 2, 3);
-			Quat initial_rotation = Quat::sRotation(Vec3::sReplicate(sqrt(1.0f / 3.0f)), DegreesToRadians(20.0f));
+			Quat initial_rotation = Quat::sRotation(Vec3::sReplicate(Sqrt(1.0f / 3.0f)), DegreesToRadians(20.0f));
 			ShapeRefC box_shape = new BoxShape(Vec3(0.3f, 0.5f, 0.7f));
 			BodyCreationSettings box_settings(box_shape, initial_position, initial_rotation, EMotionType::Dynamic, Layers::MOVING);
 			box_settings.mLinearDamping = 0;

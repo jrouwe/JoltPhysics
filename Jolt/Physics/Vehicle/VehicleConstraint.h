@@ -239,8 +239,8 @@ private:
 	{
 		float body_friction = inBody2.GetFriction();
 
-		ioLongitudinalFriction = sqrt(ioLongitudinalFriction * body_friction);
-		ioLateralFriction = sqrt(ioLateralFriction * body_friction);
+		ioLongitudinalFriction = Sqrt(ioLongitudinalFriction * body_friction);
+		ioLateralFriction = Sqrt(ioLateralFriction * body_friction);
 	};
 
 	// Callbacks

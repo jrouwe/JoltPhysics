@@ -2242,7 +2242,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 							if (friction_direction_len_sq > 1.0e-12f)
 							{
 								// Normalize friction direction
-								friction_direction /= sqrt(friction_direction_len_sq);
+								friction_direction /= Sqrt(friction_direction_len_sq);
 
 								// Calculate max friction impulse
 								float max_lambda_f = contact_settings.mCombinedFriction * contact_constraint.GetTotalLambda();

@@ -180,7 +180,7 @@ public:
 	/// Length of vector
 	inline float				Length() const
 	{
-		return sqrt(LengthSq());
+		return Sqrt(LengthSq());
 	}
 
 	/// Check if vector is normalized

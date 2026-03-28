@@ -538,7 +538,7 @@ private:
 	ContactListener *			mContactListener = nullptr;
 
 	/// Functions that are used to combine friction and restitution of 2 bodies
-	CombineFunction				mCombineFriction = [](const Body &inBody1, const SubShapeID &, const Body &inBody2, const SubShapeID &) { return sqrt(inBody1.GetFriction() * inBody2.GetFriction()); };
+	CombineFunction				mCombineFriction = [](const Body &inBody1, const SubShapeID &, const Body &inBody2, const SubShapeID &) { return Sqrt(inBody1.GetFriction() * inBody2.GetFriction()); };
 	CombineFunction				mCombineRestitution = [](const Body &inBody1, const SubShapeID &, const Body &inBody2, const SubShapeID &) { return max(inBody1.GetRestitution(), inBody2.GetRestitution()); };
 
 	/// The constraints that were added this frame

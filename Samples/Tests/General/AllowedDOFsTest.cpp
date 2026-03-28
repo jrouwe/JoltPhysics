@@ -40,7 +40,7 @@ void AllowedDOFsTest::Initialize()
 		dcs.mPoint1 = bcs.mPosition + Vec3(5, 5, 5);
 		dcs.mPoint2 = bcs.mPosition + box_size;
 		dcs.mMinDistance = 0.0f;
-		dcs.mMaxDistance = sqrt(3.0f) * 5.0f + 1.0f;
+		dcs.mMaxDistance = Sqrt(3.0f) * 5.0f + 1.0f;
 		mPhysicsSystem->AddConstraint(mBodyInterface->CreateConstraint(&dcs, BodyID(), id));
 
 		// Draw degrees of freedom

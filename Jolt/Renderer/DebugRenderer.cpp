@@ -913,7 +913,7 @@ void DebugRenderer::DrawSwingConeLimits(RMat44Arg inMatrix, float inSwingYHalfAn
 
 					// Calculate the corresponding z value of the quaternion
 					float z_sq = e1_sq - e1_sq / e2_sq * Square(y);
-					z = z_sq <= 0.0f? 0.0f : sqrt(z_sq);
+					z = z_sq <= 0.0f? 0.0f : Sqrt(z_sq);
 				}
 				else
 				{
@@ -922,7 +922,7 @@ void DebugRenderer::DrawSwingConeLimits(RMat44Arg inMatrix, float inSwingYHalfAn
 
 					// Calculate the corresponding y value of the quaternion
 					float y_sq = e2_sq - e2_sq / e1_sq * Square(z);
-					y = y_sq <= 0.0f? 0.0f : sqrt(y_sq);
+					y = y_sq <= 0.0f? 0.0f : Sqrt(y_sq);
 				}
 
 				// If we're tracing the opposite side, flip the values
@@ -934,7 +934,7 @@ void DebugRenderer::DrawSwingConeLimits(RMat44Arg inMatrix, float inSwingYHalfAn
 
 				// Create quaternion
 				Vec3 q_xyz(0, y, z);
-				float w = sqrt(1.0f - q_xyz.LengthSq());
+				float w = Sqrt(1.0f - q_xyz.LengthSq());
 				Quat q(Vec4(q_xyz, w));
 
 				// Store vertex

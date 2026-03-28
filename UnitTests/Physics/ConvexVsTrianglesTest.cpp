@@ -178,9 +178,9 @@ TEST_SUITE("ConvexVsTrianglesTest")
 	static void sTestConvexVsTriangles()
 	{
 		const float cRadius = 0.5f;
-		const float cRadiusRS2 = cRadius / sqrt(2.0f);
+		const float cRadiusRS2 = cRadius / Sqrt(2.0f);
 		const float cDistanceToTriangle = 0.1f;
-		const float cDistanceToTriangleRS2 = cDistanceToTriangle / sqrt(2.0f);
+		const float cDistanceToTriangleRS2 = cDistanceToTriangle / Sqrt(2.0f);
 		const float cEpsilon = 1.0e-6f; // A small epsilon to ensure we hit the front side
 		const float cMaxSeparationDistance = 0.5f;
 		const float cSeparationDistance = 0.1f;

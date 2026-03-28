@@ -755,7 +755,7 @@ TEST_SUITE("ShapeTests")
 		Ref<MutableCompoundShape> mutable_compound = new MutableCompoundShape();
 
 		// A non-identity rotation
-		Quat rotation = Quat::sRotation(Vec3::sReplicate(1.0f / sqrt(3.0f)), 0.1f * JPH_PI);
+		Quat rotation = Quat::sRotation(Vec3::sReplicate(1.0f / Sqrt(3.0f)), 0.1f * JPH_PI);
 
 		// Check that local bounding box is a single point
 		AABox bounds1 = mutable_compound->GetLocalBounds();

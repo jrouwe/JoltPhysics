@@ -57,6 +57,34 @@ JPH_INLINE constexpr T Square(T inV)
 	return inV * inV;
 }
 
+/// Take the square root of a float value
+JPH_INLINE float Sqrt(float inV)
+{
+#ifdef JPH_USE_SSE
+	return _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ss(inV)));
+#elif defined(JPH_USE_NEON)
+	return vget_lane_f32(vsqrt_f32(vdup_n_f32(inV)), 0);
+#elif defined(JPH_USE_RVV)
+	return __riscv_vfmv_f_s_f32m1_f32(__riscv_vfsqrt_v_f32m1(__riscv_vfmv_v_f_f32m1(inV, 1), 1));
+#else
+	return std::sqrt(inV);
+#endif
+}
+
+/// Take the square root of a double value
+JPH_INLINE double Sqrt(double inV)
+{
+#ifdef JPH_USE_SSE
+	return _mm_cvtsd_f64(_mm_sqrt_sd(_mm_undefined_pd(), _mm_set_sd(inV)));
+#elif defined(JPH_USE_NEON)
+	return vget_lane_f64(vsqrt_f64(vdup_n_f64(inV)), 0);
+#elif defined(JPH_USE_RVV)
+	return __riscv_vfmv_f_s_f64m1_f64(__riscv_vfsqrt_v_f64m1(__riscv_vfmv_v_f_f64m1(inV, 1), 1));
+#else
+	return std::sqrt(inV);
+#endif
+}
+
 /// Returns \f$inV^3\f$.
 template <typename T>
 JPH_INLINE constexpr T Cubed(T inV)

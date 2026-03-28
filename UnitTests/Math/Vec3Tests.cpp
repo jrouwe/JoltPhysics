@@ -262,12 +262,12 @@ TEST_SUITE("Vec3Tests")
 	TEST_CASE("TestVec3Length")
 	{
 		CHECK(Vec3(1, 2, 3).LengthSq() == float(1 + 4 + 9));
-		CHECK(Vec3(1, 2, 3).Length() == sqrt(float(1 + 4 + 9)));
+		CHECK(Vec3(1, 2, 3).Length() == Sqrt(float(1 + 4 + 9)));
 	}
 
 	TEST_CASE("TestVec3Sqrt")
 	{
-		CHECK_APPROX_EQUAL(Vec3(13, 15, 17).Sqrt(), Vec3(sqrt(13.0f), sqrt(15.0f), sqrt(17.0f)));
+		CHECK_APPROX_EQUAL(Vec3(13, 15, 17).Sqrt(), Vec3(Sqrt(13.0f), Sqrt(15.0f), Sqrt(17.0f)));
 	}
 
 	TEST_CASE("TestVec3Cross")
@@ -282,11 +282,11 @@ TEST_SUITE("Vec3Tests")
 
 	TEST_CASE("TestVec3Normalize")
 	{
-		CHECK(Vec3(3, 2, 1).Normalized() == Vec3(3, 2, 1) / sqrt(9.0f + 4.0f + 1.0f));
-		CHECK(Vec3(3, 2, 1).NormalizedOr(Vec3(1, 2, 3)) == Vec3(3, 2, 1) / sqrt(9.0f + 4.0f + 1.0f));
+		CHECK(Vec3(3, 2, 1).Normalized() == Vec3(3, 2, 1) / Sqrt(9.0f + 4.0f + 1.0f));
+		CHECK(Vec3(3, 2, 1).NormalizedOr(Vec3(1, 2, 3)) == Vec3(3, 2, 1) / Sqrt(9.0f + 4.0f + 1.0f));
 		CHECK(Vec3::sZero().NormalizedOr(Vec3(1, 2, 3)) == Vec3(1, 2, 3));
-		CHECK(Vec3(0.999f * sqrt(FLT_MIN), 0, 0).NormalizedOr(Vec3(1, 2, 3)) == Vec3(1, 2, 3)); // A vector that has a squared length that is denormal should also be treated as zero
-		CHECK_APPROX_EQUAL(Vec3(1.001f * sqrt(FLT_MIN), 0, 0).NormalizedOr(Vec3(1, 2, 3)), Vec3(1, 0, 0)); // A value that is just above being denormal should work normally
+		CHECK(Vec3(0.999f * Sqrt(FLT_MIN), 0, 0).NormalizedOr(Vec3(1, 2, 3)) == Vec3(1, 2, 3)); // A vector that has a squared length that is denormal should also be treated as zero
+		CHECK_APPROX_EQUAL(Vec3(1.001f * Sqrt(FLT_MIN), 0, 0).NormalizedOr(Vec3(1, 2, 3)), Vec3(1, 0, 0)); // A value that is just above being denormal should work normally
 	}
 
 	TEST_CASE("TestVec3Cast")

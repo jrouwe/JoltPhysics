@@ -107,7 +107,7 @@ float CastSphereVsTriangles::RayCylinder(Vec3Arg inRayDirection, Vec3Arg inCylin
 		return FLT_MAX; // No solution to quadratic equation
 
 	// Solve fraction t where the ray hits the cylinder
-	float t = -(b + sqrt(det)) / a; // normally divided by 2 * a but since a should be divided by 2 we lose the 2
+	float t = -(b + Sqrt(det)) / a; // normally divided by 2 * a but since a should be divided by 2 we lose the 2
 	if (t < 0.0f || t > 1.0f)
 		return FLT_MAX; // Intersection lies outside segment
 	if (start_dot_axis + t * direction_dot_axis < 0.0f || start_dot_axis + t * direction_dot_axis > axis_len_sq)
@@ -145,7 +145,7 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 		if (q_len_sq <= Square(mRadius))
 		{
 			// Early out if this hit is deeper than the collector's early out value
-			float q_len = sqrt(q_len_sq);
+			float q_len = Sqrt(q_len_sq);
 			float penetration_depth = mRadius - q_len;
 			if (-penetration_depth >= mCollector.GetEarlyOutFraction())
 				return;

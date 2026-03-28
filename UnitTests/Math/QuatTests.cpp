@@ -504,7 +504,7 @@ TEST_SUITE("QuatTests")
 
 		{
 			// Length of a vector is squared inside the function: try with sqrt(FLT_MIN) to see if that still returns a valid rotation
-			Vec3 v1(0, sqrt(FLT_MIN), 0);
+			Vec3 v1(0, Sqrt(FLT_MIN), 0);
 			Vec3 v2(1, 0, 0);
 			Quat q = Quat::sFromTo(v1, v2);
 			CHECK_APPROX_EQUAL(v2.Normalized(), (q * v1).Normalized());
