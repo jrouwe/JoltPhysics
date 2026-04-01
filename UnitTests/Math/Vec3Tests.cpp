@@ -316,6 +316,7 @@ TEST_SUITE("Vec3Tests")
 	{
 		CHECK(Vec3(1.2345f, -6.7891f, 0).GetSign() == Vec3(1, -1, 1));
 		CHECK(Vec3(0, 2.3456f, -7.8912f).GetSign() == Vec3(1, 1, -1));
+		CHECK(Vec3(-0.0f, 0.0f, -0.0f).GetSign() == Vec3(-1, 1, -1));
 	}
 
 	TEST_CASE("TestVec3FlipSign")

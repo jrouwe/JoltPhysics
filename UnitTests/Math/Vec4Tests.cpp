@@ -518,6 +518,7 @@ TEST_SUITE("Vec4Tests")
 	{
 		CHECK(Vec4(1.2345f, -6.7891f, 0, 1).GetSign() == Vec4(1, -1, 1, 1));
 		CHECK(Vec4(0, 2.3456f, -7.8912f, -1).GetSign() == Vec4(1, 1, -1, -1));
+		CHECK(Vec4(-0.0f, 0.0f, -0.0f, 0.0f).GetSign() == Vec4(-1, 1, -1, 1));
 	}
 
 	TEST_CASE("TestVec4FlipSign")

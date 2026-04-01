@@ -298,6 +298,7 @@ TEST_SUITE("DVec3Tests")
 	{
 		CHECK(DVec3(1.2345, -6.7891, 0).GetSign() == DVec3(1, -1, 1));
 		CHECK(DVec3(0, 2.3456, -7.8912).GetSign() == DVec3(1, 1, -1));
+		CHECK(DVec3(-0.0, 0.0, -0.0).GetSign() == DVec3(-1, 1, -1));
 	}
 
 	TEST_CASE("TestDVec3ConvertToString")
