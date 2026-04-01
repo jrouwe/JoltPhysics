@@ -207,9 +207,23 @@ DVec3 DVec3::sLoadDouble3Unsafe(const Double3 &inV)
 
 void DVec3::StoreDouble3(Double3 *outV) const
 {
+#if defined(JPH_USE_AVX)
+	_mm_storeu_pd(&outV->x, _mm256_castpd256_pd128(mValue));
+	outV->z = mF64[2];
+#elif defined(JPH_USE_SSE)
+	_mm_storeu_pd(&outV->x, mValue.mLow);
+	outV->z = mF64[2];
+#elif defined(JPH_USE_NEON)
+	vst1q_f64(&outV->x, mValue.val[0]);
+	outV->z = mF64[2];
+#elif defined(JPH_USE_RVV)
+	const vfloat64m2_t v = __riscv_vle64_v_f64m2(mF64, 3);
+	__riscv_vse64_v_f64m2(&outV->x, v, 3);
+#else
 	outV->x = mF64[0];
 	outV->y = mF64[1];
 	outV->z = mF64[2];
+#endif
 }
 
 DVec3::operator Vec3() const
