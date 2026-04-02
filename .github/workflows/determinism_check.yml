@@ -188,7 +188,7 @@ jobs:
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual "-validate_hash=$env:CHARACTER_VIRTUAL_HASH"
 
-macos:
+  macos:
     runs-on: macos-latest
     name: macOS Determinism Check
     env:
