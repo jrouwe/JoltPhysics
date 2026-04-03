@@ -519,7 +519,9 @@ TEST_SUITE("Vec4Tests")
 		CHECK(Vec4(1.2345f, -6.7891f, 0, 1).GetSign() == Vec4(1, -1, 1, 1));
 		CHECK(Vec4(0, 2.3456f, -7.8912f, -1).GetSign() == Vec4(1, 1, -1, -1));
 		CHECK(Vec4(-0.0f, 0.0f, -0.0f, 0.0f).GetSign() == Vec4(-1, 1, -1, 1));
-		CHECK(Vec4(0x0.000002p-126, -0x0.000002p-126, 0x0.000002p-126, -0x0.000002p-126).GetSign() == Vec4(1, -1, 1, -1)); // Denormal number
+		CHECK(Vec4(1.0f, -1.0f, 1.0f, -1.0f).GetSign() == Vec4(1, -1, 1, -1));
+		CHECK(Vec4(FLT_TRUE_MIN, -FLT_TRUE_MIN, FLT_TRUE_MIN, -FLT_TRUE_MIN).GetSign() == Vec4(1, -1, 1, -1)); // Denormal number
+		CHECK(Vec4(numeric_limits<float>::infinity(), -numeric_limits<float>::infinity(), numeric_limits<float>::infinity(), -numeric_limits<float>::infinity()).GetSign() == Vec4(1, -1, 1, -1));
 	}
 
 	TEST_CASE("TestVec4FlipSign")
