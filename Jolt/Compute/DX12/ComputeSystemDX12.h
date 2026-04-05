@@ -20,15 +20,8 @@ class JPH_EXPORT ComputeSystemDX12 : public ComputeSystem
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_EXPORT, ComputeSystemDX12)
 
-	/// How we want to compile our shaders
-	enum class EDebug
-	{
-		NoDebugSymbols,
-		DebugSymbols
-	};
-
 	/// Initialize / shutdown
-	void							Initialize(ID3D12Device *inDevice, EDebug inDebug);
+	void							Initialize(ID3D12Device *inDevice);
 	void							Shutdown();
 
 	// See: ComputeSystem
@@ -44,7 +37,7 @@ public:
 
 private:
 	ComPtr<ID3D12Device>			mDevice;
-	EDebug							mDebug = EDebug::NoDebugSymbols;
+	void *							mDxcCreateInstanceFn;
 };
 
 JPH_NAMESPACE_END

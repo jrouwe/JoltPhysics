@@ -110,7 +110,7 @@ bool ComputeSystemDX12Impl::Initialize(ComputeSystemResult &outResult)
 		return false;
 
 	// Initialize the compute interface
-	ComputeSystemDX12::Initialize(device.Get(), EDebug::DebugSymbols);
+	ComputeSystemDX12::Initialize(device.Get());
 
 #ifdef JPH_DEBUG
 	// Enable breaking on errors

@@ -16,7 +16,6 @@
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 JPH_MSVC_SUPPRESS_WARNING(5204) // 'X': class has virtual functions, but its trivial destructor is not virtual; instances of objects derived from this class may not be destructed correctly
 JPH_MSVC2026_PLUS_SUPPRESS_WARNING(4865) // wingdi.h(2806,1): '<unnamed-enum-DISPLAYCONFIG_OUTPUT_TECHNOLOGY_OTHER>': the underlying type will change from 'int' to '__int64' when '/Zc:enumTypes' is specified on the command line
-#include <fstream>
 #include <d3dcompiler.h>
 #include <dxcapi.h>
 #ifdef JPH_DEBUG
@@ -31,10 +30,13 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(ComputeSystemDX12)
 	JPH_ADD_BASE_CLASS(ComputeSystemDX12, ComputeSystem)
 }
 
-void ComputeSystemDX12::Initialize(ID3D12Device *inDevice, EDebug inDebug)
+void ComputeSystemDX12::Initialize(ID3D12Device *inDevice)
 {
 	mDevice = inDevice;
-	mDebug = inDebug;
+
+	// Dynamically load dxcompiler.dll
+	HMODULE dxc_module = LoadLibraryW(L"dxcompiler.dll");
+	mDxcCreateInstanceFn = dxc_module != nullptr? GetProcAddress(dxc_module, "DxcCreateInstance") : nullptr;
 }
 
 void ComputeSystemDX12::Shutdown()
@@ -78,225 +80,27 @@ ComputeShaderResult ComputeSystemDX12::CreateComputeShader(const char *inName, u
 	// Read shader source file
 	Array<uint8> data;
 	String error;
-	String file_name = String(inName) + ".hlsl";
+	String file_name = String(inName) + ".dxil";
 	if (!mShaderLoader(file_name.c_str(), data, error))
 	{
 		result.SetError(error);
 		return result;
 	}
 
-#ifndef JPH_USE_DXC // Use FXC, the old shader compiler?
-
-	UINT flags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS | D3DCOMPILE_ALL_RESOURCES_BOUND;
-#ifdef JPH_DEBUG
-	flags |= D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-	flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
-#endif
-	if (mDebug == EDebug::DebugSymbols)
-		flags |= D3DCOMPILE_DEBUG;
-
-	const D3D_SHADER_MACRO defines[] =
+	// Create IDxcUtils object
+	if (mDxcCreateInstanceFn == nullptr)
 	{
-		{ nullptr, nullptr }
-	};
-
-	// Handles loading include files through the shader loader
-	struct IncludeHandler : public ID3DInclude
-	{
-								IncludeHandler(const ShaderLoader &inShaderLoader) : mShaderLoader(inShaderLoader) { }
-		virtual					~IncludeHandler() = default;
-
-		STDMETHOD				(Open)(D3D_INCLUDE_TYPE, LPCSTR inFileName, LPCVOID, LPCVOID *outData, UINT *outNumBytes) override
-		{
-			// Read the header file
-			Array<uint8> file_data;
-			String error;
-			if (!mShaderLoader(inFileName, file_data, error))
-				return E_FAIL;
-			if (file_data.empty())
-			{
-				*outData = nullptr;
-				*outNumBytes = 0;
-				return S_OK;
-			}
-
-			// Copy to a new memory block
-			void *mem = CoTaskMemAlloc(file_data.size());
-			if (mem == nullptr)
-				return E_OUTOFMEMORY;
-			memcpy(mem, file_data.data(), file_data.size());
-			*outData = mem;
-			*outNumBytes = (UINT)file_data.size();
-			return S_OK;
-		}
-
-		STDMETHOD				(Close)(LPCVOID inData) override
-		{
-			if (inData != nullptr)
-				CoTaskMemFree(const_cast<void *>(inData));
-			return S_OK;
-		}
-
-	private:
-		const ShaderLoader &	mShaderLoader;
-	};
-	IncludeHandler include_handler(mShaderLoader);
-
-	// Compile source
-	ComPtr<ID3DBlob> shader_blob, error_blob;
-	if (FAILED(D3DCompile(&data[0],
-				(uint)data.size(),
-				file_name.c_str(),
-				defines,
-				&include_handler,
-				"main",
-				"cs_5_0",
-				flags,
-				0,
-				shader_blob.GetAddressOf(),
-				error_blob.GetAddressOf())))
-	{
-		if (error_blob)
-			result.SetError((const char *)error_blob->GetBufferPointer());
-		else
-			result.SetError("Shader compile error");
+		result.SetError("Failed to load dxcompiler.dll");
 		return result;
 	}
-
-	// Get shader description
-	ComPtr<ID3D12ShaderReflection> reflector;
-	if (FAILED(D3DReflect(shader_blob->GetBufferPointer(), shader_blob->GetBufferSize(), IID_PPV_ARGS(&reflector))))
-	{
-		result.SetError("Failed to reflect shader");
-		return result;
-	}
-
-#else
-
 	ComPtr<IDxcUtils> utils;
-	DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(utils.GetAddressOf()));
-
-	// Custom include handler that forwards include loads to mShaderLoader
-	struct DxcIncludeHandler : public IDxcIncludeHandler
-	{
-								DxcIncludeHandler(IDxcUtils *inUtils, const ShaderLoader &inLoader) : mUtils(inUtils), mShaderLoader(inLoader) { }
-		virtual					~DxcIncludeHandler() = default;
-
-		STDMETHODIMP			QueryInterface(REFIID riid, void **ppvObject) override
-		{
-			JPH_ASSERT(false);
-			return E_NOINTERFACE;
-		}
-
-		STDMETHODIMP_(ULONG)	AddRef(void) override
-		{
-			// Allocated on the stack, we don't do ref counting
-			return 1;
-		}
-
-		STDMETHODIMP_(ULONG)	Release(void) override
-		{
-			// Allocated on the stack, we don't do ref counting
-			return 1;
-		}
-
-		// IDxcIncludeHandler::LoadSource uses IDxcBlob**
-		STDMETHODIMP			LoadSource(LPCWSTR inFilename, IDxcBlob **outIncludeSource) override
-		{
-			*outIncludeSource = nullptr;
-
-			// Convert to UTF-8
-			char file_name[MAX_PATH];
-			WideCharToMultiByte(CP_UTF8, 0, inFilename, -1, file_name, sizeof(file_name), nullptr, nullptr);
-
-			// Load the header
-			Array<uint8> file_data;
-			String error;
-			if (!mShaderLoader(file_name, file_data, error))
-				return E_FAIL;
-
-			// Create a blob from the loaded data
-			ComPtr<IDxcBlobEncoding> blob_encoder;
-			HRESULT hr = mUtils->CreateBlob(file_data.empty()? nullptr : file_data.data(), (uint)file_data.size(), CP_UTF8, blob_encoder.GetAddressOf());
-			if (FAILED(hr))
-				return hr;
-
-			// Return as IDxcBlob
-			*outIncludeSource = blob_encoder.Detach();
-			return S_OK;
-		}
-
-		IDxcUtils *				mUtils;
-		const ShaderLoader &	mShaderLoader;
-	};
-	DxcIncludeHandler include_handler(utils.Get(), mShaderLoader);
-
-	ComPtr<IDxcBlobEncoding> source;
-	if (HRFailed(utils->CreateBlob(data.data(), (uint)data.size(), CP_UTF8, source.GetAddressOf()), result))
-		return result;
-
-	ComPtr<IDxcCompiler3> compiler;
-	DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(compiler.GetAddressOf()));
-
-	Array<LPCWSTR> arguments;
-	arguments.push_back(L"-E");
-	arguments.push_back(L"main");
-	arguments.push_back(L"-T");
-	arguments.push_back(L"cs_6_0");
-	arguments.push_back(DXC_ARG_WARNINGS_ARE_ERRORS);
-	arguments.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
-	arguments.push_back(DXC_ARG_ALL_RESOURCES_BOUND);
-	if (mDebug == EDebug::DebugSymbols)
-	{
-		arguments.push_back(DXC_ARG_DEBUG);
-		arguments.push_back(L"-Qembed_debug");
-	}
-
-	// Provide file name so tools know what the original shader was called (the actual source comes from the blob)
-	wchar_t w_file_name[MAX_PATH];
-	MultiByteToWideChar(CP_UTF8, 0, file_name.c_str(), -1, w_file_name, MAX_PATH);
-	arguments.push_back(w_file_name);
-
-	// Compile the shader
-	DxcBuffer source_buffer;
-	source_buffer.Ptr = source->GetBufferPointer();
-	source_buffer.Size = source->GetBufferSize();
-	source_buffer.Encoding = 0;
-	ComPtr<IDxcResult> compile_result;
-	if (FAILED(compiler->Compile(&source_buffer, arguments.data(), (uint32)arguments.size(), &include_handler, IID_PPV_ARGS(compile_result.GetAddressOf()))))
-	{
-		result.SetError("Failed to compile shader");
-		return result;
-	}
-
-	// Check for compilation errors
-	ComPtr<IDxcBlobUtf8> errors;
-	compile_result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errors.GetAddressOf()), nullptr);
-	if (errors != nullptr && errors->GetStringLength() > 0)
-	{
-		result.SetError((const char *)errors->GetBufferPointer());
-		return result;
-	}
-
-	// Get the compiled shader code
-	ComPtr<ID3DBlob> shader_blob;
-	if (HRFailed(compile_result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(shader_blob.GetAddressOf()), nullptr), result))
-		return result;
+	reinterpret_cast<DxcCreateInstanceProc>(mDxcCreateInstanceFn)(CLSID_DxcUtils, IID_PPV_ARGS(utils.GetAddressOf()));
 
 	// Get reflection data
-	ComPtr<IDxcBlob> reflection_data;
-	if (HRFailed(compile_result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(reflection_data.GetAddressOf()), nullptr), result))
-		return result;
-	DxcBuffer reflection_buffer;
-	reflection_buffer.Ptr = reflection_data->GetBufferPointer();
-	reflection_buffer.Size = reflection_data->GetBufferSize();
-	reflection_buffer.Encoding = 0;
+	DxcBuffer reflection_buffer = { data.data(), data.size(), 0 };
 	ComPtr<ID3D12ShaderReflection> reflector;
 	if (HRFailed(utils->CreateReflection(&reflection_buffer, IID_PPV_ARGS(reflector.GetAddressOf())), result))
 		return result;
-
-#endif // JPH_USE_DXC
 
 	// Get the shader description
 	D3D12_SHADER_DESC shader_desc;
@@ -394,7 +198,7 @@ ComputeShaderResult ComputeSystemDX12::CreateComputeShader(const char *inName, u
 	ComPtr<ID3D12PipelineState> pipeline_state;
 	D3D12_COMPUTE_PIPELINE_STATE_DESC compute_state_desc = {};
 	compute_state_desc.pRootSignature = root_sig.Get();
-	compute_state_desc.CS = { shader_blob->GetBufferPointer(), shader_blob->GetBufferSize() };
+	compute_state_desc.CS = { data.data(), data.size() };
 	if (FAILED(mDevice->CreateComputePipelineState(&compute_state_desc, IID_PPV_ARGS(&pipeline_state))))
 	{
 		result.SetError("Failed to create compute pipeline state");
@@ -407,7 +211,7 @@ ComputeShaderResult ComputeSystemDX12::CreateComputeShader(const char *inName, u
 	mbstowcs_s(&converted_chars, w_name, 1024, inName, _TRUNCATE);
 	pipeline_state->SetName(w_name);
 
-	result.Set(new ComputeShaderDX12(shader_blob, root_sig, pipeline_state, std::move(binding_names), std::move(name_to_index), inGroupSizeX, inGroupSizeY, inGroupSizeZ));
+	result.Set(new ComputeShaderDX12(root_sig, pipeline_state, std::move(binding_names), std::move(name_to_index), inGroupSizeX, inGroupSizeY, inGroupSizeZ));
 	return result;
 }
 

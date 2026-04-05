@@ -121,9 +121,6 @@ cmake_dependent_option(USE_STATIC_MSVC_RUNTIME_LIBRARY "Use the static MSVC runt
 # Option to compile with DirectX 12 compute
 option(JPH_USE_DX12 "Use DirectX" ON)
 
-# Use DXC compiler to compile shaders, when off falls back to FXC
-option(JPH_USE_DXC "Use DXC shader compiler" ON)
-
 # Option to compile with Vulkan compute
 option(JPH_USE_VK "Use Vulkan" ON)
 

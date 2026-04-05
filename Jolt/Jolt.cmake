@@ -576,6 +576,25 @@ if (WIN32)
 			${JOLT_PHYSICS_ROOT}/Compute/DX12/ComputeShaderDX12.h
 			${JOLT_PHYSICS_ROOT}/Compute/DX12/IncludeDX12.h
 		)
+
+		# Compile HLSL shaders
+		find_program(DXC_COMPILER NAMES dxc)
+		if (NOT DXC_COMPILER)
+			MESSAGE("Application 'dxc' not found. Can't compile compute shaders. Some functionality will be unavailable.")
+		else()
+			foreach(SHADER ${JOLT_PHYSICS_SHADERS})
+				cmake_path(GET SHADER STEM SHADER_STEM) # Filename without extension
+				string(REPLACE ".hlsl" ".dxil" DXIL_SHADER ${SHADER})
+				add_custom_command(OUTPUT ${DXIL_SHADER}
+					COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I Jolt/Shaders -WX -O3 -all_resources_bound -Qembed_debug -Zi ${SHADER} -Fo ${DXIL_SHADER}
+					DEPENDS ${SHADER} ${JOLT_PHYSICS_SHADER_HEADERS} # Currently don't have a way to detect header dependencies, so making dependent on all
+					COMMENT "Compiling HLSL ${SHADER}")
+				list(APPEND JOLT_PHYSICS_DXIL_SHADERS ${DXIL_SHADER})
+			endforeach()
+
+			# Group intermediate files
+			source_group(Intermediate FILES ${JOLT_PHYSICS_DXIL_SHADERS})
+		endif()
 	endif()
 else()
 	set(JPH_USE_DX12 OFF)
@@ -707,7 +726,7 @@ if (JPH_BUILD_SHARED_LIBS)
 else()
 	set(JPH_LIB_TYPE STATIC)
 endif()
-add_library(Jolt ${JPH_LIB_TYPE} ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_SHADERS} ${JOLT_PHYSICS_SHADER_HEADERS} ${JOLT_PHYSICS_SPV_SHADERS} ${JOLT_PHYSICS_METAL_LIB})
+add_library(Jolt ${JPH_LIB_TYPE} ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_SHADERS} ${JOLT_PHYSICS_SHADER_HEADERS} ${JOLT_PHYSICS_DXIL_SHADERS} ${JOLT_PHYSICS_SPV_SHADERS} ${JOLT_PHYSICS_METAL_LIB})
 add_library(Jolt::Jolt ALIAS Jolt)
 
 if (JPH_BUILD_SHARED_LIBS)
@@ -811,12 +830,6 @@ endif()
 if (JPH_USE_DX12)
 	target_compile_definitions(Jolt PUBLIC JPH_USE_DX12)
 	target_link_libraries(Jolt LINK_PUBLIC dxgi.lib d3d12.lib d3dcompiler.lib dxguid.lib)
-
-	# Use DXC compiler to compile shaders, when off falls back to FXC
-	if (JPH_USE_DXC)
-		target_compile_definitions(Jolt PUBLIC JPH_USE_DXC)
-		target_link_libraries(Jolt LINK_PUBLIC dxcompiler.lib)
-	endif()
 endif()
 
 # Compile against Vulkan
