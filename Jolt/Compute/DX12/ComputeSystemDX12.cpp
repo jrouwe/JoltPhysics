@@ -94,7 +94,7 @@ ComputeShaderResult ComputeSystemDX12::CreateComputeShader(const char *inName, u
 		return result;
 	}
 	ComPtr<IDxcUtils> utils;
-	reinterpret_cast<DxcCreateInstanceProc>(mDxcCreateInstanceFn)(CLSID_DxcUtils, IID_PPV_ARGS(utils.GetAddressOf()));
+	reinterpret_cast<DxcCreateInstanceProc>(reinterpret_cast<void *>(mDxcCreateInstanceFn))(CLSID_DxcUtils, IID_PPV_ARGS(utils.GetAddressOf()));
 
 	// Get reflection data
 	DxcBuffer reflection_buffer = { data.data(), data.size(), 0 };

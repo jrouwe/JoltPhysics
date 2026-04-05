@@ -37,7 +37,7 @@ public:
 
 private:
 	ComPtr<ID3D12Device>			mDevice;
-	void *							mDxcCreateInstanceFn;
+	FARPROC							mDxcCreateInstanceFn;
 };
 
 JPH_NAMESPACE_END

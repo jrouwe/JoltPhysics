@@ -599,6 +599,17 @@ if (WIN32)
 
 			# Group intermediate files
 			source_group(Intermediate FILES ${JOLT_PHYSICS_DXIL_SHADERS})
+
+			# Find DX12 runtime DLLs, they live alongside dxc.exe
+			cmake_path(GET DXC_COMPILER PARENT_PATH DXC_BIN_DIR)
+			foreach(DLL dxcompiler.dll dxil.dll)
+				set(DLL_PATH "${DXC_BIN_DIR}/${DLL}")
+				if (EXISTS "${DLL_PATH}")
+					list(APPEND JPH_DX12_RUNTIME_DLLS "${DLL_PATH}")
+				else()
+					message(WARNING "DX12 runtime DLL not found: ${DLL_PATH}")
+				endif()
+			endforeach()
 		endif()
 	endif()
 else()

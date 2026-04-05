@@ -473,4 +473,17 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			endif()
 		endif()
 	endif()
+
+	# Copy DX12 runtime DLLs (dxcompiler.dll, dxil.dll) to the output directory of each application
+	if (JPH_USE_DX12 AND JPH_DX12_RUNTIME_DLLS)
+		foreach(TARGET_NAME Samples JoltViewer UnitTests)
+			if (TARGET ${TARGET_NAME})
+				add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different
+						${JPH_DX12_RUNTIME_DLLS}
+						$<TARGET_FILE_DIR:${TARGET_NAME}>
+					COMMENT "Copying DX12 runtime DLLs to ${TARGET_NAME} output directory")
+			endif()
+		endforeach()
+	endif()
 endif()
