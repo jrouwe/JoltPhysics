@@ -498,6 +498,9 @@ if (JPH_USE_DX12 OR JPH_USE_VK OR JPH_USE_MTL OR JPH_USE_CPU_COMPUTE)
 		${JOLT_PHYSICS_ROOT}/Shaders/TestCompute2.hlsl
 	)
 
+	# Ignore shader files for compilation, we'll compile them manually
+	set_source_files_properties(${JOLT_PHYSICS_SHADERS} PROPERTIES HEADER_FILE_ONLY ON)
+
 	set(JOLT_PHYSICS_SHADER_HEADERS
 		${JOLT_PHYSICS_ROOT}/Shaders/HairApplyDeltaTransformBindings.h
 		${JOLT_PHYSICS_ROOT}/Shaders/HairApplyGlobalPose.h
@@ -556,9 +559,6 @@ endif()
 if (WIN32)
 	# Add natvis file
 	set(JOLT_PHYSICS_SRC_FILES ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_ROOT}/Jolt.natvis)
-
-	# Set properties to compile shaders as compute shaders
-	set_source_files_properties(${JOLT_PHYSICS_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T cs_5_0")
 
 	# DirectX support
 	if (JPH_USE_DX12)
