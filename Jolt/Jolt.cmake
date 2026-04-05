@@ -578,7 +578,12 @@ if (WIN32)
 		)
 
 		# Compile HLSL shaders
-		find_program(DXC_COMPILER NAMES dxc)
+		find_program(DXC_COMPILER
+			NAMES dxc
+			HINTS
+				"$ENV{WindowsSdkVerBinPath}x64"
+				"C:/Program Files (x86)/Windows Kits/10/bin/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/x64"
+			NO_DEFAULT_PATH)
 		if (NOT DXC_COMPILER)
 			MESSAGE("Application 'dxc' not found. Can't compile compute shaders. Some functionality will be unavailable.")
 		else()
