@@ -134,7 +134,7 @@ jobs:
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=Distribution
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
-      run: UnitTests.exe
+      run: ./UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
@@ -164,7 +164,7 @@ jobs:
       run: msbuild Build\VS2022_CL_32BIT\JoltPhysics.sln /property:Configuration=Distribution
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
-      run: UnitTests.exe
+      run: ./UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"

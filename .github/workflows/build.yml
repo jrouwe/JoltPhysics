@@ -233,7 +233,7 @@ jobs:
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
-      run: UnitTests.exe
+      run: ./UnitTests.exe
 
   msvc_cl_no_object_stream:
     runs-on: windows-latest
@@ -254,7 +254,7 @@ jobs:
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
-      run: UnitTests.exe
+      run: ./UnitTests.exe
 
   msvc_cl_dll:
     runs-on: windows-latest
@@ -275,7 +275,7 @@ jobs:
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
-      run: UnitTests.exe
+      run: ./UnitTests.exe
 
   msvc_cl_32_bit:
     runs-on: windows-latest
@@ -296,7 +296,7 @@ jobs:
       run: msbuild Build\VS2022_CL_32_BIT\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32_BIT/${{matrix.build_type}}
-      run: UnitTests.exe
+      run: ./UnitTests.exe
 
   msvc_cl_arm:
     runs-on: windows-latest
@@ -358,7 +358,7 @@ jobs:
       run: msbuild Build\VS2022_Clang\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_Clang/${{matrix.build_type}}
-      run: UnitTests.exe
+      run: ./UnitTests.exe
 
   macos:
     runs-on: macos-latest
