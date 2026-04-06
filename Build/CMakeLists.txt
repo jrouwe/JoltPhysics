@@ -130,6 +130,12 @@ option(JPH_USE_MTL "Use Metal" ON)
 # Option to compile with CPU fallback compute
 option(JPH_USE_CPU_COMPUTE "Use CPU Compute" ON)
 
+# Option to enable shader debug symbols
+option(JPH_SHADER_DEBUG_SYMBOLS "Shader Debug Symbols" OFF)
+
+# Option to enable shader optimizations. When this is on, the shaders will be optimized for performance, otherwise they're suitable for debugging.
+option(JPH_SHADER_OPTIMIZATION "Shader Optimization" ON)
+
 # Determine which configurations exist
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR) # Only do this when we're at the top level, see: https://gitlab.kitware.com/cmake/cmake/-/issues/24181
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -475,7 +481,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	endif()
 
 	# Copy DX12 runtime DLLs (dxcompiler.dll, dxil.dll) to the output directory of each application
-	if (JPH_USE_DX12 AND JPH_DX12_RUNTIME_DLLS)
+	if (JPH_DX12_RUNTIME_DLLS)
 		foreach(TARGET_NAME Samples JoltViewer UnitTests)
 			if (TARGET ${TARGET_NAME})
 				add_custom_command(TARGET ${TARGET_NAME} POST_BUILD

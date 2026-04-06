@@ -587,11 +587,22 @@ if (WIN32)
 		if (NOT DXC_COMPILER)
 			MESSAGE("Application 'dxc' not found. Can't compile compute shaders. Some functionality will be unavailable.")
 		else()
+			if (JPH_SHADER_DEBUG_SYMBOLS)
+				set(DXC_DEBUG_FLAGS -Qembed_debug -Zi)
+			else()
+				set(DXC_DEBUG_FLAGS "")
+			endif()
+
+			if (JPH_SHADER_OPTIMIZATION)
+				set(DXC_OPTIMIZATION_FLAGS -O3)
+			else()
+				set(DXC_OPTIMIZATION_FLAGS -Od)
+			endif()
+
 			foreach(SHADER ${JOLT_PHYSICS_SHADERS})
-				cmake_path(GET SHADER STEM SHADER_STEM) # Filename without extension
 				string(REPLACE ".hlsl" ".dxil" DXIL_SHADER ${SHADER})
 				add_custom_command(OUTPUT ${DXIL_SHADER}
-					COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I Jolt/Shaders -WX -O3 -all_resources_bound -Qembed_debug -Zi ${SHADER} -Fo ${DXIL_SHADER}
+					COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I Jolt/Shaders -WX -all_resources_bound ${DXC_OPTIMIZATION_FLAGS} ${DXC_DEBUG_FLAGS} ${SHADER} -Fo ${DXIL_SHADER}
 					DEPENDS ${SHADER} ${JOLT_PHYSICS_SHADER_HEADERS} # Currently don't have a way to detect header dependencies, so making dependent on all
 					COMMENT "Compiling HLSL ${SHADER}")
 				list(APPEND JOLT_PHYSICS_DXIL_SHADERS ${DXIL_SHADER})
@@ -712,6 +723,18 @@ if (JPH_USE_VK)
 		# For now, just set it manually
 		string(REPLACE "glslc" "dxc" Vulkan_dxc_EXECUTABLE ${Vulkan_GLSLC_EXECUTABLE})
 
+		if (JPH_SHADER_DEBUG_SYMBOLS)
+			set(SPV_DEBUG_FLAGS -fspv-debug=vulkan-with-source)
+		else()
+			set(SPV_DEBUG_FLAGS "")
+		endif()
+
+		if (JPH_SHADER_OPTIMIZATION)
+			set(SPV_OPTIMIZATION_FLAGS -O3)
+		else()
+			set(SPV_OPTIMIZATION_FLAGS -Od)
+		endif()
+
 		# Compile Vulkan shaders
 		foreach(SHADER ${JOLT_PHYSICS_SHADERS})
 			string(REPLACE ".hlsl" ".spv" SPV_SHADER ${SHADER})
@@ -720,7 +743,7 @@ if (JPH_USE_VK)
 				# The glslc compiler has the following issues:
 				# - All buffers bind to slot 0. We don't want to manually specify registers so this requires going into the SPIRV code and patching it.
 				# - It automatically aligns float3 to 16 byte boundaries which wastes a lot of memory in structs. We only seem to be able to override this alignment when compiling a GLSL shader and not with HLSL.
-				COMMAND ${Vulkan_dxc_EXECUTABLE} -E main -T cs_6_0 -I Jolt/Shaders -WX -O3 -all_resources_bound ${SHADER} -spirv -fvk-use-dx-layout -fspv-debug=vulkan-with-source -Fo ${SPV_SHADER}
+				COMMAND ${Vulkan_dxc_EXECUTABLE} -E main -T cs_6_0 -I Jolt/Shaders -WX -all_resources_bound -spirv -fvk-use-dx-layout ${SPV_OPTIMIZATION_FLAGS} ${SPV_DEBUG_FLAGS} ${SHADER} -Fo ${SPV_SHADER}
 				DEPENDS ${SHADER} ${JOLT_PHYSICS_SHADER_HEADERS} # Currently don't have a way to detect header dependencies, so making dependent on all
 				COMMENT "Compiling Vulkan ${SHADER}")
 			list(APPEND JOLT_PHYSICS_SPV_SHADERS ${SPV_SHADER})
