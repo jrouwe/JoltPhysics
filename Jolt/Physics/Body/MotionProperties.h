@@ -190,7 +190,7 @@ public:
 	/// Stats for this body. These are average for the simulation island the body was part of.
 	struct SimulationStats
 	{
-		void				Reset()															{ mBroadPhaseTicks = 0; mNarrowPhaseTicks.store(0, memory_order_relaxed); mVelocityConstraintTicks = 0; mPositionConstraintTicks = 0; mUpdateBoundsTicks = 0; mCCDTicks.store(0, memory_order_relaxed); mNumContactConstraints.store(0, memory_order_relaxed); mNumVelocitySteps = 0; mNumPositionSteps = 0; mIsLargeIsland = false; }
+		void				Reset()															{ mBroadPhaseTicks = 0; mNarrowPhaseTicks.store(0, memory_order_relaxed); mVelocityConstraintTicks = 0; mPositionConstraintTicks = 0; mUpdateBoundsTicks = 0; mCCDTicks.store(0, memory_order_relaxed); mNumContactConstraints.store(0, memory_order_relaxed); mNumCollisionSteps = 0; mNumVelocitySteps = 0; mNumPositionSteps = 0; mIsLargeIsland = false; }
 
 		uint64				mBroadPhaseTicks = 0;											///< Number of processor ticks spent doing broad phase collision detection
 		atomic<uint64>		mNarrowPhaseTicks = 0;											///< Number of ticks spent doing narrow phase collision detection
@@ -199,6 +199,7 @@ public:
 		uint64				mUpdateBoundsTicks = 0;											///< Number of ticks spent updating the broadphase and checking if the body should go to sleep
 		atomic<uint64>		mCCDTicks = 0;													///< Number of ticks spent doing CCD
 		atomic<uint32>		mNumContactConstraints = 0;										///< Number of contact constraints created for this body
+		uint8				mNumCollisionSteps = 0;											///< Number of collision steps this body was active (see PhysicsSystem::Update(..., inCollisionSteps, ...)). All other properties are aggregated over multiple steps, so if you want e.g. the number of contact constraints per step you need to divide by this number.
 		uint8				mNumVelocitySteps = 0;											///< Number of velocity iterations performed
 		uint8				mNumPositionSteps = 0;											///< Number of position iterations performed
 		bool				mIsLargeIsland = false;											///< If this body was part of a large island

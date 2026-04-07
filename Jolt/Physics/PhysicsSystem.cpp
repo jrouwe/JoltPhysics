@@ -157,6 +157,7 @@ void PhysicsSystem::GatherIslandStats()
 		{
 			Body &body = mBodyManager.GetBody(*body_id);
 			MotionProperties::SimulationStats &out_stats = body.GetMotionProperties()->GetSimulationStats();
+			++out_stats.mNumCollisionSteps;
 			out_stats.mNumVelocitySteps = stats.mNumVelocitySteps;
 			out_stats.mNumPositionSteps = stats.mNumPositionSteps;
 			if (body.GetMotionType() == EMotionType::Dynamic)
