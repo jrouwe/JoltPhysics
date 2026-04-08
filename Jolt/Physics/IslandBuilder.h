@@ -36,8 +36,8 @@ public:
 	/// Link a constraint to a body by their index in the BodyManager::mActiveBodies
 	void					LinkConstraint(uint32 inConstraintIndex, uint32 inFirst, uint32 inSecond);
 
-	/// Link a contact to a body by their index in the BodyManager::mActiveBodies
-	void					LinkContact(uint32 inContactIndex, uint32 inFirst, uint32 inSecond);
+	/// Link a contact to a body
+	void					LinkContact(uint32 inContactIndex, uint32 inIndexInActiveBodyList);
 
 	/// Finalize the islands after all bodies have been Link()-ed
 	void					Finalize(const BodyID *inActiveBodies, uint32 inNumActiveBodies, uint32 inNumContacts, TempAllocator *inTempAllocator);

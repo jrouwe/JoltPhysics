@@ -164,10 +164,12 @@ void IslandBuilder::LinkConstraint(uint32 inConstraintIndex, uint32 inFirst, uin
 	mConstraintLinks[inConstraintIndex] = min_value;
 }
 
-void IslandBuilder::LinkContact(uint32 inContactIndex, uint32 inFirst, uint32 inSecond)
+void IslandBuilder::LinkContact(uint32 inContactIndex, uint32 inIndexInActiveBodyList)
 {
 	JPH_ASSERT(inContactIndex < mMaxContacts);
-	mContactLinks[inContactIndex] = min(inFirst, inSecond); // Use fact that invalid index is 0xffffffff, we want the active body of two
+	JPH_ASSERT(inIndexInActiveBodyList != MotionProperties::cInactiveIndex); // Bodies should be active by now
+
+	mContactLinks[inContactIndex] = inIndexInActiveBodyList;
 }
 
 #ifdef JPH_VALIDATE_ISLAND_BUILDER
