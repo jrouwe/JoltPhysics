@@ -366,17 +366,16 @@ void VehicleConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &io
 		inBodyManager.ActivateBodies(body_ids, num_bodies);
 	}
 
-	// Link the bodies into the same island
-	uint32 min_active_index = Body::cInactiveIndex;
+	// Link dynamic bodies into the same island as the vehicle
 	for (int i = 0; i < num_bodies; ++i)
 	{
 		const Body &body = inBodyManager.GetBody(body_ids[i]);
-		min_active_index = min(min_active_index, body.GetIndexInActiveBodiesInternal());
-		ioBuilder.LinkBodies(mBody->GetIndexInActiveBodiesInternal(), body.GetIndexInActiveBodiesInternal());
+		if (body.IsDynamic())
+			ioBuilder.LinkBodies(mBody->GetIndexInActiveBodiesInternal(), body.GetIndexInActiveBodiesInternal());
 	}
 
-	// Link the constraint in the island
-	ioBuilder.LinkConstraint(inConstraintIndex, mBody->GetIndexInActiveBodiesInternal(), min_active_index);
+	// Link the vehicle constraint to the car body
+	ioBuilder.LinkConstraint(inConstraintIndex, mBody->GetIndexInActiveBodiesInternal());
 }
 
 uint VehicleConstraint::BuildIslandSplits(LargeIslandSplitter &ioSplitter) const
