@@ -1044,6 +1044,42 @@ void PhysicsSystem::sDefaultSimCollideBodyVsBody(const Body &inBody1, const Body
 	}
 }
 
+void PhysicsSystem::LinkContact(uint32 inConstraintIdx, const Body &inBody1, const Body &inBody2, bool &ioLinkBodies)
+{
+	bool body1_dynamic = inBody1.IsDynamic();
+	bool body2_dynamic = inBody2.IsDynamic();
+
+	if (ioLinkBodies)
+	{
+		// Do this only once
+		ioLinkBodies = false;
+
+		// Wake up sleeping bodies
+		BodyID body_ids[2];
+		int num_bodies = 0;
+		if (body1_dynamic && !inBody1.IsActive())
+			body_ids[num_bodies++] = inBody1.GetID();
+		if (body2_dynamic && !inBody2.IsActive())
+			body_ids[num_bodies++] = inBody2.GetID();
+		if (num_bodies > 0)
+			mBodyManager.ActivateBodies(body_ids, num_bodies);
+
+		// Link the two bodies only if both are dynamic. If one of them is static or kinematic they don't need to go into
+		// the same simulation island as a constraint cannot affect the velocity of a kinematic body.
+		if (body1_dynamic && body2_dynamic)
+			mIslandBuilder.LinkBodies(inBody1.GetIndexInActiveBodiesInternal(), inBody2.GetIndexInActiveBodiesInternal());
+	}
+
+	// Link the contact to the first dynamic body
+	if (body1_dynamic)
+		mIslandBuilder.LinkContact(inConstraintIdx, inBody1.GetIndexInActiveBodiesInternal());
+	else
+	{
+		JPH_ASSERT(body2_dynamic);
+		mIslandBuilder.LinkContact(inConstraintIdx, inBody2.GetIndexInActiveBodiesInternal());
+	}
+}
+
 void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair)
 {
 	JPH_PROFILE_FUNCTION();
@@ -1075,12 +1111,21 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false;
-	uint32 constraint_idx = ~uint32(0);
+	uint32 constraint_idx_from_cache = ~uint32(0);
 	if (mPhysicsSettings.mUseBodyPairContactCache && !(body1->IsCollisionCacheInvalid() || body2->IsCollisionCacheInvalid()))
-		mContactManager.GetContactsFromCache(ioContactAllocator, *body1, *body2, pair_handled, constraint_idx);
+		mContactManager.GetContactsFromCache(ioContactAllocator, *body1, *body2, pair_handled, constraint_idx_from_cache);
 
 	// If the cache hasn't handled this body pair do actual collision detection
-	if (!pair_handled)
+	if (pair_handled)
+	{
+		if (constraint_idx_from_cache != ~uint32(0))
+		{
+			// Activate bodies and link them to the constraint
+			bool link_bodies = true;
+			LinkContact(constraint_idx_from_cache, *body1, *body2, link_bodies);
+		}
+	}
+	else
 	{
 	#ifdef JPH_TRACK_SIMULATION_STATS
 		uint64 start_ticks = GetProcessorTickCount();
@@ -1226,6 +1271,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			mSimCollideBodyVsBody(*body1, *body2, transform1, transform2, settings, collector, shape_filter.GetFilter());
 
 			// Add the contacts
+			bool link_bodies = true;
 			for (ContactManifold &manifold : collector.mManifolds)
 			{
 				// Normalize the normal (is a sum of all normals from merged manifolds)
@@ -1236,8 +1282,12 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					PruneContactPoints(manifold.mWorldSpaceNormal, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
 
 				// Actually add the contact points to the manager
+				uint32 constraint_idx = ~uint32(0);
 				mContactManager.AddContactConstraint(ioContactAllocator, body_pair_handle, *body1, *body2, manifold, constraint_idx);
-				// TODO link contact
+
+				// Activate bodies and link them to the constraint
+				if (constraint_idx != ~uint32(0))
+					LinkContact(constraint_idx, *body1, *body2, link_bodies);
 			}
 		}
 		else
@@ -1309,9 +1359,12 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					manifold.mSubShapeID2 = inResult.mSubShapeID2;
 
 					// Actually add the contact points to the manager
-					uint32 constraint_idx;
+					uint32 constraint_idx = ~uint32(0);
 					mSystem->mContactManager.AddContactConstraint(mContactAllocator, mBodyPairHandle, *mBody1, *mBody2, manifold, constraint_idx);
-					// TODO link contact
+
+					// Activate bodies and link them to the constraint
+					if (constraint_idx != ~uint32(0))
+						mSystem->LinkContact(constraint_idx, *mBody1, *mBody2, mLinkBodies);
 				}
 
 				PhysicsSystem *		mSystem;
@@ -1320,6 +1373,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 				Body *				mBody2;
 				ContactConstraintManager::BodyPairHandle mBodyPairHandle;
 				bool				mValidateBodyPair = true;
+				bool				mLinkBodies = true;
 			};
 			NonReductionCollideShapeCollector collector(this, ioContactAllocator, body1, body2, body_pair_handle);
 
@@ -1344,37 +1398,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			body1->GetMotionProperties()->GetSimulationStats().mNarrowPhaseTicks.fetch_add(num_ticks, memory_order_relaxed);
 		}
 	#endif
-	}
-
-	// If a contact constraint was created, we need to do some extra work
-	if (constraint_idx != ~uint32(0))
-	{
-		// Wake up sleeping bodies
-		BodyID body_ids[2];
-		int num_bodies = 0;
-		bool body1_dynamic = body1->IsDynamic();
-		if (body1_dynamic && !body1->IsActive())
-			body_ids[num_bodies++] = body1->GetID();
-		bool body2_dynamic = body2->IsDynamic();
-		if (body2_dynamic && !body2->IsActive())
-			body_ids[num_bodies++] = body2->GetID();
-		if (num_bodies > 0)
-			mBodyManager.ActivateBodies(body_ids, num_bodies);
-
-		// Link the two bodies only if both are dynamic. If one of them is static or kinematic they don't need to go into
-		// the same simulation island as a constraint cannot affect the velocity of a kinematic body.
-		if (body1_dynamic)
-		{
-			if (body2_dynamic)
-				mIslandBuilder.LinkBodies(body1->GetIndexInActiveBodiesInternal(), body2->GetIndexInActiveBodiesInternal());
-			mIslandBuilder.LinkContact(constraint_idx, body1->GetIndexInActiveBodiesInternal());
-		}
-		else
-		{
-			JPH_ASSERT(body2_dynamic);
-			mIslandBuilder.LinkContact(constraint_idx, body2->GetIndexInActiveBodiesInternal());
-		}
-	}
+	}	
 }
 
 void PhysicsSystem::JobFinalizeIslands(PhysicsUpdateContext *ioContext)

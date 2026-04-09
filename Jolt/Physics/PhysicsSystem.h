@@ -305,6 +305,9 @@ private:
 	/// Called at the end of JobSolveVelocityConstraints to check if bodies need to go to sleep and to update their bounding box in the broadphase
 	void						CheckSleepAndUpdateBounds(uint32 inIslandIndex, const PhysicsUpdateContext *ioContext, const PhysicsUpdateContext::Step *ioStep, BodiesToSleep &ioBodiesToSleep);
 
+	/// Link a contact constraint to one of the bodies so it's solved in the same island
+	void						LinkContact(uint32 inConstraintIdx, const Body &inBody1, const Body &inBody2, bool &ioLinkBodies);
+
 	/// Number of constraints to process at once in JobDetermineActiveConstraints
 	static constexpr int		cDetermineActiveConstraintsBatchSize = 64;
 
