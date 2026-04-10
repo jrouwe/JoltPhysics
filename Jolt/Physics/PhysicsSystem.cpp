@@ -1343,7 +1343,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			body1->GetMotionProperties()->GetSimulationStats().mNarrowPhaseTicks.fetch_add(num_ticks, memory_order_relaxed);
 		}
 	#endif
-	}	
+	}
 }
 
 void PhysicsSystem::JobFinalizeIslands(PhysicsUpdateContext *ioContext)
