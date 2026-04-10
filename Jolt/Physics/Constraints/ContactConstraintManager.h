@@ -107,11 +107,11 @@ public:
 	/// Add a contact constraint for this frame.
 	///
 	/// @param ioContactAllocator The allocator that reserves memory for the contacts
+	/// @param ioActivateAndLinkBodies When true, this function attempts to activate and link the bodies and then sets ioActivateAndLinkBodies to false so that it only happens once
 	/// @param inBodyPair The handle for the contact cache for this body pair
 	/// @param inBody1 The first body that is colliding
 	/// @param inBody2 The second body that is colliding
 	/// @param inManifold The manifold that describes the collision
-	/// @return true if a contact constraint was created (can be false in the case of a sensor)
 	///
 	/// This is using the approach described in 'Modeling and Solving Constraints' by Erin Catto presented at GDC 2009 (and later years with slight modifications).
 	/// We're using the formulas from slide 50 - 53 combined.
