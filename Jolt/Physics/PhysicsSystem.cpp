@@ -1899,9 +1899,17 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 								}
 								else
 								{
-									if (mSoftBodyContactListener == nullptr
-										|| mSoftBodyContactListener->OnSoftBodyContactValidate(body1, body2) == SoftBodyValidateResult::AcceptContact)
+									SoftBodyContactSettings sb_settings;
+									sb_settings.mIsSensor = false;
+									if ((mSoftBodyContactListener == nullptr
+										|| mSoftBodyContactListener->OnSoftBodyContactValidate(body2, body1, sb_settings) == SoftBodyValidateResult::AcceptContact) // Note reversal, soft body needs to be first parameter
+										&& !sb_settings.mIsSensor) // If the contact listener turned this into a sensor, we want to ignore it
 									{
+										// Convert the soft body contact settings (note bodies are swapped)
+										mCCDBody.mContactSettings.mInvMassScale1 = sb_settings.mInvMassScale2;
+										mCCDBody.mContactSettings.mInvMassScale2 = sb_settings.mInvMassScale1;
+										mCCDBody.mContactSettings.mInvInertiaScale1 = sb_settings.mInvInertiaScale2;
+
 										// Accept this and all following contacts from this body
 										mValidateBodyPair = false;
 									}
@@ -2080,29 +2088,17 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			manifold.mWorldSpaceNormal = ccd_body.mContactNormal;
 
 			// Call contact point callbacks
-			ContactSettings &contact_settings = ccd_body.mContactSettings;
 			if (body2.IsRigidBody())
-				mContactManager.OnCCDContactAdded(contact_allocator, body, body2, manifold, contact_settings);
+				mContactManager.OnCCDContactAdded(contact_allocator, body, body2, manifold, ccd_body.mContactSettings);
 			else
 			{
-				contact_settings.mCombinedFriction = 0.0f; // Soft bodies CCD contacts don't apply friction
-				contact_settings.mCombinedRestitution = mContactManager.GetCombineRestitution()(body, SubShapeID(), body2, SubShapeID()); // Soft bodies don't pass sub shape IDs because the restitution is uniform across the entire body
-
-				if (mSoftBodyContactListener != nullptr)
-				{
-					SoftBodyContactSettings sb_settings;
-					sb_settings.mIsSensor = false;
-					mSoftBodyContactListener->GetSoftBodyContactSettings(body2, body, sb_settings); // Note reversal of bodies: soft body should be first parameter
-					contact_settings.mInvMassScale1 = sb_settings.mInvMassScale2;
-					contact_settings.mInvMassScale2 = sb_settings.mInvMassScale1;
-					contact_settings.mInvInertiaScale1 = sb_settings.mInvInertiaScale2;
-					contact_settings.mIsSensor = sb_settings.mIsSensor;
-				}
-				else
-					contact_settings.mIsSensor = false; // CCD sensors are filtered out in PhysicsSystem::JobIntegrateVelocity
+				// We already have mass and inertia scale from the OnSoftBodyContactValidate callback, but we need to fill in the rest of the contact settings
+				ccd_body.mContactSettings.mCombinedFriction = 0.0f; // Soft bodies CCD contacts don't apply friction
+				ccd_body.mContactSettings.mCombinedRestitution = mContactManager.GetCombineRestitution()(body, SubShapeID(), body2, SubShapeID()); // Soft bodies don't pass sub shape IDs because the restitution is uniform across the entire body
+				ccd_body.mContactSettings.mIsSensor = false; // We've filtered out sensors already
 			}
 
-			if (contact_settings.mIsSensor)
+			if (ccd_body.mContactSettings.mIsSensor)
 			{
 				// If this is a sensor, we don't want to solve the contact
 				ccd_body.mFractionPlusSlop = 1.0f;

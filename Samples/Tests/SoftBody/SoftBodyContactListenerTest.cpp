@@ -84,115 +84,62 @@ void SoftBodyContactListenerTest::StartCycle()
 	UpdateLabel();
 }
 
-SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody)
+SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings)
 {
 	switch (mCycle)
 	{
 	case 0:
 		// Normal
 		return SoftBodyValidateResult::AcceptContact;
-
-	case 1:
-		// Makes the sphere 10x as heavy
-		return SoftBodyValidateResult::AcceptContact;
-
-	case 2:
-		// Makes the cloth 10x as heavy
-		return SoftBodyValidateResult::AcceptContact;
-
-	case 3:
-		// Makes the sphere have infinite mass
-		return SoftBodyValidateResult::AcceptContact;
-
-	case 4:
-		// Makes the cloth have infinite mass
-		return SoftBodyValidateResult::AcceptContact;
-
-	case 5:
-		// Sensor contact
-		return SoftBodyValidateResult::AcceptContact;
-
-	case 6:
-		// No contacts
-		return SoftBodyValidateResult::RejectContact;
-
-	case 7:
-		// Kinematic sphere
-		return SoftBodyValidateResult::AcceptContact;
-
-	case 8:
-		// Kinematic sphere, cloth infinite mass
-		return SoftBodyValidateResult::AcceptContact;
-
-	case 9:
-		// Kinematic sphere, sensor contact
-		return SoftBodyValidateResult::AcceptContact;
-
-	default:
-		// No contacts
-		JPH_ASSERT(false);
-		return SoftBodyValidateResult::RejectContact;
-	}
-}
-
-void SoftBodyContactListenerTest::GetSoftBodyContactSettings(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings)
-{
-	switch (mCycle)
-	{
-	case 0:
-		// Normal
-		break;
 
 	case 1:
 		// Makes the sphere 10x as heavy
 		ioSettings.mInvMassScale2 = 0.1f;
 		ioSettings.mInvInertiaScale2 = 0.1f;
-		break;
+		return SoftBodyValidateResult::AcceptContact;
 
 	case 2:
 		// Makes the cloth 10x as heavy
 		ioSettings.mInvMassScale1 = 0.1f;
-		break;
+		return SoftBodyValidateResult::AcceptContact;
 
 	case 3:
 		// Makes the sphere have infinite mass
 		ioSettings.mInvMassScale2 = 0.0f;
 		ioSettings.mInvInertiaScale2 = 0.0f;
-		break;
+		return SoftBodyValidateResult::AcceptContact;
 
 	case 4:
 		// Makes the cloth have infinite mass
 		ioSettings.mInvMassScale1 = 0.0f;
-		break;
+		return SoftBodyValidateResult::AcceptContact;
 
 	case 5:
 		// Sensor contact
 		ioSettings.mIsSensor = true;
-		break;
+		return SoftBodyValidateResult::AcceptContact;
 
 	case 6:
 		// No contacts
-		JPH_ASSERT(false);
-		break;
+		return SoftBodyValidateResult::RejectContact;
 
 	case 7:
 		// Kinematic sphere
-		break;
+		return SoftBodyValidateResult::AcceptContact;
 
 	case 8:
 		// Kinematic sphere, cloth infinite mass
 		ioSettings.mInvMassScale1 = 0.0f;
-		break;
+		return SoftBodyValidateResult::AcceptContact;
 
 	case 9:
 		// Kinematic sphere, sensor contact
 		ioSettings.mIsSensor = true;
-		break;
+		return SoftBodyValidateResult::AcceptContact;
 
 	default:
 		// No contacts
-		JPH_ASSERT(false);
-		break;
+		return SoftBodyValidateResult::RejectContact;
 	}
 }
 
@@ -208,4 +155,16 @@ void SoftBodyContactListenerTest::OnSoftBodyContactAdded(const Body &inSoftBody,
 			mDebugRenderer->DrawMarker(position, Color::sRed, 0.1f);
 			mDebugRenderer->DrawArrow(position, position + normal, Color::sGreen, 0.1f);
 		}
+
+	// Draw the sensors that are in contact with the soft body
+	for (uint i = 0; i < inManifold.GetNumSensorContacts(); ++i)
+	{
+		BodyID sensor_id = inManifold.GetSensorContactBodyID(i);
+		BodyLockRead lock(mPhysicsSystem->GetBodyLockInterfaceNoLock(), sensor_id); // Can't lock in a callback
+		if (lock.SucceededAndIsInBroadPhase())
+		{
+			AABox bounds = lock.GetBody().GetWorldSpaceBounds();
+			DebugRenderer::sInstance->DrawWireBox(bounds, Color::sGreen);
+		}
+	}
 }
