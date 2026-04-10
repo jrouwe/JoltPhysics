@@ -12,6 +12,7 @@
 #include <Jolt/Compute/DX12/ComputeBufferDX12.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/FPException.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 JPH_MSVC_SUPPRESS_WARNING(5204) // 'X': class has virtual functions, but its trivial destructor is not virtual; instances of objects derived from this class may not be destructed correctly
@@ -41,6 +42,10 @@ void ComputeSystemDX12::Initialize(ID3D12Device *inDevice)
 
 void ComputeSystemDX12::Shutdown()
 {
+	// Releasing the device can cause invalid floating point operation exceptions inside the DirectX driver
+	FPExceptionDisableInvalid disable_invalid;
+	JPH_UNUSED(disable_invalid);
+
 	mDevice.Reset();
 }
 
