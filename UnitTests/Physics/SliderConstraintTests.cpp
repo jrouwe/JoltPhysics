@@ -7,6 +7,7 @@
 #include <Jolt/Physics/Constraints/SliderConstraint.h>
 #include <Jolt/Physics/Collision/GroupFilterTable.h>
 #include "Layers.h"
+#include "LoggingContactListener.h"
 
 TEST_SUITE("SliderConstraintTests")
 {
@@ -503,5 +504,83 @@ TEST_SUITE("SliderConstraintTests")
 				CHECK_APPROX_EQUAL(body.GetPosition().GetZ(), 0);
 			}
 		}
+	}
+
+	// Tests that constrained dynamic bodies are put in the same simulation island and that kinematic and static bodies are not
+	TEST_CASE("TestConstraintsVsSimulationIslands")
+	{
+		EMotionType motion_types[] = { EMotionType::Static, EMotionType::Kinematic, EMotionType::Dynamic };
+		for (EMotionType m1 : motion_types)
+			for (EMotionType m2 : motion_types)
+				for (EMotionType m3 : motion_types)
+				{
+					// Create 3 boxes with different motion types that are apart
+					PhysicsTestContext c;
+					Body &b1 = c.CreateBox(RVec3(0, 0, 0), Quat::sIdentity(), m1, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
+					Body &b2 = c.CreateBox(RVec3(5, 0, 0), Quat::sIdentity(), m2, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
+					Body &b3 = c.CreateBox(RVec3(10, 0, 0), Quat::sIdentity(), m3, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
+
+					// Constrain b1 to b2 and b2 to b3
+					SliderConstraintSettings s;
+					s.mAutoDetectPoint = true;
+					c.GetSystem()->AddConstraint(s.Create(b1, b2));
+					c.GetSystem()->AddConstraint(s.Create(b2, b3));
+
+					LoggingContactListener listener;
+					c.GetSystem()->SetContactListener(&listener);
+
+					// Simulate a step to make sure we properly create simulation islands with different motion types in them
+					c.SimulateSingleStep();
+
+					// Nothing should have collided
+					CHECK(listener.GetEntryCount() == 0);
+
+					auto get_island_index = [](const Body &inBody)
+					{
+						return inBody.IsStatic()? MotionProperties::cInactiveIndex : inBody.GetMotionProperties()->GetIslandIndexInternal();
+					};
+
+					uint32 island_index1 = get_island_index(b1);
+					uint32 island_index2 = get_island_index(b2);
+					uint32 island_index3 = get_island_index(b3);
+
+					if (m1 == EMotionType::Dynamic && m2 == EMotionType::Dynamic)
+					{
+						// Two dynamic bodies should always be in the same island
+						CHECK(island_index1 != MotionProperties::cInactiveIndex);
+						CHECK(island_index1 == island_index2);
+					}
+					else if (m1 == EMotionType::Dynamic || m1 == EMotionType::Kinematic)
+					{
+						// A kinematic body or a dynamic body that is touching a kinematic/static body should be in an island of its own
+						CHECK(island_index1 != MotionProperties::cInactiveIndex);
+						CHECK(island_index1 != island_index2);
+						CHECK(island_index1 != island_index3);
+					}
+					else
+					{
+						// Static bodies should not be in an island
+						CHECK(island_index1 == MotionProperties::cInactiveIndex);
+					}
+
+					if (m3 == EMotionType::Dynamic && m2 == EMotionType::Dynamic)
+					{
+						// Two dynamic bodies should always be in the same island
+						CHECK(island_index3 != MotionProperties::cInactiveIndex);
+						CHECK(island_index2 == island_index3);
+					}
+					else if (m3 == EMotionType::Dynamic || m3 == EMotionType::Kinematic)
+					{
+						// A kinematic body or a dynamic body that is touching a kinematic/static body should be in an island of its own
+						CHECK(island_index3 != MotionProperties::cInactiveIndex);
+						CHECK(island_index3 != island_index2);
+						CHECK(island_index3 != island_index1);
+					}
+					else
+					{
+						// Static bodies should not be in an island
+						CHECK(island_index3 == MotionProperties::cInactiveIndex);
+					}
+				}
 	}
 }

@@ -2262,7 +2262,8 @@ TEST_SUITE("PhysicsTests")
 		}
 	}
 
-	TEST_CASE("TestMotionTypeVsSimulationIslands")
+	// Tests that colliding dynamic bodies are put in the same simulation island and that kinematic and static bodies are not
+	TEST_CASE("TestContactsVsSimulationIslands")
 	{
 		EMotionType motion_types[] = { EMotionType::Static, EMotionType::Kinematic, EMotionType::Dynamic };
 		for (EMotionType m1 : motion_types)
@@ -2287,25 +2288,15 @@ TEST_SUITE("PhysicsTests")
 					uint32 island_index2 = get_island_index(b2);
 					uint32 island_index3 = get_island_index(b3);
 
-					if (m1 == EMotionType::Dynamic)
+					if (m1 == EMotionType::Dynamic && m2 == EMotionType::Dynamic)
 					{
-						if (m2 == EMotionType::Dynamic)
-						{
-							// Two dynamic bodies should always be in the same island
-							CHECK(island_index1 != MotionProperties::cInactiveIndex);
-							CHECK(island_index1 == island_index2);
-						}
-						else
-						{
-							// A dynamic body should be in an island with any other dynamic bodies but not with kinematic or static bodies
-							CHECK(island_index1 != MotionProperties::cInactiveIndex);
-							CHECK(island_index1 != island_index2);
-							CHECK(island_index1 != island_index3);
-						}
+						// Two dynamic bodies should always be in the same island
+						CHECK(island_index1 != MotionProperties::cInactiveIndex);
+						CHECK(island_index1 == island_index2);
 					}
-					else if (m1 == EMotionType::Kinematic)
+					else if (m1 == EMotionType::Dynamic || m1 == EMotionType::Kinematic)
 					{
-						// A kinematic body should be in an island of its own
+						// A kinematic body or a dynamic body that is touching a kinematic/static body should be in an island of its own
 						CHECK(island_index1 != MotionProperties::cInactiveIndex);
 						CHECK(island_index1 != island_index2);
 						CHECK(island_index1 != island_index3);
@@ -2316,25 +2307,15 @@ TEST_SUITE("PhysicsTests")
 						CHECK(island_index1 == MotionProperties::cInactiveIndex);
 					}
 
-					if (m3 == EMotionType::Dynamic)
+					if (m3 == EMotionType::Dynamic && m2 == EMotionType::Dynamic)
 					{
-						if (m2 == EMotionType::Dynamic)
-						{
-							// Two dynamic bodies should always be in the same island
-							CHECK(island_index3 != MotionProperties::cInactiveIndex);
-							CHECK(island_index2 == island_index3);
-						}
-						else
-						{
-							// A dynamic body should be in an island with any other dynamic bodies but not with kinematic or static bodies
-							CHECK(island_index3 != MotionProperties::cInactiveIndex);
-							CHECK(island_index3 != island_index2);
-							CHECK(island_index3 != island_index1);
-						}
+						// Two dynamic bodies should always be in the same island
+						CHECK(island_index3 != MotionProperties::cInactiveIndex);
+						CHECK(island_index2 == island_index3);
 					}
-					else if (m3 == EMotionType::Kinematic)
+					else if (m3 == EMotionType::Dynamic || m3 == EMotionType::Kinematic)
 					{
-						// A kinematic body should be in an island of its own
+						// A kinematic body or a dynamic body that is touching a kinematic/static body should be in an island of its own
 						CHECK(island_index3 != MotionProperties::cInactiveIndex);
 						CHECK(island_index3 != island_index2);
 						CHECK(island_index3 != island_index1);
