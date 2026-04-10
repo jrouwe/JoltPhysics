@@ -18,15 +18,19 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Increased maximum value of HeightFieldShape::mBitsPerSample to 16 to be able to create height fields that more closely match the uncompressed height values.
 * Made tolerance that's used in the internal edge removal algorithm configurable in `CollideShapeSettings::mInternalEdgeRemovalVertexToleranceSq` and `PhysicsSettings::mInternalEdgeRemovalVertexToleranceSq`.
 * Added support for RISC-V RVV, the SIMD extension for RISC-V.
+* Added JPH_BUILD_SHARED_LIBS cmake variable to determine whether to build static or shared libraries (it defaults to BUILD_SHARED_LIBS). This allows embedding Jolt as a static library within a shared library.
+* Simulation stats: Added tracking of collision steps. This way we can know by how many steps we need to divide the numbers to get averages per step.
+* Various performance and memory optimizations.
 
 ### Bug Fixes
 
 * Made it possible to make a class outside the `JPH` namespace serializable.
 * `VehicleConstraint`s are automatically disabled when the vehicle body is not in the `PhysicsSystem`.
 * Fixed an issue where a character could get stuck. If the character was teleported inside an area surrounded by slopes that are steeper than `mMaxSlopeAngle`, the code to stop the constraint solver from ping ponging between two planes didn't work properly.
-* Fixed an issue where collide/cast shape against a triangle would return a hit result with `mShape2Face` in incorrect winding order. This caused an incorrect normal in the enhanced internal edge removal algorithm. This in turn resulted in objects not settling properly on dense triangle grids.
+* Fixed an issue where collide/cast shape against a triangle that was scaled inside out would return a hit result with `mShape2Face` in incorrect winding order. This caused an incorrect normal in the enhanced internal edge removal algorithm. This in turn resulted in objects not settling properly on dense triangle grids.
 * When using `Body::AddForce` to apply gravity, bodies could gain extra energy during elastic collisions. We now cancel added forces in the direction of the contact normal if the body starts in collision to negate this energy gain.
 * Made `MoveKinematic` more accurate when rotating a body by a very small angle.
+* Kinematic bodies were assigned to the same island as bodies that were constrained to / in contact with them. This led to larger simulation islands and impacted performance.
 
 ## v5.5.0
 
