@@ -2261,4 +2261,89 @@ TEST_SUITE("PhysicsTests")
 			c.GetSystem()->OptimizeBroadPhase();
 		}
 	}
+
+	TEST_CASE("TestMotionTypeVsSimulationIslands")
+	{
+		EMotionType motion_types[] = { EMotionType::Static, EMotionType::Kinematic, EMotionType::Dynamic };
+		for (EMotionType m1 : motion_types)
+			for (EMotionType m2 : motion_types)
+				for (EMotionType m3 : motion_types)
+				{
+					// Create 3 boxes with different motion types that are all touching each other
+					PhysicsTestContext c;
+					Body &b1 = c.CreateBox(RVec3(0, 0, 0), Quat::sIdentity(), m1, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
+					Body &b2 = c.CreateBox(RVec3(1.99f, 0, 0), Quat::sIdentity(), m2, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
+					Body &b3 = c.CreateBox(RVec3(3.98f, 0, 0), Quat::sIdentity(), m3, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
+
+					// Simulate a step to make sure we properly create simulation islands with different motion types in them
+					c.SimulateSingleStep();
+
+					auto get_island_index = [](const Body &inBody)
+					{
+						return inBody.IsStatic()? MotionProperties::cInactiveIndex : inBody.GetMotionProperties()->GetIslandIndexInternal();
+					};
+
+					uint32 island_index1 = get_island_index(b1);
+					uint32 island_index2 = get_island_index(b2);
+					uint32 island_index3 = get_island_index(b3);
+
+					if (m1 == EMotionType::Dynamic)
+					{
+						if (m2 == EMotionType::Dynamic)
+						{
+							// Two dynamic bodies should always be in the same island
+							CHECK(island_index1 != MotionProperties::cInactiveIndex);
+							CHECK(island_index1 == island_index2);
+						}
+						else
+						{
+							// A dynamic body should be in an island with any other dynamic bodies but not with kinematic or static bodies
+							CHECK(island_index1 != MotionProperties::cInactiveIndex);
+							CHECK(island_index1 != island_index2);
+							CHECK(island_index1 != island_index3);
+						}
+					}
+					else if (m1 == EMotionType::Kinematic)
+					{
+						// A kinematic body should be in an island of its own
+						CHECK(island_index1 != MotionProperties::cInactiveIndex);
+						CHECK(island_index1 != island_index2);
+						CHECK(island_index1 != island_index3);
+					}
+					else
+					{
+						// Static bodies should not be in an island
+						CHECK(island_index1 == MotionProperties::cInactiveIndex);
+					}
+
+					if (m3 == EMotionType::Dynamic)
+					{
+						if (m2 == EMotionType::Dynamic)
+						{
+							// Two dynamic bodies should always be in the same island
+							CHECK(island_index3 != MotionProperties::cInactiveIndex);
+							CHECK(island_index2 == island_index3);
+						}
+						else
+						{
+							// A dynamic body should be in an island with any other dynamic bodies but not with kinematic or static bodies
+							CHECK(island_index3 != MotionProperties::cInactiveIndex);
+							CHECK(island_index3 != island_index2);
+							CHECK(island_index3 != island_index1);
+						}
+					}
+					else if (m3 == EMotionType::Kinematic)
+					{
+						// A kinematic body should be in an island of its own
+						CHECK(island_index3 != MotionProperties::cInactiveIndex);
+						CHECK(island_index3 != island_index2);
+						CHECK(island_index3 != island_index1);
+					}
+					else
+					{
+						// Static bodies should not be in an island
+						CHECK(island_index3 == MotionProperties::cInactiveIndex);
+					}
+				}
+	}
 }
