@@ -220,6 +220,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	context.mPhysicsSystem = this;
 	context.mJobSystem = inJobSystem;
 	context.mBarrier = inJobSystem->CreateBarrier();
+	context.mBodyManager = &mBodyManager;
 	context.mIslandBuilder = &mIslandBuilder;
 	context.mStepDeltaTime = step_delta_time;
 	context.mWarmStartImpulseRatio = warm_start_impulse_ratio;
@@ -1075,9 +1076,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false;
-	ContactLinker linker(mBodyManager, mIslandBuilder);
 	if (mPhysicsSettings.mUseBodyPairContactCache && !(body1->IsCollisionCacheInvalid() || body2->IsCollisionCacheInvalid()))
-		mContactManager.GetContactsFromCache(ioContactAllocator, linker, *body1, *body2, pair_handled);
+		mContactManager.GetContactsFromCache(ioContactAllocator, *body1, *body2, pair_handled);
 
 	// If the cache hasn't handled this body pair do actual collision detection
 	if (!pair_handled)
@@ -1226,6 +1226,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			mSimCollideBodyVsBody(*body1, *body2, transform1, transform2, settings, collector, shape_filter.GetFilter());
 
 			// Add the contacts
+			bool link_and_activate_bodies = true;
 			for (ContactManifold &manifold : collector.mManifolds)
 			{
 				// Normalize the normal (is a sum of all normals from merged manifolds)
@@ -1236,7 +1237,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					PruneContactPoints(manifold.mWorldSpaceNormal, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
 
 				// Actually add the contact points to the manager
-				mContactManager.AddContactConstraint(ioContactAllocator, linker, body_pair_handle, *body1, *body2, manifold);
+				mContactManager.AddContactConstraint(ioContactAllocator, link_and_activate_bodies, body_pair_handle, *body1, *body2, manifold);
 			}
 		}
 		else
@@ -1247,10 +1248,9 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			class NonReductionCollideShapeCollector : public CollideShapeCollector
 			{
 			public:
-								NonReductionCollideShapeCollector(PhysicsSystem *inSystem, ContactAllocator &ioContactAllocator, ContactLinker &ioContactLinker, Body *inBody1, Body *inBody2, const ContactConstraintManager::BodyPairHandle &inPairHandle) :
+								NonReductionCollideShapeCollector(PhysicsSystem *inSystem, ContactAllocator &ioContactAllocator, Body *inBody1, Body *inBody2, const ContactConstraintManager::BodyPairHandle &inPairHandle) :
 					mSystem(inSystem),
 					mContactAllocator(ioContactAllocator),
-					mContactLinker(ioContactLinker),
 					mBody1(inBody1),
 					mBody2(inBody2),
 					mBodyPairHandle(inPairHandle)
@@ -1309,19 +1309,18 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					manifold.mSubShapeID2 = inResult.mSubShapeID2;
 
 					// Actually add the contact points to the manager
-					mSystem->mContactManager.AddContactConstraint(mContactAllocator, mContactLinker, mBodyPairHandle, *mBody1, *mBody2, manifold);
+					mSystem->mContactManager.AddContactConstraint(mContactAllocator, mLinkAndActivateBodies, mBodyPairHandle, *mBody1, *mBody2, manifold);
 				}
 
 				PhysicsSystem *		mSystem;
 				ContactAllocator &	mContactAllocator;
-				ContactLinker &		mContactLinker;
 				Body *				mBody1;
 				Body *				mBody2;
 				ContactConstraintManager::BodyPairHandle mBodyPairHandle;
 				bool				mValidateBodyPair = true;
-				bool				mLinkBodies = true;
+				bool				mLinkAndActivateBodies = true;
 			};
-			NonReductionCollideShapeCollector collector(this, ioContactAllocator, linker, body1, body2, body_pair_handle);
+			NonReductionCollideShapeCollector collector(this, ioContactAllocator, body1, body2, body_pair_handle);
 
 			// Perform collision detection between the two shapes
 			mSimCollideBodyVsBody(*body1, *body2, transform1, transform2, settings, collector, shape_filter.GetFilter());
