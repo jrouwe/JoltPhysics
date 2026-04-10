@@ -5,10 +5,13 @@
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
 #include "Layers.h"
+#include "LoggingContactListener.h"
+#include "LoggingSoftBodyContactListener.h"
 #include <Jolt/Physics/SoftBody/SoftBodySharedSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
 TEST_SUITE("SoftBodyTests")
 {
@@ -144,5 +147,110 @@ TEST_SUITE("SoftBodyTests")
 		CHECK_APPROX_EQUAL(sb_box.GetPosition(), cExpectedPosSB, 0.01f * cExpectedPosSB.Length());
 		CHECK_APPROX_EQUAL(sb_box.GetLinearVelocity(), cExpectedVel, 2.0e-3f);
 		CHECK_APPROX_EQUAL(sb_box.GetAngularVelocity(), Vec3::sZero(), 0.01f);
+	}
+
+	// Test that a rigid body sphere with high speed tunnels through a soft body cube when using discrete motion quality,
+	// but collides and transfers momentum correctly when using linear cast motion quality. Test that we can affect
+	// this behavior with the soft body contact listener.
+	TEST_CASE("TestLinearCastSphereVsSoftBody")
+	{
+		constexpr float cDeltaTime = 1.0f / 60.0f;
+		constexpr float cSphereMass = 200.0f;
+		constexpr float cSoftBodyMass = 6.0f * 6.0f * 6.0f; // * 1 kg
+
+		// Sphere starts at x = 2 and moves by -5 in one time step, towards the soft body cube at the origin (spans [-0.5, 0.5])
+		// Velocity is high enough to tunnel through the cube in one simulation step
+		const RVec3 cSphereStartPos(2.0f, 0, 0);
+		const Vec3 cSphereVelocity(-5.0f / cDeltaTime, 0, 0);
+
+		// Expensive to make, create outside of loop
+		RefConst<SoftBodySharedSettings> cube = SoftBodySharedSettings::sCreateCube(6, 0.2f);
+
+		enum class Test
+		{
+			NoContactListener,
+			WithContactListener,
+			WithRejectingContactListener
+		};
+
+		for (Test test : { Test::NoContactListener, Test::WithContactListener, Test::WithRejectingContactListener })
+			for (EMotionQuality motion_quality : { EMotionQuality::Discrete, EMotionQuality::LinearCast })
+			{
+				PhysicsTestContext c(cDeltaTime, 1);
+				c.ZeroGravity();
+				BodyInterface &bi = c.GetBodyInterface();
+
+				// Create rigid body sphere approaching the cube
+				BodyCreationSettings sphere_settings(new SphereShape(1.0f), cSphereStartPos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+				sphere_settings.mMotionQuality = motion_quality;
+				sphere_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+				sphere_settings.mMassPropertiesOverride.mMass = cSphereMass;
+				sphere_settings.mLinearVelocity = cSphereVelocity;
+				sphere_settings.mLinearDamping = 0.0f;
+				Body &sphere = c.CreateBody(sphere_settings, EActivation::Activate);
+				CHECK_APPROX_EQUAL(sphere.GetMotionProperties()->GetInverseMass(), 1.0f / cSphereMass);
+
+				// Create soft body cube at origin (size 1 with 5 subdivisions)
+				SoftBodyCreationSettings sb_settings(cube, RVec3::sZero(), Quat::sIdentity(), Layers::MOVING);
+				Body &soft_body = *bi.CreateSoftBody(sb_settings);
+				bi.AddBody(soft_body.GetID(), EActivation::Activate);
+				CHECK_APPROX_EQUAL(soft_body.GetMotionProperties()->GetInverseMass(), 1.0f / cSoftBodyMass);
+
+				LoggingContactListener listener;
+				c.GetSystem()->SetContactListener(&listener);
+
+				// Optionally install a soft body contact listener
+				LoggingSoftBodyContactListener soft_body_listener;
+				if (test != Test::NoContactListener)
+					c.GetSystem()->SetSoftBodyContactListener(&soft_body_listener);
+				if (test == Test::WithRejectingContactListener)
+					soft_body_listener.SetValidateValueToReturn(SoftBodyValidateResult::RejectContact);
+
+				// Simulate one step
+				c.SimulateSingleStep();
+
+				// We shouldn't be receiving any contacts on the normal contact listener
+				CHECK(listener.GetEntryCount() == 0);
+
+				if (motion_quality == EMotionQuality::Discrete || test == Test::WithRejectingContactListener)
+				{
+					// With discrete motion  quality / rejected contacts the sphere should have tunneled through the soft body without any collision
+					CHECK_APPROX_EQUAL(sphere.GetPosition(), cSphereStartPos + cDeltaTime * cSphereVelocity);
+					CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), cSphereVelocity);
+					CHECK(soft_body.GetLinearVelocity() == Vec3::sZero());
+
+					// No contacts should have been detected
+					if (motion_quality == EMotionQuality::Discrete)
+						CHECK(soft_body_listener.GetEntryCount() == 0);
+					else
+					{
+						CHECK(soft_body_listener.Contains(LoggingSoftBodyContactListener::EType::Validate, soft_body.GetID(), sphere.GetID())); // Should have gotten a validate that we rejected
+						CHECK(!soft_body_listener.Contains(LoggingSoftBodyContactListener::EType::Add, soft_body.GetID(), sphere.GetID()));
+					}
+				}
+				else // LinearCast
+				{
+					// With linear cast motion quality the sphere should have collided with the soft body and stopped there (we do time stealing)
+					CHECK_APPROX_EQUAL(sphere.GetPosition(), RVec3(1.5f, 0, 0), c.GetSystem()->GetPhysicsSettings().mPenetrationSlop);
+
+					// The soft body should have gained velocity in the direction the sphere was traveling
+					CHECK(soft_body.GetLinearVelocity().GetX() < 0.0f);
+
+					// Check that momentum is conserved (GetLinearVelocity returns the center of mass velocity of the soft body)
+					// Note that because we apply the collision impulse to a face, some rotational velocity will be introduced and we lose some linear momentum
+					float initial_momentum = cSphereMass * cSphereVelocity.GetX();
+					float final_momentum = cSphereMass * sphere.GetLinearVelocity().GetX() + cSoftBodyMass * soft_body.GetLinearVelocity().GetX();
+					CHECK_APPROX_EQUAL(final_momentum, initial_momentum, 0.05f * abs(initial_momentum));
+
+					if (test == Test::NoContactListener)
+						CHECK(soft_body_listener.GetEntryCount() == 0);
+					else
+					{
+						// We should have received one contact for the soft body
+						CHECK(soft_body_listener.Contains(LoggingSoftBodyContactListener::EType::Validate, soft_body.GetID(), sphere.GetID()));
+						// TODO - we don't report these yet: CHECK(soft_body_listener.Contains(LoggingSoftBodyContactListener::EType::Add, soft_body.GetID(), sphere.GetID()));
+					}
+				}
+			}
 	}
 }
