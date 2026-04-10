@@ -121,9 +121,6 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 {
 	JPH_PROFILE_FUNCTION();
 
-	// Reset flag prior to collision detection
-	mNeedContactCallback.store(false, memory_order_relaxed);
-
 	struct Collector : public CollideShapeBodyCollector
 	{
 									Collector(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem, const BodyLockInterface &inBodyLockInterface, const AABox &inLocalBounds, const AABox &inWorldBounds, SimShapeFilterWrapper &inShapeFilter, Array<CollidingShape> &ioHits, Array<CollidingSensor> &ioSensors) :
@@ -288,7 +285,7 @@ void SoftBodyMotionProperties::DetermineSensorCollisions(CollidingSensor &ioSens
 
 	// We need a contact callback if one of the sensors collided
 	if (ioSensor.mHasContact)
-		mNeedContactCallback.store(true, memory_order_relaxed);
+		RequestContactCallback();
 }
 
 void SoftBodyMotionProperties::ApplyPressure(const SoftBodyUpdateContext &inContext)
@@ -717,6 +714,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 			v.mVelocity = (v.mPosition - v.mPreviousPosition) / dt;
 
 			// Satisfy collision constraint
+			static_assert(int(BodyID::cBroadPhaseBit) < 0); // CCD contacts should be negative too (see: SoftBodyVertex::MarkCCDContact)
 			if (v.mCollidingShapeIndex >= 0)
 			{
 				// Check if there is a collision
@@ -727,7 +725,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 					v.mHasContact = true;
 
 					// We need a contact callback if one of the vertices collided
-					mNeedContactCallback.store(true, memory_order_relaxed);
+					RequestContactCallback();
 
 					// Note that we already calculated the velocity, so this does not affect the velocity (next iteration starts by setting previous position to current position)
 					CollidingShape &cs = mCollidingShapes[v.mCollidingShapeIndex];
@@ -842,6 +840,8 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 			}
 
 		ioContext.mContactListener->OnSoftBodyContactAdded(*ioContext.mBody, SoftBodyManifold(this));
+
+		mNeedContactCallback.store(false, memory_order_relaxed);
 	}
 
 	// Loop through vertices once more to update the global state

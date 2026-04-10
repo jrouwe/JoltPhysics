@@ -2319,6 +2319,19 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 						vtx0.mVelocity += delta_v2 * vtx0.mInvMass;
 						vtx1.mVelocity += delta_v2 * vtx1.mInvMass;
 						vtx2.mVelocity += delta_v2 * vtx2.mInvMass;
+
+						// If there's a contact listener, we need to flag this vertex as having had collision and force a contact callback.
+						// Note that during the soft body update that follows this, it is likely that a new collision will be found and that this will be overwritten.
+						if (mSoftBodyContactListener != nullptr)
+						{
+							BodyID body_id = ccd_body->mBodyID1;
+							Vec3 local_normal = inv_body2_transform.Multiply3x3(ccd_body->mContactNormal);
+							Plane contact_plane = Plane::sFromPointAndNormal(local_contact, local_normal);
+							vtx0.MarkCCDContact(body_id, contact_plane);
+							vtx1.MarkCCDContact(body_id, contact_plane);
+							vtx2.MarkCCDContact(body_id, contact_plane);
+							soft_mp->RequestContactCallback();
+						}
 					}
 
 					// Clamp velocity of body 1

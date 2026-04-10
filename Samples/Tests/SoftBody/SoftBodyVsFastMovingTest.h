@@ -5,8 +5,9 @@
 #pragma once
 
 #include <Tests/Test.h>
+#include <Jolt/Physics/SoftBody/SoftBodyContactListener.h>
 
-class SoftBodyVsFastMovingTest : public Test
+class SoftBodyVsFastMovingTest : public Test, public SoftBodyContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyVsFastMovingTest)
@@ -19,4 +20,7 @@ public:
 
 	// See: Test
 	virtual void		Initialize() override;
+
+	// See: SoftBodyContactListener
+	virtual void		OnSoftBodyContactAdded(const Body &inSoftBody, const SoftBodyManifold &inManifold) override;
 };

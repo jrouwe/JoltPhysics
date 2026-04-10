@@ -7,8 +7,10 @@
 #include <Tests/SoftBody/SoftBodyVsFastMovingTest.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyManifold.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Utils/SoftBodyCreator.h>
+#include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyVsFastMovingTest)
@@ -18,6 +20,9 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyVsFastMovingTest)
 
 void SoftBodyVsFastMovingTest::Initialize()
 {
+	// Install contact listener for soft bodies
+	mPhysicsSystem->SetSoftBodyContactListener(this);
+
 	// Floor
 	CreateFloor();
 
@@ -38,4 +43,18 @@ void SoftBodyVsFastMovingTest::Initialize()
 	// Create another body with a higher ID than the cloth
 	bcs.mPosition = RVec3(2, 20, 0);
 	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+}
+
+void SoftBodyVsFastMovingTest::OnSoftBodyContactAdded(const Body &inSoftBody, const SoftBodyManifold &inManifold)
+{
+	// Draw contacts
+	RMat44 com = inSoftBody.GetCenterOfMassTransform();
+	for (const SoftBodyVertex &vertex : inManifold.GetVertices())
+		if (inManifold.HasContact(vertex))
+		{
+			RVec3 position = com * inManifold.GetLocalContactPoint(vertex);
+			Vec3 normal = inManifold.GetContactNormal(vertex);
+			mDebugRenderer->DrawMarker(position, Color::sRed, 0.1f);
+			mDebugRenderer->DrawArrow(position, position + normal, Color::sGreen, 0.1f);
+		}
 }

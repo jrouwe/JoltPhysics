@@ -248,7 +248,7 @@ TEST_SUITE("SoftBodyTests")
 					{
 						// We should have received one contact for the soft body
 						CHECK(soft_body_listener.Contains(LoggingSoftBodyContactListener::EType::Validate, soft_body.GetID(), sphere.GetID()));
-						// TODO - we don't report these yet: CHECK(soft_body_listener.Contains(LoggingSoftBodyContactListener::EType::Add, soft_body.GetID(), sphere.GetID()));
+						CHECK(soft_body_listener.Contains(LoggingSoftBodyContactListener::EType::Add, soft_body.GetID(), sphere.GetID()));
 					}
 				}
 			}
