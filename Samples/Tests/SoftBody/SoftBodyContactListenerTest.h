@@ -27,7 +27,8 @@ public:
 	virtual bool					IsDeterministic() const override							{ return false; }
 
 	// See: SoftBodyContactListener
-	virtual SoftBodyValidateResult	OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings) override;
+	virtual SoftBodyValidateResult	OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody) override;
+	virtual void					GetSoftBodyContactSettings(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings) override;
 	virtual void					OnSoftBodyContactAdded(const Body &inSoftBody, const SoftBodyManifold &inManifold) override;
 
 private:

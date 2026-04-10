@@ -26,6 +26,7 @@
 #include <Jolt/Physics/DeterminismLog.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/SoftBody/SoftBodyShape.h>
+#include <Jolt/Physics/SoftBody/SoftBodyContactListener.h>
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Geometry/ClosestPoint.h>
 #include <Jolt/Core/JobSystem.h>
@@ -1833,9 +1834,10 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		class CCDNarrowPhaseCollector : public CastShapeCollector
 		{
 		public:
-										CCDNarrowPhaseCollector(const BodyManager &inBodyManager, ContactConstraintManager &inContactConstraintManager, CCDBody &inCCDBody, ShapeCastResult &inResult, float inDeltaTime) :
+										CCDNarrowPhaseCollector(const BodyManager &inBodyManager, ContactConstraintManager &inContactConstraintManager, SoftBodyContactListener *inSoftBodyContactListener, CCDBody &inCCDBody, ShapeCastResult &inResult, float inDeltaTime) :
 				mBodyManager(inBodyManager),
 				mContactConstraintManager(inContactConstraintManager),
+				mSoftBodyContactListener(inSoftBodyContactListener),
 				mCCDBody(inCCDBody),
 				mResult(inResult),
 				mDeltaTime(inDeltaTime)
@@ -1871,26 +1873,45 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 							{
 								// Validate the contact result
 								const Body &body1 = mBodyManager.GetBody(mCCDBody.mBodyID1);
-								ValidateResult validate_result = mContactConstraintManager.ValidateContactPoint(body1, body2, body1.GetCenterOfMassPosition(), inResult); // Note that the center of mass of body 1 is the start of the sweep and is used as base offset below
-								switch (validate_result)
+								if (body2.IsRigidBody())
 								{
-								case ValidateResult::AcceptContact:
-									// Just continue
-									break;
+									ValidateResult validate_result = mContactConstraintManager.ValidateContactPoint(body1, body2, body1.GetCenterOfMassPosition(), inResult); // Note that the center of mass of body 1 is the start of the sweep and is used as base offset below
+									switch (validate_result)
+									{
+									case ValidateResult::AcceptContact:
+										// Just continue
+										break;
 
-								case ValidateResult::AcceptAllContactsForThisBodyPair:
-									// Accept this and all following contacts from this body
-									mValidateBodyPair = false;
-									break;
+									case ValidateResult::AcceptAllContactsForThisBodyPair:
+										// Accept this and all following contacts from this body
+										mValidateBodyPair = false;
+										break;
 
-								case ValidateResult::RejectContact:
-									return;
+									case ValidateResult::RejectContact:
+										return;
 
-								case ValidateResult::RejectAllContactsForThisBodyPair:
-									// Reject this and all following contacts from this body
-									mRejectAll = true;
-									ForceEarlyOut();
-									return;
+									case ValidateResult::RejectAllContactsForThisBodyPair:
+										// Reject this and all following contacts from this body
+										mRejectAll = true;
+										ForceEarlyOut();
+										return;
+									}
+								}
+								else
+								{
+									if (mSoftBodyContactListener == nullptr
+										|| mSoftBodyContactListener->OnSoftBodyContactValidate(body1, body2) == SoftBodyValidateResult::AcceptContact)
+									{
+										// Accept this and all following contacts from this body
+										mValidateBodyPair = false;
+									}
+									else
+									{
+										// Reject this and all following contacts from this body
+										mRejectAll = true;
+										ForceEarlyOut();
+										return;
+									}
 								}
 							}
 
@@ -1927,6 +1948,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		private:
 			const BodyManager &			mBodyManager;
 			ContactConstraintManager &	mContactConstraintManager;
+			SoftBodyContactListener *	mSoftBodyContactListener;
 			CCDBody &					mCCDBody;
 			ShapeCastResult &			mResult;
 			float						mDeltaTime;
@@ -1935,7 +1957,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 
 		// Narrowphase collector
 		ShapeCastResult cast_shape_result;
-		CCDNarrowPhaseCollector np_collector(mBodyManager, mContactManager, ccd_body, cast_shape_result, ioContext->mStepDeltaTime);
+		CCDNarrowPhaseCollector np_collector(mBodyManager, mContactManager, mSoftBodyContactListener, ccd_body, cast_shape_result, ioContext->mStepDeltaTime);
 
 		// This collector wraps the narrowphase collector and collects the closest hit
 		class CCDBroadPhaseCollector : public CastShapeBodyCollector
@@ -2058,9 +2080,29 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			manifold.mWorldSpaceNormal = ccd_body.mContactNormal;
 
 			// Call contact point callbacks
-			mContactManager.OnCCDContactAdded(contact_allocator, body, body2, manifold, ccd_body.mContactSettings);
+			ContactSettings &contact_settings = ccd_body.mContactSettings;
+			if (body2.IsRigidBody())
+				mContactManager.OnCCDContactAdded(contact_allocator, body, body2, manifold, contact_settings);
+			else
+			{
+				contact_settings.mCombinedFriction = 0.0f; // Soft bodies CCD contacts don't apply friction
+				contact_settings.mCombinedRestitution = mContactManager.GetCombineRestitution()(body, SubShapeID(), body2, SubShapeID()); // Soft bodies don't pass sub shape IDs because the restitution is uniform across the entire body
 
-			if (ccd_body.mContactSettings.mIsSensor)
+				if (mSoftBodyContactListener != nullptr)
+				{
+					SoftBodyContactSettings sb_settings;
+					sb_settings.mIsSensor = false;
+					mSoftBodyContactListener->GetSoftBodyContactSettings(body2, body, sb_settings); // Note reversal of bodies: soft body should be first parameter
+					contact_settings.mInvMassScale1 = sb_settings.mInvMassScale2;
+					contact_settings.mInvMassScale2 = sb_settings.mInvMassScale1;
+					contact_settings.mInvInertiaScale1 = sb_settings.mInvInertiaScale2;
+					contact_settings.mIsSensor = sb_settings.mIsSensor;
+				}
+				else
+					contact_settings.mIsSensor = false; // CCD sensors are filtered out in PhysicsSystem::JobIntegrateVelocity
+			}
+
+			if (contact_settings.mIsSensor)
 			{
 				// If this is a sensor, we don't want to solve the contact
 				ccd_body.mFractionPlusSlop = 1.0f;

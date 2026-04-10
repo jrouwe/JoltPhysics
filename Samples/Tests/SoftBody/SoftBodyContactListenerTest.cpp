@@ -84,7 +84,7 @@ void SoftBodyContactListenerTest::StartCycle()
 	UpdateLabel();
 }
 
-SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings)
+SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody)
 {
 	switch (mCycle)
 	{
@@ -94,29 +94,22 @@ SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(co
 
 	case 1:
 		// Makes the sphere 10x as heavy
-		ioSettings.mInvMassScale2 = 0.1f;
-		ioSettings.mInvInertiaScale2 = 0.1f;
 		return SoftBodyValidateResult::AcceptContact;
 
 	case 2:
 		// Makes the cloth 10x as heavy
-		ioSettings.mInvMassScale1 = 0.1f;
 		return SoftBodyValidateResult::AcceptContact;
 
 	case 3:
 		// Makes the sphere have infinite mass
-		ioSettings.mInvMassScale2 = 0.0f;
-		ioSettings.mInvInertiaScale2 = 0.0f;
 		return SoftBodyValidateResult::AcceptContact;
 
 	case 4:
 		// Makes the cloth have infinite mass
-		ioSettings.mInvMassScale1 = 0.0f;
 		return SoftBodyValidateResult::AcceptContact;
 
 	case 5:
 		// Sensor contact
-		ioSettings.mIsSensor = true;
 		return SoftBodyValidateResult::AcceptContact;
 
 	case 6:
@@ -129,17 +122,77 @@ SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(co
 
 	case 8:
 		// Kinematic sphere, cloth infinite mass
-		ioSettings.mInvMassScale1 = 0.0f;
 		return SoftBodyValidateResult::AcceptContact;
 
 	case 9:
 		// Kinematic sphere, sensor contact
-		ioSettings.mIsSensor = true;
 		return SoftBodyValidateResult::AcceptContact;
 
 	default:
 		// No contacts
+		JPH_ASSERT(false);
 		return SoftBodyValidateResult::RejectContact;
+	}
+}
+
+void SoftBodyContactListenerTest::GetSoftBodyContactSettings(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings)
+{
+	switch (mCycle)
+	{
+	case 0:
+		// Normal
+		break;
+
+	case 1:
+		// Makes the sphere 10x as heavy
+		ioSettings.mInvMassScale2 = 0.1f;
+		ioSettings.mInvInertiaScale2 = 0.1f;
+		break;
+
+	case 2:
+		// Makes the cloth 10x as heavy
+		ioSettings.mInvMassScale1 = 0.1f;
+		break;
+
+	case 3:
+		// Makes the sphere have infinite mass
+		ioSettings.mInvMassScale2 = 0.0f;
+		ioSettings.mInvInertiaScale2 = 0.0f;
+		break;
+
+	case 4:
+		// Makes the cloth have infinite mass
+		ioSettings.mInvMassScale1 = 0.0f;
+		break;
+
+	case 5:
+		// Sensor contact
+		ioSettings.mIsSensor = true;
+		break;
+
+	case 6:
+		// No contacts
+		JPH_ASSERT(false);
+		break;
+
+	case 7:
+		// Kinematic sphere
+		break;
+
+	case 8:
+		// Kinematic sphere, cloth infinite mass
+		ioSettings.mInvMassScale1 = 0.0f;
+		break;
+
+	case 9:
+		// Kinematic sphere, sensor contact
+		ioSettings.mIsSensor = true;
+		break;
+
+	default:
+		// No contacts
+		JPH_ASSERT(false);
+		break;
 	}
 }
 
