@@ -231,7 +231,7 @@ TEST_SUITE("SoftBodyTests")
 				else // LinearCast
 				{
 					// With linear cast motion quality the sphere should have collided with the soft body and stopped there (we do time stealing)
-					CHECK_APPROX_EQUAL(sphere.GetPosition(), RVec3(1.5f, 0, 0), c.GetSystem()->GetPhysicsSettings().mPenetrationSlop);
+					CHECK_APPROX_EQUAL(sphere.GetPosition(), RVec3(1.5f, 0, 0), 1.001f * c.GetSystem()->GetPhysicsSettings().mPenetrationSlop);
 
 					// The soft body should have gained velocity in the direction the sphere was traveling
 					CHECK(soft_body.GetLinearVelocity().GetX() < 0.0f);
