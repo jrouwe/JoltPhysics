@@ -95,7 +95,6 @@ public:
 
 	/// Check if the contact points from the previous frame are reusable and if so copy them.
 	/// When the cache was usable and the pair has been handled: outPairHandled = true.
-	/// When a contact constraint was produced: outConstraintIdx will be the index in the constraint list, 0xffffffff otherwise.
 	void						GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled);
 
 	/// Handle used to keep track of the current body pair

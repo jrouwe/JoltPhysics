@@ -952,7 +952,7 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 
 void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled)
 {
-	// Start with no constraint and not handled
+	// Start with not handled
 	outPairHandled = false;
 
 	// Swap bodies so that body 1 id < body 2 id

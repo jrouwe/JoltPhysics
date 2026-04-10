@@ -157,7 +157,7 @@ void IslandBuilder::LinkBodies(uint32 inFirst, uint32 inSecond)
 void IslandBuilder::LinkConstraint(uint32 inConstraintIndex, uint32 inIndexInActiveBodyList)
 {
 	JPH_ASSERT(inConstraintIndex < mNumConstraints);
-	JPH_ASSERT(inIndexInActiveBodyList != MotionProperties::cInactiveIndex); // Bodies should be active
+	JPH_ASSERT(inIndexInActiveBodyList != MotionProperties::cInactiveIndex); // Body should be active
 
 	mConstraintLinks[inConstraintIndex] = inIndexInActiveBodyList;
 }
@@ -165,7 +165,7 @@ void IslandBuilder::LinkConstraint(uint32 inConstraintIndex, uint32 inIndexInAct
 void IslandBuilder::LinkContact(uint32 inContactIndex, uint32 inIndexInActiveBodyList)
 {
 	JPH_ASSERT(inContactIndex < mMaxContacts);
-	JPH_ASSERT(inIndexInActiveBodyList != MotionProperties::cInactiveIndex); // Bodies should be active
+	JPH_ASSERT(inIndexInActiveBodyList != MotionProperties::cInactiveIndex); // Body should be active
 
 	mContactLinks[inContactIndex] = inIndexInActiveBodyList;
 }
