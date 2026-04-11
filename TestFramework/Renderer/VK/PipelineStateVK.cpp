@@ -159,17 +159,17 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 	pipeline_info.pDynamicState = &dynamic_state;
 	pipeline_info.layout = mRenderer->GetPipelineLayout();
 	pipeline_info.renderPass = inDrawPass == EDrawPass::Normal? mRenderer->GetRenderPass() : mRenderer->GetRenderPassShadow();
-	FatalErrorIfFailed(vkCreateGraphicsPipelines(mRenderer->GetDevice(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &mGraphicsPipeline));
+	FatalErrorIfFailed(mRenderer->mVkCreateGraphicsPipelines(mRenderer->GetDevice(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &mGraphicsPipeline));
 }
 
 PipelineStateVK::~PipelineStateVK()
 {
 	mRenderer->mVkDeviceWaitIdle(mRenderer->GetDevice());
 
-	vkDestroyPipeline(mRenderer->GetDevice(), mGraphicsPipeline, nullptr);
+	mRenderer->mVkDestroyPipeline(mRenderer->GetDevice(), mGraphicsPipeline, nullptr);
 }
 
 void PipelineStateVK::Activate()
 {
-	vkCmdBindPipeline(mRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
+	mRenderer->mVkCmdBindPipeline(mRenderer->GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mGraphicsPipeline);
 }

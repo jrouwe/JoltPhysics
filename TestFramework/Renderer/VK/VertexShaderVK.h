@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Renderer/VertexShader.h>
+#include <Renderer/VK/RendererVK.h>
 
 #include <vulkan/vulkan.h>
 
@@ -13,8 +14,8 @@ class VertexShaderVK : public VertexShader
 {
 public:
 	/// Constructor
-							VertexShaderVK(VkDevice inDevice, VkShaderModule inShaderModule) :
-		mDevice(inDevice)
+							VertexShaderVK(RendererVK *inRenderer, VkShaderModule inShaderModule) :
+		mRenderer(inRenderer)
 	{
 		mStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		mStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -25,9 +26,9 @@ public:
 	/// Destructor
 	virtual					~VertexShaderVK() override
 	{
-		vkDestroyShaderModule(mDevice, mStageInfo.module, nullptr);
+		mRenderer->mVkDestroyShaderModule(mRenderer->GetDevice(), mStageInfo.module, nullptr);
 	}
 
-	VkDevice				mDevice;
+	RendererVK *			mRenderer;
 	VkPipelineShaderStageCreateInfo mStageInfo = {};
 };

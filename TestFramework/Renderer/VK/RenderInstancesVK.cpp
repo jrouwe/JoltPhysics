@@ -40,16 +40,16 @@ void RenderInstancesVK::Draw(RenderPrimitive *inPrimitive, int inStartInstance, 
 
 	VkBuffer buffers[] = { primitive->mVertexBuffer.mBuffer, mInstancesBuffer.mBuffer };
 	VkDeviceSize offsets[] = { 0, 0 };
-	vkCmdBindVertexBuffers(command_buffer, 0, 2, buffers, offsets);
+	mRenderer->mVkCmdBindVertexBuffers(command_buffer, 0, 2, buffers, offsets);
 
 	if (primitive->mIndexBuffer.mBuffer == VK_NULL_HANDLE)
 	{
-		vkCmdDraw(command_buffer, primitive->mNumVtxToDraw, inNumInstances, 0, inStartInstance);
+		mRenderer->mVkCmdDraw(command_buffer, primitive->mNumVtxToDraw, inNumInstances, 0, inStartInstance);
 	}
 	else
 	{
-		vkCmdBindIndexBuffer(command_buffer, primitive->mIndexBuffer.mBuffer, 0, VK_INDEX_TYPE_UINT32);
+		mRenderer->mVkCmdBindIndexBuffer(command_buffer, primitive->mIndexBuffer.mBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdDrawIndexed(command_buffer, primitive->mNumIdxToDraw, inNumInstances, 0, 0, inStartInstance);
+		mRenderer->mVkCmdDrawIndexed(command_buffer, primitive->mNumIdxToDraw, inNumInstances, 0, 0, inStartInstance);
 	}
 }

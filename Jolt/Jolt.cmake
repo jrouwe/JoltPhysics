@@ -876,7 +876,6 @@ if (JPH_USE_VK)
 	target_compile_definitions(Jolt PUBLIC JPH_USE_VK)
 
 	target_include_directories(Jolt PUBLIC ${Vulkan_INCLUDE_DIRS})
-	target_link_libraries(Jolt LINK_PUBLIC ${Vulkan_LIBRARIES})
 endif()
 
 # Compile against Metal

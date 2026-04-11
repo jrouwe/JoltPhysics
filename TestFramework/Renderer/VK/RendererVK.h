@@ -51,6 +51,47 @@ public:
 	VkFormat						FindDepthFormat();
 	void							FreeBufferDelayed(const BufferVK &inBuffer)						{ mPerFrameFreedBuffers[mFrameIndex].push_back(inBuffer); }
 
+	// Vulkan instance function pointers
+	PFN_vkDestroySurfaceKHR							mVkDestroySurfaceKHR = nullptr;
+	PFN_vkGetPhysicalDeviceFeatures2				mVkGetPhysicalDeviceFeatures2 = nullptr;
+	PFN_vkGetPhysicalDeviceFormatProperties			mVkGetPhysicalDeviceFormatProperties = nullptr;
+	PFN_vkGetPhysicalDeviceImageFormatProperties	mVkGetPhysicalDeviceImageFormatProperties = nullptr;
+	PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR	mVkGetPhysicalDeviceSurfaceCapabilitiesKHR = nullptr;
+	PFN_vkGetPhysicalDeviceSurfaceFormatsKHR		mVkGetPhysicalDeviceSurfaceFormatsKHR = nullptr;
+	PFN_vkGetPhysicalDeviceSurfaceSupportKHR		mVkGetPhysicalDeviceSurfaceSupportKHR = nullptr;
+
+	// Vulkan device function pointers
+	PFN_vkQueueWaitIdle				mVkQueueWaitIdle = nullptr;
+	PFN_vkQueuePresentKHR			mVkQueuePresentKHR = nullptr;
+	PFN_vkGetSwapchainImagesKHR		mVkGetSwapchainImagesKHR = nullptr;
+	PFN_vkGetImageMemoryRequirements mVkGetImageMemoryRequirements = nullptr;
+	PFN_vkDestroySwapchainKHR		mVkDestroySwapchainKHR = nullptr;
+	PFN_vkDestroySemaphore			mVkDestroySemaphore = nullptr;
+	PFN_vkDestroySampler			mVkDestroySampler = nullptr;
+	PFN_vkDestroyRenderPass			mVkDestroyRenderPass = nullptr;
+	PFN_vkDestroyImageView			mVkDestroyImageView = nullptr;
+	PFN_vkDestroyImage				mVkDestroyImage = nullptr;
+	PFN_vkDestroyFramebuffer		mVkDestroyFramebuffer = nullptr;
+	PFN_vkCreateSwapchainKHR		mVkCreateSwapchainKHR = nullptr;
+	PFN_vkCreateSemaphore			mVkCreateSemaphore = nullptr;
+	PFN_vkCreateSampler				mVkCreateSampler = nullptr;
+	PFN_vkCreateRenderPass			mVkCreateRenderPass = nullptr;
+	PFN_vkCreateImageView			mVkCreateImageView = nullptr;
+	PFN_vkCreateImage				mVkCreateImage = nullptr;
+	PFN_vkCreateGraphicsPipelines	mVkCreateGraphicsPipelines = nullptr;
+	PFN_vkCreateFramebuffer			mVkCreateFramebuffer = nullptr;
+	PFN_vkCmdSetViewport			mVkCmdSetViewport = nullptr;
+	PFN_vkCmdSetScissor				mVkCmdSetScissor = nullptr;
+	PFN_vkCmdEndRenderPass			mVkCmdEndRenderPass = nullptr;
+	PFN_vkCmdDrawIndexed			mVkCmdDrawIndexed = nullptr;
+	PFN_vkCmdDraw					mVkCmdDraw = nullptr;
+	PFN_vkCmdCopyBufferToImage		mVkCmdCopyBufferToImage = nullptr;
+	PFN_vkCmdBindVertexBuffers		mVkCmdBindVertexBuffers = nullptr;
+	PFN_vkCmdBindIndexBuffer		mVkCmdBindIndexBuffer = nullptr;
+	PFN_vkCmdBeginRenderPass		mVkCmdBeginRenderPass = nullptr;
+	PFN_vkBindImageMemory			mVkBindImageMemory = nullptr;
+	PFN_vkAcquireNextImageKHR		mVkAcquireNextImageKHR = nullptr;
+
 protected:
 	// Callbacks from ComputeSystemVKImpl
 	virtual void					OnInstanceCreated() override;

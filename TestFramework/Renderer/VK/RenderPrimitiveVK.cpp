@@ -81,16 +81,16 @@ void RenderPrimitiveVK::Draw() const
 
 	VkBuffer vertex_buffers[] = { mVertexBuffer.mBuffer };
 	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
+	mRenderer->mVkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets);
 
 	if (mIndexBuffer.mBuffer == VK_NULL_HANDLE)
 	{
-		vkCmdDraw(command_buffer, mNumVtxToDraw, 1, 0, 0);
+		mRenderer->mVkCmdDraw(command_buffer, mNumVtxToDraw, 1, 0, 0);
 	}
 	else
 	{
-		vkCmdBindIndexBuffer(command_buffer, mIndexBuffer.mBuffer, 0, VK_INDEX_TYPE_UINT32);
+		mRenderer->mVkCmdBindIndexBuffer(command_buffer, mIndexBuffer.mBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdDrawIndexed(command_buffer, mNumIdxToDraw, 1, 0, 0, 0);
+		mRenderer->mVkCmdDrawIndexed(command_buffer, mNumIdxToDraw, 1, 0, 0, 0);
 	}
 }
