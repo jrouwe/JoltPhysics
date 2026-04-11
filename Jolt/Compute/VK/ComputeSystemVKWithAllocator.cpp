@@ -20,7 +20,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(ComputeSystemVKWithAllocator)
 
 bool ComputeSystemVKWithAllocator::Initialize(VkInstance inInstance, VkPhysicalDevice inPhysicalDevice, PFN_vkGetInstanceProcAddr inGetInstanceProcAddr, PFN_vkGetDeviceProcAddr inVkGetDeviceProcAddr, VkDevice inDevice, uint32 inComputeQueueIndex, ComputeSystemResult &outResult)
 {
-	#define JPH_LOAD_VK_INST(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(vkGetInstanceProcAddr(inInstance, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
+	#define JPH_LOAD_VK_INST(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(inGetInstanceProcAddr(inInstance, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
 	JPH_LOAD_VK_INST(GetPhysicalDeviceMemoryProperties);
 	#undef JPH_LOAD_VK_INST
 

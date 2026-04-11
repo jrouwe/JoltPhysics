@@ -138,9 +138,6 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	JPH_LOAD_VK_INST(GetPhysicalDeviceProperties);
 	JPH_LOAD_VK_INST(GetPhysicalDeviceQueueFamilyProperties);
 	#undef JPH_LOAD_VK_INST
-#ifdef JPH_DEBUG
-	mVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(reinterpret_cast<void *>(vkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT")));
-#endif
 
 	// Get vkGetDeviceProcAddr
 	PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr = reinterpret_cast<PFN_vkGetDeviceProcAddr>(reinterpret_cast<void *>(vkGetInstanceProcAddr(mInstance, "vkGetDeviceProcAddr")));
@@ -149,9 +146,9 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 #ifdef JPH_DEBUG
 	// Finalize debug messenger callback
 	PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)(std::uintptr_t)vkGetInstanceProcAddr(mInstance, "vkCreateDebugUtilsMessengerEXT");
-	if (vkCreateDebugUtilsMessengerEXT != nullptr)
-		if (VKFailed(vkCreateDebugUtilsMessengerEXT(mInstance, &messenger_create_info, nullptr, &mDebugMessenger), outResult))
-			return false;
+	mVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(reinterpret_cast<void *>(vkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT")));
+	if (vkCreateDebugUtilsMessengerEXT != nullptr && VKFailed(vkCreateDebugUtilsMessengerEXT(mInstance, &messenger_create_info, nullptr, &mDebugMessenger), outResult))
+		return false;
 #endif
 
 	// Notify that instance has been created
