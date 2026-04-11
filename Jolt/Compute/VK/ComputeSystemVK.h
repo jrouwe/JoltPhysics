@@ -37,7 +37,7 @@ public:
 	virtual void *					MapBuffer(BufferVK &ioBuffer) = 0;
 	virtual void					UnmapBuffer(BufferVK &ioBuffer) = 0;
 
-	// Vulkan device function pointers (loaded during Initialize)
+	// Vulkan device function pointers
 	PFN_vkAllocateCommandBuffers	mVkAllocateCommandBuffers = nullptr;
 	PFN_vkAllocateDescriptorSets	mVkAllocateDescriptorSets = nullptr;
 	PFN_vkAllocateMemory			mVkAllocateMemory = nullptr;

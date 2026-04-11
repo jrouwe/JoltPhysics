@@ -24,7 +24,7 @@ bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, PFN_vkGetDev
 	mDevice = inDevice;
 	mComputeQueueIndex = inComputeQueueIndex;
 
-	// Load all required Vulkan device functions dynamically
+	// Load Vulkan device functions
 	#define JPH_LOAD_VK(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(inVkGetDeviceProcAddr(mDevice, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
 	JPH_LOAD_VK(AllocateCommandBuffers);
 	JPH_LOAD_VK(AllocateDescriptorSets);
@@ -64,11 +64,13 @@ bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, PFN_vkGetDev
 	JPH_LOAD_VK(ResetCommandBuffer);
 	JPH_LOAD_VK(ResetDescriptorPool);
 	JPH_LOAD_VK(ResetFences);
-	JPH_LOAD_VK(SetDebugUtilsObjectNameEXT);
 	JPH_LOAD_VK(UnmapMemory);
 	JPH_LOAD_VK(UpdateDescriptorSets);
 	JPH_LOAD_VK(WaitForFences);
 	#undef JPH_LOAD_VK
+
+	// Get function to set a debug name
+	mVkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(reinterpret_cast<void *>(inVkGetDeviceProcAddr(mDevice, "vkSetDebugUtilsObjectNameEXT")));
 
 	if (!InitializeMemory())
 	{
