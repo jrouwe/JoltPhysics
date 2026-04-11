@@ -14,7 +14,7 @@ JPH_NAMESPACE_BEGIN
 ComputeShaderVK::~ComputeShaderVK()
 {
 	VkDevice device = mComputeSystem->GetDevice();
-	
+
 	if (mShaderModule != VK_NULL_HANDLE)
 		mComputeSystem->mVkDestroyShaderModule(device, mShaderModule, nullptr);
 
@@ -155,7 +155,7 @@ bool ComputeShaderVK::Initialize(const Array<uint8> &inSPVCode, VkBuffer inDummy
 	}
 
 	VkDevice device = mComputeSystem->GetDevice();
-	
+
 	// Create layout bindings and buffer infos
 	if (!name_to_binding.empty())
 	{
