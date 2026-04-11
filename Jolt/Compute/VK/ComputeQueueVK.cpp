@@ -19,30 +19,30 @@ ComputeQueueVK::~ComputeQueueVK()
 	VkDevice device = mComputeSystem->GetDevice();
 
 	if (mCommandBuffer != VK_NULL_HANDLE)
-		vkFreeCommandBuffers(device, mCommandPool, 1, &mCommandBuffer);
+		mComputeSystem->mVkFreeCommandBuffers(device, mCommandPool, 1, &mCommandBuffer);
 
 	if (mCommandPool != VK_NULL_HANDLE)
-		vkDestroyCommandPool(device, mCommandPool, nullptr);
+		mComputeSystem->mVkDestroyCommandPool(device, mCommandPool, nullptr);
 
 	if (mDescriptorPool != VK_NULL_HANDLE)
-		vkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
+		mComputeSystem->mVkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
 
 	if (mFence != VK_NULL_HANDLE)
-		vkDestroyFence(device, mFence, nullptr);
+		mComputeSystem->mVkDestroyFence(device, mFence, nullptr);
 }
 
 bool ComputeQueueVK::Initialize(uint32 inComputeQueueIndex, ComputeQueueResult &outResult)
 {
 	// Get the queue
 	VkDevice device = mComputeSystem->GetDevice();
-	vkGetDeviceQueue(device, inComputeQueueIndex, 0, &mQueue);
+	mComputeSystem->mVkGetDeviceQueue(device, inComputeQueueIndex, 0, &mQueue);
 
 	// Create a command pool
 	VkCommandPoolCreateInfo pool_info = {};
 	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	pool_info.queueFamilyIndex = inComputeQueueIndex;
-	if (VKFailed(vkCreateCommandPool(device, &pool_info, nullptr, &mCommandPool), outResult))
+	if (VKFailed(mComputeSystem->mVkCreateCommandPool(device, &pool_info, nullptr, &mCommandPool), outResult))
 		return false;
 
 	// Create descriptor pool
@@ -55,7 +55,7 @@ bool ComputeQueueVK::Initialize(uint32 inComputeQueueIndex, ComputeQueueResult &
 	descriptor_info.poolSizeCount = (uint32)std::size(descriptor_pool_sizes);
 	descriptor_info.pPoolSizes = descriptor_pool_sizes;
 	descriptor_info.maxSets = 256;
-	if (VKFailed(vkCreateDescriptorPool(device, &descriptor_info, nullptr, &mDescriptorPool), outResult))
+	if (VKFailed(mComputeSystem->mVkCreateDescriptorPool(device, &descriptor_info, nullptr, &mDescriptorPool), outResult))
 		return false;
 
 	// Create a command buffer
@@ -64,13 +64,13 @@ bool ComputeQueueVK::Initialize(uint32 inComputeQueueIndex, ComputeQueueResult &
 	alloc_info.commandPool = mCommandPool;
 	alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	alloc_info.commandBufferCount = 1;
-	if (VKFailed(vkAllocateCommandBuffers(device, &alloc_info, &mCommandBuffer), outResult))
+	if (VKFailed(mComputeSystem->mVkAllocateCommandBuffers(device, &alloc_info, &mCommandBuffer), outResult))
 		return false;
 
 	// Create a fence
 	VkFenceCreateInfo fence_info = {};
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	if (VKFailed(vkCreateFence(device, &fence_info, nullptr, &mFence), outResult))
+	if (VKFailed(mComputeSystem->mVkCreateFence(device, &fence_info, nullptr, &mFence), outResult))
 		return false;
 
 	return true;
@@ -83,7 +83,7 @@ bool ComputeQueueVK::BeginCommandBuffer()
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		if (VKFailed(vkBeginCommandBuffer(mCommandBuffer, &begin_info)))
+		if (VKFailed(mComputeSystem->mVkBeginCommandBuffer(mCommandBuffer, &begin_info)))
 			return false;
 		mCommandBufferRecording = true;
 	}
@@ -187,7 +187,7 @@ void ComputeQueueVK::ScheduleReadback(ComputeBuffer *inDst, const ComputeBuffer 
 	copy.srcOffset = 0;
 	copy.dstOffset = 0;
 	copy.size = src_vk->GetSize() * src_vk->GetStride();
-	vkCmdCopyBuffer(mCommandBuffer, src_vk->GetBufferGPU(), dst_vk->GetBufferCPU(), 1, &copy);
+	mComputeSystem->mVkCmdCopyBuffer(mCommandBuffer, src_vk->GetBufferGPU(), dst_vk->GetBufferCPU(), 1, &copy);
 
 	// Barrier to indicate that CPU can read from the buffer
 	dst_vk->Barrier(mCommandBuffer, VK_PIPELINE_STAGE_HOST_BIT, VK_ACCESS_HOST_READ_BIT, false);
@@ -201,7 +201,7 @@ void ComputeQueueVK::Dispatch(uint inThreadGroupsX, uint inThreadGroupsY, uint i
 	if (!BeginCommandBuffer())
 		return;
 
-	vkCmdBindPipeline(mCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, mShader->GetPipeline());
+	mComputeSystem->mVkCmdBindPipeline(mCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, mShader->GetPipeline());
 
 	VkDevice device = mComputeSystem->GetDevice();
 	const Array<VkDescriptorSetLayoutBinding> &ds_bindings = mShader->GetLayoutBindings();
@@ -215,7 +215,7 @@ void ComputeQueueVK::Dispatch(uint inThreadGroupsX, uint inThreadGroupsY, uint i
 		VkDescriptorSetLayout ds_layout = mShader->GetDescriptorSetLayout();
 		alloc_info.pSetLayouts = &ds_layout;
 		VkDescriptorSet descriptor_set;
-		if (VKFailed(vkAllocateDescriptorSets(device, &alloc_info, &descriptor_set)))
+		if (VKFailed(mComputeSystem->mVkAllocateDescriptorSets(device, &alloc_info, &descriptor_set)))
 			return;
 
 		// Write the values to the descriptor set
@@ -233,13 +233,13 @@ void ComputeQueueVK::Dispatch(uint inThreadGroupsX, uint inThreadGroupsY, uint i
 			w.pBufferInfo = &mBufferInfos[i];
 			writes.push_back(w);
 		}
-		vkUpdateDescriptorSets(device, (uint32)writes.size(), writes.data(), 0, nullptr);
+		mComputeSystem->mVkUpdateDescriptorSets(device, (uint32)writes.size(), writes.data(), 0, nullptr);
 
 		// Bind the descriptor set
-		vkCmdBindDescriptorSets(mCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, mShader->GetPipelineLayout(), 0, 1, &descriptor_set, 0, nullptr);
+		mComputeSystem->mVkCmdBindDescriptorSets(mCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, mShader->GetPipelineLayout(), 0, 1, &descriptor_set, 0, nullptr);
 	}
 
-	vkCmdDispatch(mCommandBuffer, inThreadGroupsX, inThreadGroupsY, inThreadGroupsZ);
+	mComputeSystem->mVkCmdDispatch(mCommandBuffer, inThreadGroupsX, inThreadGroupsY, inThreadGroupsZ);
 }
 
 void ComputeQueueVK::Execute()
@@ -247,13 +247,13 @@ void ComputeQueueVK::Execute()
 	// End command buffer
 	if (!mCommandBufferRecording)
 		return;
-	if (VKFailed(vkEndCommandBuffer(mCommandBuffer)))
+	if (VKFailed(mComputeSystem->mVkEndCommandBuffer(mCommandBuffer)))
 		return;
 	mCommandBufferRecording = false;
 
 	// Reset fence
 	VkDevice device = mComputeSystem->GetDevice();
-	if (VKFailed(vkResetFences(device, 1, &mFence)))
+	if (VKFailed(mComputeSystem->mVkResetFences(device, 1, &mFence)))
 		return;
 
 	// Submit
@@ -261,7 +261,7 @@ void ComputeQueueVK::Execute()
 	submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit.commandBufferCount = 1;
 	submit.pCommandBuffers = &mCommandBuffer;
-	if (VKFailed(vkQueueSubmit(mQueue, 1, &submit, mFence)))
+	if (VKFailed(mComputeSystem->mVkQueueSubmit(mQueue, 1, &submit, mFence)))
 		return;
 
 	// Clear the current shader
@@ -278,15 +278,15 @@ void ComputeQueueVK::Wait()
 
 	// Wait for the work to complete
 	VkDevice device = mComputeSystem->GetDevice();
-	if (VKFailed(vkWaitForFences(device, 1, &mFence, VK_TRUE, UINT64_MAX)))
+	if (VKFailed(mComputeSystem->mVkWaitForFences(device, 1, &mFence, VK_TRUE, UINT64_MAX)))
 		return;
 
 	// Reset command buffer so it can be reused
 	if (mCommandBuffer != VK_NULL_HANDLE)
-		vkResetCommandBuffer(mCommandBuffer, 0);
+		mComputeSystem->mVkResetCommandBuffer(mCommandBuffer, 0);
 
 	// Allow reusing the descriptors for next run
-	vkResetDescriptorPool(device, mDescriptorPool, 0);
+	mComputeSystem->mVkResetDescriptorPool(device, mDescriptorPool, 0);
 
 	// Buffers can be freed now
 	mUsedBuffers.clear();

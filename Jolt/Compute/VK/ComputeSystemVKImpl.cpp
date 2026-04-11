@@ -310,7 +310,7 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	mSelectedFormat = selected_device.mFormat;
 
 	// Initialize the compute system
-	return ComputeSystemVK::Initialize(selected_device.mPhysicalDevice, device, selected_device.mComputeQueueIndex, outResult);
+	return ComputeSystemVK::Initialize(selected_device.mPhysicalDevice, vkGetDeviceProcAddr, device, selected_device.mComputeQueueIndex, outResult);
 }
 
 ComputeSystemResult CreateComputeSystemVK()

@@ -83,7 +83,7 @@ void ComputeBufferVK::Barrier(VkCommandBuffer inCommandBuffer, VkPipelineStageFl
 	b.buffer = mBufferGPU.mBuffer != VK_NULL_HANDLE? mBufferGPU.mBuffer : mBufferCPU.mBuffer;
 	b.offset = 0;
 	b.size = VK_WHOLE_SIZE;
-	vkCmdPipelineBarrier(inCommandBuffer, mAccessStage, inToStage, 0, 0, nullptr, 1, &b, 0, nullptr);
+	mComputeSystem->mVkCmdPipelineBarrier(inCommandBuffer, mAccessStage, inToStage, 0, 0, nullptr, 1, &b, 0, nullptr);
 
 	mAccessStage = inToStage;
 	mAccessFlagBits = inToFlags;
@@ -102,7 +102,7 @@ bool ComputeBufferVK::SyncCPUToGPU(VkCommandBuffer inCommandBuffer) const
 	copy.srcOffset = 0;
 	copy.dstOffset = 0;
 	copy.size = GetSize() * GetStride();
-	vkCmdCopyBuffer(inCommandBuffer, mBufferCPU.mBuffer, mBufferGPU.mBuffer, 1, &copy);
+	mComputeSystem->mVkCmdCopyBuffer(inCommandBuffer, mBufferCPU.mBuffer, mBufferGPU.mBuffer, 1, &copy);
 
 	mNeedsSync = false;
 	return true;

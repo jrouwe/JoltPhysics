@@ -104,7 +104,7 @@ TextureVK::~TextureVK()
 	{
 		VkDevice device = mRenderer->GetDevice();
 
-		vkDeviceWaitIdle(device);
+		mRenderer->mVkDeviceWaitIdle(device);
 
 		vkDestroyImageView(device, mImageView, nullptr);
 

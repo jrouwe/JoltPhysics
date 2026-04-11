@@ -20,7 +20,7 @@ public:
 	JPH_DECLARE_RTTI_ABSTRACT(JPH_EXPORT, ComputeSystemVK)
 
 	// Initialize / shutdown the compute system
-	bool							Initialize(VkPhysicalDevice inPhysicalDevice, VkDevice inDevice, uint32 inComputeQueueIndex, ComputeSystemResult &outResult);
+	bool							Initialize(VkPhysicalDevice inPhysicalDevice, PFN_vkGetDeviceProcAddr inVkGetDeviceProcAddr, VkDevice inDevice, uint32 inComputeQueueIndex, ComputeSystemResult &outResult);
 	void							Shutdown();
 
 	// See: ComputeSystem
@@ -37,6 +37,41 @@ public:
 	virtual void *					MapBuffer(BufferVK &ioBuffer) = 0;
 	virtual void					UnmapBuffer(BufferVK &ioBuffer) = 0;
 
+	// Vulkan device function pointers (loaded during Initialize)
+	PFN_vkDeviceWaitIdle			mVkDeviceWaitIdle = nullptr;
+	PFN_vkSetDebugUtilsObjectNameEXT mVkSetDebugUtilsObjectNameEXT = nullptr;
+	PFN_vkGetDeviceQueue			mVkGetDeviceQueue = nullptr;
+	PFN_vkCreateCommandPool			mVkCreateCommandPool = nullptr;
+	PFN_vkDestroyCommandPool		mVkDestroyCommandPool = nullptr;
+	PFN_vkCreateDescriptorPool		mVkCreateDescriptorPool = nullptr;
+	PFN_vkDestroyDescriptorPool		mVkDestroyDescriptorPool = nullptr;
+	PFN_vkAllocateCommandBuffers	mVkAllocateCommandBuffers = nullptr;
+	PFN_vkFreeCommandBuffers		mVkFreeCommandBuffers = nullptr;
+	PFN_vkCreateFence				mVkCreateFence = nullptr;
+	PFN_vkDestroyFence				mVkDestroyFence = nullptr;
+	PFN_vkBeginCommandBuffer		mVkBeginCommandBuffer = nullptr;
+	PFN_vkEndCommandBuffer			mVkEndCommandBuffer = nullptr;
+	PFN_vkResetCommandBuffer		mVkResetCommandBuffer = nullptr;
+	PFN_vkAllocateDescriptorSets	mVkAllocateDescriptorSets = nullptr;
+	PFN_vkUpdateDescriptorSets		mVkUpdateDescriptorSets = nullptr;
+	PFN_vkResetDescriptorPool		mVkResetDescriptorPool = nullptr;
+	PFN_vkCmdBindPipeline			mVkCmdBindPipeline = nullptr;
+	PFN_vkCmdBindDescriptorSets		mVkCmdBindDescriptorSets = nullptr;
+	PFN_vkCmdDispatch				mVkCmdDispatch = nullptr;
+	PFN_vkResetFences				mVkResetFences = nullptr;
+	PFN_vkQueueSubmit				mVkQueueSubmit = nullptr;
+	PFN_vkWaitForFences				mVkWaitForFences = nullptr;
+	PFN_vkCreateShaderModule		mVkCreateShaderModule = nullptr;
+	PFN_vkDestroyShaderModule		mVkDestroyShaderModule = nullptr;
+	PFN_vkCreateDescriptorSetLayout	mVkCreateDescriptorSetLayout = nullptr;
+	PFN_vkDestroyDescriptorSetLayout mVkDestroyDescriptorSetLayout = nullptr;
+	PFN_vkCreatePipelineLayout		mVkCreatePipelineLayout = nullptr;
+	PFN_vkDestroyPipelineLayout		mVkDestroyPipelineLayout = nullptr;
+	PFN_vkCreateComputePipelines	mVkCreateComputePipelines = nullptr;
+	PFN_vkDestroyPipeline			mVkDestroyPipeline = nullptr;
+	PFN_vkCmdPipelineBarrier		mVkCmdPipelineBarrier = nullptr;
+	PFN_vkCmdCopyBuffer				mVkCmdCopyBuffer = nullptr;
+
 protected:
 	/// Initialize / shutdown the memory subsystem
 	virtual bool					InitializeMemory() = 0;
@@ -45,7 +80,6 @@ protected:
 	VkPhysicalDevice				mPhysicalDevice = VK_NULL_HANDLE;
 	VkDevice						mDevice = VK_NULL_HANDLE;
 	uint32							mComputeQueueIndex = 0;
-	PFN_vkSetDebugUtilsObjectNameEXT mVkSetDebugUtilsObjectNameEXT = nullptr;
 
 private:
 	// Buffer that can be bound when we have no buffer

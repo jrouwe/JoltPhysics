@@ -164,7 +164,7 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 
 PipelineStateVK::~PipelineStateVK()
 {
-	vkDeviceWaitIdle(mRenderer->GetDevice());
+	mRenderer->mVkDeviceWaitIdle(mRenderer->GetDevice());
 
 	vkDestroyPipeline(mRenderer->GetDevice(), mGraphicsPipeline, nullptr);
 }

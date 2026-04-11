@@ -13,6 +13,8 @@
 
 JPH_NAMESPACE_BEGIN
 
+class ComputeSystemVK;
+
 /// Compute shader handle for Vulkan
 class JPH_EXPORT ComputeShaderVK : public ComputeShader
 {
@@ -20,7 +22,7 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor / destructor
-										ComputeShaderVK(VkDevice inDevice, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) : ComputeShader(inGroupSizeX, inGroupSizeY, inGroupSizeZ), mDevice(inDevice) { }
+										ComputeShaderVK(ComputeSystemVK *inComputeSystem, uint32 inGroupSizeX, uint32 inGroupSizeY, uint32 inGroupSizeZ) : ComputeShader(inGroupSizeX, inGroupSizeY, inGroupSizeZ), mComputeSystem(inComputeSystem) { }
 	virtual								~ComputeShaderVK() override;
 
 	/// Initialize from SPIR-V code
@@ -37,7 +39,7 @@ public:
 	const Array<VkDescriptorBufferInfo> &GetBufferInfos() const						{ return mBufferInfos; }
 
 private:
-	VkDevice							mDevice;
+	ComputeSystemVK *					mComputeSystem;
 	VkShaderModule						mShaderModule = VK_NULL_HANDLE;
 	VkPipelineLayout					mPipelineLayout = VK_NULL_HANDLE;
 	VkPipeline							mPipeline = VK_NULL_HANDLE;

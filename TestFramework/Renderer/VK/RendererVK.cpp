@@ -39,7 +39,7 @@ RendererVK::RendererVK()
 
 RendererVK::~RendererVK()
 {
-	vkDeviceWaitIdle(mDevice);
+	mVkDeviceWaitIdle(mDevice);
 
 	// Destroy the shadow map
 	mShadowMap = nullptr;
@@ -62,19 +62,19 @@ RendererVK::~RendererVK()
 	}
 
 	for (VkFence fence : mInFlightFences)
-		vkDestroyFence(mDevice, fence, nullptr);
+		mVkDestroyFence(mDevice, fence, nullptr);
 
 	for (uint32 i = 0; i < cFrameCount; ++i)
-		vkFreeCommandBuffers(mDevice, mCommandPool, 1, &mCommandBuffers[i]);
+		mVkFreeCommandBuffers(mDevice, mCommandPool, 1, &mCommandBuffers[i]);
 
-	vkDestroyCommandPool(mDevice, mCommandPool, nullptr);
+	mVkDestroyCommandPool(mDevice, mCommandPool, nullptr);
 
 	vkDestroyPipelineLayout(mDevice, mPipelineLayout, nullptr);
 
 	vkDestroyRenderPass(mDevice, mRenderPassShadow, nullptr);
 	vkDestroyRenderPass(mDevice, mRenderPass, nullptr);
 
-	vkDestroyDescriptorPool(mDevice, mDescriptorPool, nullptr);
+	mVkDestroyDescriptorPool(mDevice, mDescriptorPool, nullptr);
 
 	vkDestroySampler(mDevice, mTextureSamplerShadow, nullptr);
 	vkDestroySampler(mDevice, mTextureSamplerRepeat, nullptr);
@@ -133,7 +133,7 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	pool_info.queueFamilyIndex = mGraphicsQueueIndex;
-	FatalErrorIfFailed(vkCreateCommandPool(mDevice, &pool_info, nullptr, &mCommandPool));
+	FatalErrorIfFailed(mVkCreateCommandPool(mDevice, &pool_info, nullptr, &mCommandPool));
 
 	VkCommandBufferAllocateInfo command_buffer_info = {};
 	command_buffer_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -141,13 +141,13 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	command_buffer_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	command_buffer_info.commandBufferCount = 1;
 	for (uint32 i = 0; i < cFrameCount; ++i)
-		FatalErrorIfFailed(vkAllocateCommandBuffers(mDevice, &command_buffer_info, &mCommandBuffers[i]));
+		FatalErrorIfFailed(mVkAllocateCommandBuffers(mDevice, &command_buffer_info, &mCommandBuffers[i]));
 
 	VkFenceCreateInfo fence_info = {};
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 	for (uint32 i = 0; i < cFrameCount; ++i)
-		FatalErrorIfFailed(vkCreateFence(mDevice, &fence_info, nullptr, &mInFlightFences[i]));
+		FatalErrorIfFailed(mVkCreateFence(mDevice, &fence_info, nullptr, &mInFlightFences[i]));
 
 	// Create constant buffer. One per frame to avoid overwriting the constant buffer while the GPU is still using it.
 	for (uint n = 0; n < cFrameCount; ++n)
@@ -215,7 +215,7 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	descriptor_info.poolSizeCount = (uint32)std::size(descriptor_pool_sizes);
 	descriptor_info.pPoolSizes = descriptor_pool_sizes;
 	descriptor_info.maxSets = 256;
-	FatalErrorIfFailed(vkCreateDescriptorPool(mDevice, &descriptor_info, nullptr, &mDescriptorPool));
+	FatalErrorIfFailed(mVkCreateDescriptorPool(mDevice, &descriptor_info, nullptr, &mDescriptorPool));
 
 	// Allocate descriptor sets for 3d rendering
 	Array<VkDescriptorSetLayout> layouts(cFrameCount, mDescriptorSetLayoutUBO);
@@ -609,7 +609,7 @@ void RendererVK::DestroySwapChain()
 
 void RendererVK::OnWindowResize()
 {
-	vkDeviceWaitIdle(mDevice);
+	mVkDeviceWaitIdle(mDevice);
 	DestroySwapChain();
 	CreateSwapChain(mPhysicalDevice);
 }
@@ -662,7 +662,7 @@ bool RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	VkResult result = mSubOptimalSwapChain? VK_ERROR_OUT_OF_DATE_KHR : vkAcquireNextImageKHR(mDevice, mSwapChain, UINT64_MAX, semaphore, VK_NULL_HANDLE, &mImageIndex);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-		vkDeviceWaitIdle(mDevice);
+		mVkDeviceWaitIdle(mDevice);
 		DestroySwapChain();
 		CreateSwapChain(mPhysicalDevice);
 		if (mSwapChain == VK_NULL_HANDLE)
@@ -700,7 +700,7 @@ bool RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	VkCommandBufferBeginInfo command_buffer_begin_info = {};
 	command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	FatalErrorIfFailed(vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info));
+	FatalErrorIfFailed(mVkBeginCommandBuffer(command_buffer, &command_buffer_begin_info));
 
 	// Begin the shadow pass
 	VkClearValue clear_value;
@@ -872,19 +872,19 @@ VkCommandBuffer RendererVK::StartTempCommandBuffer()
 	alloc_info.commandBufferCount = 1;
 
 	VkCommandBuffer command_buffer;
-	vkAllocateCommandBuffers(mDevice, &alloc_info, &command_buffer);
+	mVkAllocateCommandBuffers(mDevice, &alloc_info, &command_buffer);
 
 	VkCommandBufferBeginInfo begin_info = {};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	vkBeginCommandBuffer(command_buffer, &begin_info);
+	mVkBeginCommandBuffer(command_buffer, &begin_info);
 
 	return command_buffer;
 }
 
 void RendererVK::EndTempCommandBuffer(VkCommandBuffer inCommandBuffer)
 {
-	vkEndCommandBuffer(inCommandBuffer);
+	mVkEndCommandBuffer(inCommandBuffer);
 
 	VkSubmitInfo submit_info = {};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -894,7 +894,7 @@ void RendererVK::EndTempCommandBuffer(VkCommandBuffer inCommandBuffer)
 	vkQueueSubmit(mGraphicsQueue, 1, &submit_info, VK_NULL_HANDLE);
 	vkQueueWaitIdle(mGraphicsQueue); // Inefficient, but we only use this during initialization
 
-	vkFreeCommandBuffers(mDevice, mCommandPool, 1, &inCommandBuffer);
+	mVkFreeCommandBuffers(mDevice, mCommandPool, 1, &inCommandBuffer);
 }
 
 void RendererVK::CopyBuffer(VkBuffer inSrc, VkBuffer inDst, VkDeviceSize inSize)
