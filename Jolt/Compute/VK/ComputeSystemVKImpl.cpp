@@ -57,7 +57,7 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 		outResult.SetError("Failed to load vulkan-1.dll");
 		return false;
 	}
-	PFN_vkGetInstanceProcAddr instance_proc_addr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(reinterpret_cast<void *>(GetProcAddress(module, "vkGetInstanceProcAddr")));
+	mVkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(reinterpret_cast<void *>(GetProcAddress(module, "vkGetInstanceProcAddr")));
 #elif defined(JPH_PLATFORM_LINUX)
 	void *library = dlopen("libvulkan.so.1", RTLD_NOW | RTLD_LOCAL);
 	if (!library)
@@ -67,13 +67,13 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 		outResult.SetError("Failed to load libvulkan.so.1 or libvulkan.so");
 		return false;
 	}
-	PFN_vkGetInstanceProcAddr instance_proc_addr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(library, "vkGetInstanceProcAddr"));
+	mVkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(library, "vkGetInstanceProcAddr"));
 #else
 	#error "Unsupported platform"
 #endif
 
 	// Check vkGetInstanceProcAddr
-	if (instance_proc_addr == nullptr)
+	if (mVkGetInstanceProcAddr == nullptr)
 	{
 		outResult.SetError("Failed to get vkGetInstanceProcAddr");
 		return false;
@@ -98,7 +98,7 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	GetDeviceExtensions(required_device_extensions);
 
 	// Load pre-instance Vulkan functions
-	#define JPH_LOAD_VK_PRE_INST(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(instance_proc_addr(nullptr, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
+	#define JPH_LOAD_VK_PRE_INST(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(mVkGetInstanceProcAddr(nullptr, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
 	JPH_LOAD_VK_PRE_INST(CreateInstance);
 	JPH_LOAD_VK_PRE_INST(EnumerateInstanceExtensionProperties);
 	JPH_LOAD_VK_PRE_INST(EnumerateInstanceLayerProperties);
@@ -163,7 +163,7 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 		return false;
 
 	// Load instance-level Vulkan functions
-	#define JPH_LOAD_VK_INST(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(instance_proc_addr(mInstance, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
+	#define JPH_LOAD_VK_INST(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(mVkGetInstanceProcAddr(mInstance, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
 	JPH_LOAD_VK_INST(CreateDevice);
 	JPH_LOAD_VK_INST(DestroyInstance);
 	JPH_LOAD_VK_INST(EnumerateDeviceExtensionProperties);
@@ -173,8 +173,8 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	#undef JPH_LOAD_VK_INST
 
 	// Get vkGetDeviceProcAddr
-	PFN_vkGetDeviceProcAddr device_proc_addr = reinterpret_cast<PFN_vkGetDeviceProcAddr>(reinterpret_cast<void *>(instance_proc_addr(mInstance, "vkGetDeviceProcAddr")));
-	if (device_proc_addr == nullptr)
+	mVkGetDeviceProcAddr = reinterpret_cast<PFN_vkGetDeviceProcAddr>(reinterpret_cast<void *>(mVkGetInstanceProcAddr(mInstance, "vkGetDeviceProcAddr")));
+	if (mVkGetDeviceProcAddr == nullptr)
 	{
 		outResult.SetError("Failed to get vkGetDeviceProcAddr");
 		return false;
@@ -182,8 +182,8 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 
 #ifdef JPH_DEBUG
 	// Finalize debug messenger callback
-	PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)(std::uintptr_t)instance_proc_addr(mInstance, "vkCreateDebugUtilsMessengerEXT");
-	mVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(reinterpret_cast<void *>(instance_proc_addr(mInstance, "vkDestroyDebugUtilsMessengerEXT")));
+	PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)(std::uintptr_t)mVkGetInstanceProcAddr(mInstance, "vkCreateDebugUtilsMessengerEXT");
+	mVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(reinterpret_cast<void *>(mVkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT")));
 	if (vkCreateDebugUtilsMessengerEXT != nullptr && VKFailed(vkCreateDebugUtilsMessengerEXT(mInstance, &messenger_create_info, nullptr, &mDebugMessenger), outResult))
 		return false;
 #endif
@@ -361,7 +361,7 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	mSelectedFormat = selected_device.mFormat;
 
 	// Initialize the compute system (loads device-level functions)
-	if (!ComputeSystemVKWithAllocator::Initialize(mInstance, selected_device.mPhysicalDevice, instance_proc_addr, device_proc_addr, device, selected_device.mComputeQueueIndex, outResult))
+	if (!ComputeSystemVKWithAllocator::Initialize(mInstance, selected_device.mPhysicalDevice, mVkGetInstanceProcAddr, mVkGetDeviceProcAddr, device, selected_device.mComputeQueueIndex, outResult))
 		return false;
 
 	// Get the queues

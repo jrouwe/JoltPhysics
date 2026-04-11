@@ -52,6 +52,9 @@ protected:
 	VkQueue							mPresentQueue = VK_NULL_HANDLE;
 	VkSurfaceFormatKHR				mSelectedFormat;
 
+	PFN_vkGetInstanceProcAddr		mVkGetInstanceProcAddr = nullptr;
+	PFN_vkGetDeviceProcAddr			mVkGetDeviceProcAddr = nullptr;
+
 	// Pre instance functions
 	PFN_vkCreateInstance			mVkCreateInstance = nullptr;
 	PFN_vkEnumerateInstanceExtensionProperties mVkEnumerateInstanceExtensionProperties = nullptr;
