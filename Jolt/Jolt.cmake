@@ -577,18 +577,30 @@ if (WIN32)
 			${JOLT_PHYSICS_ROOT}/Compute/DX12/IncludeDX12.h
 		)
 
-		# Compile HLSL shaders
+		# Determine target architecture
 		if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "Win32")
 			set(DXC_ARCH_DIR "x86")
 		else()
 			set(DXC_ARCH_DIR "x64")
 		endif()
-		find_program(DXC_COMPILER
-			NAMES dxc
-			HINTS
-				"$ENV{WindowsSdkVerBinPath}${DXC_ARCH_DIR}"
-				"C:/Program Files (x86)/Windows Kits/10/bin/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/${DXC_ARCH_DIR}"
-			NO_DEFAULT_PATH)
+
+		# CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION is only set for Visual Studio,
+		# otherwise just search for the first SDK.
+		set(DXC_SEARCH_HINTS "$ENV{WindowsSdkVerBinPath}${DXC_ARCH_DIR}")
+		if (CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
+			list(APPEND DXC_SEARCH_HINTS
+				"C:/Program Files (x86)/Windows Kits/10/bin/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/${DXC_ARCH_DIR}")
+		else()
+			file(GLOB DXC_SDK_VERSION_DIRS "C:/Program Files (x86)/Windows Kits/10/bin/10.*")
+			foreach(SDK_DIR ${DXC_SDK_VERSION_DIRS})
+				list(APPEND DXC_SEARCH_HINTS "${SDK_DIR}/${DXC_ARCH_DIR}")
+			endforeach()
+		endif()
+
+		# Locate DXC
+		find_program(DXC_COMPILER NAMES dxc HINTS ${DXC_SEARCH_HINTS} NO_DEFAULT_PATH)
+
+		# Compile HLSL shaders
 		if (NOT DXC_COMPILER)
 			MESSAGE("Application 'dxc' not found. Can't compile compute shaders. Some functionality will be unavailable.")
 		else()
