@@ -9,7 +9,7 @@
 #include <Jolt/Compute/VK/ComputeSystemVKImpl.h>
 #include <Jolt/Core/QuickSort.h>
 #include <Jolt/Core/IncludeWindows.h>
-#ifdef JPH_PLATFORM_LINUX
+#if defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_MACOS)
 #include <dlfcn.h>
 #endif
 
@@ -65,6 +65,16 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	if (!library)
 	{
 		outResult.SetError("Failed to load libvulkan.so.1 or libvulkan.so");
+		return false;
+	}
+	mVkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(library, "vkGetInstanceProcAddr"));
+#elif defined(JPH_PLATFORM_MACOS)
+	void *library = dlopen("libvulkan.1.dylib", RTLD_NOW | RTLD_LOCAL);
+	if (!library)
+		library = dlopen("libvulkan.dylib", RTLD_NOW | RTLD_LOCAL);
+	if (!library)
+	{
+		outResult.SetError("Failed to load libvulkan.1.dylib or libvulkan.dylib");
 		return false;
 	}
 	mVkGetInstanceProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(library, "vkGetInstanceProcAddr"));
