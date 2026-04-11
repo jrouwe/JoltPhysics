@@ -28,12 +28,15 @@ bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, PFN_vkGetDev
 	#define JPH_LOAD_VK(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(inVkGetDeviceProcAddr(mDevice, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
 	JPH_LOAD_VK(AllocateCommandBuffers);
 	JPH_LOAD_VK(AllocateDescriptorSets);
+	JPH_LOAD_VK(AllocateMemory);
 	JPH_LOAD_VK(BeginCommandBuffer);
+	JPH_LOAD_VK(BindBufferMemory);
 	JPH_LOAD_VK(CmdBindDescriptorSets);
 	JPH_LOAD_VK(CmdBindPipeline);
 	JPH_LOAD_VK(CmdCopyBuffer);
 	JPH_LOAD_VK(CmdDispatch);
 	JPH_LOAD_VK(CmdPipelineBarrier);
+	JPH_LOAD_VK(CreateBuffer);
 	JPH_LOAD_VK(CreateCommandPool);
 	JPH_LOAD_VK(CreateComputePipelines);
 	JPH_LOAD_VK(CreateDescriptorPool);
@@ -41,6 +44,7 @@ bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, PFN_vkGetDev
 	JPH_LOAD_VK(CreateFence);
 	JPH_LOAD_VK(CreatePipelineLayout);
 	JPH_LOAD_VK(CreateShaderModule);
+	JPH_LOAD_VK(DestroyBuffer);
 	JPH_LOAD_VK(DestroyCommandPool);
 	JPH_LOAD_VK(DestroyDescriptorPool);
 	JPH_LOAD_VK(DestroyDescriptorSetLayout);
@@ -51,12 +55,16 @@ bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, PFN_vkGetDev
 	JPH_LOAD_VK(DeviceWaitIdle);
 	JPH_LOAD_VK(EndCommandBuffer);
 	JPH_LOAD_VK(FreeCommandBuffers);
+	JPH_LOAD_VK(FreeMemory);
+	JPH_LOAD_VK(GetBufferMemoryRequirements);
 	JPH_LOAD_VK(GetDeviceQueue);
+	JPH_LOAD_VK(MapMemory);
 	JPH_LOAD_VK(QueueSubmit);
 	JPH_LOAD_VK(ResetCommandBuffer);
 	JPH_LOAD_VK(ResetDescriptorPool);
 	JPH_LOAD_VK(ResetFences);
 	JPH_LOAD_VK(SetDebugUtilsObjectNameEXT);
+	JPH_LOAD_VK(UnmapMemory);
 	JPH_LOAD_VK(UpdateDescriptorSets);
 	JPH_LOAD_VK(WaitForFences);
 	#undef JPH_LOAD_VK

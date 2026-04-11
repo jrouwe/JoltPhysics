@@ -58,12 +58,12 @@ void ComputeSystemVKWithAllocator::AllocateMemory(VkDeviceSize inSize, uint32 in
 	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	alloc_info.allocationSize = inSize;
 	alloc_info.memoryTypeIndex = FindMemoryType(inMemoryTypeBits, inProperties);
-	vkAllocateMemory(mDevice, &alloc_info, nullptr, &ioMemory.mMemory);
+	mVkAllocateMemory(mDevice, &alloc_info, nullptr, &ioMemory.mMemory);
 }
 
 void ComputeSystemVKWithAllocator::FreeMemory(MemoryVK &ioMemory)
 {
-	vkFreeMemory(mDevice, ioMemory.mMemory, nullptr);
+	mVkFreeMemory(mDevice, ioMemory.mMemory, nullptr);
 	ioMemory.mMemory = VK_NULL_HANDLE;
 }
 
@@ -77,14 +77,14 @@ bool ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsa
 	create_info.size = inSize;
 	create_info.usage = inUsage;
 	create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	if (VKFailed(vkCreateBuffer(mDevice, &create_info, nullptr, &outBuffer.mBuffer)))
+	if (VKFailed(mVkCreateBuffer(mDevice, &create_info, nullptr, &outBuffer.mBuffer)))
 	{
 		outBuffer.mBuffer = VK_NULL_HANDLE;
 		return false;
 	}
 
 	VkMemoryRequirements mem_requirements;
-	vkGetBufferMemoryRequirements(mDevice, outBuffer.mBuffer, &mem_requirements);
+	mVkGetBufferMemoryRequirements(mDevice, outBuffer.mBuffer, &mem_requirements);
 
 	if (mem_requirements.size > cMaxAllocSize)
 	{
@@ -122,7 +122,7 @@ bool ComputeSystemVKWithAllocator::CreateBuffer(VkDeviceSize inSize, VkBufferUsa
 	}
 
 	// Bind the memory to the buffer
-	vkBindBufferMemory(mDevice, outBuffer.mBuffer, outBuffer.mMemory->mMemory, outBuffer.mOffset);
+	mVkBindBufferMemory(mDevice, outBuffer.mBuffer, outBuffer.mMemory->mMemory, outBuffer.mOffset);
 	return true;
 }
 
@@ -131,7 +131,7 @@ void ComputeSystemVKWithAllocator::FreeBuffer(BufferVK &ioBuffer)
 	if (ioBuffer.mBuffer != VK_NULL_HANDLE)
 	{
 		// Destroy the buffer
-		vkDestroyBuffer(mDevice, ioBuffer.mBuffer, nullptr);
+		mVkDestroyBuffer(mDevice, ioBuffer.mBuffer, nullptr);
 		ioBuffer.mBuffer = VK_NULL_HANDLE;
 
 		// Hand the memory back to the cache
@@ -148,7 +148,7 @@ void ComputeSystemVKWithAllocator::FreeBuffer(BufferVK &ioBuffer)
 void *ComputeSystemVKWithAllocator::MapBuffer(BufferVK& ioBuffer)
 {
 	if (++ioBuffer.mMemory->mMappedCount == 1
-		&& VKFailed(vkMapMemory(mDevice, ioBuffer.mMemory->mMemory, 0, VK_WHOLE_SIZE, 0, &ioBuffer.mMemory->mMappedPtr)))
+		&& VKFailed(mVkMapMemory(mDevice, ioBuffer.mMemory->mMemory, 0, VK_WHOLE_SIZE, 0, &ioBuffer.mMemory->mMappedPtr)))
 	{
 		ioBuffer.mMemory->mMappedCount = 0;
 		return nullptr;
@@ -162,7 +162,7 @@ void ComputeSystemVKWithAllocator::UnmapBuffer(BufferVK& ioBuffer)
 	JPH_ASSERT(ioBuffer.mMemory->mMappedCount > 0);
 	if (--ioBuffer.mMemory->mMappedCount == 0)
 	{
-		vkUnmapMemory(mDevice, ioBuffer.mMemory->mMemory);
+		mVkUnmapMemory(mDevice, ioBuffer.mMemory->mMemory);
 		ioBuffer.mMemory->mMappedPtr = nullptr;
 	}
 }
