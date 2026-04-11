@@ -60,6 +60,7 @@ public:
 	PFN_vkDestroyCommandPool		mVkDestroyCommandPool = nullptr;
 	PFN_vkDestroyDescriptorPool		mVkDestroyDescriptorPool = nullptr;
 	PFN_vkDestroyDescriptorSetLayout mVkDestroyDescriptorSetLayout = nullptr;
+	PFN_vkDestroyDevice				mVkDestroyDevice = nullptr;
 	PFN_vkDestroyFence				mVkDestroyFence = nullptr;
 	PFN_vkDestroyPipeline			mVkDestroyPipeline = nullptr;
 	PFN_vkDestroyPipelineLayout		mVkDestroyPipelineLayout = nullptr;

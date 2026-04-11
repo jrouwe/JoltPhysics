@@ -44,12 +44,26 @@ protected:
 	VkInstance						mInstance = VK_NULL_HANDLE;
 #ifdef JPH_DEBUG
 	VkDebugUtilsMessengerEXT		mDebugMessenger = VK_NULL_HANDLE;
+	PFN_vkDestroyDebugUtilsMessengerEXT mVkDestroyDebugUtilsMessengerEXT = nullptr;
 #endif
 	uint32							mGraphicsQueueIndex = 0;
 	uint32							mPresentQueueIndex = 0;
 	VkQueue							mGraphicsQueue = VK_NULL_HANDLE;
 	VkQueue							mPresentQueue = VK_NULL_HANDLE;
 	VkSurfaceFormatKHR				mSelectedFormat;
+
+	// Pre instance functions
+	PFN_vkCreateInstance			mVkCreateInstance = nullptr;
+	PFN_vkEnumerateInstanceExtensionProperties mVkEnumerateInstanceExtensionProperties = nullptr;
+	PFN_vkEnumerateInstanceLayerProperties mVkEnumerateInstanceLayerProperties = nullptr;
+
+	// Post instance functions
+	PFN_vkCreateDevice				mVkCreateDevice = nullptr;
+	PFN_vkDestroyInstance			mVkDestroyInstance = nullptr;
+	PFN_vkEnumerateDeviceExtensionProperties mVkEnumerateDeviceExtensionProperties = nullptr;
+	PFN_vkEnumeratePhysicalDevices	mVkEnumeratePhysicalDevices = nullptr;
+	PFN_vkGetPhysicalDeviceProperties mVkGetPhysicalDeviceProperties = nullptr;
+	PFN_vkGetPhysicalDeviceQueueFamilyProperties mVkGetPhysicalDeviceQueueFamilyProperties = nullptr;
 };
 
 JPH_NAMESPACE_END

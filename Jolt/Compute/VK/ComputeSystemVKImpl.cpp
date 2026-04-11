@@ -32,17 +32,16 @@ ComputeSystemVKImpl::~ComputeSystemVKImpl()
 {
 	ComputeSystemVK::Shutdown();
 
-	if (mDevice != VK_NULL_HANDLE)
-		vkDestroyDevice(mDevice, nullptr);
+	if (mDevice != VK_NULL_HANDLE && mVkDestroyDevice != nullptr)
+		mVkDestroyDevice(mDevice, nullptr);
 
 #ifdef JPH_DEBUG
-	PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)(void *)vkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT");
-	if (mInstance != VK_NULL_HANDLE && mDebugMessenger != VK_NULL_HANDLE && vkDestroyDebugUtilsMessengerEXT != nullptr)
-		vkDestroyDebugUtilsMessengerEXT(mInstance, mDebugMessenger, nullptr);
+	if (mInstance != VK_NULL_HANDLE && mDebugMessenger != VK_NULL_HANDLE && mVkDestroyDebugUtilsMessengerEXT != nullptr)
+		mVkDestroyDebugUtilsMessengerEXT(mInstance, mDebugMessenger, nullptr);
 #endif
 
-	if (mInstance != VK_NULL_HANDLE)
-		vkDestroyInstance(mInstance, nullptr);
+	if (mInstance != VK_NULL_HANDLE && mVkDestroyInstance != nullptr)
+		mVkDestroyInstance(mInstance, nullptr);
 }
 
 bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
@@ -65,20 +64,27 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 #endif
 	GetDeviceExtensions(required_device_extensions);
 
+	// Load pre-instance Vulkan functions
+	#define JPH_LOAD_VK_PRE_INST(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(vkGetInstanceProcAddr(nullptr, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
+	JPH_LOAD_VK_PRE_INST(CreateInstance);
+	JPH_LOAD_VK_PRE_INST(EnumerateInstanceExtensionProperties);
+	JPH_LOAD_VK_PRE_INST(EnumerateInstanceLayerProperties);
+	#undef JPH_LOAD_VK_PRE_INST
+
 	// Query supported instance extensions
 	uint32 instance_extension_count = 0;
-	if (VKFailed(vkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, nullptr), outResult))
+	if (VKFailed(mVkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, nullptr), outResult))
 		return false;
 	Array<VkExtensionProperties> instance_extensions;
 	instance_extensions.resize(instance_extension_count);
-	if (VKFailed(vkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, instance_extensions.data()), outResult))
+	if (VKFailed(mVkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, instance_extensions.data()), outResult))
 		return false;
 
 	// Query supported validation layers
 	uint32 validation_layer_count;
-	vkEnumerateInstanceLayerProperties(&validation_layer_count, nullptr);
+	mVkEnumerateInstanceLayerProperties(&validation_layer_count, nullptr);
 	Array<VkLayerProperties> validation_layers(validation_layer_count);
-	vkEnumerateInstanceLayerProperties(&validation_layer_count, validation_layers.data());
+	mVkEnumerateInstanceLayerProperties(&validation_layer_count, validation_layers.data());
 
 	VkApplicationInfo app_info = {};
 	app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -120,8 +126,25 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 
 	instance_create_info.enabledExtensionCount = (uint32)required_instance_extensions.size();
 	instance_create_info.ppEnabledExtensionNames = required_instance_extensions.data();
-	if (VKFailed(vkCreateInstance(&instance_create_info, nullptr, &mInstance), outResult))
+	if (VKFailed(mVkCreateInstance(&instance_create_info, nullptr, &mInstance), outResult))
 		return false;
+
+	// Load instance-level Vulkan functions
+	#define JPH_LOAD_VK_INST(name) mVk##name = reinterpret_cast<PFN_vk##name>(reinterpret_cast<void *>(vkGetInstanceProcAddr(mInstance, "vk" #name))); JPH_ASSERT(mVk##name != nullptr)
+	JPH_LOAD_VK_INST(CreateDevice);
+	JPH_LOAD_VK_INST(DestroyInstance);
+	JPH_LOAD_VK_INST(EnumerateDeviceExtensionProperties);
+	JPH_LOAD_VK_INST(EnumeratePhysicalDevices);
+	JPH_LOAD_VK_INST(GetPhysicalDeviceProperties);
+	JPH_LOAD_VK_INST(GetPhysicalDeviceQueueFamilyProperties);
+	#undef JPH_LOAD_VK_INST
+#ifdef JPH_DEBUG
+	mVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(reinterpret_cast<void *>(vkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT")));
+#endif
+
+	// Get vkGetDeviceProcAddr
+	PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr = reinterpret_cast<PFN_vkGetDeviceProcAddr>(reinterpret_cast<void *>(vkGetInstanceProcAddr(mInstance, "vkGetDeviceProcAddr")));
+	JPH_ASSERT(vkGetDeviceProcAddr != nullptr);
 
 #ifdef JPH_DEBUG
 	// Finalize debug messenger callback
@@ -136,11 +159,11 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 
 	// Select device
 	uint32 device_count = 0;
-	if (VKFailed(vkEnumeratePhysicalDevices(mInstance, &device_count, nullptr), outResult))
+	if (VKFailed(mVkEnumeratePhysicalDevices(mInstance, &device_count, nullptr), outResult))
 		return false;
 	Array<VkPhysicalDevice> devices;
 	devices.resize(device_count);
-	if (VKFailed(vkEnumeratePhysicalDevices(mInstance, &device_count, devices.data()), outResult))
+	if (VKFailed(mVkEnumeratePhysicalDevices(mInstance, &device_count, devices.data()), outResult))
 		return false;
 	struct Device
 	{
@@ -157,7 +180,7 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	{
 		// Get device properties
 		VkPhysicalDeviceProperties properties;
-		vkGetPhysicalDeviceProperties(device, &properties);
+		mVkGetPhysicalDeviceProperties(device, &properties);
 
 		// Test if it is an appropriate type
 		int score = 0;
@@ -182,10 +205,10 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 
 		// Check if the device supports all our required extensions
 		uint32 device_extension_count;
-		vkEnumerateDeviceExtensionProperties(device, nullptr, &device_extension_count, nullptr);
+		mVkEnumerateDeviceExtensionProperties(device, nullptr, &device_extension_count, nullptr);
 		Array<VkExtensionProperties> available_extensions;
 		available_extensions.resize(device_extension_count);
-		vkEnumerateDeviceExtensionProperties(device, nullptr, &device_extension_count, available_extensions.data());
+		mVkEnumerateDeviceExtensionProperties(device, nullptr, &device_extension_count, available_extensions.data());
 		int found_extensions = 0;
 		for (const char *required_device_extension : required_device_extensions)
 			for (const VkExtensionProperties &ext : available_extensions)
@@ -199,10 +222,10 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 
 		// Find the right queues
 		uint32 queue_family_count = 0;
-		vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+		mVkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
 		Array<VkQueueFamilyProperties> queue_families;
 		queue_families.resize(queue_family_count);
-		vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
+		mVkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
 		uint32 graphics_queue = ~uint32(0);
 		uint32 present_queue = ~uint32(0);
 		uint32 compute_queue = ~uint32(0);
@@ -297,20 +320,23 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	device_create_info.pEnabledFeatures = nullptr;
 
 	VkDevice device = VK_NULL_HANDLE;
-	if (VKFailed(vkCreateDevice(selected_device.mPhysicalDevice, &device_create_info, nullptr, &device), outResult))
+	if (VKFailed(mVkCreateDevice(selected_device.mPhysicalDevice, &device_create_info, nullptr, &device), outResult))
+		return false;
+
+	// Store selected format
+	mSelectedFormat = selected_device.mFormat;
+
+	// Initialize the compute system (loads device-level functions)
+	if (!ComputeSystemVK::Initialize(selected_device.mPhysicalDevice, vkGetDeviceProcAddr, device, selected_device.mComputeQueueIndex, outResult))
 		return false;
 
 	// Get the queues
 	mGraphicsQueueIndex = selected_device.mGraphicsQueueIndex;
 	mPresentQueueIndex = selected_device.mPresentQueueIndex;
-	vkGetDeviceQueue(device, mGraphicsQueueIndex, 0, &mGraphicsQueue);
-	vkGetDeviceQueue(device, mPresentQueueIndex, 0, &mPresentQueue);
+	mVkGetDeviceQueue(mDevice, mGraphicsQueueIndex, 0, &mGraphicsQueue);
+	mVkGetDeviceQueue(mDevice, mPresentQueueIndex, 0, &mPresentQueue);
 
-	// Store selected format
-	mSelectedFormat = selected_device.mFormat;
-
-	// Initialize the compute system
-	return ComputeSystemVK::Initialize(selected_device.mPhysicalDevice, vkGetDeviceProcAddr, device, selected_device.mComputeQueueIndex, outResult);
+	return true;
 }
 
 ComputeSystemResult CreateComputeSystemVK()

@@ -48,6 +48,7 @@ bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, PFN_vkGetDev
 	JPH_LOAD_VK(DestroyCommandPool);
 	JPH_LOAD_VK(DestroyDescriptorPool);
 	JPH_LOAD_VK(DestroyDescriptorSetLayout);
+	JPH_LOAD_VK(DestroyDevice);
 	JPH_LOAD_VK(DestroyFence);
 	JPH_LOAD_VK(DestroyPipeline);
 	JPH_LOAD_VK(DestroyPipelineLayout);
