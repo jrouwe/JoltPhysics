@@ -327,7 +327,7 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	mSelectedFormat = selected_device.mFormat;
 
 	// Initialize the compute system (loads device-level functions)
-	if (!ComputeSystemVK::Initialize(selected_device.mPhysicalDevice, vkGetDeviceProcAddr, device, selected_device.mComputeQueueIndex, outResult))
+	if (!ComputeSystemVKWithAllocator::Initialize(mInstance, selected_device.mPhysicalDevice, vkGetInstanceProcAddr, vkGetDeviceProcAddr, device, selected_device.mComputeQueueIndex, outResult))
 		return false;
 
 	// Get the queues

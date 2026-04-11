@@ -18,6 +18,9 @@ class JPH_EXPORT ComputeSystemVKWithAllocator : public ComputeSystemVK
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_EXPORT, ComputeSystemVKWithAllocator)
 
+	// Initialize the compute system
+	bool							Initialize(VkInstance inInstance, VkPhysicalDevice inPhysicalDevice, PFN_vkGetInstanceProcAddr inGetInstanceProcAddr, PFN_vkGetDeviceProcAddr inVkGetDeviceProcAddr, VkDevice inDevice, uint32 inComputeQueueIndex, ComputeSystemResult &outResult);
+
 	/// Allow the application to override buffer creation and memory mapping in case it uses its own allocator
 	virtual bool					CreateBuffer(VkDeviceSize inSize, VkBufferUsageFlags inUsage, VkMemoryPropertyFlags inProperties, BufferVK &outBuffer) override;
 	virtual void					FreeBuffer(BufferVK &ioBuffer) override;
@@ -33,6 +36,8 @@ protected:
 	void							FreeMemory(MemoryVK &ioMemory);
 
 	VkPhysicalDeviceMemoryProperties mMemoryProperties;
+
+	PFN_vkGetPhysicalDeviceMemoryProperties mVkGetPhysicalDeviceMemoryProperties = nullptr;
 
 private:
 	// Smaller allocations (from cMinAllocSize to cMaxAllocSize) will be done in blocks of cBlockSize bytes.
