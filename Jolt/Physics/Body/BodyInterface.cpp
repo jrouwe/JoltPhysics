@@ -274,8 +274,8 @@ TwoBodyConstraint *BodyInterface::CreateConstraint(const TwoBodyConstraintSettin
 	Body *body1 = lock.GetBody(0);
 	Body *body2 = lock.GetBody(1);
 
-	JPH_ASSERT(body1 != body2);
 	JPH_ASSERT(body1 != nullptr || body2 != nullptr);
+	JPH_ASSERT(body1 != body2);
 
 	return inSettings->Create(body1 != nullptr? *body1 : Body::sFixedToWorld, body2 != nullptr? *body2 : Body::sFixedToWorld);
 }
