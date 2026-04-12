@@ -188,7 +188,8 @@ void LargeIslandSplitter::Prepare(const IslandBuilder &inIslandBuilder, uint32 i
 	JPH_PROFILE_FUNCTION();
 
 	// Count the total number of constraints and contacts that we will be putting in splits
-	mContactAndConstraintsSize = 0;
+	JPH_ASSERT(mNumSplitIslands == 0);
+	JPH_ASSERT(mContactAndConstraintsSize == 0);
 	for (uint32 island = 0; island < inIslandBuilder.GetNumIslands(); ++island)
 	{
 		// Get the contacts in this island
