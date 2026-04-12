@@ -72,6 +72,7 @@ void IslandBuilder::PrepareNonContactConstraints(uint32 inNumConstraints, TempAl
 	JPH_ASSERT(mBodyLinks != nullptr);
 
 	// Check that the builder has been reset
+	JPH_ASSERT(mNumConstraints == 0);
 	JPH_ASSERT(mNumIslands == 0);
 
 	// Store number of constraints
@@ -294,7 +295,7 @@ void IslandBuilder::BuildConstraintIslands(const uint32 *inConstraintToBody, uin
 	uint32 *constraint_ends = (uint32 *)inTempAllocator->Allocate((mNumIslands + 1) * sizeof(uint32));
 
 	// Reset sizes
-	for (uint32 island = 0; island < mNumIslands; ++island)
+	for (uint32 island = 0; island <= mNumIslands; ++island)
 		constraint_ends[island] = 0;
 
 	// Loop over array and increment start relative position for the next island
@@ -440,9 +441,11 @@ void IslandBuilder::ResetIslands(TempAllocator *inTempAllocator)
 
 #ifdef JPH_TRACK_SIMULATION_STATS
 	inTempAllocator->Free(mIslandStats, mNumIslands * sizeof(IslandStats));
+	mIslandStats = nullptr;
 #endif
 
 	inTempAllocator->Free(mNumPositionSteps, mNumIslands * sizeof(uint8));
+	mNumPositionSteps = nullptr;
 
 	if (mIslandsSorted != nullptr)
 	{
@@ -468,7 +471,7 @@ void IslandBuilder::ResetIslands(TempAllocator *inTempAllocator)
 
 	inTempAllocator->Free(mBodyIslandEnds, (mNumActiveBodies + 1) * sizeof(uint32));
 	mBodyIslandEnds = nullptr;
-	inTempAllocator->Free(mBodyIslands, mNumActiveBodies * sizeof(uint32));
+	inTempAllocator->Free(mBodyIslands, mNumActiveBodies * sizeof(BodyID));
 	mBodyIslands = nullptr;
 
 	inTempAllocator->Free(mConstraintLinks, mNumConstraints * sizeof(uint32));

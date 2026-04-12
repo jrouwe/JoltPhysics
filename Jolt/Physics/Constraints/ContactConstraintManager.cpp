@@ -557,7 +557,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 
 			// When validating, get all existing manifolds
 			Array<const MKeyValue *> all_m;
-			if (inStream.IsValidating())
+			if (inStream.IsValidating() && i < all_bp.size())
 				inReadCache.GetAllManifoldsSorted(all_bp[i]->GetValue(), all_m);
 
 			// Read amount of manifolds
@@ -768,7 +768,7 @@ JPH_INLINE ContactConstraintManager::ContactConstraint<Type1, Type2> *ContactCon
 
 	// Store offset for constraint
 	uint32 constraint_offset = uint32(constraint_idx_and_constraint_offset >> 32);
-	JPH_ASSERT(constraint_offset + constraint_size < mMaxConstraints * cMaxConstraintSize);
+	JPH_ASSERT(constraint_offset + constraint_size <= mMaxConstraints * cMaxConstraintSize);
 	mConstraintIdxToOffset[constraint_idx] = constraint_offset;
 
 	// Construct constraint
