@@ -436,7 +436,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v6
     - name: Setup emsdk
-      uses: mymindstorm/setup-emsdk@v15
+      uses: mymindstorm/setup-emsdk@v16
       with:
         version: ${{env.EMSCRIPTEN_VERSION}}
     - name: Verify emsdk
@@ -474,7 +474,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v6
     - name: Setup emsdk
-      uses: mymindstorm/setup-emsdk@v15
+      uses: mymindstorm/setup-emsdk@v16
       with:
         version: ${{env.EMSCRIPTEN_VERSION}}
     - name: Verify emsdk
