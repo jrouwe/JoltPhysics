@@ -313,18 +313,18 @@ TEST_SUITE("Vec3Tests")
 
 	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
 		// Check treatment of -0.0f
-		CHECK(Vec3(0.0f, 0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt());
-		CHECK(Vec3(0.0f, -0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt());
-		CHECK(Vec3(-0.0f, 0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt());
-		CHECK(Vec3(-0.0f, -0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt());
-		CHECK(Vec3(0.0f, 2.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt());
-		CHECK(Vec3(0.0f, 2.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, -0.0f, -1.0f).ReinterpretAsInt());
-		CHECK(Vec3(-0.0f, 2.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt());
-		CHECK(Vec3(-0.0f, 2.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, -0.0f, -1.0f).ReinterpretAsInt());
-		CHECK(Vec3(2.0f, 0.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt());
-		CHECK(Vec3(2.0f, 0.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(-0.0f, 0.0f, -1.0f).ReinterpretAsInt());
-		CHECK(Vec3(2.0f, -0.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt());
-		CHECK(Vec3(2.0f, -0.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(-0.0f, 0.0f, -1.0f).ReinterpretAsInt());
+		CHECK(UVec4::sEquals(Vec3(0.0f, 0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(0.0f, -0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(-0.0f, 0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(-0.0f, -0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(0.0f, 2.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(0.0f, 2.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, -0.0f, -1.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(-0.0f, 2.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(-0.0f, 2.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, -0.0f, -1.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(2.0f, 0.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(2.0f, 0.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(-0.0f, 0.0f, -1.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(2.0f, -0.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt()).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(2.0f, -0.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt(), Vec3(-0.0f, 0.0f, -1.0f).ReinterpretAsInt()).TestAllXYZTrue());
 	#endif
 	}
 
