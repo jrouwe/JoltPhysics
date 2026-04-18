@@ -1218,8 +1218,8 @@ Vec3 Vec3::GetNormalizedPerpendicular() const
 {
 #if defined(JPH_USE_SSE)
 	// Build both perpendicular candidates without explicit masking:
-	// perp_x = [z, 0, -x, 0]  (used when |x| > |y|)
-	// perp_y = [0, z, -y, 0]  (used when |x| <= |y|)
+	// perp_x = [z, 0, -x, 0] (used when |x| > |y|)
+	// perp_y = [0, z, -y, 0] (used when |x| <= |y|)
 	__m128 zero = _mm_setzero_ps();
 	__m128 neg = _mm_sub_ps(zero, mValue);
 	__m128 perp_x = _mm_shuffle_ps(_mm_unpackhi_ps(mValue, zero), neg, _MM_SHUFFLE(0, 0, 1, 0));

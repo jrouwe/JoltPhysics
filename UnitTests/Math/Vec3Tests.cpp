@@ -310,6 +310,22 @@ TEST_SUITE("Vec3Tests")
 			CHECK(p.IsNormalized());
 			CHECK(abs(v.Dot(p)) < 1.0e-6f);
 		}
+
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		// Check treatment of -0.0f
+		CHECK(Vec3(0.0f, 0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt());
+		CHECK(Vec3(0.0f, -0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt());
+		CHECK(Vec3(-0.0f, 0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt());
+		CHECK(Vec3(-0.0f, -0.0f, 2.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 1.0f, 0.0f).ReinterpretAsInt());
+		CHECK(Vec3(0.0f, 2.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt());
+		CHECK(Vec3(0.0f, 2.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, -0.0f, -1.0f).ReinterpretAsInt());
+		CHECK(Vec3(-0.0f, 2.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt());
+		CHECK(Vec3(-0.0f, 2.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, -0.0f, -1.0f).ReinterpretAsInt());
+		CHECK(Vec3(2.0f, 0.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt());
+		CHECK(Vec3(2.0f, 0.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(-0.0f, 0.0f, -1.0f).ReinterpretAsInt());
+		CHECK(Vec3(2.0f, -0.0f, 0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(0.0f, 0.0f, -1.0f).ReinterpretAsInt());
+		CHECK(Vec3(2.0f, -0.0f, -0.0f).GetNormalizedPerpendicular().ReinterpretAsInt() == Vec3(-0.0f, 0.0f, -1.0f).ReinterpretAsInt());
+	#endif
 	}
 
 	TEST_CASE("TestVec3Sign")
