@@ -1216,46 +1216,44 @@ float Vec3::ReduceMax() const
 
 Vec3 Vec3::GetNormalizedPerpendicular() const
 {
-#ifdef JPH_USE_SSE4_1
-	// Compute -value and |value| and check if |x| > |y|
-	__m128 neg_val = _mm_sub_ps(_mm_setzero_ps(), mValue);
-	__m128 abs_val = _mm_max_ps(mValue, neg_val);
-	__m128 abs_x = _mm_shuffle_ps(abs_val, abs_val, _MM_SHUFFLE(0, 0, 0, 0));
-	__m128 abs_y = _mm_shuffle_ps(abs_val, abs_val, _MM_SHUFFLE(1, 1, 1, 1));
-	__m128 x_gt_y = _mm_cmpgt_ps(abs_x, abs_y);
+#if defined(JPH_USE_SSE)
+	// Build both perpendicular candidates without explicit masking:
+	// perp_x = [z, 0, -x, 0]  (used when |x| > |y|)
+	// perp_y = [0, z, -y, 0]  (used when |x| <= |y|)
+	__m128 zero = _mm_setzero_ps();
+	__m128 neg = _mm_sub_ps(zero, mValue);
+	__m128 perp_x = _mm_shuffle_ps(_mm_unpackhi_ps(mValue, zero), neg, _MM_SHUFFLE(0, 0, 1, 0));
+	__m128 perp_y = _mm_shuffle_ps(_mm_unpackhi_ps(zero, mValue), neg, _MM_SHUFFLE(1, 1, 1, 0));
 
-	// |x| > |y|: perpendicular is [z, 0, -x, 0]
-	__m128 case_x_gt_y = _mm_shuffle_ps(mValue, neg_val, _MM_SHUFFLE(0, 0, 2, 2));
-	case_x_gt_y = _mm_and_ps(case_x_gt_y, _mm_castsi128_ps(_mm_set_epi32(0, -1, 0, -1)));
+	// Compare squared components instead of absolute values (saves the abs computation).
+	__m128 sq = _mm_mul_ps(mValue, mValue);
+	__m128 xx = _mm_shuffle_ps(sq, sq, _MM_SHUFFLE(0, 0, 0, 0));
+	__m128 yy = _mm_shuffle_ps(sq, sq, _MM_SHUFFLE(1, 1, 1, 1));
+	__m128 zz = _mm_shuffle_ps(sq, sq, _MM_SHUFFLE(2, 2, 2, 2));
+	__m128 x_gt_y = _mm_cmpgt_ps(xx, yy);
 
-	// |x| <= |y|: perpendicular is [0, z, -y, 0]
-	__m128 case_x_le_y = _mm_shuffle_ps(mValue, neg_val, _MM_SHUFFLE(1, 1, 2, 2));
-	case_x_le_y = _mm_and_ps(case_x_le_y, _mm_castsi128_ps(_mm_set_epi32(0, -1, -1,  0)));
-
-	// Select result based on |x| > |y|
-	__m128 result = _mm_or_ps(_mm_and_ps(x_gt_y, case_x_gt_y), _mm_andnot_ps(x_gt_y, case_x_le_y));
-
-	// Normalize result
-	__m128 mul = _mm_mul_ps(result, result);
-	__m128 shuf = _mm_movehdup_ps(mul);
-	__m128 sums = _mm_add_ps(mul, shuf);
-	shuf = _mm_movehl_ps(shuf, sums);
-	sums = _mm_add_ss(sums, shuf);
-	__m128 len = _mm_sqrt_ss(sums);
-	len = _mm_shuffle_ps(len, len, _MM_SHUFFLE(0, 0, 0, 0));
-	return sFixW(_mm_div_ps(result, len));
+	// Select perpendicular based on |x| > |y|.
+#if defined(JPH_USE_SSE4_1) && !defined(JPH_PLATFORM_WASM) // _mm_blendv_ps has problems on FireFox
+	__m128 result = _mm_blendv_ps(perp_y, perp_x, x_gt_y);
 #else
-	if (abs(mF32[0]) > abs(mF32[1]))
-	{
-		float len = sqrt(mF32[0] * mF32[0] + mF32[2] * mF32[2]);
-		return Vec3(mF32[2], 0.0f, -mF32[0]) / len;
-	}
-	else
-	{
-		float len = sqrt(mF32[1] * mF32[1] + mF32[2] * mF32[2]);
-		return Vec3(0.0f, mF32[2], -mF32[1]) / len;
-	}
+	__m128 result = _mm_or_ps(_mm_and_ps(x_gt_y, perp_x), _mm_andnot_ps(x_gt_y, perp_y));
 #endif
+
+	// Normalize. Since the result has only two nonzero components; one of x^2 / y^2 plus z^2; the squared length is max(xx, yy) + zz. All lanes of the sqrt input are identical.
+	__m128 len = _mm_sqrt_ps(_mm_add_ps(_mm_max_ps(xx, yy), zz));
+	return _mm_div_ps(result, len);
+#else
+	float x = mF32[0], y = mF32[1], z = mF32[2];
+	float xx = x * x, yy = y * y, zz = z * z;
+#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+	Vec3 perp_x(z, 0.0f, 0.0f - x);
+	Vec3 perp_y(0.0f, z, 0.0f - y);
+#else
+	Vec3 perp_x(z, 0.0f, -x);
+	Vec3 perp_y(0.0f, z, -y);
+#endif // JPH_CROSS_PLATFORM_DETERMINISTIC
+	return (xx > yy ? perp_x : perp_y) / sqrt(max(xx, yy) + zz);
+#endif // JPH_USE_SSE
 }
 
 Vec3 Vec3::GetSign() const
