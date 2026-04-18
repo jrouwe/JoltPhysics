@@ -607,41 +607,6 @@ static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 // Macro to indicate that a parameter / variable is unused
 #define JPH_UNUSED(x)			(void)x
 
-// Macro to enable floating point precise mode and to disable fused multiply add instructions
-#if defined(JPH_COMPILER_GCC) || defined(JPH_CROSS_PLATFORM_DETERMINISTIC)
-	// We compile without -ffast-math and -ffp-contract=fast, so we don't need to disable anything
-	#define JPH_PRECISE_MATH_ON
-	#define JPH_PRECISE_MATH_OFF
-#elif defined(JPH_COMPILER_CLANG)
-	// We compile without -ffast-math because pragma float_control(precise, on) doesn't seem to actually negate all of the -ffast-math effects and causes the unit tests to fail (even if the pragma is added to all files)
-	// On clang 14 and later we can turn off float contraction through a pragma (before it was buggy), so if FMA is on we can disable it through this macro
-	#if (defined(JPH_CPU_ARM) && !defined(JPH_PLATFORM_ANDROID) && __clang_major__ >= 16) || (defined(JPH_CPU_X86) && __clang_major__ >= 14) || defined(JPH_USE_RVV)
-		#define JPH_PRECISE_MATH_ON						\
-			_Pragma("float_control(precise, on, push)")	\
-			_Pragma("clang fp contract(off)")
-		#define JPH_PRECISE_MATH_OFF					\
-			_Pragma("float_control(pop)")
-	#elif __clang_major__ >= 14 && (defined(JPH_USE_FMADD) || defined(FP_FAST_FMA))
-		#define JPH_PRECISE_MATH_ON						\
-			_Pragma("clang fp contract(off)")
-		#define JPH_PRECISE_MATH_OFF					\
-			_Pragma("clang fp contract(on)")
-	#else
-		#define JPH_PRECISE_MATH_ON
-		#define JPH_PRECISE_MATH_OFF
-	#endif
-#elif defined(JPH_COMPILER_MSVC)
-	// Unfortunately there is no way to push the state of fp_contract, so we have to assume it was turned on before JPH_PRECISE_MATH_ON
-	#define JPH_PRECISE_MATH_ON							\
-		__pragma(float_control(precise, on, push))		\
-		__pragma(fp_contract(off))
-	#define JPH_PRECISE_MATH_OFF						\
-		__pragma(fp_contract(on))						\
-		__pragma(float_control(pop))
-#else
-	#error Undefined
-#endif
-
 // Check if Thread Sanitizer is enabled
 #ifdef __has_feature
 	#if __has_feature(thread_sanitizer)
