@@ -81,4 +81,17 @@ TEST_SUITE("Mat44Tests")
 		CHECK(!IsPowerOf2(65535));
 		CHECK(!IsPowerOf2(65537));
 	}
+
+	TEST_CASE("TestDifferenceOfProducts")
+	{
+		float a = 33962.035f, b = -30438.8f, c = 41563.4f, d = -24871.969f;
+		float result = DifferenceOfProducts(a, b, c, d);
+		double expected = double(a) * double(b) - double(c) * double(d);
+		CHECK(expected == -75.165603637695312);
+	#ifdef JPH_USE_FMADD
+		CHECK(result == float(expected));
+	#else
+		CHECK(result == -128.0f); // The products are in the order of 10^9, so the subtraction causes a large loss of precision and we get a very different result. This is expected when fused multiply add instructions are not available.
+	#endif
+	}
 }

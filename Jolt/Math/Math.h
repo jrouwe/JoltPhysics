@@ -43,6 +43,21 @@ inline float CenterAngleAroundZero(float inV)
 	return inV;
 }
 
+/// Calculates inA * inB - inC * inD with higher accuracy when fused multiply add instructions are available.
+/// If inA * inB and inC * inD are large, the subtraction can cause a large loss of precision when the result is small.
+/// See: https://pharr.org/matt/blog/2019/11/03/difference-of-floats (or search for Kahan's algorithm)
+JPH_INLINE float DifferenceOfProducts(float inA, float inB, float inC, float inD)
+{
+#ifdef JPH_USE_FMADD
+	float cd = inC * inD;
+	float err = std::fma(-inC, inD, cd);
+	float dop = std::fma(inA, inB, -cd);
+	return dop + err;
+#else
+	return inA * inB - inC * inD;
+#endif
+}
+
 /// Clamp a value between two values
 template <typename T>
 JPH_INLINE constexpr T Clamp(T inV, T inMin, T inMax)

@@ -838,6 +838,18 @@ Vec3 Vec3::Reciprocal() const
 	return sOne() / mValue;
 }
 
+Vec3 Vec3::sDifferenceOfProducts(Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, Vec3Arg inD)
+{
+#ifdef JPH_USE_FMADD
+	Vec3 cd = inC * inD;
+	Vec3 err = Vec3::sFusedMultiplyAdd(-inC, inD, cd);
+	Vec3 dop = Vec3::sFusedMultiplyAdd(inA, inB, -cd);
+	return dop + err;
+#else
+	return inA * inB - inC * inD;
+#endif
+}
+
 Vec3 Vec3::Cross(Vec3Arg inV2) const
 {
 #if defined(JPH_USE_SSE)
@@ -874,6 +886,11 @@ Vec3 Vec3::Cross(Vec3Arg inV2) const
 				mF32[2] * inV2.mF32[0] - mF32[0] * inV2.mF32[2],
 				mF32[0] * inV2.mF32[1] - mF32[1] * inV2.mF32[0]);
 #endif
+}
+
+Vec3 Vec3::CrossPrecise(Vec3Arg inV2) const
+{
+	return sDifferenceOfProducts(*this, inV2.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>(), Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>(), inV2).Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>();
 }
 
 Vec3 Vec3::DotV(Vec3Arg inV2) const

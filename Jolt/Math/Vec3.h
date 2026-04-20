@@ -223,8 +223,14 @@ public:
 	/// Reciprocal vector (1 / value) for each of the components
 	JPH_INLINE Vec3				Reciprocal() const;
 
+	/// Calculates inA * inB - inC * inD with more precision when FMA instructions are available. See DifferenceOfProducts.
+	JPH_INLINE static Vec3		sDifferenceOfProducts(Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, Vec3Arg inD);
+
 	/// Cross product
 	JPH_INLINE Vec3				Cross(Vec3Arg inV2) const;
+
+	/// Cross product (more precise version when FMA is available)
+	JPH_INLINE Vec3				CrossPrecise(Vec3Arg inV2) const;
 
 	/// Dot product, returns the dot product in X, Y and Z components
 	JPH_INLINE Vec3				DotV(Vec3Arg inV2) const;
