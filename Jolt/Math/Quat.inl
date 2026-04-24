@@ -91,27 +91,30 @@ Quat Quat::operator * (QuatArg inRHS) const
 		8,  9,  10, 11
 	};
 
-    uint8x16_t abcd_bytes = vreinterpretq_u8_f32(abcd);
-    uint8x16_t xyzw_bytes = vreinterpretq_u8_f32(xyzw);
+    uint8x16_t abcd_b = vreinterpretq_u8_f32(abcd);
+    uint8x16_t xyzw_b = vreinterpretq_u8_f32(xyzw);
 
-    float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_bytes, abca_idx));
-    float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_bytes, bcab_idx));
-    float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_bytes, cabc_idx));
+    float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, abca_idx));
+    float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, bcab_idx));
+    float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, cabc_idx));
     float32x4_t dddd = vdupq_laneq_f32(abcd, 3);
 
-    float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, wwwx_idx));
-    float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, zxyy_idx));
-    float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, yzxz_idx));
+    float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, wwwx_idx));
+    float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, zxyy_idx));
+    float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, yzxz_idx));
 
-    // m3 = abca * wwwx + bcab * zxyy
-    float32x4_t m3 = vfmaq_f32(vmulq_f32(bcab, zxyy), abca, wwwx);
+    float32x4_t m1 = vmulq_f32(abca, wwwx);
+    float32x4_t m2 = vmulq_f32(bcab, zxyy);
+    float32x4_t m3 = vaddq_f32(m1, m2);
 
-    // Negate W lane
-    static constexpr uint32x4_t sign_mask = { 0, 0, 0, 0x80000000u };
-    m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), sign_mask));
+    // Negate the W lane to match Hamilton product logic
+    static constexpr uint32x4_t w_neg_mask = { 0, 0, 0, 0x80000000 };
+    m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), w_neg_mask));
 
-    // m7 = dddd * xyzw - cabc * yzxz + m3
-    float32x4_t m7 = vfmaq_f32(vfmsq_f32(m3, cabc, yzxz), dddd, xyzw);
+    float32x4_t m4 = vmulq_f32(dddd, xyzw);
+    float32x4_t m5 = vmulq_f32(cabc, yzxz);
+    float32x4_t m6 = vsubq_f32(m4, m5);
+    float32x4_t m7 = vaddq_f32(m3, m6);
 
     return Quat(Vec4(m7));
 #else
@@ -220,16 +223,17 @@ Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
     float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, zxyy_idx));
     float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, yzxz_idx));
 
-    // Core Hamilton Math using Fused Multiply-Add
-    // m3 = (bcab * zxyy) + (abca * wwwx)
-    float32x4_t m3 = vfmaq_f32(vmulq_f32(bcab, zxyy), abca, wwwx);
+    float32x4_t m1 = vmulq_f32(abca, wwwx);
+    float32x4_t m2 = vmulq_f32(bcab, zxyy);
+    float32x4_t m3 = vaddq_f32(m1, m2);
 
     // Flip sign of the W lane (index 3) using a bitmask
     static constexpr uint32x4_t sign_mask = { 0, 0, 0, 0x80000000u };
     m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), sign_mask));
 
     // m7 = m3 - (cabc * yzxz)
-    float32x4_t m7 = vfmsq_f32(m3, cabc, yzxz);
+    float32x4_t m4 = vmulq_f32(cabc, yzxz);
+    float32x4_t m7 = vsubq_f32(m3, m4);
 
     return Quat(Vec4(m7));
 #else
@@ -362,7 +366,7 @@ Quat Quat::sRandom(Random &inRandom)
 
 Quat Quat::sEulerAngles(Vec3Arg inAngles)
 {
-	Vec4 half(0.5f * inAngles);
+    Vec4 half(0.5f * inAngles);
     Vec4 s;
 	Vec4 c;
     half.SinCos(s, c);
@@ -371,39 +375,39 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
     __m128 sv = s.mValue;
     __m128 cv = c.mValue;
 
-    // cx,cy,cz in lanes 0,1,2 — lane 3 unused/zero
-    // sx,sy,sz in lanes 0,1,2
+    __m128 lane_y_mask = _mm_castsi128_ps(_mm_set_epi32(0, 0, 0xffffffff, 0));
+    __m128 lane_z_mask = _mm_castsi128_ps(_mm_set_epi32(0, 0xffffffff, 0, 0));
 
     // A = { cz, cz, sz, cz } * { sx, cx, cx, cx } * { cy, sy, cy, cy }
-    __m128 cz_cz_sz_cz = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2));
-    // overwrite lane 2 with sz
-    cz_cz_sz_cz = _mm_blend_ps(cz_cz_sz_cz, _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2,2,2,2)), 0b0100);
+    __m128 cz_v = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2));
+    __m128 sz_v = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2, 2, 2, 2));
+    __m128 cz_cz_sz_cz = _mm_or_ps(_mm_and_ps(lane_z_mask, sz_v), _mm_andnot_ps(lane_z_mask, cz_v));
 
-    __m128 sx_cx_cx_cx = _mm_shuffle_ps(sv, cv, _MM_SHUFFLE(0, 0, 0, 0));
-    sx_cx_cx_cx = _mm_blend_ps(sx_cx_cx_cx, sv, 0b0001);
+    __m128 cx_v = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(0, 0, 0, 0));
+    __m128 sx_cx_cx_cx = _mm_move_ss(cx_v, sv); 
 
-    __m128 cy_sy_cy_cy = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1, 1, 1, 1));
-    cy_sy_cy_cy = _mm_blend_ps(cy_sy_cy_cy, _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1,1,1,1)), 0b0010);
+    __m128 cy_v = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1, 1, 1, 1));
+    __m128 sy_v = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1, 1, 1, 1));
+    __m128 cy_sy_cy_cy = _mm_or_ps(_mm_and_ps(lane_y_mask, sy_v), _mm_andnot_ps(lane_y_mask, cy_v));
 
     __m128 A = _mm_mul_ps(_mm_mul_ps(cz_cz_sz_cz, sx_cx_cx_cx), cy_sy_cy_cy);
 
     // B = { sz, sz, cz, sz } * { cx, sx, sx, sx } * { sy, cy, sy, sy }
-    __m128 sz_sz_cz_sz = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2, 2, 2, 2));
-    sz_sz_cz_sz = _mm_blend_ps(sz_sz_cz_sz, _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2,2,2,2)), 0b0100);
+    __m128 sz_v2 = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2, 2, 2, 2));
+    __m128 cz_v2 = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2));
+    __m128 sz_sz_cz_sz = _mm_or_ps(_mm_and_ps(lane_z_mask, cz_v2), _mm_andnot_ps(lane_z_mask, sz_v2));
 
-    __m128 cx_sx_sx_sx = _mm_shuffle_ps(cv, sv, _MM_SHUFFLE(0, 0, 0, 0));
-    cx_sx_sx_sx = _mm_blend_ps(cx_sx_sx_sx, cv, 0b0001);
+    __m128 sx_v2 = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(0, 0, 0, 0));
+    __m128 cx_sx_sx_sx = _mm_move_ss(sx_v2, cv);
 
-    __m128 sy_cy_sy_sy = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1, 1, 1, 1));
-    sy_cy_sy_sy = _mm_blend_ps(sy_cy_sy_sy, _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1,1,1,1)), 0b0010);
+    __m128 sy_v2 = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1, 1, 1, 1));
+    __m128 cy_v2 = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1, 1, 1, 1));
+    __m128 sy_cy_sy_sy = _mm_or_ps(_mm_and_ps(lane_y_mask, cy_v2), _mm_andnot_ps(lane_y_mask, sy_v2));
 
     __m128 B = _mm_mul_ps(_mm_mul_ps(sz_sz_cz_sz, cx_sx_sx_sx), sy_cy_sy_sy);
 
-    // X = A-B, Y = A+B, Z = A-B, W = A+B => sign mask {-, +, -, +}
     __m128 sign_mask = _mm_set_ps(0.0f, -0.0f, 0.0f, -0.0f);
-    __m128 B_flipped = _mm_xor_ps(B, sign_mask);
-    return Quat(Vec4(_mm_add_ps(A, B_flipped)));
-
+    return Quat(Vec4(_mm_add_ps(A, _mm_xor_ps(B, sign_mask))));
 #elif defined(JPH_USE_NEON)
     // Register aliases for clarity
     float32x4_t sv = s.mValue;
@@ -437,30 +441,30 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
     }; // [cy, cy, cy, cy] — lane 1 patched to sy below
 
     float32x4_t cz_cz_sz_cz = vreinterpretq_f32_u8(vqtbl1q_u8(cv_bytes, cz_cz_cz_cz_idx));
-    cz_cz_sz_cz = vsetq_lane_f32(vgetq_lane_f32(sv, 2), cz_cz_sz_cz, 2);  // patch sz into lane 2
+    cz_cz_sz_cz = vsetq_lane_f32(vgetq_lane_f32(sv, 2), cz_cz_sz_cz, 2); 
 
     float32x4_t sx_cx_cx_cx = vreinterpretq_f32_u8(vqtbl1q_u8(cv_bytes, cx_cx_cx_cx_idx));
-    sx_cx_cx_cx = vsetq_lane_f32(vgetq_lane_f32(sv, 0), sx_cx_cx_cx, 0);  // patch sx into lane 0
+    sx_cx_cx_cx = vsetq_lane_f32(vgetq_lane_f32(sv, 0), sx_cx_cx_cx, 0); 
 
     float32x4_t cy_sy_cy_cy = vreinterpretq_f32_u8(vqtbl1q_u8(cv_bytes, cy_cy_cy_cy_idx));
-    cy_sy_cy_cy = vsetq_lane_f32(vgetq_lane_f32(sv, 1), cy_sy_cy_cy, 1);  // patch sy into lane 1
+    cy_sy_cy_cy = vsetq_lane_f32(vgetq_lane_f32(sv, 1), cy_sy_cy_cy, 1); 
 
+    // Match scalar accumulation order: (Z * X) * Y
     float32x4_t A = vmulq_f32(vmulq_f32(cz_cz_sz_cz, sx_cx_cx_cx), cy_sy_cy_cy);
 
     // B = { sz, sz, cz, sz } * { cx, sx, sx, sx } * { sy, cy, sy, sy }
     float32x4_t sz_sz_cz_sz = vdupq_laneq_f32(sv, 2);
-    sz_sz_cz_sz = vsetq_lane_f32(vgetq_lane_f32(cv, 2), sz_sz_cz_sz, 2);  // patch cz into lane 2
+    sz_sz_cz_sz = vsetq_lane_f32(vgetq_lane_f32(cv, 2), sz_sz_cz_sz, 2); 
 
     float32x4_t cx_sx_sx_sx = vdupq_laneq_f32(sv, 0);
-    cx_sx_sx_sx = vsetq_lane_f32(vgetq_lane_f32(cv, 0), cx_sx_sx_sx, 0);  // patch cx into lane 0
+    cx_sx_sx_sx = vsetq_lane_f32(vgetq_lane_f32(cv, 0), cx_sx_sx_sx, 0); 
 
     float32x4_t sy_cy_sy_sy = vdupq_laneq_f32(sv, 1);
-    sy_cy_sy_sy = vsetq_lane_f32(vgetq_lane_f32(cv, 1), sy_cy_sy_sy, 1);  // patch cy into lane 1
+    sy_cy_sy_sy = vsetq_lane_f32(vgetq_lane_f32(cv, 1), sy_cy_sy_sy, 1); 
 
     float32x4_t B = vmulq_f32(vmulq_f32(sz_sz_cz_sz, cx_sx_sx_sx), sy_cy_sy_sy);
 
-    // Flip sign of X and Z lanes (indices 0, 2) on B, then add to A
-    // Result: { A[0]-B[0], A[1]+B[1], A[2]-B[2], A[3]+B[3] }
+    // Result: { A0-B0, A1+B1, A2-B2, A3+B3 }
     static constexpr uint32x4_t sign_mask = { 0x80000000u, 0, 0x80000000u, 0 };
     float32x4_t B_flipped = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(B), sign_mask));
 
@@ -523,47 +527,41 @@ Vec3 Quat::GetEulerAngles() const
 #elif defined(JPH_USE_NEON)
     float32x4_t q = mValue.mValue; // [x, y, z, w]
 
-    // Broadcast individual components
-    float32x4_t xx = vmulq_f32(vdupq_laneq_f32(q, 0), vdupq_laneq_f32(q, 0)); // x*x
-    float32x4_t yy = vmulq_f32(vdupq_laneq_f32(q, 1), vdupq_laneq_f32(q, 1)); // y*y
-    float32x4_t zz = vmulq_f32(vdupq_laneq_f32(q, 2), vdupq_laneq_f32(q, 2)); // z*z
+    // Compute squares in one go instead of 3 separate vectors
+    float32x4_t q_sq = vmulq_f32(q, q); // [x*x, y*y, z*z, w*w]
+    float xx = vgetq_lane_f32(q_sq, 0);
+    float yy = vgetq_lane_f32(q_sq, 1);
+    float zz = vgetq_lane_f32(q_sq, 2);
 
-    // Compute the three numerators: [w*x, w*y, w*z, _]
-    float32x4_t wwww = vdupq_laneq_f32(q, 3);
-    float32x4_t wxyz = vmulq_f32(wwww, q); // [w*x, w*y, w*z, w*w]
+    // Numerators: [w*x, w*y, w*z, w*w]
+    float32x4_t w_prod = vmulq_f32(vdupq_laneq_f32(q, 3), q);
+    float wx = vgetq_lane_f32(w_prod, 0);
+    float wy = vgetq_lane_f32(w_prod, 1);
+    float wz = vgetq_lane_f32(w_prod, 2);
 
-    // t0 = 2*(w*x + y*z),  t2_num = 2*(w*y - z*x),  t3 = 2*(w*z + x*y)
-    float wx = vgetq_lane_f32(wxyz, 0);
-    float wy = vgetq_lane_f32(wxyz, 1);
-    float wz = vgetq_lane_f32(wxyz, 2);
-
-    float xx_s = vgetq_lane_f32(xx, 0);
-    float yy_s = vgetq_lane_f32(yy, 0);
-    float zz_s = vgetq_lane_f32(zz, 0);
-
-    // Compute cross terms as a vector: [y*z, z*x, x*y, _]
-    uint8x16_t q_bytes = vreinterpretq_u8_f32(q);
+    // Cross terms: [x*y, y*z, z*x, w*w]
     static constexpr uint8x16_t yzx_idx = {
          4,  5,   6,   7,
          8,  9,  10,  11,
          0,  1,   2,   3,
         12, 13,  14,  15,
     }; // [y, z, x, w]
-    float32x4_t yzxw  = vreinterpretq_f32_u8(vqtbl1q_u8(q_bytes, yzx_idx));
-    float32x4_t cross = vmulq_f32(q, yzxw); // [x*y, y*z, z*x, w*w]
 
+    float32x4_t cross = vmulq_f32(q, vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(q), yzx_idx)));
+    float xy = vgetq_lane_f32(cross, 0);
     float yz = vgetq_lane_f32(cross, 1);
     float zx = vgetq_lane_f32(cross, 2);
-    float xy = vgetq_lane_f32(cross, 0);
 
     float t0 = 2.0f * (wx + yz);
-    float t1 = 1.0f - 2.0f * (xx_s + yy_s);
+    float t1 = 1.0f - 2.0f * (xx + yy);
     float t2 = 2.0f * (wy - zx);
-    float t2c = t2 > 1.0f? 1.0f : (t2 < -1.0f? -1.0f : t2); // gimbal clamp, must stay scalar
-    float t3 = 2.0f * (wz + xy);
-    float t4 = 1.0f - 2.0f * (yy_s + zz_s);
+    
+    t2 = (t2 > 1.0f) ? 1.0f : ((t2 < -1.0f) ? -1.0f : t2);
 
-    return Vec3(ATan2(t0, t1), ASin(t2c), ATan2(t3, t4));
+    float t3 = 2.0f * (wz + xy);
+    float t4 = 1.0f - 2.0f * (yy + zz);
+
+    return Vec3(ATan2(t0, t1), ASin(t2), ATan2(t3, t4));
 
 #else
 	float y_sq = GetY() * GetY();
