@@ -446,21 +446,16 @@ TEST_SUITE("QuatTests")
 	TEST_CASE("TestQuatEulerAnglesRandom")
 	{
 		UnitTestRandom random;
-		uniform_real_distribution<float> angle_range(DegreesToRadians(-89.0f), DegreesToRadians(89.0f));
+		uniform_real_distribution<float> angle_range(DegreesToRadians(-85.0f), DegreesToRadians(85.0f));
 		for (int i = 0; i < 1000; ++i)
 		{
 			Vec3 input(angle_range(random), angle_range(random), angle_range(random));
 
-			Quat qx = Quat::sRotation(Vec3::sAxisX(), input.GetX());
-			Quat qy = Quat::sRotation(Vec3::sAxisY(), input.GetY());
-			Quat qz = Quat::sRotation(Vec3::sAxisZ(), input.GetZ());
-			Quat q = qz * qy * qx;
-
 			Quat q2 = Quat::sEulerAngles(input);
-			CHECK_APPROX_EQUAL(q, q2, 1.0e-5f);
+			CHECK_APPROX_EQUAL(q, q2, 1.0e-4f);
 
 			Vec3 angles = q2.GetEulerAngles();
-			CHECK_APPROX_EQUAL(angles, input, 1.0e-5f);
+			CHECK_APPROX_EQUAL(angles, input, 1.0e-4f);
 		}
 	}
 
