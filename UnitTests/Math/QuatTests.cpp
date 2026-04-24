@@ -451,7 +451,14 @@ TEST_SUITE("QuatTests")
 		{
 			Vec3 input(angle_range(random), angle_range(random), angle_range(random));
 
+			// Create ground truth by multiplying 3 separate axis rotations (ZYX order)
+			Quat qx = Quat::sRotation(Vec3::sAxisX(), input.GetX());
+			Quat qy = Quat::sRotation(Vec3::sAxisY(), input.GetY());
+			Quat qz = Quat::sRotation(Vec3::sAxisZ(), input.GetZ());
+			Quat q = qz * qy * qx;
+
 			Quat q2 = Quat::sEulerAngles(input);
+			
 			CHECK_APPROX_EQUAL(q, q2, 1.0e-4f);
 
 			Vec3 angles = q2.GetEulerAngles();
