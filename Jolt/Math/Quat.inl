@@ -487,6 +487,85 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
 
 Vec3 Quat::GetEulerAngles() const
 {
+#ifdef JPH_USE_SSE
+    __m128 q = mValue.mValue; // [x, y, z, w]
+
+    // Compute squares: [x*x, y*y, z*z, w*w]
+    __m128 q2 = _mm_mul_ps(q, q);
+
+    // Compute w-products: [w*x, w*y, w*z, w*w]
+    // shuffle w into all components
+    __m128 wwww = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 3, 3, 3));
+    __m128 w_prod = _mm_mul_ps(wwww, q);
+
+    // Compute cross terms: [x*y, y*z, z*x, w*w]
+    // shuffle q to [y, z, x, w] -> indices 1, 2, 0, 3
+    __m128 yzxw = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 0, 2, 1));
+    __m128 cross = _mm_mul_ps(q, yzxw);
+
+    // extract to scalar. 
+    alignas(16) float s[4]; _mm_store_ps(s, q2);     // s = [xx, yy, zz, ww]
+    alignas(16) float w[4]; _mm_store_ps(w, w_prod); // w = [wx, wy, wz, ww]
+    alignas(16) float c[4]; _mm_store_ps(c, cross);  // c = [xy, yz, zx, ww]
+
+    // finalize terms
+    float t0 = 2.0f * (w[0] + c[1]);           // 2*(wx + yz)
+    float t1 = 1.0f - 2.0f * (s[0] + s[1]);    // 1 - 2*(xx + yy)
+    float t2 = 2.0f * (w[1] - c[2]);           // 2*(wy - zx)
+    
+    // clamp.
+    float t2c = t2 > 1.0f ? 1.0f : (t2 < -1.0f ? -1.0f : t2);
+    
+    float t3 = 2.0f * (w[2] + c[0]);           // 2*(wz + xy)
+    float t4 = 1.0f - 2.0f * (s[1] + s[2]);    // 1 - 2*(yy + zz)
+
+    return Vec3(ATan2(t0, t1), ASin(t2c), ATan2(t3, t4));
+#elif defined(JPH_USE_NEON)
+    float32x4_t q = mValue.mValue; // [x, y, z, w]
+
+    // Broadcast individual components
+    float32x4_t xx = vmulq_f32(vdupq_laneq_f32(q, 0), vdupq_laneq_f32(q, 0)); // x*x
+    float32x4_t yy = vmulq_f32(vdupq_laneq_f32(q, 1), vdupq_laneq_f32(q, 1)); // y*y
+    float32x4_t zz = vmulq_f32(vdupq_laneq_f32(q, 2), vdupq_laneq_f32(q, 2)); // z*z
+
+    // Compute the three numerators: [w*x, w*y, w*z, _]
+    float32x4_t wwww = vdupq_laneq_f32(q, 3);
+    float32x4_t wxyz = vmulq_f32(wwww, q); // [w*x, w*y, w*z, w*w]
+
+    // t0 = 2*(w*x + y*z),  t2_num = 2*(w*y - z*x),  t3 = 2*(w*z + x*y)
+    float wx = vgetq_lane_f32(wxyz, 0);
+    float wy = vgetq_lane_f32(wxyz, 1);
+    float wz = vgetq_lane_f32(wxyz, 2);
+
+    float xx_s = vgetq_lane_f32(xx, 0);
+    float yy_s = vgetq_lane_f32(yy, 0);
+    float zz_s = vgetq_lane_f32(zz, 0);
+
+    // Compute cross terms as a vector: [y*z, z*x, x*y, _]
+    uint8x16_t q_bytes = vreinterpretq_u8_f32(q);
+    static constexpr uint8x16_t yzx_idx = {
+         4,  5,   6,   7,
+         8,  9,  10,  11,
+         0,  1,   2,   3,
+        12, 13,  14,  15,
+    }; // [y, z, x, w]
+    float32x4_t yzxw  = vreinterpretq_f32_u8(vqtbl1q_u8(q_bytes, yzx_idx));
+    float32x4_t cross = vmulq_f32(q, yzxw); // [x*y, y*z, z*x, w*w]
+
+    float yz = vgetq_lane_f32(cross, 1);
+    float zx = vgetq_lane_f32(cross, 2);
+    float xy = vgetq_lane_f32(cross, 0);
+
+    float t0 = 2.0f * (wx + yz);
+    float t1 = 1.0f - 2.0f * (xx_s + yy_s);
+    float t2 = 2.0f * (wy - zx);
+    float t2c = t2 > 1.0f? 1.0f : (t2 < -1.0f? -1.0f : t2); // gimbal clamp, must stay scalar
+    float t3 = 2.0f * (wz + xy);
+    float t4 = 1.0f - 2.0f * (yy_s + zz_s);
+
+    return Vec3(ATan2(t0, t1), ASin(t2c), ATan2(t3, t4));
+
+#else
 	float y_sq = GetY() * GetY();
 
 	// X
@@ -503,6 +582,7 @@ Vec3 Quat::GetEulerAngles() const
 	float t4 = 1.0f - 2.0f * (y_sq + GetZ() * GetZ());
 
 	return Vec3(ATan2(t0, t1), ASin(t2), ATan2(t3, t4));
+#endif
 }
 
 Quat Quat::GetTwist(Vec3Arg inAxis) const
