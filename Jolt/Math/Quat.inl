@@ -47,69 +47,31 @@ Quat Quat::operator * (QuatArg inRHS) const
     float32x4_t abcd = mValue.mValue;
     float32x4_t xyzw = inRHS.mValue.mValue;
 
-    // Use vtbl to permute — indices are byte offsets (each float = 4 bytes)
-    static constexpr uint8x16_t abca_idx = 
-	{ 
-		0,  1,   2,  3,  
-		4,  5,   6,  7,  
-		8,  9,  10, 11,  
-		0,  1,   2,  3  
-	};
-    static constexpr uint8x16_t bcab_idx = 
-	{ 
-		4,  5,   6,  7,  
-		8,  9,  10, 11, 
-		0,  1,   2,  3,   
-		4,  5,   6,  7  
-	};
-    static constexpr uint8x16_t cabc_idx = 
-	{ 
-		8,  9,  10,  11, 
-		0,  1,   2,   3,  
-		4,  5,   6,   7,   
-		8,  9,  10,  11
-	};
-    static constexpr uint8x16_t wwwx_idx = 
-	{
-		12, 13, 14, 15,
-		12, 13, 14, 15,
-		12, 13, 14, 15, 
-		 0,  1,  2,  3
-	};
-    static constexpr uint8x16_t zxyy_idx = 
-	{ 
-		8,  9,  10, 11, 
-		0,  1,   2,  3,  
-		4,  5,   6,  7,   
-		4,  5,   6,  7  
-	};
-    static constexpr uint8x16_t yzxz_idx = 
-	{ 
-		4,  5,   6,  7,  
-		8,  9,  10, 11, 
-		0,  1,   2,  3,   
-		8,  9,  10, 11
-	};
+    alignas(16) static constexpr uint32 abca_idx[4] = { 0x03020100, 0x07060504, 0x0b0a0908, 0x03020100 };
+    alignas(16) static constexpr uint32 bcab_idx[4] = { 0x07060504, 0x0b0a0908, 0x03020100, 0x07060504 };
+    alignas(16) static constexpr uint32 cabc_idx[4] = { 0x0b0a0908, 0x03020100, 0x07060504, 0x0b0a0908 };
+    alignas(16) static constexpr uint32 wwwx_idx[4] = { 0x0f0e0d0c, 0x0f0e0d0c, 0x0f0e0d0c, 0x03020100 };
+    alignas(16) static constexpr uint32 zxyy_idx[4] = { 0x0b0a0908, 0x03020100, 0x07060504, 0x07060504 };
+    alignas(16) static constexpr uint32 yzxz_idx[4] = { 0x07060504, 0x0b0a0908, 0x03020100, 0x0b0a0908 };
 
     uint8x16_t abcd_b = vreinterpretq_u8_f32(abcd);
     uint8x16_t xyzw_b = vreinterpretq_u8_f32(xyzw);
 
-    float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, abca_idx));
-    float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, bcab_idx));
-    float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, cabc_idx));
+    float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(abca_idx))));
+    float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(bcab_idx))));
+    float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cabc_idx))));
     float32x4_t dddd = vdupq_laneq_f32(abcd, 3);
 
-    float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, wwwx_idx));
-    float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, zxyy_idx));
-    float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, yzxz_idx));
+    float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(wwwx_idx))));
+    float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(zxyy_idx))));
+    float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(yzxz_idx))));
 
     float32x4_t m1 = vmulq_f32(abca, wwwx);
     float32x4_t m2 = vmulq_f32(bcab, zxyy);
     float32x4_t m3 = vaddq_f32(m1, m2);
 
-    // Negate the W lane to match Hamilton product logic
-    static constexpr uint32x4_t w_neg_mask = { 0, 0, 0, 0x80000000 };
-    m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), w_neg_mask));
+    alignas(16) static constexpr uint32 w_neg_mask[4] = { 0, 0, 0, 0x80000000u };
+    m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), *reinterpret_cast<const uint32x4_t *>(w_neg_mask)));
 
     float32x4_t m4 = vmulq_f32(dddd, xyzw);
     float32x4_t m5 = vmulq_f32(cabc, yzxz);
@@ -166,72 +128,34 @@ Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 	// [(aw+bz)-cy,(bw+cx)-az,(cw+ay)-bx,-(ax+by)-cz]
 	return Quat(Vec4(_mm_sub_ps(m3, m4)));
 #elif defined(JPH_USE_NEON)
-    // Register aliases for clarity
     float32x4_t abc0 = inLHS.mValue;
     float32x4_t xyzw = inRHS.mValue.mValue;
 
-    // Type casting to 8-bit vectors for the table lookup (shuffling)
-    uint8x16_t abc0_bytes = vreinterpretq_u8_f32(abc0);
-    uint8x16_t xyzw_bytes = vreinterpretq_u8_f32(xyzw);
+    alignas(16) static constexpr uint32 abca_idx[4] = { 0x03020100, 0x07060504, 0x0b0a0908, 0x03020100 };
+    alignas(16) static constexpr uint32 bcab_idx[4] = { 0x07060504, 0x0b0a0908, 0x03020100, 0x07060504 };
+    alignas(16) static constexpr uint32 cabc_idx[4] = { 0x0b0a0908, 0x03020100, 0x07060504, 0x0b0a0908 };
+    alignas(16) static constexpr uint32 wwwx_idx[4] = { 0x0f0e0d0c, 0x0f0e0d0c, 0x0f0e0d0c, 0x03020100 };
+    alignas(16) static constexpr uint32 zxyy_idx[4] = { 0x0b0a0908, 0x03020100, 0x07060504, 0x07060504 };
+    alignas(16) static constexpr uint32 yzxz_idx[4] = { 0x07060504, 0x0b0a0908, 0x03020100, 0x0b0a0908 };
 
-    // Byte-level indices for the VQTBL1Q shuffles (4 bytes per float)
-    // Layout: [x, y, z, w]
-    static constexpr uint8x16_t abca_idx = {  
-		0,  1,  2,  3,   
-		4,  5,  6,  7,   
-		8,  9, 10, 11,   
-		0,  1,  2,  3  
-	}; // [x, y, z, x]
-    static constexpr uint8x16_t bcab_idx = {  
-		4,  5,  6,  7,   
-		8,  9, 10, 11,  
-		0,  1,  2,  3,   
-		4,  5,  6, 	7  
-	}; // [y, z, x, y]
-    static constexpr uint8x16_t cabc_idx = {  
-		8,  9, 10, 11,  
-		0,  1,  2,  3,  
-		4,  5,  6,  7,   
-		8,  9, 10, 11 
-	}; // [z, x, y, z]
+    uint8x16_t abc0_b = vreinterpretq_u8_f32(abc0);
+    uint8x16_t xyzw_b = vreinterpretq_u8_f32(xyzw);
 
-    static constexpr uint8x16_t wwwx_idx = { 
-		12, 13, 14, 15, 
-		12, 13, 14, 15, 
-		12, 13, 14, 15,  
-		 0,  1,  2,  3  
-	}; // [w, w, w, x]
-    static constexpr uint8x16_t zxyy_idx = {  
-		8,  9,  10, 11,  
-		0,  1,   2,  3,  
-		4,  5,   6,  7,   
-		4,  5,   6,  7  
-	}; // [z, x, y, y]
-    static constexpr uint8x16_t yzxz_idx = {  
-		4,  5,   6,  7,   
-		8,  9,  10, 11,  
-		0,  1,   2,  3,   
-		8,  9,  10, 11 
-	}; // [y, z, x, z]
+    float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(abca_idx))));
+    float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(bcab_idx))));
+    float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cabc_idx))));
 
-    // Perform shuffles
-    float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_bytes, abca_idx));
-    float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_bytes, bcab_idx));
-    float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_bytes, cabc_idx));
-
-    float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, wwwx_idx));
-    float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, zxyy_idx));
-    float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, yzxz_idx));
+    float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(wwwx_idx))));
+    float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(zxyy_idx))));
+    float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(yzxz_idx))));
 
     float32x4_t m1 = vmulq_f32(abca, wwwx);
     float32x4_t m2 = vmulq_f32(bcab, zxyy);
     float32x4_t m3 = vaddq_f32(m1, m2);
 
-    // Flip sign of the W lane (index 3) using a bitmask
-    static constexpr uint32x4_t sign_mask = { 0, 0, 0, 0x80000000u };
-    m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), sign_mask));
+    alignas(16) static constexpr uint32 sign_mask[4] = { 0, 0, 0, 0x80000000u };
+    m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), *reinterpret_cast<const uint32x4_t *>(sign_mask)));
 
-    // m7 = m3 - (cabc * yzxz)
     float32x4_t m4 = vmulq_f32(cabc, yzxz);
     float32x4_t m7 = vsubq_f32(m3, m4);
 
@@ -409,66 +333,32 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
     __m128 sign_mask = _mm_set_ps(0.0f, -0.0f, 0.0f, -0.0f);
     return Quat(Vec4(_mm_add_ps(A, _mm_xor_ps(B, sign_mask))));
 #elif defined(JPH_USE_NEON)
-    // Register aliases for clarity
     float32x4_t sv = s.mValue;
     float32x4_t cv = c.mValue;
+    uint8x16_t cv_b = vreinterpretq_u8_f32(cv);
 
-    // Type casting to 8-bit vectors for the table lookup (shuffling)
-    uint8x16_t cv_bytes = vreinterpretq_u8_f32(cv);
+    alignas(16) static constexpr uint32 cz_idx[4] = { 0x0b0a0908, 0x0b0a0908, 0x0b0a0908, 0x0b0a0908 };
+    alignas(16) static constexpr uint32 cx_idx[4] = { 0x03020100, 0x03020100, 0x03020100, 0x03020100 };
+    alignas(16) static constexpr uint32 cy_idx[4] = { 0x07060504, 0x07060504, 0x07060504, 0x07060504 };
 
-    // Byte-level indices for the VQTBL1Q shuffles (4 bytes per float)
-    // sv layout: [sx, sy, sz, _]
-    // cv layout: [cx, cy, cz, _]
+    float32x4_t cz_cz_sz_cz = vsetq_lane_f32(vgetq_lane_f32(sv, 2), vreinterpretq_f32_u8(vqtbl1q_u8(cv_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cz_idx)))), 2);
+    float32x4_t sx_cx_cx_cx = vsetq_lane_f32(vgetq_lane_f32(sv, 0), vreinterpretq_f32_u8(vqtbl1q_u8(cv_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cx_idx)))), 0);
+    float32x4_t cy_sy_cy_cy = vsetq_lane_f32(vgetq_lane_f32(sv, 1), vreinterpretq_f32_u8(vqtbl1q_u8(cv_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cy_idx)))), 1);
 
-    // A = { cz, cz, sz, cz } * { sx, cx, cx, cx } * { cy, sy, cy, cy }
-    static constexpr uint8x16_t cz_cz_cz_cz_idx = {
-         8,  9, 10, 11,
-         8,  9, 10, 11,
-         8,  9, 10, 11,
-         8,  9, 10, 11,
-    }; // [cz, cz, cz, cz] — lane 2 patched to sz below
-    static constexpr uint8x16_t cx_cx_cx_cx_idx = {
-         0,  1,  2,  3,
-         0,  1,  2,  3,
-         0,  1,  2,  3,
-         0,  1,  2,  3,
-    }; // [cx, cx, cx, cx] — lane 0 patched to sx below
-    static constexpr uint8x16_t cy_cy_cy_cy_idx = {
-         4,  5,  6,  7,
-         4,  5,  6,  7,
-         4,  5,  6,  7,
-         4,  5,  6,  7,
-    }; // [cy, cy, cy, cy] — lane 1 patched to sy below
-
-    float32x4_t cz_cz_sz_cz = vreinterpretq_f32_u8(vqtbl1q_u8(cv_bytes, cz_cz_cz_cz_idx));
-    cz_cz_sz_cz = vsetq_lane_f32(vgetq_lane_f32(sv, 2), cz_cz_sz_cz, 2); 
-
-    float32x4_t sx_cx_cx_cx = vreinterpretq_f32_u8(vqtbl1q_u8(cv_bytes, cx_cx_cx_cx_idx));
-    sx_cx_cx_cx = vsetq_lane_f32(vgetq_lane_f32(sv, 0), sx_cx_cx_cx, 0); 
-
-    float32x4_t cy_sy_cy_cy = vreinterpretq_f32_u8(vqtbl1q_u8(cv_bytes, cy_cy_cy_cy_idx));
-    cy_sy_cy_cy = vsetq_lane_f32(vgetq_lane_f32(sv, 1), cy_sy_cy_cy, 1); 
-
-    // Match scalar accumulation order: (Z * X) * Y
     float32x4_t A = vmulq_f32(vmulq_f32(cz_cz_sz_cz, sx_cx_cx_cx), cy_sy_cy_cy);
 
-    // B = { sz, sz, cz, sz } * { cx, sx, sx, sx } * { sy, cy, sy, sy }
-    float32x4_t sz_sz_cz_sz = vdupq_laneq_f32(sv, 2);
-    sz_sz_cz_sz = vsetq_lane_f32(vgetq_lane_f32(cv, 2), sz_sz_cz_sz, 2); 
+    float32x4_t sz_v = vdupq_laneq_f32(sv, 2);
+    float32x4_t sx_v = vdupq_laneq_f32(sv, 0);
+    float32x4_t sy_v = vdupq_laneq_f32(sv, 1);
 
-    float32x4_t cx_sx_sx_sx = vdupq_laneq_f32(sv, 0);
-    cx_sx_sx_sx = vsetq_lane_f32(vgetq_lane_f32(cv, 0), cx_sx_sx_sx, 0); 
-
-    float32x4_t sy_cy_sy_sy = vdupq_laneq_f32(sv, 1);
-    sy_cy_sy_sy = vsetq_lane_f32(vgetq_lane_f32(cv, 1), sy_cy_sy_sy, 1); 
+    float32x4_t sz_sz_cz_sz = vsetq_lane_f32(vgetq_lane_f32(cv, 2), sz_v, 2);
+    float32x4_t cx_sx_sx_sx = vsetq_lane_f32(vgetq_lane_f32(cv, 0), sx_v, 0);
+    float32x4_t sy_cy_sy_sy = vsetq_lane_f32(vgetq_lane_f32(cv, 1), sy_v, 1);
 
     float32x4_t B = vmulq_f32(vmulq_f32(sz_sz_cz_sz, cx_sx_sx_sx), sy_cy_sy_sy);
 
-    // Result: { A0-B0, A1+B1, A2-B2, A3+B3 }
-    static constexpr uint32x4_t sign_mask = { 0x80000000u, 0, 0x80000000u, 0 };
-    float32x4_t B_flipped = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(B), sign_mask));
-
-    return Quat(Vec4(vaddq_f32(A, B_flipped)));
+    alignas(16) static constexpr uint32 sign_mask[4] = { 0x80000000u, 0, 0x80000000u, 0 };
+    return Quat(Vec4(vaddq_f32(A, vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(B), *reinterpret_cast<const uint32x4_t *>(sign_mask))))));
 #else
 	float cx = c.GetX();
 	float sx = s.GetX();
@@ -521,29 +411,21 @@ Vec3 Quat::GetEulerAngles() const
 
     return Vec3(ATan2(t0, t1), ASin(t2c), ATan2(t3, t4));
 #elif defined(JPH_USE_NEON)
-    float32x4_t q = mValue.mValue; // [x, y, z, w]
+    float32x4_t q = mValue.mValue; 
 
-    // Compute squares in one go instead of 3 separate vectors
-    float32x4_t q_sq = vmulq_f32(q, q); // [x*x, y*y, z*z, w*w]
+    float32x4_t q_sq = vmulq_f32(q, q); 
     float xx = vgetq_lane_f32(q_sq, 0);
     float yy = vgetq_lane_f32(q_sq, 1);
     float zz = vgetq_lane_f32(q_sq, 2);
 
-    // Numerators: [w*x, w*y, w*z, w*w]
     float32x4_t w_prod = vmulq_f32(vdupq_laneq_f32(q, 3), q);
     float wx = vgetq_lane_f32(w_prod, 0);
     float wy = vgetq_lane_f32(w_prod, 1);
     float wz = vgetq_lane_f32(w_prod, 2);
 
-    // Cross terms: [x*y, y*z, z*x, w*w]
-    static constexpr uint8x16_t yzx_idx = {
-         4,  5,   6,   7,
-         8,  9,  10,  11,
-         0,  1,   2,   3,
-        12, 13,  14,  15,
-    }; // [y, z, x, w]
+    alignas(16) static constexpr uint32 yzx_idx[4] = { 0x07060504, 0x0b0a0908, 0x03020100, 0x0f0e0d0c };
 
-    float32x4_t cross = vmulq_f32(q, vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(q), yzx_idx)));
+    float32x4_t cross = vmulq_f32(q, vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(q), vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(yzx_idx)))));
     float xy = vgetq_lane_f32(cross, 0);
     float yz = vgetq_lane_f32(cross, 1);
     float zx = vgetq_lane_f32(cross, 2);
