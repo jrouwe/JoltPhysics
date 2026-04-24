@@ -375,8 +375,8 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
     __m128 sv = s.mValue;
     __m128 cv = c.mValue;
 
-    __m128 lane_y_mask = _mm_castsi128_ps(_mm_set_epi32(0, 0, 0xffffffff, 0));
-    __m128 lane_z_mask = _mm_castsi128_ps(_mm_set_epi32(0, 0xffffffff, 0, 0));
+    __m128 lane_y_mask = _mm_castsi128_ps(_mm_set_epi32(0, 0, -1, 0));
+    __m128 lane_z_mask = _mm_castsi128_ps(_mm_set_epi32(0, -1, 0, 0));
 
     // A = { cz, cz, sz, cz } * { sx, cx, cx, cx } * { cy, sy, cy, cy }
     __m128 cz_v = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2));
