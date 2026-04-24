@@ -162,6 +162,76 @@ Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 
 	// [(aw+bz)-cy,(bw+cx)-az,(cw+ay)-bx,-(ax+by)-cz]
 	return Quat(Vec4(_mm_sub_ps(m3, m4)));
+#elif defined(JPH_USE_NEON)
+    // Register aliases for clarity
+    float32x4_t abc0 = inLHS.mValue;
+    float32x4_t xyzw = inRHS.mValue.mValue;
+
+    // Type casting to 8-bit vectors for the table lookup (shuffling)
+    uint8x16_t abc0_bytes = vreinterpretq_u8_f32(abc0);
+    uint8x16_t xyzw_bytes = vreinterpretq_u8_f32(xyzw);
+
+    // Byte-level indices for the VQTBL1Q shuffles (4 bytes per float)
+    // Layout: [x, y, z, w]
+    static constexpr uint8x16_t abca_idx = {  
+		0,  1,  2,  3,   
+		4,  5,  6,  7,   
+		8,  9, 10, 11,   
+		0,  1,  2,  3  
+	}; // [x, y, z, x]
+    static constexpr uint8x16_t bcab_idx = {  
+		4,  5,  6,  7,   
+		8,  9, 10, 11,  
+		0,  1,  2,  3,   
+		4,  5,  6, 	7  
+	}; // [y, z, x, y]
+    static constexpr uint8x16_t cabc_idx = {  
+		8,  9, 10, 11,  
+		0,  1,  2,  3,  
+		4,  5,  6,  7,   
+		8,  9, 10, 11 
+	}; // [z, x, y, z]
+
+    static constexpr uint8x16_t wwwx_idx = { 
+		12, 13, 14, 15, 
+		12, 13, 14, 15, 
+		12, 13, 14, 15,  
+		 0,  1,  2,  3  
+	}; // [w, w, w, x]
+    static constexpr uint8x16_t zxyy_idx = {  
+		8,  9,  10, 11,  
+		0,  1,   2,  3,  
+		4,  5,   6,  7,   
+		4,  5,   6,  7  
+	}; // [z, x, y, y]
+    static constexpr uint8x16_t yzxz_idx = {  
+		4,  5,   6,  7,   
+		8,  9,  10, 11,  
+		0,  1,   2,  3,   
+		8,  9,  10, 11 
+	}; // [y, z, x, z]
+
+    // Perform shuffles
+    float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_bytes, abca_idx));
+    float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_bytes, bcab_idx));
+    float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_bytes, cabc_idx));
+
+    float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, wwwx_idx));
+    float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, zxyy_idx));
+    float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, yzxz_idx));
+
+    // Core Hamilton Math using Fused Multiply-Add
+    // m3 = (bcab * zxyy) + (abca * wwwx)
+    float32x4_t m3 = vfmaq_f32(vmulq_f32(bcab, zxyy), abca, wwwx);
+
+    // Flip sign of the W lane (index 3) using a bitmask
+    static constexpr uint32x4_t sign_mask = { 0, 0, 0, 0x80000000u };
+    m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), sign_mask));
+
+    // m7 = m3 - (cabc * yzxz)
+    float32x4_t m7 = vfmsq_f32(m3, cabc, yzxz);
+
+    return Quat(Vec4(m7));
 #else
 	float a = inLHS.GetX();
 	float b = inLHS.GetY();
