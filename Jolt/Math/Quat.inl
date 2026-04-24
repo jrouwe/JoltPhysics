@@ -470,10 +470,6 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
 
     return Quat(Vec4(vaddq_f32(A, B_flipped)));
 #else
-	Vec4 half(0.5f * inAngles);
-	Vec4 s, c;
-	half.SinCos(s, c);
-
 	float cx = c.GetX();
 	float sx = s.GetX();
 	float cy = c.GetY();
