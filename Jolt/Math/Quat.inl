@@ -43,6 +43,77 @@ Quat Quat::operator * (QuatArg inRHS) const
 
 	// [(aw+bz)+(dx-cy),(bw+cx)+(dy-az),(cw+ay)+(dz-bx),-(ax+by)+(dw-cz)]
 	return Quat(Vec4(m7));
+#elif defined(JPH_USE_NEON)
+    float32x4_t abcd = mValue.mValue;
+    float32x4_t xyzw = inRHS.mValue.mValue;
+
+    // Use vtbl to permute — indices are byte offsets (each float = 4 bytes)
+    static constexpr uint8x16_t abca_idx = 
+	{ 
+		0,  1,   2,  3,  
+		4,  5,   6,  7,  
+		8,  9,  10, 11,  
+		0,  1,   2,  3  
+	};
+    static constexpr uint8x16_t bcab_idx = 
+	{ 
+		4,  5,   6,  7,  
+		8,  9,  10, 11, 
+		0,  1,   2,  3,   
+		4,  5,   6,  7  
+	};
+    static constexpr uint8x16_t cabc_idx = 
+	{ 
+		8,  9,  10,  11, 
+		0,  1,   2,   3,  
+		4,  5,   6,   7,   
+		8,  9,  10,  11
+	};
+    static constexpr uint8x16_t wwwx_idx = 
+	{
+		12, 13, 14, 15,
+		12, 13, 14, 15,
+		12, 13, 14, 15, 
+		 0,  1,  2,  3
+	};
+    static constexpr uint8x16_t zxyy_idx = 
+	{ 
+		8,  9,  10, 11, 
+		0,  1,   2,  3,  
+		4,  5,   6,  7,   
+		4,  5,   6,  7  
+	};
+    static constexpr uint8x16_t yzxz_idx = 
+	{ 
+		4,  5,   6,  7,  
+		8,  9,  10, 11, 
+		0,  1,   2,  3,   
+		8,  9,  10, 11
+	};
+
+    uint8x16_t abcd_bytes = vreinterpretq_u8_f32(abcd);
+    uint8x16_t xyzw_bytes = vreinterpretq_u8_f32(xyzw);
+
+    float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_bytes, abca_idx));
+    float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_bytes, bcab_idx));
+    float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_bytes, cabc_idx));
+    float32x4_t dddd = vdupq_laneq_f32(abcd, 3);
+
+    float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, wwwx_idx));
+    float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, zxyy_idx));
+    float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_bytes, yzxz_idx));
+
+    // m3 = abca * wwwx + bcab * zxyy
+    float32x4_t m3 = vfmaq_f32(vmulq_f32(bcab, zxyy), abca, wwwx);
+
+    // Negate W lane
+    static constexpr uint32x4_t sign_mask = { 0, 0, 0, 0x80000000u };
+    m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), sign_mask));
+
+    // m7 = dddd * xyzw - cabc * yzxz + m3
+    float32x4_t m7 = vfmaq_f32(vfmsq_f32(m3, cabc, yzxz), dddd, xyzw);
+
+    return Quat(Vec4(m7));
 #else
 	float a = mValue.GetX();
 	float b = mValue.GetY();
