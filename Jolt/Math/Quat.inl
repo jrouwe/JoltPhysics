@@ -363,6 +363,110 @@ Quat Quat::sRandom(Random &inRandom)
 Quat Quat::sEulerAngles(Vec3Arg inAngles)
 {
 	Vec4 half(0.5f * inAngles);
+    Vec4 s;
+	Vec4 c;
+    half.SinCos(s, c);
+
+#ifdef JPH_USE_SSE
+    __m128 sv = s.mValue;
+    __m128 cv = c.mValue;
+
+    // cx,cy,cz in lanes 0,1,2 — lane 3 unused/zero
+    // sx,sy,sz in lanes 0,1,2
+
+    // A = { cz, cz, sz, cz } * { sx, cx, cx, cx } * { cy, sy, cy, cy }
+    __m128 cz_cz_sz_cz = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2));
+    // overwrite lane 2 with sz
+    cz_cz_sz_cz = _mm_blend_ps(cz_cz_sz_cz, _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2,2,2,2)), 0b0100);
+
+    __m128 sx_cx_cx_cx = _mm_shuffle_ps(sv, cv, _MM_SHUFFLE(0, 0, 0, 0));
+    sx_cx_cx_cx = _mm_blend_ps(sx_cx_cx_cx, sv, 0b0001);
+
+    __m128 cy_sy_cy_cy = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1, 1, 1, 1));
+    cy_sy_cy_cy = _mm_blend_ps(cy_sy_cy_cy, _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1,1,1,1)), 0b0010);
+
+    __m128 A = _mm_mul_ps(_mm_mul_ps(cz_cz_sz_cz, sx_cx_cx_cx), cy_sy_cy_cy);
+
+    // B = { sz, sz, cz, sz } * { cx, sx, sx, sx } * { sy, cy, sy, sy }
+    __m128 sz_sz_cz_sz = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2, 2, 2, 2));
+    sz_sz_cz_sz = _mm_blend_ps(sz_sz_cz_sz, _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2,2,2,2)), 0b0100);
+
+    __m128 cx_sx_sx_sx = _mm_shuffle_ps(cv, sv, _MM_SHUFFLE(0, 0, 0, 0));
+    cx_sx_sx_sx = _mm_blend_ps(cx_sx_sx_sx, cv, 0b0001);
+
+    __m128 sy_cy_sy_sy = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1, 1, 1, 1));
+    sy_cy_sy_sy = _mm_blend_ps(sy_cy_sy_sy, _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1,1,1,1)), 0b0010);
+
+    __m128 B = _mm_mul_ps(_mm_mul_ps(sz_sz_cz_sz, cx_sx_sx_sx), sy_cy_sy_sy);
+
+    // X = A-B, Y = A+B, Z = A-B, W = A+B => sign mask {-, +, -, +}
+    __m128 sign_mask = _mm_set_ps(0.0f, -0.0f, 0.0f, -0.0f);
+    __m128 B_flipped = _mm_xor_ps(B, sign_mask);
+    return Quat(Vec4(_mm_add_ps(A, B_flipped)));
+
+#elif defined(JPH_USE_NEON)
+    // Register aliases for clarity
+    float32x4_t sv = s.mValue;
+    float32x4_t cv = c.mValue;
+
+    // Type casting to 8-bit vectors for the table lookup (shuffling)
+    uint8x16_t cv_bytes = vreinterpretq_u8_f32(cv);
+
+    // Byte-level indices for the VQTBL1Q shuffles (4 bytes per float)
+    // sv layout: [sx, sy, sz, _]
+    // cv layout: [cx, cy, cz, _]
+
+    // A = { cz, cz, sz, cz } * { sx, cx, cx, cx } * { cy, sy, cy, cy }
+    static constexpr uint8x16_t cz_cz_cz_cz_idx = {
+         8,  9, 10, 11,
+         8,  9, 10, 11,
+         8,  9, 10, 11,
+         8,  9, 10, 11,
+    }; // [cz, cz, cz, cz] — lane 2 patched to sz below
+    static constexpr uint8x16_t cx_cx_cx_cx_idx = {
+         0,  1,  2,  3,
+         0,  1,  2,  3,
+         0,  1,  2,  3,
+         0,  1,  2,  3,
+    }; // [cx, cx, cx, cx] — lane 0 patched to sx below
+    static constexpr uint8x16_t cy_cy_cy_cy_idx = {
+         4,  5,  6,  7,
+         4,  5,  6,  7,
+         4,  5,  6,  7,
+         4,  5,  6,  7,
+    }; // [cy, cy, cy, cy] — lane 1 patched to sy below
+
+    float32x4_t cz_cz_sz_cz = vreinterpretq_f32_u8(vqtbl1q_u8(cv_bytes, cz_cz_cz_cz_idx));
+    cz_cz_sz_cz = vsetq_lane_f32(vgetq_lane_f32(sv, 2), cz_cz_sz_cz, 2);  // patch sz into lane 2
+
+    float32x4_t sx_cx_cx_cx = vreinterpretq_f32_u8(vqtbl1q_u8(cv_bytes, cx_cx_cx_cx_idx));
+    sx_cx_cx_cx = vsetq_lane_f32(vgetq_lane_f32(sv, 0), sx_cx_cx_cx, 0);  // patch sx into lane 0
+
+    float32x4_t cy_sy_cy_cy = vreinterpretq_f32_u8(vqtbl1q_u8(cv_bytes, cy_cy_cy_cy_idx));
+    cy_sy_cy_cy = vsetq_lane_f32(vgetq_lane_f32(sv, 1), cy_sy_cy_cy, 1);  // patch sy into lane 1
+
+    float32x4_t A = vmulq_f32(vmulq_f32(cz_cz_sz_cz, sx_cx_cx_cx), cy_sy_cy_cy);
+
+    // B = { sz, sz, cz, sz } * { cx, sx, sx, sx } * { sy, cy, sy, sy }
+    float32x4_t sz_sz_cz_sz = vdupq_laneq_f32(sv, 2);
+    sz_sz_cz_sz = vsetq_lane_f32(vgetq_lane_f32(cv, 2), sz_sz_cz_sz, 2);  // patch cz into lane 2
+
+    float32x4_t cx_sx_sx_sx = vdupq_laneq_f32(sv, 0);
+    cx_sx_sx_sx = vsetq_lane_f32(vgetq_lane_f32(cv, 0), cx_sx_sx_sx, 0);  // patch cx into lane 0
+
+    float32x4_t sy_cy_sy_sy = vdupq_laneq_f32(sv, 1);
+    sy_cy_sy_sy = vsetq_lane_f32(vgetq_lane_f32(cv, 1), sy_cy_sy_sy, 1);  // patch cy into lane 1
+
+    float32x4_t B = vmulq_f32(vmulq_f32(sz_sz_cz_sz, cx_sx_sx_sx), sy_cy_sy_sy);
+
+    // Flip sign of X and Z lanes (indices 0, 2) on B, then add to A
+    // Result: { A[0]-B[0], A[1]+B[1], A[2]-B[2], A[3]+B[3] }
+    static constexpr uint32x4_t sign_mask = { 0x80000000u, 0, 0x80000000u, 0 };
+    float32x4_t B_flipped = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(B), sign_mask));
+
+    return Quat(Vec4(vaddq_f32(A, B_flipped)));
+#else
+	Vec4 half(0.5f * inAngles);
 	Vec4 s, c;
 	half.SinCos(s, c);
 
@@ -378,6 +482,7 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
 		cz * cx * sy + sz * sx * cy,
 		sz * cx * cy - cz * sx * sy,
 		cz * cx * cy + sz * sx * sy);
+#endif
 }
 
 Vec3 Quat::GetEulerAngles() const
