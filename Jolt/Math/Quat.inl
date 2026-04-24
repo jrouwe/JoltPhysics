@@ -394,50 +394,38 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
 Vec3 Quat::GetEulerAngles() const
 {
 #ifdef JPH_USE_SSE
-	__m128 q = mValue.mValue; // [x, y, z, w]
+    __m128 q = mValue.mValue; // [x, y, z, w]
 
-	__m128 q2 = _mm_mul_ps(q, q); // [xx, yy, zz, ww]
+    // Compute squares: [x*x, y*y, z*z, w*w]
+    __m128 q2 = _mm_mul_ps(q, q);
 
-	// Compute w-products: [wx, wy, wz, ww]
-	__m128 wwww = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 3, 3, 3));
-	__m128 w_prod = _mm_mul_ps(wwww, q);
+    // Compute w-products: [w*x, w*y, w*z, w*w]
+    // shuffle w into all components
+    __m128 wwww = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 3, 3, 3));
+    __m128 w_prod = _mm_mul_ps(wwww, q);
 
-	// Compute cross terms: [xy, yz, zx, ww]
-	__m128 yzxw = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 0, 2, 1));
-	__m128 cross = _mm_mul_ps(q, yzxw);
+    // Compute cross terms: [x*y, y*z, z*x, w*w]
+    // shuffle q to [y, z, x, w] -> indices 1, 2, 0, 3
+    __m128 yzxw = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 0, 2, 1));
+    __m128 cross = _mm_mul_ps(q, yzxw);
 
-	float t0, t1, t2, t3, t4;
+    // extract to scalar. 
+    alignas(16) float s[4]; _mm_store_ps(s, q2);     // s = [xx, yy, zz, ww]
+    alignas(16) float w[4]; _mm_store_ps(w, w_prod); // w = [wx, wy, wz, ww]
+    alignas(16) float c[4]; _mm_store_ps(c, cross);  // c = [xy, yz, zx, ww]
 
-#ifdef JPH_USE_SSE4_1=
-	// _mm_extract_ps extracts a lane directly to a GPR, which the compiler
-	// can then pass to ATan2/ASin without hitting the stack.
-	auto Extract = []( __m128 v, int lane) {
-		union { int i; float f; } u;
-		u.i = _mm_extract_ps(v, lane);
-		return u.f;
-	};
+    // finalize terms
+    float t0 = 2.0f * (w[0] + c[1]);           // 2*(wx + yz)
+    float t1 = 1.0f - 2.0f * (s[0] + s[1]);    // 1 - 2*(xx + yy)
+    float t2 = 2.0f * (w[1] - c[2]);           // 2*(wy - zx)
+    
+    // clamp.
+    float t2c = t2 > 1.0f ? 1.0f : (t2 < -1.0f ? -1.0f : t2);
+    
+    float t3 = 2.0f * (w[2] + c[0]);           // 2*(wz + xy)
+    float t4 = 1.0f - 2.0f * (s[1] + s[2]);    // 1 - 2*(yy + zz)
 
-	t0 = 2.0f * (_mm_cvtss_f32(w_prod) + Extract(cross, 1)); // 2*(wx + yz)
-	t1 = 1.0f - 2.0f * (_mm_cvtss_f32(q2) + Extract(q2, 1));  // 1 - 2*(xx + yy)
-	t2 = 2.0f * (Extract(w_prod, 1) - Extract(cross, 2));    // 2*(wy - zx)
-	t3 = 2.0f * (Extract(w_prod, 2) + _mm_cvtss_f32(cross)); // 2*(wz + xy)
-	t4 = 1.0f - 2.0f * (Extract(q2, 1) + Extract(q2, 2));    // 1 - 2*(yy + zz)
-#else
-	alignas(16) float s[4]; _mm_store_ps(s, q2);     // [xx, yy, zz, ww]
-	alignas(16) float w[4]; _mm_store_ps(w, w_prod); // [wx, wy, wz, ww]
-	alignas(16) float c[4]; _mm_store_ps(c, cross);  // [xy, yz, zx, ww]
-
-	t0 = 2.0f * (w[0] + c[1]);
-	t1 = 1.0f - 2.0f * (s[0] + s[1]);
-	t2 = 2.0f * (w[1] - c[2]);
-	t3 = 2.0f * (w[2] + c[0]);
-	t4 = 1.0f - 2.0f * (s[1] + s[2]);
-#endif
-
-	// Clamping t2 for ASin
-	float t2c = t2 > 1.0f ? 1.0f : (t2 < -1.0f ? -1.0f : t2);
-
-	return Vec3(ATan2(t0, t1), ASin(t2c), ATan2(t3, t4));
+    return Vec3(ATan2(t0, t1), ASin(t2c), ATan2(t3, t4));
 #elif defined(JPH_USE_NEON)
     float32x4_t q = mValue.mValue; 
 
