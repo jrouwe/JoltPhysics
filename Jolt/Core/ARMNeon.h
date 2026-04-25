@@ -100,7 +100,7 @@
 	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 2, 3, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vcombine_f32(vzip1_f32(vget_low_f32(inV1), vget_high_f32(inV1)), vrev64_f32(vget_high_f32(inV1)));
+		return vcopyq_laneq_f32(vuzp1q_f32(inV1, inV1), 2, inV1, 3);
 	}
 
 	template <>
@@ -180,7 +180,7 @@
 	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 3, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vcombine_f32(vext_f32(vget_low_f32(inV1), vget_high_f32(inV1), 1), vrev64_f32(vget_high_f32(inV1)));
+		return vextq_f32(inV1, vdupq_laneq_f32(inV1, 2), 1);
 	}
 
 	template <>
@@ -230,7 +230,7 @@
 	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 2, 1, 0>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vcombine_f32(vdup_lane_f32(vget_high_f32(inV1), 0), vrev64_f32(vget_low_f32(inV1)));
+		return vextq_f32(vtrn1q_f32(inV1, inV1), vrev64q_f32(inV1), 2);
 	}
 
 	template <>
@@ -291,13 +291,14 @@
 	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<3, 0, 3, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vcombine_f32(vext_f32(vget_high_f32(inV1), vget_low_f32(inV1), 1), vrev64_f32(vget_high_f32(inV1)));
+		return vtrn1q_f32(vdupq_laneq_f32(inV1, 3), inV1);
 	}
 
 	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<3, 2, 1, 0>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vcombine_f32(vrev64_f32(vget_high_f32(inV1)), vrev64_f32(vget_low_f32(inV1)));
+		float32x4_t t = vrev64q_f32(inV1);
+		return vextq_f32(t, t, 2);
 	}
 
 	template <>
