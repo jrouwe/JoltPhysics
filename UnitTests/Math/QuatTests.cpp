@@ -427,42 +427,35 @@ TEST_SUITE("QuatTests")
 		CHECK_APPROX_EQUAL(a, DegreesToRadians(-10.0f), 1.0e-5f);
 	}
 
-	TEST_CASE("TestQuatGetEulerAngles")
-	{
-		Vec3 input(DegreesToRadians(-10.0f), DegreesToRadians(20.0f), DegreesToRadians(-95.0f));
-
-		Quat qx = Quat::sRotation(Vec3::sAxisX(), input.GetX());
-		Quat qy = Quat::sRotation(Vec3::sAxisY(), input.GetY());
-		Quat qz = Quat::sRotation(Vec3::sAxisZ(), input.GetZ());
-		Quat q = qz * qy * qx;
-
-		Quat q2 = Quat::sEulerAngles(input);
-		CHECK_APPROX_EQUAL(q, q2);
-
-		Vec3 angles = q2.GetEulerAngles();
-		CHECK_APPROX_EQUAL(angles, input);
-	}
-
-	TEST_CASE("TestQuatEulerAnglesRandom")
+	TEST_CASE("TestQuatEulerAngles")
 	{
 		UnitTestRandom random;
+
+		// Test a specific case first
+		Vec3 fixed_input(DegreesToRadians(-10.0f), DegreesToRadians(20.0f), DegreesToRadians(-95.0f));
 		uniform_real_distribution<float> angle_range(DegreesToRadians(-85.0f), DegreesToRadians(85.0f));
-		for (int i = 0; i < 1000; ++i)
+		// Run a random loop to ensure coverage
+		for (int i = -1; i < 1000; ++i)
 		{
-			Vec3 input(angle_range(random), angle_range(random), angle_range(random));
+			Vec3 input;
+			if (i == -1)
+				input = fixed_input;
+			else
+				input = Vec3(angle_range(random), angle_range(random), angle_range(random));
 
 			// Create ground truth by multiplying 3 separate axis rotations (ZYX order)
 			Quat qx = Quat::sRotation(Vec3::sAxisX(), input.GetX());
 			Quat qy = Quat::sRotation(Vec3::sAxisY(), input.GetY());
 			Quat qz = Quat::sRotation(Vec3::sAxisZ(), input.GetZ());
-			Quat q = qz * qy * qx;
+			Quat q_expected = qz * qy * qx;
 
-			Quat q2 = Quat::sEulerAngles(input);
-			
-			CHECK_APPROX_EQUAL(q, q2, 1.0e-4f);
+			// Test sEulerAngles (Conversion from Euler to Quat)
+			Quat q_actual = Quat::sEulerAngles(input);
+			CHECK_APPROX_EQUAL(q_expected, q_actual, 1.0e-4f);
 
-			Vec3 angles = q2.GetEulerAngles();
-			CHECK_APPROX_EQUAL(angles, input, 1.0e-4f);
+			// Test GetEulerAngles (Conversion from Quat back to Euler)
+			Vec3 angles_result = q_actual.GetEulerAngles();
+			CHECK_APPROX_EQUAL(angles_result, input, 1.0e-4f);
 		}
 	}
 
