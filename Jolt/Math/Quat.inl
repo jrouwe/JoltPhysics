@@ -129,21 +129,19 @@ Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 	float32x4_t abc0 = inLHS.mValue;
 	float32x4_t xyzw = inRHS.mValue.mValue;
 
-	alignas(16) static constexpr uint32 abca_idx[4] = { 0x03020100, 0x07060504, 0x0b0a0908, 0x03020100 };
 	alignas(16) static constexpr uint32 bcab_idx[4] = { 0x07060504, 0x0b0a0908, 0x03020100, 0x07060504 };
 	alignas(16) static constexpr uint32 cabc_idx[4] = { 0x0b0a0908, 0x03020100, 0x07060504, 0x0b0a0908 };
-	alignas(16) static constexpr uint32 wwwx_idx[4] = { 0x0f0e0d0c, 0x0f0e0d0c, 0x0f0e0d0c, 0x03020100 };
 	alignas(16) static constexpr uint32 zxyy_idx[4] = { 0x0b0a0908, 0x03020100, 0x07060504, 0x07060504 };
 	alignas(16) static constexpr uint32 yzxz_idx[4] = { 0x07060504, 0x0b0a0908, 0x03020100, 0x0b0a0908 };
 
 	uint8x16_t abc0_b = vreinterpretq_u8_f32(abc0);
 	uint8x16_t xyzw_b = vreinterpretq_u8_f32(xyzw);
 
-	float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(abca_idx))));
+	float32x4_t abca = vcopyq_laneq_f32(abc0, 3, abc0, 0);
 	float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(bcab_idx))));
 	float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abc0_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cabc_idx))));
 
-	float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(wwwx_idx))));
+	float32x4_t wwwx = vcopyq_laneq_f32(vdupq_laneq_f32(xyzw, 3), 3, xyzw, 0);
 	float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(zxyy_idx))));
 	float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(yzxz_idx))));
 
