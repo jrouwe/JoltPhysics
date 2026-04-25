@@ -47,22 +47,20 @@ Quat Quat::operator * (QuatArg inRHS) const
 	float32x4_t abcd = mValue.mValue;
 	float32x4_t xyzw = inRHS.mValue.mValue;
 
-	alignas(16) static constexpr uint32 abca_idx[4] = { 0x03020100, 0x07060504, 0x0b0a0908, 0x03020100 };
 	alignas(16) static constexpr uint32 bcab_idx[4] = { 0x07060504, 0x0b0a0908, 0x03020100, 0x07060504 };
 	alignas(16) static constexpr uint32 cabc_idx[4] = { 0x0b0a0908, 0x03020100, 0x07060504, 0x0b0a0908 };
-	alignas(16) static constexpr uint32 wwwx_idx[4] = { 0x0f0e0d0c, 0x0f0e0d0c, 0x0f0e0d0c, 0x03020100 };
 	alignas(16) static constexpr uint32 zxyy_idx[4] = { 0x0b0a0908, 0x03020100, 0x07060504, 0x07060504 };
 	alignas(16) static constexpr uint32 yzxz_idx[4] = { 0x07060504, 0x0b0a0908, 0x03020100, 0x0b0a0908 };
 
 	uint8x16_t abcd_b = vreinterpretq_u8_f32(abcd);
 	uint8x16_t xyzw_b = vreinterpretq_u8_f32(xyzw);
 
-	float32x4_t abca = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(abca_idx))));
+	float32x4_t abca = vcopyq_laneq_f32(abcd, 3, abcd, 0);
 	float32x4_t bcab = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(bcab_idx))));
 	float32x4_t cabc = vreinterpretq_f32_u8(vqtbl1q_u8(abcd_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cabc_idx))));
 	float32x4_t dddd = vdupq_laneq_f32(abcd, 3);
 
-	float32x4_t wwwx = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(wwwx_idx))));
+	float32x4_t wwwx = vcopyq_laneq_f32(vdupq_laneq_f32(xyzw, 3), 3, xyzw, 0);
 	float32x4_t zxyy = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(zxyy_idx))));
 	float32x4_t yzxz = vreinterpretq_f32_u8(vqtbl1q_u8(xyzw_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(yzxz_idx))));
 
@@ -398,12 +396,12 @@ Vec3 Quat::GetEulerAngles() const
 	__m128 yzxw = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 0, 2, 1));
 	__m128 cross = _mm_mul_ps(q, yzxw);
 
-	// extract to scalar.
+	// Store to stack, the extraction cost is negligible relative to trigs.
 	alignas(16) float s[4]; _mm_store_ps(s, q2);     // s = [xx, yy, zz, ww]
 	alignas(16) float w[4]; _mm_store_ps(w, w_prod); // w = [wx, wy, wz, ww]
 	alignas(16) float c[4]; _mm_store_ps(c, cross);  // c = [xy, yz, zx, ww]
 
-	// finalize terms
+	// Let the compiler vectorize this section
 	float t0 = 2.0f * (w[0] + c[1]);           // 2*(wx + yz)
 	float t1 = 1.0f - 2.0f * (s[0] + s[1]);    // 1 - 2*(xx + yy)
 	float t2 = 2.0f * (w[1] - c[2]);           // 2*(wy - zx)
