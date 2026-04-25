@@ -70,7 +70,7 @@
 	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 1, 4, 5>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vcombine_f32(vget_low_f32(inV1), vget_low_f32(inV2));
+		return vreinterpretq_f32_f64(vzip1q_f64(vreinterpretq_f64_f32(inV1), vreinterpretq_f64_f32(inV2)));
 	}
 
 	template <>
@@ -174,7 +174,7 @@
 	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 2, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vcombine_f32(vext_f32(vget_low_f32(inV1), vget_high_f32(inV1), 1), vdup_lane_f32(vget_high_f32(inV1), 0));
+		return vextq_f32(inV1, vdupq_laneq_f32(inV1, 2), 1);
 	}
 
 	template <>
