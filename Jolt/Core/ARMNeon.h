@@ -174,7 +174,7 @@
 	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 2, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vextq_f32(inV1, vdupq_laneq_f32(inV1, 2), 1);
+		return vcombine_f32(vext_f32(vget_low_f32(inV1), vget_high_f32(inV1), 1), vdup_lane_f32(vget_high_f32(inV1), 0));
 	}
 
 	template <>
