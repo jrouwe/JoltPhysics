@@ -431,17 +431,17 @@ TEST_SUITE("QuatTests")
 	{
 		UnitTestRandom random;
 
-		// Test a specific case first
+		// Pitch clamped to ±85° to avoid gimbal lock singularity near ±90°
+		uniform_real_distribution<float> full_range(DegreesToRadians(-180.0f), DegreesToRadians(180.0f));
+		uniform_real_distribution<float> pitch_range(DegreesToRadians(-85.0f), DegreesToRadians(85.0f));
+
+		// i == -1 runs a fixed regression case before random cases
 		Vec3 fixed_input(DegreesToRadians(-10.0f), DegreesToRadians(20.0f), DegreesToRadians(-95.0f));
-		uniform_real_distribution<float> angle_range(DegreesToRadians(-85.0f), DegreesToRadians(85.0f));
-		// Run a random loop to ensure coverage
 		for (int i = -1; i < 1000; ++i)
 		{
-			Vec3 input;
-			if (i == -1)
-				input = fixed_input;
-			else
-				input = Vec3(angle_range(random), angle_range(random), angle_range(random));
+			Vec3 input = (i == -1)
+				? fixed_input
+				: Vec3(full_range(random), pitch_range(random), full_range(random));
 
 			// Create ground truth by multiplying 3 separate axis rotations (ZYX order)
 			Quat qx = Quat::sRotation(Vec3::sAxisX(), input.GetX());
@@ -449,13 +449,14 @@ TEST_SUITE("QuatTests")
 			Quat qz = Quat::sRotation(Vec3::sAxisZ(), input.GetZ());
 			Quat q_expected = qz * qy * qx;
 
-			// Test sEulerAngles (Conversion from Euler to Quat)
+			// Test sEulerAngles (Euler -> Quat)
 			Quat q_actual = Quat::sEulerAngles(input);
 			CHECK_APPROX_EQUAL(q_expected, q_actual, 1.0e-4f);
 
-			// Test GetEulerAngles (Conversion from Quat back to Euler)
-			Vec3 angles_result = q_actual.GetEulerAngles();
-			CHECK_APPROX_EQUAL(angles_result, input, 1.0e-4f);
+			// Test GetEulerAngles (Quat -> Euler), tested against both q_actual and q_expected
+			// to catch cases where sEulerAngles and GetEulerAngles share a bug
+			CHECK_APPROX_EQUAL(q_actual.GetEulerAngles(), input, 1.0e-4f);
+			CHECK_APPROX_EQUAL(q_expected.GetEulerAngles(), input, 1.0e-4f);
 		}
 	}
 
