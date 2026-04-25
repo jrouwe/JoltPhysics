@@ -27,25 +27,26 @@
 	template <unsigned I1, unsigned I2, unsigned I3, unsigned I4>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4(float32x4_t inV1, float32x4_t inV2)
 	{
-		float32x4_t ret;
-		ret = vmovq_n_f32(vgetq_lane_f32(I1 >= 4? inV2 : inV1, I1 & 0b11));
-		ret = vsetq_lane_f32(vgetq_lane_f32(I2 >= 4? inV2 : inV1, I2 & 0b11), ret, 1);
-		ret = vsetq_lane_f32(vgetq_lane_f32(I3 >= 4? inV2 : inV1, I3 & 0b11), ret, 2);
-		ret = vsetq_lane_f32(vgetq_lane_f32(I4 >= 4? inV2 : inV1, I4 & 0b11), ret, 3);
-		return ret;
+		float32x2_t lo = vcopy_laneq_f32(vdup_n_f32(0), 0, I1 >= 4? inV2 : inV1, I1 & 0b11);
+		lo = vcopy_laneq_f32(lo, 1, I2 >= 4? inV2 : inV1, I2 & 0b11);
+
+		float32x2_t hi = vcopy_laneq_f32(vdup_n_f32(0), 0, I3 >= 4? inV2 : inV1, I3 & 0b11);
+		hi = vcopy_laneq_f32(hi, 1, I4 >= 4? inV2 : inV1, I4 & 0b11);
+
+		return vcombine_f32(lo, hi);
 	}
 
 	// Specializations
 	template <>
-	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 1, 2, 2>(float32x4_t inV1, float32x4_t inV2)
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 1, 0, 0>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vcombine_f32(vget_low_f32(inV1), vdup_lane_f32(vget_high_f32(inV1), 0));
+		return vcombine_f32(vget_low_f32(inV1), vdup_lane_f32(vget_low_f32(inV1), 0));
 	}
 
 	template <>
-	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 1, 3, 3>(float32x4_t inV1, float32x4_t inV2)
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 1, 2, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		return vcombine_f32(vget_low_f32(inV1), vdup_lane_f32(vget_high_f32(inV1), 1));
+		return vcombine_f32(vget_low_f32(inV1), vdup_lane_f32(vget_high_f32(inV1), 0));
 	}
 
 	template <>
@@ -55,9 +56,57 @@
 	}
 
 	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 1, 3, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vget_low_f32(inV1), vrev64_f32(vget_high_f32(inV1)));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 1, 3, 3>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vget_low_f32(inV1), vdup_lane_f32(vget_high_f32(inV1), 1));
+	}
+
+	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 1, 4, 5>(float32x4_t inV1, float32x4_t inV2)
 	{
 		return vcombine_f32(vget_low_f32(inV1), vget_low_f32(inV2));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 2, 1, 1>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vzip1_f32(vget_low_f32(inV1), vget_high_f32(inV1)), vdup_lane_f32(vget_low_f32(inV1), 1));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 2, 1, 3>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vzip1_f32(vget_low_f32(inV1), vget_high_f32(inV1)), vzip2_f32(vget_low_f32(inV1), vget_high_f32(inV1)));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 2, 2, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vzip1_f32(vget_low_f32(inV1), vget_high_f32(inV1)), vdup_lane_f32(vget_high_f32(inV1), 0));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 2, 2, 3>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vzip1_f32(vget_low_f32(inV1), vget_high_f32(inV1)), vget_high_f32(inV1));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 2, 3, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vzip1_f32(vget_low_f32(inV1), vget_high_f32(inV1)), vrev64_f32(vget_high_f32(inV1)));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 2, 3, 3>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vzip1_f32(vget_low_f32(inV1), vget_high_f32(inV1)), vdup_lane_f32(vget_high_f32(inV1), 1));
 	}
 
 	template <>
@@ -67,23 +116,86 @@
 	}
 
 	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 3, 1, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		static const uint8x16_t table = JPH_NEON_UINT8x16(0x00, 0x01, 0x02, 0x03, 0x0c, 0x0d, 0x0e, 0x0f, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b);
+		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 0, 0, 0>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vrev64_f32(vget_low_f32(inV1)), vdup_lane_f32(vget_low_f32(inV1), 0));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 0, 0, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vrev64_f32(vget_low_f32(inV1)), vzip1_f32(vget_low_f32(inV1), vget_high_f32(inV1)));
+	}
+
+	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 0, 3, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
 		return vrev64q_f32(inV1);
 	}
 
 	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 1, 2, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vdup_lane_f32(vget_low_f32(inV1), 1), vdup_lane_f32(vget_high_f32(inV1), 0));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 1, 3, 3>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vdup_lane_f32(vget_low_f32(inV1), 1), vdup_lane_f32(vget_high_f32(inV1), 1));
+	}
+
+	// Used extensively by cross product
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 0, 0>(float32x4_t inV1, float32x4_t inV2)
+	{
+		static const uint8x16_t table = JPH_NEON_UINT8x16(0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03);
+		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+	}
+
+	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 0, 1>(float32x4_t inV1, float32x4_t inV2)
 	{
-		static uint8x16_t table = JPH_NEON_UINT8x16(0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07);
+		static const uint8x16_t table = JPH_NEON_UINT8x16(0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07);
 		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
 	}
 
 	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 0, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		static uint8x16_t table = JPH_NEON_UINT8x16(0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x08, 0x09, 0x0a, 0x0b);
+		static const uint8x16_t table = JPH_NEON_UINT8x16(0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x08, 0x09, 0x0a, 0x0b);
 		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 2, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vext_f32(vget_low_f32(inV1), vget_high_f32(inV1), 1), vdup_lane_f32(vget_high_f32(inV1), 0));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 3, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vext_f32(vget_low_f32(inV1), vget_high_f32(inV1), 1), vrev64_f32(vget_high_f32(inV1)));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 3, 3>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vext_f32(vget_low_f32(inV1), vget_high_f32(inV1), 1), vdup_lane_f32(vget_high_f32(inV1), 1));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 3, 0, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vzip2_f32(vget_low_f32(inV1), vget_high_f32(inV1)), vzip1_f32(vget_low_f32(inV1), vget_high_f32(inV1)));
 	}
 
 	template <>
@@ -93,9 +205,55 @@
 	}
 
 	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 0, 1, 1>(float32x4_t inV1, float32x4_t inV2)
+	{
+		static const uint8x16_t table = JPH_NEON_UINT8x16(0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x04, 0x05, 0x06, 0x07);
+		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 0, 1, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		static const uint8x16_t table = JPH_NEON_UINT8x16(0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b);
+		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 1, 0, 0>(float32x4_t inV1, float32x4_t inV2)
+	{
+		static const uint8x16_t table = JPH_NEON_UINT8x16(0x08, 0x09, 0x0a, 0x0b, 0x04, 0x05, 0x06, 0x07, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03);
+		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 1, 0, 3>(float32x4_t inV1, float32x4_t inV2)
+	{
+		static const uint8x16_t table = JPH_NEON_UINT8x16(0x08, 0x09, 0x0a, 0x0b, 0x04, 0x05, 0x06, 0x07, 0x00, 0x01, 0x02, 0x03, 0x0c, 0x0d, 0x0e, 0x0f);
+		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+	}
+
+	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 2, 1, 0>(float32x4_t inV1, float32x4_t inV2)
 	{
 		return vcombine_f32(vdup_lane_f32(vget_high_f32(inV1), 0), vrev64_f32(vget_low_f32(inV1)));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 2, 1, 1>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vdup_lane_f32(vget_high_f32(inV1), 0), vdup_lane_f32(vget_low_f32(inV1), 1));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 2, 1, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vdup_lane_f32(vget_high_f32(inV1), 0), vext_f32(vget_low_f32(inV1), vget_high_f32(inV1), 1));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 2, 2, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vdupq_laneq_f32(inV1, 2);
 	}
 
 	template <>
@@ -105,17 +263,22 @@
 	}
 
 	template <>
-	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 0, 1, 1>(float32x4_t inV1, float32x4_t inV2)
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 3, 1, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		static uint8x16_t table = JPH_NEON_UINT8x16(0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x04, 0x05, 0x06, 0x07);
-		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+		return vcombine_f32(vget_high_f32(inV1), vext_f32(vget_low_f32(inV1), vget_high_f32(inV1), 1));
 	}
 
 	template <>
-	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 0, 1, 2>(float32x4_t inV1, float32x4_t inV2)
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 3, 2, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		static uint8x16_t table = JPH_NEON_UINT8x16(0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b);
-		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+		return vcombine_f32(vget_high_f32(inV1), vdup_lane_f32(vget_high_f32(inV1), 0));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<2, 3, 2, 3>(float32x4_t inV1, float32x4_t inV2)
+	{
+		float32x2_t yz = vget_high_f32(inV1);
+		return vcombine_f32(yz, yz);
 	}
 
 	template <>
@@ -124,12 +287,29 @@
 		return vcombine_f32(vget_high_f32(inV1), vget_high_f32(inV2));
 	}
 
-	// Used extensively by cross product
 	template <>
-	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 2, 0, 0>(float32x4_t inV1, float32x4_t inV2)
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<3, 0, 1, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
-		static uint8x16_t table = JPH_NEON_UINT8x16(0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03);
-		return vreinterpretq_f32_u8(vqtbl1q_u8(vreinterpretq_u8_f32(inV1), table));
+		return vextq_f32(inV1, inV1, 3);
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<3, 0, 3, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vext_f32(vget_high_f32(inV1), vget_low_f32(inV1), 1), vrev64_f32(vget_high_f32(inV1)));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<3, 2, 1, 0>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vcombine_f32(vrev64_f32(vget_high_f32(inV1)), vrev64_f32(vget_low_f32(inV1)));
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<3, 2, 3, 2>(float32x4_t inV1, float32x4_t inV2)
+	{
+		float32x2_t zy = vrev64_f32(vget_high_f32(inV1));
+		return vcombine_f32(zy, zy);
 	}
 
 	// Shuffle a vector
