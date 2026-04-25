@@ -431,7 +431,7 @@ TEST_SUITE("QuatTests")
 	{
 		UnitTestRandom random;
 
-		// Pitch clamped to ±85° to avoid gimbal lock singularity near ±90°
+		// Pitch clamped to +/- 85 degrees to avoid gimbal lock singularity near +/- 90 degrees
 		uniform_real_distribution<float> full_range(DegreesToRadians(-180.0f), DegreesToRadians(180.0f));
 		uniform_real_distribution<float> pitch_range(DegreesToRadians(-85.0f), DegreesToRadians(85.0f));
 
