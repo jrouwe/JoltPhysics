@@ -298,82 +298,72 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
 	__m128 sv = s.mValue;
 	__m128 cv = c.mValue;
 
-	__m128 a, b;
+	// Hoist shared component shuffles
+	__m128 sx = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(0, 0, 0, 0));
+	__m128 cx = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(0, 0, 0, 0));
+	__m128 sy = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1, 1, 1, 1));
+	__m128 cy = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1, 1, 1, 1));
+	__m128 sz = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2, 2, 2, 2));
+	__m128 cz = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2));
+
+	__m128 cz_cz_sz_cz, sx_cx_cx_cx, cy_sy_cy_cy;
+	__m128 sz_sz_cz_sz, cx_sx_sx_sx, sy_cy_sy_sy;
 
 #ifdef JPH_USE_SSE4_1
 	// a = { cz, cz, sz, cz } * { sx, cx, cx, cx } * { cy, sy, cy, cy }
-	__m128 cz_cz_sz_cz = _mm_blend_ps(_mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2)), _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2, 2, 2, 2)), 0b0100);
-	__m128 sx_cx_cx_cx = _mm_blend_ps(_mm_shuffle_ps(cv, cv, _MM_SHUFFLE(0, 0, 0, 0)), sv, 0b0001);
-	__m128 cy_sy_cy_cy = _mm_blend_ps(_mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1, 1, 1, 1)), _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1, 1, 1, 1)), 0b0010);
-
-	a = _mm_mul_ps(_mm_mul_ps(cz_cz_sz_cz, sx_cx_cx_cx), cy_sy_cy_cy);
+	cz_cz_sz_cz = _mm_blend_ps(cz, sz, 0b0100);
+	sx_cx_cx_cx = _mm_blend_ps(cx, sv, 0b0001);
+	cy_sy_cy_cy = _mm_blend_ps(cy, sy, 0b0010);
 
 	// b = { sz, sz, cz, sz } * { cx, sx, sx, sx } * { sy, cy, sy, sy }
-	__m128 sz_sz_cz_sz = _mm_blend_ps(_mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2, 2, 2, 2)), _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2)), 0b0100);
-	__m128 cx_sx_sx_sx = _mm_blend_ps(_mm_shuffle_ps(sv, sv, _MM_SHUFFLE(0, 0, 0, 0)), cv, 0b0001);
-	__m128 sy_cy_sy_sy = _mm_blend_ps(_mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1, 1, 1, 1)), _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1, 1, 1, 1)), 0b0010);
-
-	b = _mm_mul_ps(_mm_mul_ps(sz_sz_cz_sz, cx_sx_sx_sx), sy_cy_sy_sy);
+	sz_sz_cz_sz = _mm_blend_ps(sz, cz, 0b0100);
+	cx_sx_sx_sx = _mm_blend_ps(sx, cv, 0b0001);
+	sy_cy_sy_sy = _mm_blend_ps(sy, cy, 0b0010);
 #else
 	__m128 lane_y_mask = _mm_castsi128_ps(_mm_set_epi32(0, 0, -1, 0));
 	__m128 lane_z_mask = _mm_castsi128_ps(_mm_set_epi32(0, -1, 0, 0));
 
-	__m128 cz_v = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2));
-	__m128 sz_v = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2, 2, 2, 2));
-	__m128 cz_cz_sz_cz = _mm_or_ps(_mm_and_ps(lane_z_mask, sz_v), _mm_andnot_ps(lane_z_mask, cz_v));
+	cz_cz_sz_cz = _mm_or_ps(_mm_and_ps(lane_z_mask, sz), _mm_andnot_ps(lane_z_mask, cz));
+	sx_cx_cx_cx = _mm_move_ss(cx, sv);
+	cy_sy_cy_cy = _mm_or_ps(_mm_and_ps(lane_y_mask, sy), _mm_andnot_ps(lane_y_mask, cy));
 
-	__m128 cx_v = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(0, 0, 0, 0));
-	__m128 sx_cx_cx_cx = _mm_move_ss(cx_v, sv);
-
-	__m128 cy_v = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1, 1, 1, 1));
-	__m128 sy_v = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1, 1, 1, 1));
-	__m128 cy_sy_cy_cy = _mm_or_ps(_mm_and_ps(lane_y_mask, sy_v), _mm_andnot_ps(lane_y_mask, cy_v));
-
-	a = _mm_mul_ps(_mm_mul_ps(cz_cz_sz_cz, sx_cx_cx_cx), cy_sy_cy_cy);
-
-	__m128 sz_v2 = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(2, 2, 2, 2));
-	__m128 cz_v2 = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(2, 2, 2, 2));
-	__m128 sz_sz_cz_sz = _mm_or_ps(_mm_and_ps(lane_z_mask, cz_v2), _mm_andnot_ps(lane_z_mask, sz_v2));
-
-	__m128 sx_v2 = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(0, 0, 0, 0));
-	__m128 cx_sx_sx_sx = _mm_move_ss(sx_v2, cv);
-
-	__m128 sy_v2 = _mm_shuffle_ps(sv, sv, _MM_SHUFFLE(1, 1, 1, 1));
-	__m128 cy_v2 = _mm_shuffle_ps(cv, cv, _MM_SHUFFLE(1, 1, 1, 1));
-	__m128 sy_cy_sy_sy = _mm_or_ps(_mm_and_ps(lane_y_mask, cy_v2), _mm_andnot_ps(lane_y_mask, sy_v2));
-
-	b = _mm_mul_ps(_mm_mul_ps(sz_sz_cz_sz, cx_sx_sx_sx), sy_cy_sy_sy);
+	sz_sz_cz_sz = _mm_or_ps(_mm_and_ps(lane_z_mask, cz), _mm_andnot_ps(lane_z_mask, sz));
+	cx_sx_sx_sx = _mm_move_ss(sx, cv);
+	sy_cy_sy_sy = _mm_or_ps(_mm_and_ps(lane_y_mask, cy), _mm_andnot_ps(lane_y_mask, sy));
 #endif
-	// Assembly remains identical for both SSE versions to ensure matching rounding
+
+	__m128 a = _mm_mul_ps(_mm_mul_ps(cz_cz_sz_cz, sx_cx_cx_cx), cy_sy_cy_cy);
+	__m128 b = _mm_mul_ps(_mm_mul_ps(sz_sz_cz_sz, cx_sx_sx_sx), sy_cy_sy_sy);
+
 	__m128 sign_mask = _mm_set_ps(0.0f, -0.0f, 0.0f, -0.0f);
 	return Quat(Vec4(_mm_add_ps(a, _mm_xor_ps(b, sign_mask))));
 #elif defined(JPH_USE_NEON)
 	float32x4_t sv = s.mValue;
 	float32x4_t cv = c.mValue;
-	uint8x16_t cv_b = vreinterpretq_u8_f32(cv);
 
-	alignas(16) static constexpr uint32 cz_idx[4] = { 0x0b0a0908, 0x0b0a0908, 0x0b0a0908, 0x0b0a0908 };
-	alignas(16) static constexpr uint32 cx_idx[4] = { 0x03020100, 0x03020100, 0x03020100, 0x03020100 };
-	alignas(16) static constexpr uint32 cy_idx[4] = { 0x07060504, 0x07060504, 0x07060504, 0x07060504 };
+	// use vdupq_laneq_f32 instead of constexpr tables for lane replication
+	float32x4_t sx = vdupq_laneq_f32(sv, 0);
+	float32x4_t cx = vdupq_laneq_f32(cv, 0);
+	float32x4_t sy = vdupq_laneq_f32(sv, 1);
+	float32x4_t cy = vdupq_laneq_f32(cv, 1);
+	float32x4_t sz = vdupq_laneq_f32(sv, 2);
+	float32x4_t cz = vdupq_laneq_f32(cv, 2);
 
-	float32x4_t cz_cz_sz_cz = vsetq_lane_f32(vgetq_lane_f32(sv, 2), vreinterpretq_f32_u8(vqtbl1q_u8(cv_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cz_idx)))), 2);
-	float32x4_t sx_cx_cx_cx = vsetq_lane_f32(vgetq_lane_f32(sv, 0), vreinterpretq_f32_u8(vqtbl1q_u8(cv_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cx_idx)))), 0);
-	float32x4_t cy_sy_cy_cy = vsetq_lane_f32(vgetq_lane_f32(sv, 1), vreinterpretq_f32_u8(vqtbl1q_u8(cv_b, vreinterpretq_u8_u32(*reinterpret_cast<const uint32x4_t *>(cy_idx)))), 1);
+	float32x4_t cz_cz_sz_cz = vsetq_lane_f32(vgetq_lane_f32(sv, 2), cz, 2);
+	float32x4_t sx_cx_cx_cx = vsetq_lane_f32(vgetq_lane_f32(sv, 0), cx, 0);
+	float32x4_t cy_sy_cy_cy = vsetq_lane_f32(vgetq_lane_f32(sv, 1), cy, 1);
 
 	float32x4_t a = vmulq_f32(vmulq_f32(cz_cz_sz_cz, sx_cx_cx_cx), cy_sy_cy_cy);
 
-	float32x4_t sz_v = vdupq_laneq_f32(sv, 2);
-	float32x4_t sx_v = vdupq_laneq_f32(sv, 0);
-	float32x4_t sy_v = vdupq_laneq_f32(sv, 1);
-
-	float32x4_t sz_sz_cz_sz = vsetq_lane_f32(vgetq_lane_f32(cv, 2), sz_v, 2);
-	float32x4_t cx_sx_sx_sx = vsetq_lane_f32(vgetq_lane_f32(cv, 0), sx_v, 0);
-	float32x4_t sy_cy_sy_sy = vsetq_lane_f32(vgetq_lane_f32(cv, 1), sy_v, 1);
+	float32x4_t sz_sz_cz_sz = vsetq_lane_f32(vgetq_lane_f32(cv, 2), sz, 2);
+	float32x4_t cx_sx_sx_sx = vsetq_lane_f32(vgetq_lane_f32(cv, 0), sx, 0);
+	float32x4_t sy_cy_sy_sy = vsetq_lane_f32(vgetq_lane_f32(cv, 1), sy, 1);
 
 	float32x4_t b = vmulq_f32(vmulq_f32(sz_sz_cz_sz, cx_sx_sx_sx), sy_cy_sy_sy);
 
-	alignas(16) static constexpr uint32 sign_mask[4] = { 0x80000000u, 0, 0x80000000u, 0 };
-	return Quat(Vec4(vaddq_f32(a, vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(b), *reinterpret_cast<const uint32x4_t *>(sign_mask))))));
+	alignas(16) static constexpr uint32 sign_mask_data[4] = { 0x80000000u, 0, 0x80000000u, 0 };
+	uint32x4_t sign_mask = vld1q_u32(sign_mask_data);
+	return Quat(Vec4(vaddq_f32(a, vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(b), sign_mask)))));
 #else
 	float cx = c.GetX();
 	float sx = s.GetX();
