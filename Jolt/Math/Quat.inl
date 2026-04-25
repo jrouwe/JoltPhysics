@@ -60,8 +60,8 @@ Quat Quat::operator * (QuatArg inRHS) const
 	float32x4_t m2 = vmulq_f32(bcab, zxyy);
 	float32x4_t m3 = vaddq_f32(m1, m2);
 
-	alignas(16) static constexpr uint32 w_neg_mask[4] = { 0, 0, 0, 0x80000000u };
-	m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), *reinterpret_cast<const uint32x4_t *>(w_neg_mask)));
+	uint32x4_t w_neg_mask = JPH_NEON_UINT32x4(0, 0, 0, 0x80000000u);
+	m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), w_neg_mask));
 
 	float32x4_t m4 = vmulq_f32(dddd, xyzw);
 	float32x4_t m5 = vmulq_f32(cabc, yzxz);
@@ -133,8 +133,8 @@ Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 	float32x4_t m2 = vmulq_f32(bcab, zxyy);
 	float32x4_t m3 = vaddq_f32(m1, m2);
 
-	alignas(16) static constexpr uint32 sign_mask[4] = { 0, 0, 0, 0x80000000u };
-	m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), *reinterpret_cast<const uint32x4_t *>(sign_mask)));
+	uint32x4_t w_neg_mask = JPH_NEON_UINT32x4(0, 0, 0, 0x80000000u);
+	m3 = vreinterpretq_f32_u32(veorq_u32(vreinterpretq_u32_f32(m3), w_neg_mask));
 
 	float32x4_t m4 = vmulq_f32(cabc, yzxz);
 	float32x4_t m7 = vsubq_f32(m3, m4);
