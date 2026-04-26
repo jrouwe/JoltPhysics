@@ -38,6 +38,12 @@
 
 	// Specializations
 	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 0, 0, 0>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vdupq_laneq_f32(inV1, 0);
+	}
+
+	template <>
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<0, 1, 0, 0>(float32x4_t inV1, float32x4_t inV2)
 	{
 		return vcombine_f32(vget_low_f32(inV1), vdup_lane_f32(vget_low_f32(inV1), 0));
@@ -137,6 +143,12 @@
 	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 0, 3, 2>(float32x4_t inV1, float32x4_t inV2)
 	{
 		return vrev64q_f32(inV1);
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<1, 1, 1, 1>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vdupq_laneq_f32(inV1, 1);
 	}
 
 	template <>
@@ -306,6 +318,12 @@
 	{
 		float32x2_t zy = vrev64_f32(vget_high_f32(inV1));
 		return vcombine_f32(zy, zy);
+	}
+
+	template <>
+	JPH_INLINE float32x4_t NeonShuffleFloat32x4<3, 3, 3, 3>(float32x4_t inV1, float32x4_t inV2)
+	{
+		return vdupq_laneq_f32(inV1, 3);
 	}
 
 	// Shuffle a vector
