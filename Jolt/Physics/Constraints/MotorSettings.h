@@ -22,8 +22,8 @@ enum class EMotorState
 };
 
 // Ability to check if position/velocity is enabled for a motor state
-inline constexpr bool		IsVelocityMotor(EMotorState inMotorState)	{ return (int(inMotorState) & int(EMotorState::Velocity)) != 0; }
-inline constexpr bool		IsPositionMotor(EMotorState inMotorState)	{ return (int(inMotorState) & int(EMotorState::Position)) != 0; }
+constexpr bool				IsVelocityMotor(EMotorState inMotorState)	{ return (int(inMotorState) & int(EMotorState::Velocity)) != 0; }
+constexpr bool				IsPositionMotor(EMotorState inMotorState)	{ return (int(inMotorState) & int(EMotorState::Position)) != 0; }
 
 static_assert(!IsVelocityMotor(EMotorState::Off));
 static_assert(IsVelocityMotor(EMotorState::Velocity));
