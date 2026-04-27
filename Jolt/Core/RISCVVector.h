@@ -92,7 +92,7 @@ JPH_INLINE vfloat32m1_t RVVShuffleFloat32x4<1, 3, 5, 7>(vfloat32m1_t inV0, vfloa
 }
 
 /// Given inV = (a, b, c, d), calculates (a + b) + (c + d) when cross platform determinism is on, otherwise calculates a + b + c + d (order undefined)
-JPH_INLINE float RVVSumElementsFloat32x4(vfloat32m1_t inV)
+JPH_INLINE vfloat32m1_t RVVSumElementsFloat32x4(vfloat32m1_t inV)
 {
 #ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
 	const vfloat32m1_t shift1 = __riscv_vslidedown_vx_f32m1(inV, 1, 4);
@@ -103,7 +103,7 @@ JPH_INLINE float RVVSumElementsFloat32x4(vfloat32m1_t inV)
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 4);
 	const vfloat32m1_t sum = __riscv_vfredusum_vs_f32m1_f32m1(inV, zeros, 4);
 #endif
-	return __riscv_vfmv_f_s_f32m1_f32(sum);
+	return sum;
 }
 
 #endif // JPH_USE_RVV

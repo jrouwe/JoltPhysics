@@ -1017,8 +1017,8 @@ float Vec3::Length() const
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
 	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
-	return sqrt(dot);
+	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(sum, 1);
+	return __riscv_vfmv_f_s_f32m1_f32(sqrt);
 #else
 	return sqrt(LengthSq());
 #endif
@@ -1061,9 +1061,9 @@ Vec3 Vec3::Normalized() const
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
 	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
-	const float magnitude = sqrt(dot);
-	const vfloat32m1_t norm_v = __riscv_vfdiv_vf_f32m1(v, magnitude, 3);
+	const vfloat32m1_t splat = __riscv_vrgather_vx_f32m1(sum, 0, 3);
+	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(splat, 3);
+	const vfloat32m1_t norm_v = __riscv_vfdiv_vv_f32m1(v, sqrt, 3);
 
 	Vec3 res;
 	__riscv_vse32_v_f32m1(res.mF32, norm_v, 3);
@@ -1110,10 +1110,11 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	if (dot <= FLT_MIN)
 		return inZeroValue;
 
-	const float length = sqrt(dot);
+	const vfloat32m1_t splat = __riscv_vrgather_vx_f32m1(sum, 0, 3);
+	const vfloat32m1_t length = __riscv_vfsqrt_v_f32m1(splat, 3);
 
 	Vec3 v;
-	const vfloat32m1_t norm = __riscv_vfdiv_vf_f32m1(src, length, 3);
+	const vfloat32m1_t norm = __riscv_vfdiv_vv_f32m1(src, length, 3);
 	__riscv_vse32_v_f32m1(v.mF32, norm, 3);
 	return v;
 #else

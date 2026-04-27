@@ -899,8 +899,9 @@ Mat44 Mat44::Inversed() const
 	minor3 = __riscv_vfadd_vv_f32m1(__riscv_vfmul_vv_f32m1(row1, tmp1, 4), minor3, 4);
 
 	const vfloat32m1_t v_det = __riscv_vfmul_vv_f32m1(row0, minor0, 4);
-	const float s_det = RVVSumElementsFloat32x4(v_det);
-	const vfloat32m1_t det_inv = __riscv_vfmv_v_f_f32m1(1.0f / s_det, 4);
+	const vfloat32m1_t s_det = RVVSumElementsFloat32x4(v_det);
+	const vfloat32m1_t det_splat = __riscv_vrgather_vx_f32m1(s_det, 0, 4);
+	const vfloat32m1_t det_inv = __riscv_vfrdiv_vf_f32m1(det_splat, 1.0f, 4);
 
 	minor0 = __riscv_vfmul_vv_f32m1(det_inv, minor0, 4);
 	minor1 = __riscv_vfmul_vv_f32m1(det_inv, minor1, 4);

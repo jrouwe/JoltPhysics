@@ -989,8 +989,8 @@ Vec4 Vec4::DotV(Vec4Arg inV2) const
 	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
 	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
-	float dot = RVVSumElementsFloat32x4(mul);
-	const vfloat32m1_t splat = __riscv_vfmv_v_f_f32m1(dot, 4);
+	vfloat32m1_t dot = RVVSumElementsFloat32x4(mul);
+	const vfloat32m1_t splat = __riscv_vrgather_vx_f32m1(dot, 0, 4);
 	__riscv_vse32_v_f32m1(res.mF32, splat, 4);
 	return res;
 #else
@@ -1010,7 +1010,7 @@ float Vec4::Dot(Vec4Arg inV2) const
 	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
 	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
-	return RVVSumElementsFloat32x4(mul);
+	return __riscv_vfmv_f_s_f32m1_f32(RVVSumElementsFloat32x4(mul));
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
 	return (mF32[0] * inV2.mF32[0] + mF32[1] * inV2.mF32[1]) + (mF32[2] * inV2.mF32[2] + mF32[3] * inV2.mF32[3]);
@@ -1027,7 +1027,7 @@ float Vec4::LengthSq() const
 #elif defined(JPH_USE_RVV)
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 4);
-	return RVVSumElementsFloat32x4(mul);
+	return __riscv_vfmv_f_s_f32m1_f32(RVVSumElementsFloat32x4(mul));
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
 	return (mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]);
@@ -1045,7 +1045,9 @@ float Vec4::Length() const
 #elif defined(JPH_USE_RVV)
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 4);
-	return sqrt(RVVSumElementsFloat32x4(mul));
+	const vfloat32m1_t sum = RVVSumElementsFloat32x4(mul);
+	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(sum, 1);
+	return __riscv_vfmv_f_s_f32m1_f32(sqrt);
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
 	return sqrt((mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]));
@@ -1119,8 +1121,11 @@ Vec4 Vec4::Normalized() const
 #elif defined(JPH_USE_RVV)
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 4);
-	const float length = sqrt(RVVSumElementsFloat32x4(mul));
-	const vfloat32m1_t norm_v = __riscv_vfdiv_vf_f32m1(v, length, 4);
+
+	const vfloat32m1_t sum = RVVSumElementsFloat32x4(mul);
+	const vfloat32m1_t sum_splat = __riscv_vrgather_vx_f32m1(sum, 0, 4);
+	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(sum_splat, 4);
+	const vfloat32m1_t norm_v = __riscv_vfdiv_vv_f32m1(v, sqrt, 4);
 
 	Vec4 vec;
 	__riscv_vse32_v_f32m1(vec.mF32, norm_v, 4);
