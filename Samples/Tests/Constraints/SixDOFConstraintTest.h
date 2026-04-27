@@ -27,6 +27,7 @@ private:
 	static float			sLimitMax[EAxis::Num];
 	static bool				sEnableLimits[EAxis::Num];
 	static SettingsRef		sSettings;
+	inline static float		sMaxMotorAcceleration = 250.0f;
 
 	Vec3					mTargetOrientationCS = Vec3::sZero();
 

@@ -65,9 +65,8 @@ void SixDOFConstraintTest::Initialize()
 	sSettings->mPosition1 = sSettings->mPosition2 = position - Vec3(0, half_box_height, 0);
 
 	// Set force limits
-	const float max_acceleration = 1.0f;
 	for (int i = 0; i < 3; ++i)
-		sSettings->mMotorSettings[i].SetForceLimit(max_acceleration / body2.GetMotionProperties()->GetInverseMass());
+		sSettings->mMotorSettings[i].SetForceLimit(sMaxMotorAcceleration / body2.GetMotionProperties()->GetInverseMass());
 
 	// Create constraint
 	mConstraint = static_cast<SixDOFConstraint *>(sSettings->Create(body1, body2));
@@ -123,6 +122,8 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 
 		for (int i = 0; i < 6; ++i)
 			inUI->CreateSlider(configuration_settings, "Motor Damping " + labels[i], sSettings->mMotorSettings[i].mSpringSettings.mDamping, 0.0f, 2.0f, 0.01f, [i](float inValue) { sSettings->mMotorSettings[i].mSpringSettings.mDamping = inValue; });
+
+		inUI->CreateSlider(configuration_settings, "Motor Max Acceleration (m/s^2)", sMaxMotorAcceleration, 0.0f, 250.0f, 1.0f, [](float inValue) { sMaxMotorAcceleration = inValue; });
 
 		inUI->CreateTextButton(configuration_settings, "Accept Changes", [this]() { RestartTest(); });
 
