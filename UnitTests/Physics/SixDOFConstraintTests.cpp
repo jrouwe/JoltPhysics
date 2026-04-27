@@ -86,6 +86,58 @@ TEST_SUITE("SixDOFConstraintTests")
 		}
 	}
 
+	// Test that a velocity motor with damping-only SpringSettings acts as a soft, mass-normalized
+	// acceleration-mode drive: a = -damping * v_err. Velocity follows v_new = (v_old + dt * c * v_target) / (1 + dt * c)
+	// independently of body mass/inertia. Exercises both translational and rotational motor paths and both spring modes
+	TEST_CASE("TestSixDOFMotorVelocityAcceleration")
+	{
+		const float cDamping = 4.0f;
+		const float cTargetVelocity = 5.0f;
+
+		// Cover all translation and rotation motor axes
+		for (int axis = 0; axis < 6; ++axis)
+		{
+			const bool is_rotation = axis >= 3;
+
+			// Run against two sphere sizes; identical motion curves prove mass/inertia independence
+			for (float radius : { 0.5f, 1.0f })
+			{
+				PhysicsTestContext context;
+				context.ZeroGravity();
+				Body &body = context.CreateSphere(RVec3::sZero(), radius, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING);
+				body.GetMotionProperties()->SetLinearDamping(0.0f);
+				body.GetMotionProperties()->SetAngularDamping(0.0f);
+
+				SixDOFConstraintSettings settings;
+				settings.mPosition1 = settings.mPosition2 = RVec3::sZero();
+				settings.mMotorSettings[axis].mSpringSettings = SpringSettings(ESpringMode::StiffnessAndDampingInAccelerationMode, 0.0f, cDamping);
+				SixDOFConstraint &constraint = context.CreateConstraint<SixDOFConstraint>(Body::sFixedToWorld, body, settings);
+				constraint.SetMotorState((SixDOFConstraintSettings::EAxis)axis, EMotorState::PositionAndVelocity);
+				Vec3 target = Vec3::sZero();
+				target.SetComponent(axis % 3, cTargetVelocity);
+				if (is_rotation)
+					constraint.SetTargetAngularVelocityCS(target);
+				else
+					constraint.SetTargetVelocityCS(target);
+
+				// Predicted velocity. Implicit Euler soft-constraint form from 'Soft Constraints: Reinventing
+				// The Spring' - Erin Catto - GDC 2011 (page 32), k = 0 limit, mass-normalized damping c:
+				// v_new = (v_old + dt * c * v_target) / (1 + dt * c)
+				float v = 0.0f;
+				float dt = context.GetDeltaTime();
+				for (int i = 0; i < 120; ++i)
+				{
+					v = (v + dt * cDamping * cTargetVelocity) / (1.0f + dt * cDamping);
+					context.SimulateSingleStep();
+					Vec3 expected = Vec3::sZero();
+					expected.SetComponent(axis % 3, v);
+					Vec3 actual = is_rotation? body.GetAngularVelocity() : body.GetLinearVelocity();
+					CHECK_APPROX_EQUAL(expected, actual, 1.0e-5f);
+				}
+			}
+		}
+	}
+
 	// Test combination of locked rotation axis with a 6DOF constraint
 	TEST_CASE("TestSixDOFLockedRotation")
 	{

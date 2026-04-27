@@ -16,9 +16,23 @@ class StreamOut;
 enum class EMotorState
 {
 	Off,																///< Motor is off
-	Velocity,															///< Motor will drive to target velocity
-	Position															///< Motor will drive to target position
+	Velocity,															///< Motor will drive to target velocity limited only by max force/torque that the motor can apply
+	Position,															///< Motor will drive to target position using: force = stiffness * (target_position - current_position) - damping * current_velocity
+	PositionAndVelocity,												///< Motor will drive both to target position and velocity using: force = stiffness * (target_position - current_position) + damping * (target_velocity - current_velocity)
 };
+
+// Ability to check if position/velocity is enabled for a motor state
+inline constexpr bool		IsVelocityMotor(EMotorState inMotorState)	{ return (int(inMotorState) & int(EMotorState::Velocity)) != 0; }
+inline constexpr bool		IsPositionMotor(EMotorState inMotorState)	{ return (int(inMotorState) & int(EMotorState::Position)) != 0; }
+
+static_assert(!IsVelocityMotor(EMotorState::Off));
+static_assert(IsVelocityMotor(EMotorState::Velocity));
+static_assert(!IsVelocityMotor(EMotorState::Position));
+static_assert(IsPositionMotor(EMotorState::PositionAndVelocity));
+static_assert(!IsPositionMotor(EMotorState::Off));
+static_assert(!IsPositionMotor(EMotorState::Velocity));
+static_assert(IsPositionMotor(EMotorState::Position));
+static_assert(IsPositionMotor(EMotorState::PositionAndVelocity));
 
 /// Class that contains the settings for a constraint motor.
 /// See the main page of the API documentation for more information on how to configure a motor.
@@ -31,7 +45,9 @@ public:
 							MotorSettings() = default;
 							MotorSettings(const MotorSettings &) = default;
 	MotorSettings &			operator = (const MotorSettings &) = default;
+							MotorSettings(ESpringMode inMode, float inFrequency, float inDamping) : mSpringSettings(inMode, inFrequency, inDamping) { JPH_ASSERT(IsValid()); }
 							MotorSettings(float inFrequency, float inDamping) : mSpringSettings(ESpringMode::FrequencyAndDamping, inFrequency, inDamping) { JPH_ASSERT(IsValid()); }
+							MotorSettings(ESpringMode inMode, float inFrequency, float inDamping, float inForceLimit, float inTorqueLimit) : mSpringSettings(inMode, inFrequency, inDamping), mMinForceLimit(-inForceLimit), mMaxForceLimit(inForceLimit), mMinTorqueLimit(-inTorqueLimit), mMaxTorqueLimit(inTorqueLimit) { JPH_ASSERT(IsValid()); }
 							MotorSettings(float inFrequency, float inDamping, float inForceLimit, float inTorqueLimit) : mSpringSettings(ESpringMode::FrequencyAndDamping, inFrequency, inDamping), mMinForceLimit(-inForceLimit), mMaxForceLimit(inForceLimit), mMinTorqueLimit(-inTorqueLimit), mMaxTorqueLimit(inTorqueLimit) { JPH_ASSERT(IsValid()); }
 
 	/// Set asymmetric force limits

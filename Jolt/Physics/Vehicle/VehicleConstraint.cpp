@@ -440,7 +440,8 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 			if (settings->mSuspensionMaxLength > settings->mSuspensionMinLength)
 			{
 				float stiffness, damping;
-				if (settings->mSuspensionSpring.mMode == ESpringMode::FrequencyAndDamping)
+				ESpringMode mode = settings->mSuspensionSpring.mMode;
+				if (mode == ESpringMode::FrequencyAndDamping || mode == ESpringMode::StiffnessAndDampingInAccelerationMode)
 				{
 					// Calculate effective mass based on vehicle configuration (the stiffness of the spring should not be affected by the dynamics of the vehicle): K = 1 / (J M^-1 J^T)
 					// Note that if no suspension force point is supplied we don't know where the force is applied so we assume it is applied at average suspension length
@@ -449,10 +450,19 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 					const MotionProperties *mp = mBody->GetMotionProperties();
 					float effective_mass = 1.0f / (mp->GetInverseMass() + force_point_x_neg_up.Dot(mp->GetLocalSpaceInverseInertia().Multiply3x3(force_point_x_neg_up)));
 
-					// Convert frequency and damping to stiffness and damping
-					float omega = 2.0f * JPH_PI * settings->mSuspensionSpring.mFrequency;
-					stiffness = effective_mass * Square(omega);
-					damping = 2.0f * effective_mass * settings->mSuspensionSpring.mDamping * omega;
+					if (mode == ESpringMode::FrequencyAndDamping)
+					{
+						// Convert frequency and damping to stiffness and damping
+						float omega = 2.0f * JPH_PI * settings->mSuspensionSpring.mFrequency;
+						stiffness = effective_mass * Square(omega);
+						damping = 2.0f * effective_mass * settings->mSuspensionSpring.mDamping * omega;
+					}
+					else
+					{
+						// Multiply only by effective mass
+						stiffness = effective_mass * settings->mSuspensionSpring.mStiffness;
+						damping = effective_mass * settings->mSuspensionSpring.mDamping;
+					}
 				}
 				else
 				{

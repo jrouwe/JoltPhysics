@@ -110,14 +110,38 @@ public:
 	/// @param inInvEffectiveMass Inverse effective mass K
 	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
 	///	@param inC Value of the constraint equation (C).
-	///	@param inStiffness Spring stiffness k. Set to zero if you don't want to drive the constraint to zero with a spring.
+	///	@param inStiffness Spring stiffness k.
 	///	@param inDamping Spring damping coefficient c.
 	/// @param outEffectiveMass On return, this contains the new effective mass K^-1
 	inline void					CalculateSpringPropertiesWithStiffnessAndDamping(float inDeltaTime, float inInvEffectiveMass, float inBias, float inC, float inStiffness, float inDamping, float &outEffectiveMass)
 	{
-		if (inStiffness > 0.0f)
+		if (inStiffness > 0.0f || inDamping > 0.0f)
 		{
 			CalculateSpringPropertiesHelper(inDeltaTime, inInvEffectiveMass, inBias, inC, inStiffness, inDamping, outEffectiveMass);
+		}
+		else
+		{
+			outEffectiveMass = 1.0f / inInvEffectiveMass;
+
+			CalculateSpringPropertiesWithBias(inBias);
+		}
+	}
+
+	/// Calculate spring properties with spring stiffness (k) and damping (c) in acceleration mode, this is based on the spring equation: F = m_eff * (-k * x - c * v) where m_eff is the effective mass of the constraint
+	///
+	/// @param inDeltaTime Time step
+	/// @param inInvEffectiveMass Inverse effective mass K
+	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
+	///	@param inC Value of the constraint equation (C).
+	///	@param inStiffness Spring stiffness k.
+	///	@param inDamping Spring damping coefficient c.
+	/// @param outEffectiveMass On return, this contains the new effective mass K^-1
+	inline void					CalculateSpringPropertiesWithStiffnessAndDampingInAccelerationMode(float inDeltaTime, float inInvEffectiveMass, float inBias, float inC, float inStiffness, float inDamping, float &outEffectiveMass)
+	{
+		if (inStiffness > 0.0f || inDamping > 0.0f)
+		{
+			float m_eff = 1.0f / inInvEffectiveMass;
+			CalculateSpringPropertiesHelper(inDeltaTime, inInvEffectiveMass, inBias, inC, m_eff * inStiffness, m_eff * inDamping, outEffectiveMass);
 		}
 		else
 		{

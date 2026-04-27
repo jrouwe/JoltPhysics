@@ -220,7 +220,7 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 			mWorldSpaceMotorAxis[i] = ws_axis.GetColumn3(i);
 
 		Vec3 rotation_error;
-		if (mSwingMotorState == EMotorState::Position || mTwistMotorState == EMotorState::Position)
+		if (IsPositionMotor(mSwingMotorState) || IsPositionMotor(mTwistMotorState))
 		{
 			// Get target orientation along the shortest path from q
 			Quat target_orientation = q.Dot(mTargetOrientation) > 0.0f? mTargetOrientation : -mTargetOrientation;
@@ -289,6 +289,20 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 					mMotorConstraintPart[i].Deactivate();
 			}
 			break;
+
+		case EMotorState::PositionAndVelocity:
+			// Use motor to drive rotation error to zero
+			if (mSwingMotorSettings.mSpringSettings.HasStiffnessOrDamping())
+			{
+				for (int i = 1; i < 3; ++i)
+					mMotorConstraintPart[i].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[i], -mTargetAngularVelocity[i], rotation_error[i], mSwingMotorSettings.mSpringSettings);
+			}
+			else
+			{
+				for (int i = 1; i < 3; ++i)
+					mMotorConstraintPart[i].Deactivate();
+			}
+			break;
 		}
 
 		// Twist motor
@@ -316,6 +330,14 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 			// Use motor to drive rotation error to zero
 			if (mTwistMotorSettings.mSpringSettings.HasStiffness())
 				mMotorConstraintPart[0].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[0], 0.0f, rotation_error[0], mTwistMotorSettings.mSpringSettings);
+			else
+				mMotorConstraintPart[0].Deactivate();
+			break;
+
+		case EMotorState::PositionAndVelocity:
+			// Use motor to drive rotation error to zero
+			if (mTwistMotorSettings.mSpringSettings.HasStiffnessOrDamping())
+				mMotorConstraintPart[0].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[0], -mTargetAngularVelocity[0], rotation_error[0], mTwistMotorSettings.mSpringSettings);
 			else
 				mMotorConstraintPart[0].Deactivate();
 			break;
@@ -440,12 +462,12 @@ void SwingTwistConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 	inRenderer->DrawLine(position1, position1 + mDrawConstraintSize * (rotation1 * q_twist).RotateAxisY(), Color::sWhite);
 	inRenderer->DrawLine(position1, position1 + mDrawConstraintSize * (rotation1 * q_swing).RotateAxisX(), Color::sWhite);
 
-	if (mSwingMotorState == EMotorState::Velocity || mTwistMotorState == EMotorState::Velocity)
+	if (IsVelocityMotor(mSwingMotorState) || IsVelocityMotor(mTwistMotorState))
 	{
 		// Draw target angular velocity
 		inRenderer->DrawArrow(position1, position1 + rotation2 * mTargetAngularVelocity, Color::sRed, 0.1f);
 	}
-	if (mSwingMotorState == EMotorState::Position || mTwistMotorState == EMotorState::Position)
+	if (IsPositionMotor(mSwingMotorState) || IsPositionMotor(mTwistMotorState))
 	{
 		// Draw motor swing and twist
 		Quat swing, twist;

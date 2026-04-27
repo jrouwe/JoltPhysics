@@ -223,6 +223,13 @@ void HingeConstraint::CalculateMotorConstraintProperties(float inDeltaTime)
 		else
 			mMotorConstraintPart.Deactivate();
 		break;
+
+	case EMotorState::PositionAndVelocity:
+		if (mMotorSettings.mSpringSettings.HasStiffnessOrDamping())
+			mMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mA1, -mTargetAngularVelocity, CenterAngleAroundZero(mTheta - mTargetAngle), mMotorSettings.mSpringSettings);
+		else
+			mMotorConstraintPart.Deactivate();
+		break;
 	}
 }
 
@@ -286,6 +293,7 @@ bool HingeConstraint::SolveVelocityConstraint(float inDeltaTime)
 
 		case EMotorState::Velocity:
 		case EMotorState::Position:
+		case EMotorState::PositionAndVelocity:
 			motor = mMotorConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mA1, inDeltaTime * mMotorSettings.mMinTorqueLimit, inDeltaTime * mMotorSettings.mMaxTorqueLimit);
 			break;
 		}

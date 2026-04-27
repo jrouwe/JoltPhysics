@@ -155,7 +155,7 @@ public:
 		}
 	}
 
-	/// Calculate properties used during the functions below
+	/// Calculate properties used during the functions below. Set inFrequency to zero if you don't want to drive using a spring.
 	/// @param inDeltaTime Time step
 	/// @param inBody1 The first body that this constraint is attached to
 	/// @param inBody2 The second body that this constraint is attached to
@@ -176,7 +176,7 @@ public:
 			mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
 	}
 
-	/// Calculate properties used during the functions below
+	/// Calculate properties used during the functions below. Set inFrequency and inDamping to zero if you don't want to drive using a spring.
 	/// @param inDeltaTime Time step
 	/// @param inBody1 The first body that this constraint is attached to
 	/// @param inBody2 The second body that this constraint is attached to
@@ -204,10 +204,19 @@ public:
 
 		if (inv_effective_mass == 0.0f)
 			Deactivate();
-		else if (inSpringSettings.mMode == ESpringMode::FrequencyAndDamping)
-			mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mFrequency, inSpringSettings.mDamping, mEffectiveMass);
 		else
-			mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mStiffness, inSpringSettings.mDamping, mEffectiveMass);
+			switch (inSpringSettings.mMode)
+			{
+			case ESpringMode::FrequencyAndDamping:
+				mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mFrequency, inSpringSettings.mDamping, mEffectiveMass);
+				break;
+			case ESpringMode::StiffnessAndDamping:
+				mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mStiffness, inSpringSettings.mDamping, mEffectiveMass);
+				break;
+			case ESpringMode::StiffnessAndDampingInAccelerationMode:
+				mSpringPart.CalculateSpringPropertiesWithStiffnessAndDampingInAccelerationMode(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mStiffness, inSpringSettings.mDamping, mEffectiveMass);
+				break;
+			}
 	}
 
 	/// Deactivate this constraint
