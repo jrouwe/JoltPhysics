@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Collision/GroupFilterTable.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Application/DebugUI.h>
+#include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(PoweredHingeConstraintTest)
@@ -48,8 +49,6 @@ void PoweredHingeConstraintTest::Initialize()
 	settings.mHingeAxis1 = settings.mHingeAxis2 = Vec3::sAxisY();
 	settings.mNormalAxis1 = settings.mNormalAxis2 = Vec3::sAxisX();
 	mConstraint = static_cast<HingeConstraint *>(settings.Create(body1, body2));
-	mConstraint->SetMotorState(EMotorState::Velocity);
-	mConstraint->SetTargetAngularVelocity(DegreesToRadians(25));
 	mPhysicsSystem->AddConstraint(mConstraint);
 
 	// Calculate inertia of body 2 as seen from the constraint
@@ -65,18 +64,47 @@ void PoweredHingeConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParam
 	// Torque = Inertia * Angular Acceleration (alpha)
 	MotorSettings &motor_settings = mConstraint->GetMotorSettings();
 	motor_settings.SetTorqueLimit(mInertiaBody2AsSeenFromConstraint * sMaxAngularAcceleration);
-	motor_settings.mSpringSettings.mFrequency = sFrequency;
-	motor_settings.mSpringSettings.mDamping = sDamping;
+	mConstraint->SetMotorState(sMotorState);
+	mConstraint->SetTargetAngularVelocity(sTargetAngularVelocity);
+	mConstraint->SetTargetAngle(sTargetAngle);
 	mConstraint->SetMaxFrictionTorque(mInertiaBody2AsSeenFromConstraint * sMaxFrictionAngularAcceleration);
+	switch (sSpringMode)
+	{
+	case ESpringMode::FrequencyAndDamping:
+		motor_settings.mSpringSettings.mMode = ESpringMode::FrequencyAndDamping;
+		motor_settings.mSpringSettings.mFrequency = sFrequency;
+		motor_settings.mSpringSettings.mDamping = sDampingRatio;
+		break;
+
+	case ESpringMode::StiffnessAndDamping:
+		motor_settings.mSpringSettings.mMode = ESpringMode::StiffnessAndDamping;
+		motor_settings.mSpringSettings.mFrequency = mInertiaBody2AsSeenFromConstraint * sStiffness; // Make sStiffness mass independent to avoid having to work with really large numbers
+		motor_settings.mSpringSettings.mDamping = mInertiaBody2AsSeenFromConstraint * sDamping;
+		break;
+
+	case ESpringMode::MassNormalizedStiffnessAndDamping:
+		motor_settings.mSpringSettings.mMode = ESpringMode::MassNormalizedStiffnessAndDamping;
+		motor_settings.mSpringSettings.mFrequency = sStiffness;
+		motor_settings.mSpringSettings.mDamping = sDamping;
+		break;
+	}
+
+	// Draw state
+	float angle = mConstraint->GetCurrentAngle();
+	float velocity = mConstraint->GetBody2()->GetAngularVelocity().GetY();
+	mDebugRenderer->DrawText3D(mConstraint->GetBody2()->GetPosition(), StringFormat("Angle: %.1f deg, Velocity: %.1f deg/s", RadiansToDegrees(angle), RadiansToDegrees(velocity)), Color::sWhite, 1.0f);
 }
 
 void PoweredHingeConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateComboBox(inSubMenu, "Motor", { "Off", "Velocity", "Position" }, (int)mConstraint->GetMotorState(), [this](int inItem) { mConstraint->SetMotorState((EMotorState)inItem); });
-	inUI->CreateSlider(inSubMenu, "Target Angular Velocity (deg/s)", RadiansToDegrees(mConstraint->GetTargetAngularVelocity()), -90.0f, 90.0f, 1.0f, [this](float inValue) { mConstraint->SetTargetAngularVelocity(DegreesToRadians(inValue)); });
-	inUI->CreateSlider(inSubMenu, "Target Angle (deg)", RadiansToDegrees(mConstraint->GetTargetAngle()), -180.0f, 180.0f, 1.0f, [this](float inValue) { mConstraint->SetTargetAngle(DegreesToRadians(inValue)); });
+	inUI->CreateComboBox(inSubMenu, "Motor", { "Off", "Velocity", "Position", "PositionAndVelocity" }, (int)sMotorState, [this](int inItem) { sMotorState = (EMotorState)inItem; });
+	inUI->CreateSlider(inSubMenu, "Target Angle (deg)", RadiansToDegrees(sTargetAngle), -180.0f, 180.0f, 1.0f, [this](float inValue) { sTargetAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Target Angular Velocity (deg/s)", RadiansToDegrees(sTargetAngularVelocity), -90.0f, 90.0f, 1.0f, [this](float inValue) { sTargetAngularVelocity = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Max Angular Acceleration (deg/s^2)", RadiansToDegrees(sMaxAngularAcceleration), 0.0f, 3600.0f, 10.0f, [](float inValue) { sMaxAngularAcceleration = DegreesToRadians(inValue); });
+	inUI->CreateComboBox(inSubMenu, "SpringMode", { "FrequencyAndDamping", "StiffnessAndDamping", "NormStiffAndDamp" }, (int)sSpringMode, [this](int inItem) { sSpringMode = (ESpringMode)inItem; });
 	inUI->CreateSlider(inSubMenu, "Frequency (Hz)", sFrequency, 0.0f, 20.0f, 0.1f, [](float inValue) { sFrequency = inValue; });
-	inUI->CreateSlider(inSubMenu, "Damping", sDamping, 0.0f, 2.0f, 0.01f, [](float inValue) { sDamping = inValue; });
+	inUI->CreateSlider(inSubMenu, "Damping Ratio", sDampingRatio, 0.0f, 2.0f, 0.01f, [](float inValue) { sDamping = inValue; });
+	inUI->CreateSlider(inSubMenu, "Stiffness", sStiffness, 0.0f, 200.0f, 0.1f, [](float inValue) { sStiffness = inValue; });
+	inUI->CreateSlider(inSubMenu, "Damping", sDamping, 0.0f, 100.0f, 0.1f, [](float inValue) { sDamping = inValue; });
 	inUI->CreateSlider(inSubMenu, "Max Friction Angular Acceleration (deg/s^2)", RadiansToDegrees(sMaxFrictionAngularAcceleration), 0.0f, 90.0f, 1.0f, [](float inValue) { sMaxFrictionAngularAcceleration = DegreesToRadians(inValue); });
 }
