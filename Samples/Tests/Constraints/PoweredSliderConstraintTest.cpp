@@ -86,7 +86,7 @@ void PoweredSliderConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inPara
 	// Draw state
 	float position = mConstraint->GetCurrentPosition();
 	float velocity = mConstraint->GetBody2()->GetLinearVelocity().GetX();
-	mDebugRenderer->DrawText3D(mConstraint->GetBody2()->GetPosition(), StringFormat("Position: %.1f, Velocity: %.1f m/s", position, velocity), Color::sWhite, 1.0f);
+	mDebugRenderer->DrawText3D(mConstraint->GetBody2()->GetPosition(), StringFormat("Position: %.1f, Velocity: %.1f m/s", (double)position, (double)velocity), Color::sWhite, 1.0f);
 }
 
 void PoweredSliderConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)

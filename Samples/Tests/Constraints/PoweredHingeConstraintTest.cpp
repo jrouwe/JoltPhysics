@@ -92,7 +92,7 @@ void PoweredHingeConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParam
 	// Draw state
 	float angle = mConstraint->GetCurrentAngle();
 	float velocity = mConstraint->GetBody2()->GetAngularVelocity().GetY();
-	mDebugRenderer->DrawText3D(mConstraint->GetBody2()->GetPosition(), StringFormat("Angle: %.1f deg, Velocity: %.1f deg/s", RadiansToDegrees(angle), RadiansToDegrees(velocity)), Color::sWhite, 1.0f);
+	mDebugRenderer->DrawText3D(mConstraint->GetBody2()->GetPosition(), StringFormat("Angle: %.1f deg, Velocity: %.1f deg/s", (double)RadiansToDegrees(angle), (double)RadiansToDegrees(velocity)), Color::sWhite, 1.0f);
 }
 
 void PoweredHingeConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
