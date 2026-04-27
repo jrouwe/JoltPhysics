@@ -83,7 +83,7 @@ void SixDOFConstraintTest::GetInitialCamera(CameraState &ioState) const
 void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
 	Array<String> labels = { "Translation X", "Translation Y", "Translation Z", "Rotation X", "Rotation Y", "Rotation Z" };
-	Array<String> motor_states = { "Off", "Velocity", "Position" };
+	Array<String> motor_states = { "Off", "Velocity", "Position", "PositionAndVelocity" };
 	Array<String> swing_types = { "Cone", "Pyramid" };
 
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings (Limits)", [this, inUI, labels, swing_types]() {

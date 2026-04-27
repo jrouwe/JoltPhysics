@@ -120,7 +120,7 @@ void PathConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 
 	inUI->CreateTextButton(inSubMenu, "Runtime Settings", [this, inUI]() {
 		UIElement *runtime_settings = inUI->CreateMenu();
-		inUI->CreateComboBox(runtime_settings, "Motor", { "Off", "Velocity", "Position" }, (int)mConstraints[0]->GetPositionMotorState(), [this](int inItem) { for (PathConstraint *c : mConstraints) c->SetPositionMotorState((EMotorState)inItem); });
+		inUI->CreateComboBox(runtime_settings, "Motor", { "Off", "Velocity", "Position", "PositionAndVelocity" }, (int)mConstraints[0]->GetPositionMotorState(), [this](int inItem) { for (PathConstraint *c : mConstraints) c->SetPositionMotorState((EMotorState)inItem); });
 		inUI->CreateSlider(runtime_settings, "Target Velocity (m/s)", mConstraints[0]->GetTargetVelocity(), -10.0f, 10.0f, 0.1f, [this](float inValue) { for (PathConstraint *c : mConstraints) c->SetTargetVelocity(inValue); });
 		inUI->CreateSlider(runtime_settings, "Target Path Fraction", mConstraints[0]->GetTargetPathFraction(), 0, mPaths[0]->GetPathMaxFraction(), 0.1f, [this](float inValue) { for (PathConstraint *c : mConstraints) c->SetTargetPathFraction(inValue); });
 		inUI->CreateSlider(runtime_settings, "Max Acceleration (m/s^2)", sMaxMotorAcceleration, 0.0f, 100.0f, 1.0f, [](float inValue) { sMaxMotorAcceleration = inValue; });

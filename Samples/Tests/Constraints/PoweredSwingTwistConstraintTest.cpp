@@ -121,8 +121,8 @@ void PoweredSwingTwistConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElemen
 		inUI->CreateSlider(runtime_settings, "Normal Half Cone Angle (deg)", RadiansToDegrees(sNormalHalfConeAngle), 0.0f, 180.0f, 1.0f, [=](float inValue) { sNormalHalfConeAngle = DegreesToRadians(inValue); });
 		inUI->CreateSlider(runtime_settings, "Plane Half Cone Angle (deg)", RadiansToDegrees(sPlaneHalfConeAngle), 0.0f, 180.0f, 1.0f, [=](float inValue) { sPlaneHalfConeAngle = DegreesToRadians(inValue); });
 
-		inUI->CreateComboBox(runtime_settings, "Swing Motor", { "Off", "Velocity", "Position" }, (int)sSwingMotorState, [=](int inItem) { sSwingMotorState = (EMotorState)inItem; });
-		inUI->CreateComboBox(runtime_settings, "Twist Motor", { "Off", "Velocity", "Position" }, (int)sTwistMotorState, [=](int inItem) { sTwistMotorState = (EMotorState)inItem; });
+		inUI->CreateComboBox(runtime_settings, "Swing Motor", { "Off", "Velocity", "Position", "PositionAndVelocity" }, (int)sSwingMotorState, [=](int inItem) { sSwingMotorState = (EMotorState)inItem; });
+		inUI->CreateComboBox(runtime_settings, "Twist Motor", { "Off", "Velocity", "Position", "PositionAndVelocity" }, (int)sTwistMotorState, [=](int inItem) { sTwistMotorState = (EMotorState)inItem; });
 
 		for (int i = 0; i < 3; ++i)
 			inUI->CreateSlider(runtime_settings, "Target Angular Velocity " + constraint_label[i] + " (deg/s)", RadiansToDegrees(sTargetVelocityCS[i]), -90.0f, 90.0f, 1.0f, [i](float inValue) { sTargetVelocityCS.SetComponent(i, DegreesToRadians(inValue)); });
