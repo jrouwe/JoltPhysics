@@ -41,7 +41,7 @@ public:
 	inline bool					HasStiffness() const							{ return mFrequency > 0.0f; }
 
 	/// Check if this spring has stiffness or damping (making it active), if not the constraint will be hard
-	inline bool					HasStiffnessOrDamping() const					{ return mFrequency > 0.0f || mDamping > 0.0f; }
+	inline bool					HasStiffnessOrDamping() const					{ return mFrequency > 0.0f || (mMode != ESpringMode::FrequencyAndDamping && mDamping > 0.0f); }
 
 	/// Selects the way in which the spring is defined. See the descriptions of the mFrequency, mStiffness and mDamping properties.
 	ESpringMode					mMode = ESpringMode::FrequencyAndDamping;
