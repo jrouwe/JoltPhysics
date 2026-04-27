@@ -136,7 +136,7 @@ public:
 	///	@param inStiffness Spring stiffness k.
 	///	@param inDamping Spring damping coefficient c.
 	/// @param outEffectiveMass On return, this contains the new effective mass K^-1
-	inline void					CalculateSpringPropertiesWithStiffnessAndDampingInAccelerationMode(float inDeltaTime, float inInvEffectiveMass, float inBias, float inC, float inStiffness, float inDamping, float &outEffectiveMass)
+	inline void					CalculateSpringPropertiesWithMassNormalizedStiffnessAndDamping(float inDeltaTime, float inInvEffectiveMass, float inBias, float inC, float inStiffness, float inDamping, float &outEffectiveMass)
 	{
 		if (inStiffness > 0.0f || inDamping > 0.0f)
 		{

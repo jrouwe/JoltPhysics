@@ -441,7 +441,7 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 			{
 				float stiffness, damping;
 				ESpringMode mode = settings->mSuspensionSpring.mMode;
-				if (mode == ESpringMode::FrequencyAndDamping || mode == ESpringMode::StiffnessAndDampingInAccelerationMode)
+				if (mode == ESpringMode::FrequencyAndDamping || mode == ESpringMode::MassNormalizedStiffnessAndDamping)
 				{
 					// Calculate effective mass based on vehicle configuration (the stiffness of the spring should not be affected by the dynamics of the vehicle): K = 1 / (J M^-1 J^T)
 					// Note that if no suspension force point is supplied we don't know where the force is applied so we assume it is applied at average suspension length

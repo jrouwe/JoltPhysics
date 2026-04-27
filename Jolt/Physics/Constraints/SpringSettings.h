@@ -14,9 +14,9 @@ class StreamOut;
 /// Enum used by constraints to specify how the spring is defined
 enum class ESpringMode : uint8
 {
-	FrequencyAndDamping,					///< Frequency and damping are specified
-	StiffnessAndDamping,					///< Stiffness and damping are specified
-	StiffnessAndDampingInAccelerationMode,	///< Stiffness and damping are specified in acceleration mode (stiffness and damping are multiplied by the effective mass / inertia to make them mass independent and easier to tune)
+	FrequencyAndDamping,					///< Frequency and damping are specified.
+	StiffnessAndDamping,					///< Stiffness and damping are specified.
+	MassNormalizedStiffnessAndDamping,		///< Stiffness and damping divided by mass / inertia are specified (also known as acceleration mode). This makes it easier to tune the spring and makes it mass independent.
 };
 
 /// Settings for a linear or angular spring
@@ -61,7 +61,7 @@ public:
 		/// force = stiffness * delta_spring_length = mass * gravity <=> stiffness = mass * gravity / delta_spring_length.
 		/// So if your object weighs 1500 kg and the spring compresses by 2 meters, you need a stiffness in the order of 1500 * 9.81 / 2 ~ 7500 N/m.
 		///
-		/// When mMode = ESpringMode::StiffnessAndDampingInAccelerationMode:
+		/// When mMode = ESpringMode::MassNormalizedStiffnessAndDamping:
 		/// Specifies the stiffness (k) in the spring equation F = m_eff * (-k * x - c * v) for a linear or T = i_eff * (-k * theta - c * w) for an angular spring.
 		/// m_eff / i_eff is the effective mass / inertia of the constraint.
 		/// Units are 1 / s^2 for a linear spring and 1 / rad s^2 for an angular spring.
@@ -75,7 +75,7 @@ public:
 	/// When mMode = ESpringMode::StiffnessAndDamping this is the damping (c) in the spring equation F = -k * x - c * v for a linear or T = -k * theta - c * w for an angular spring.
 	/// Units are N s / m for a linear spring and N s m / rad for an angular spring.
 	///
-	/// When mMode = ESpringMode::StiffnessAndDampingInAccelerationMode this is the damping (c) in the spring equation F = m_eff * (-k * x - c * v) for a linear or T = i_eff * (-k * theta - c * w) for an angular spring.
+	/// When mMode = ESpringMode::MassNormalizedStiffnessAndDamping this is the damping (c) in the spring equation F = m_eff * (-k * x - c * v) for a linear or T = i_eff * (-k * theta - c * w) for an angular spring.
 	/// m_eff / i_eff is the effective mass / inertia of the constraint.
 	/// Units are 1 / s for a linear spring and 1 / rad s for an angular spring.
 	///

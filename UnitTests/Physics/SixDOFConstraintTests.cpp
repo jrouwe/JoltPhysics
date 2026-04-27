@@ -110,7 +110,7 @@ TEST_SUITE("SixDOFConstraintTests")
 
 				SixDOFConstraintSettings settings;
 				settings.mPosition1 = settings.mPosition2 = RVec3::sZero();
-				settings.mMotorSettings[axis].mSpringSettings = SpringSettings(ESpringMode::StiffnessAndDampingInAccelerationMode, 0.0f, cDamping);
+				settings.mMotorSettings[axis].mSpringSettings = SpringSettings(ESpringMode::MassNormalizedStiffnessAndDamping, 0.0f, cDamping);
 				SixDOFConstraint &constraint = context.CreateConstraint<SixDOFConstraint>(Body::sFixedToWorld, body, settings);
 				constraint.SetMotorState((SixDOFConstraintSettings::EAxis)axis, EMotorState::PositionAndVelocity);
 				Vec3 target = Vec3::sZero();

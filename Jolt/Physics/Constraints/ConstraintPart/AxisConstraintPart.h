@@ -213,8 +213,8 @@ public:
 			case ESpringMode::StiffnessAndDamping:
 				mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mStiffness, inSpringSettings.mDamping, mEffectiveMass);
 				break;
-			case ESpringMode::StiffnessAndDampingInAccelerationMode:
-				mSpringPart.CalculateSpringPropertiesWithStiffnessAndDampingInAccelerationMode(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mStiffness, inSpringSettings.mDamping, mEffectiveMass);
+			case ESpringMode::MassNormalizedStiffnessAndDamping:
+				mSpringPart.CalculateSpringPropertiesWithMassNormalizedStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mStiffness, inSpringSettings.mDamping, mEffectiveMass);
 				break;
 			}
 	}
