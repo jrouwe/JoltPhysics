@@ -71,7 +71,7 @@ public:
 	};
 
 	/// When mMode = ESpringMode::FrequencyAndDamping this is the damping ratio (0 = no damping, 1 = critical damping).
-	/// 
+	///
 	/// When mMode = ESpringMode::StiffnessAndDamping this is the damping (c) in the spring equation F = -k * x - c * v for a linear or T = -k * theta - c * w for an angular spring.
 	/// Units are N s / m for a linear spring and N s m / rad for an angular spring.
 	///
