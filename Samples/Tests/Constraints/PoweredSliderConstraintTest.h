@@ -13,18 +13,24 @@ public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, PoweredSliderConstraintTest)
 
 	// See: Test
-	virtual void			Initialize() override;
-	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
+	virtual void				Initialize() override;
+	virtual void				PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
-	virtual bool			HasSettingsMenu() const override							{ return true; }
-	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
+	virtual bool				HasSettingsMenu() const override							{ return true; }
+	virtual void				CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
-	inline static float		sMaxMotorAcceleration = 250.0f;
-	inline static float		sMaxFrictionAcceleration = 0.0f;
-	inline static float		sFrequency = 2.0f;
-	inline static float		sDamping = 1.0f;
+	inline static EMotorState	sMotorState = EMotorState::Velocity;
+	inline static float			sTargetPosition = 0.0f;
+	inline static float			sTargetVelocity = 1.0f;
+	inline static float			sMaxMotorAcceleration = 250.0f;
+	inline static float			sMaxFrictionAcceleration = 0.0f;
+	inline static ESpringMode	sSpringMode = ESpringMode::FrequencyAndDamping;
+	inline static float			sFrequency = 2.0f;
+	inline static float			sDampingRatio = 1.0f;
+	inline static float			sStiffness = 150.0f;
+	inline static float			sDamping = 25.0f;
 
-	Body *					mBody2 = nullptr;
-	SliderConstraint *		mConstraint = nullptr;
+	Body *						mBody2 = nullptr;
+	SliderConstraint *			mConstraint = nullptr;
 };
