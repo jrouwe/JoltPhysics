@@ -91,11 +91,11 @@ void PoweredSliderConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inPara
 
 void PoweredSliderConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateComboBox(inSubMenu, "Motor", { "Off", "Velocity", "Position", "PositionAndVelocity" }, (int)sMotorState, [this](int inItem) { sMotorState = (EMotorState)inItem; });
-	inUI->CreateSlider(inSubMenu, "Target Position (m)", sTargetPosition, -5.0f, 20.0f, 0.1f, [this](float inValue) { sTargetPosition = inValue; });
-	inUI->CreateSlider(inSubMenu, "Target Velocity (m/s)", sTargetVelocity, -10.0f, 10.0f, 0.1f, [this](float inValue) { sTargetVelocity = inValue; });
+	inUI->CreateComboBox(inSubMenu, "Motor", { "Off", "Velocity", "Position", "PositionAndVelocity" }, (int)sMotorState, [](int inItem) { sMotorState = (EMotorState)inItem; });
+	inUI->CreateSlider(inSubMenu, "Target Position (m)", sTargetPosition, -5.0f, 20.0f, 0.1f, [](float inValue) { sTargetPosition = inValue; });
+	inUI->CreateSlider(inSubMenu, "Target Velocity (m/s)", sTargetVelocity, -10.0f, 10.0f, 0.1f, [](float inValue) { sTargetVelocity = inValue; });
 	inUI->CreateSlider(inSubMenu, "Max Acceleration (m/s^2)", sMaxMotorAcceleration, 0.0f, 250.0f, 1.0f, [](float inValue) { sMaxMotorAcceleration = inValue; });
-	inUI->CreateComboBox(inSubMenu, "SpringMode", { "FrequencyAndDamping", "StiffnessAndDamping", "NormStiffAndDamp" }, (int)sSpringMode, [this](int inItem) { sSpringMode = (ESpringMode)inItem; });
+	inUI->CreateComboBox(inSubMenu, "SpringMode", { "FrequencyAndDamping", "StiffnessAndDamping", "NormStiffAndDamp" }, (int)sSpringMode, [](int inItem) { sSpringMode = (ESpringMode)inItem; });
 	inUI->CreateSlider(inSubMenu, "Frequency (Hz)", sFrequency, 0.0f, 20.0f, 0.1f, [](float inValue) { sFrequency = inValue; });
 	inUI->CreateSlider(inSubMenu, "Damping Ratio", sDampingRatio, 0.0f, 2.0f, 0.01f, [](float inValue) { sDamping = inValue; });
 	inUI->CreateSlider(inSubMenu, "Stiffness", sStiffness, 0.0f, 200.0f, 0.1f, [](float inValue) { sStiffness = inValue; });

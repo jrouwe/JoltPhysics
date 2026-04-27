@@ -97,11 +97,11 @@ void PoweredHingeConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParam
 
 void PoweredHingeConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateComboBox(inSubMenu, "Motor", { "Off", "Velocity", "Position", "PositionAndVelocity" }, (int)sMotorState, [this](int inItem) { sMotorState = (EMotorState)inItem; });
-	inUI->CreateSlider(inSubMenu, "Target Angle (deg)", RadiansToDegrees(sTargetAngle), -180.0f, 180.0f, 1.0f, [this](float inValue) { sTargetAngle = DegreesToRadians(inValue); });
-	inUI->CreateSlider(inSubMenu, "Target Angular Velocity (deg/s)", RadiansToDegrees(sTargetAngularVelocity), -90.0f, 90.0f, 1.0f, [this](float inValue) { sTargetAngularVelocity = DegreesToRadians(inValue); });
+	inUI->CreateComboBox(inSubMenu, "Motor", { "Off", "Velocity", "Position", "PositionAndVelocity" }, (int)sMotorState, [](int inItem) { sMotorState = (EMotorState)inItem; });
+	inUI->CreateSlider(inSubMenu, "Target Angle (deg)", RadiansToDegrees(sTargetAngle), -180.0f, 180.0f, 1.0f, [](float inValue) { sTargetAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Target Angular Velocity (deg/s)", RadiansToDegrees(sTargetAngularVelocity), -90.0f, 90.0f, 1.0f, [](float inValue) { sTargetAngularVelocity = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Max Angular Acceleration (deg/s^2)", RadiansToDegrees(sMaxAngularAcceleration), 0.0f, 3600.0f, 10.0f, [](float inValue) { sMaxAngularAcceleration = DegreesToRadians(inValue); });
-	inUI->CreateComboBox(inSubMenu, "SpringMode", { "FrequencyAndDamping", "StiffnessAndDamping", "NormStiffAndDamp" }, (int)sSpringMode, [this](int inItem) { sSpringMode = (ESpringMode)inItem; });
+	inUI->CreateComboBox(inSubMenu, "SpringMode", { "FrequencyAndDamping", "StiffnessAndDamping", "NormStiffAndDamp" }, (int)sSpringMode, [](int inItem) { sSpringMode = (ESpringMode)inItem; });
 	inUI->CreateSlider(inSubMenu, "Frequency (Hz)", sFrequency, 0.0f, 20.0f, 0.1f, [](float inValue) { sFrequency = inValue; });
 	inUI->CreateSlider(inSubMenu, "Damping Ratio", sDampingRatio, 0.0f, 2.0f, 0.01f, [](float inValue) { sDamping = inValue; });
 	inUI->CreateSlider(inSubMenu, "Stiffness", sStiffness, 0.0f, 200.0f, 0.1f, [](float inValue) { sStiffness = inValue; });
