@@ -1050,7 +1050,7 @@ float Vec4::Length() const
 	return __riscv_vfmv_f_s_f32m1_f32(sqrt);
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
-	return Sqrt((mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]));
+	return JPH::Sqrt((mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]));
 #endif
 }
 
@@ -1067,7 +1067,7 @@ Vec4 Vec4::Sqrt() const
 	__riscv_vse32_v_f32m1(res.mF32, rvv_sqrt, 4);
 	return res;
 #else
-	return Vec4(Sqrt(mF32[0]), Sqrt(mF32[1]), Sqrt(mF32[2]), Sqrt(mF32[3]));
+	return Vec4(JPH::Sqrt(mF32[0]), JPH::Sqrt(mF32[1]), JPH::Sqrt(mF32[2]), JPH::Sqrt(mF32[3]));
 #endif
 }
 

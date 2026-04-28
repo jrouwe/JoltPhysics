@@ -1094,7 +1094,7 @@ DVec3 DVec3::Sqrt() const
 	__riscv_vse64_v_f64m2(res.mF64, rvv_sqrt, 3);
 	return res;
 #else
-	return DVec3(Sqrt(mF64[0]), Sqrt(mF64[1]), Sqrt(mF64[2]));
+	return DVec3(JPH::Sqrt(mF64[0]), JPH::Sqrt(mF64[1]), JPH::Sqrt(mF64[2]));
 #endif
 }
 
