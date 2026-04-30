@@ -64,8 +64,10 @@ JPH_INLINE float Sqrt(float inV)
 	return _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ss(inV)));
 #elif defined(JPH_USE_NEON)
 	return vget_lane_f32(vsqrt_f32(vdup_n_f32(inV)), 0);
-#elif defined(JPH_USE_RVV)
-	return __riscv_vfmv_f_s_f32m1_f32(__riscv_vfsqrt_v_f32m1(__riscv_vfmv_v_f_f32m1(inV, 1), 1));
+#elif defined(JPH_CPU_RISCV)
+	float res;
+	asm("fsqrt.s %0, %1" : "=f"(res) : "f"(inV));
+	return res;
 #else
 	return std::sqrt(inV);
 #endif
@@ -78,8 +80,10 @@ JPH_INLINE double Sqrt(double inV)
 	return _mm_cvtsd_f64(_mm_sqrt_sd(_mm_undefined_pd(), _mm_set_sd(inV)));
 #elif defined(JPH_USE_NEON)
 	return vget_lane_f64(vsqrt_f64(vdup_n_f64(inV)), 0);
-#elif defined(JPH_USE_RVV)
-	return __riscv_vfmv_f_s_f64m1_f64(__riscv_vfsqrt_v_f64m1(__riscv_vfmv_v_f_f64m1(inV, 1), 1));
+#elif defined(JPH_CPU_RISCV)
+	double res;
+	asm("fsqrt.d %0, %1" : "=f"(res) : "f"(inV));
+	return res;
 #else
 	return std::sqrt(inV);
 #endif
