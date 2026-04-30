@@ -194,7 +194,7 @@ Vec3 CharacterVirtual::CalculateCharacterGroundVelocity(RVec3Arg inCenterOfMass,
 	float angular_velocity_len_sq = inAngularVelocity.LengthSq();
 	if (angular_velocity_len_sq < 1.0e-12f)
 		return inLinearVelocity;
-	float angular_velocity_len = sqrt(angular_velocity_len_sq);
+	float angular_velocity_len = Sqrt(angular_velocity_len_sq);
 
 	// Calculate the rotation that the object will make in the time step
 	Quat rotation = Quat::sRotation(inAngularVelocity / angular_velocity_len, angular_velocity_len * inDeltaTime);
@@ -577,7 +577,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	settings.mReturnDeepestPoint = false;
 
 	// Calculate how much extra fraction we need to add to the cast to account for the character padding
-	float character_padding_fraction = mCharacterPadding / sqrt(displacement_len_sq);
+	float character_padding_fraction = mCharacterPadding / Sqrt(displacement_len_sq);
 
 	// Body filter
 	IgnoreSingleBodyFilterChained body_filter(mInnerBodyID, inBodyFilter);

@@ -1017,10 +1017,10 @@ float Vec3::Length() const
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
 	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
-	return sqrt(dot);
+	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(sum, 1);
+	return __riscv_vfmv_f_s_f32m1_f32(sqrt);
 #else
-	return sqrt(LengthSq());
+	return JPH::Sqrt(LengthSq());
 #endif
 }
 
@@ -1037,7 +1037,7 @@ Vec3 Vec3::Sqrt() const
 	__riscv_vse32_v_f32m1(res.mF32, rvv_sqrt, 3);
 	return res;
 #else
-	return Vec3(sqrt(mF32[0]), sqrt(mF32[1]), sqrt(mF32[2]));
+	return Vec3(JPH::Sqrt(mF32[0]), JPH::Sqrt(mF32[1]), JPH::Sqrt(mF32[2]));
 #endif
 }
 
@@ -1061,9 +1061,9 @@ Vec3 Vec3::Normalized() const
 	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
 	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
 	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	const float dot = __riscv_vfmv_f_s_f32m1_f32(sum);
-	const float magnitude = sqrt(dot);
-	const vfloat32m1_t norm_v = __riscv_vfdiv_vf_f32m1(v, magnitude, 3);
+	const vfloat32m1_t splat = __riscv_vrgather_vx_f32m1(sum, 0, 3);
+	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(splat, 3);
+	const vfloat32m1_t norm_v = __riscv_vfdiv_vv_f32m1(v, sqrt, 3);
 
 	Vec3 res;
 	__riscv_vse32_v_f32m1(res.mF32, norm_v, 3);
@@ -1110,10 +1110,11 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	if (dot <= FLT_MIN)
 		return inZeroValue;
 
-	const float length = sqrt(dot);
+	const vfloat32m1_t splat = __riscv_vrgather_vx_f32m1(sum, 0, 3);
+	const vfloat32m1_t length = __riscv_vfsqrt_v_f32m1(splat, 3);
 
 	Vec3 v;
-	const vfloat32m1_t norm = __riscv_vfdiv_vf_f32m1(src, length, 3);
+	const vfloat32m1_t norm = __riscv_vfdiv_vv_f32m1(src, length, 3);
 	__riscv_vse32_v_f32m1(v.mF32, norm, 3);
 	return v;
 #else
@@ -1121,7 +1122,7 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	if (len_sq <= FLT_MIN)
 		return inZeroValue;
 	else
-		return *this / sqrt(len_sq);
+		return *this / JPH::Sqrt(len_sq);
 #endif
 }
 
@@ -1252,7 +1253,7 @@ Vec3 Vec3::GetNormalizedPerpendicular() const
 	Vec3 perp_x(z, 0.0f, -x);
 	Vec3 perp_y(0.0f, z, -y);
 #endif // JPH_CROSS_PLATFORM_DETERMINISTIC
-	return (xx > yy ? perp_x : perp_y) / sqrt(max(xx, yy) + zz);
+	return (xx > yy ? perp_x : perp_y) / JPH::Sqrt(max(xx, yy) + zz);
 #endif // JPH_USE_SSE
 }
 
@@ -1344,7 +1345,7 @@ Vec3 Vec3::sDecompressUnitVector(uint32 inValue)
 	JPH_ASSERT(v.GetZ() == 0.0f);
 
 	// Restore the highest component
-	v.SetZ(sqrt(max(1.0f - v.LengthSq(), 0.0f)));
+	v.SetZ(JPH::Sqrt(max(1.0f - v.LengthSq(), 0.0f)));
 
 	// Extract sign
 	if ((inValue & 0x80000000u) != 0)

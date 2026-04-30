@@ -96,7 +96,7 @@ void HairTest::Initialize()
 			Float3 translation, rotation;
 			stream.Read(translation);
 			stream.Read(rotation);
-			Quat rotation_quat(rotation.x, rotation.y, rotation.z, sqrt(max(0.0f, 1.0f - Vec3(rotation).LengthSq())));
+			Quat rotation_quat(rotation.x, rotation.y, rotation.z, Sqrt(max(0.0f, 1.0f - Vec3(rotation).LengthSq())));
 			mFaceAnimation[frame][joint] = Mat44::sRotationTranslation(rotation_quat, Vec3(translation));
 		}
 	}

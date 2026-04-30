@@ -98,7 +98,7 @@ void DeformedHeightFieldShapeTest::PrePhysicsUpdate(const PreUpdateParams &inPar
 
 		// A function to calculate the delta height at a certain distance from the center of the pit
 		constexpr float cHalfPi = 0.5f * JPH_PI;
-		auto pit_shape = [=](float inDistanceX, float inDistanceY) { return Cos(min(sqrt(Square(inDistanceX) + Square(inDistanceY)) * cHalfPi / cPitRadius, cHalfPi)); };
+		auto pit_shape = [=](float inDistanceX, float inDistanceY) { return Cos(min(Sqrt(Square(inDistanceX) + Square(inDistanceY)) * cHalfPi / cPitRadius, cHalfPi)); };
 
 		AABox affected_area;
 		for (int y = 0; y < count_y; ++y)

@@ -504,17 +504,17 @@ TEST_SUITE("Vec4Tests")
 	TEST_CASE("TestVec4Length")
 	{
 		CHECK(Vec4(1, 2, 3, 4).LengthSq() == float(1 + 4 + 9 + 16));
-		CHECK(Vec4(1, 2, 3, 4).Length() == sqrt(float(1 + 4 + 9 + 16)));
+		CHECK(Vec4(1, 2, 3, 4).Length() == Sqrt(float(1 + 4 + 9 + 16)));
 	}
 
 	TEST_CASE("TestVec4Sqrt")
 	{
-		CHECK_APPROX_EQUAL(Vec4(13, 15, 17, 19).Sqrt(), Vec4(sqrt(13.0f), sqrt(15.0f), sqrt(17.0f), sqrt(19.0f)));
+		CHECK_APPROX_EQUAL(Vec4(13, 15, 17, 19).Sqrt(), Vec4(Sqrt(13.0f), Sqrt(15.0f), Sqrt(17.0f), Sqrt(19.0f)));
 	}
 
 	TEST_CASE("TestVec4Normalize")
 	{
-		CHECK(Vec4(1, 2, 3, 4).Normalized() == Vec4(1, 2, 3, 4) / sqrt(30.0f));
+		CHECK(Vec4(1, 2, 3, 4).Normalized() == Vec4(1, 2, 3, 4) / Sqrt(30.0f));
 	}
 
 	TEST_CASE("TestVec4Cast")

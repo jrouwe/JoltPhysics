@@ -27,7 +27,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyShapesTest)
 
 void SoftBodyShapesTest::Initialize()
 {
-	const Quat cCubeOrientation = Quat::sRotation(Vec3::sReplicate(sqrt(1.0f / 3.0f)), DegreesToRadians(45.0f));
+	const Quat cCubeOrientation = Quat::sRotation(Vec3::sReplicate(Sqrt(1.0f / 3.0f)), DegreesToRadians(45.0f));
 
 	// Floor
 	CreateMeshTerrain();

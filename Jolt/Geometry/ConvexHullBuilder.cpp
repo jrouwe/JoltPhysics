@@ -1351,7 +1351,7 @@ void ConvexHullBuilder::DetermineMaxError(Face *&outFaceWithMaxError, float &out
 		}
 
 		// If the minimum distance to an edge is further than our current max error, we use that as max error
-		float min_edge_dist = sqrt(min_edge_dist_sq);
+		float min_edge_dist = Sqrt(min_edge_dist_sq);
 		if (min_edge_dist_face != nullptr && min_edge_dist > max_error)
 		{
 			max_error = min_edge_dist;

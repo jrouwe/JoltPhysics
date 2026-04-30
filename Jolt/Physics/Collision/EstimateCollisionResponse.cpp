@@ -192,7 +192,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 				float total_lambda_sq = Square(lambda1) + Square(lambda2);
 				if (total_lambda_sq > Square(max_impulse))
 				{
-					float scale = max_impulse / sqrt(total_lambda_sq);
+					float scale = max_impulse / Sqrt(total_lambda_sq);
 					lambda1 *= scale;
 					lambda2 *= scale;
 				}

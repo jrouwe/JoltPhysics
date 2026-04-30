@@ -40,7 +40,7 @@ void CharacterSpaceShipTest::Initialize()
 	StaticCompoundShapeSettings compound;
 	compound.SetEmbedded();
 	for (float h = cSpaceShipRingHeight; h < cSpaceShipHeight; h += cSpaceShipRingHeight)
-		compound.AddShape(Vec3::sZero(), Quat::sIdentity(), new CylinderShape(h, sqrt(Square(cSpaceShipRadius) - Square(cSpaceShipRadius - cSpaceShipHeight - cSpaceShipRingHeight + h))));
+		compound.AddShape(Vec3::sZero(), Quat::sIdentity(), new CylinderShape(h, Sqrt(Square(cSpaceShipRadius) - Square(cSpaceShipRadius - cSpaceShipHeight - cSpaceShipRingHeight + h))));
 	mSpaceShip = mBodyInterface->CreateAndAddBody(BodyCreationSettings(&compound, cShipInitialPosition, Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 	mSpaceShipPrevTransform = mBodyInterface->GetCenterOfMassTransform(mSpaceShip);
 }

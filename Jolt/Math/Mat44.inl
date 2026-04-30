@@ -899,8 +899,9 @@ Mat44 Mat44::Inversed() const
 	minor3 = __riscv_vfadd_vv_f32m1(__riscv_vfmul_vv_f32m1(row1, tmp1, 4), minor3, 4);
 
 	const vfloat32m1_t v_det = __riscv_vfmul_vv_f32m1(row0, minor0, 4);
-	const float s_det = RVVSumElementsFloat32x4(v_det);
-	const vfloat32m1_t det_inv = __riscv_vfmv_v_f_f32m1(1.0f / s_det, 4);
+	const vfloat32m1_t s_det = RVVSumElementsFloat32x4(v_det);
+	const vfloat32m1_t det_splat = __riscv_vrgather_vx_f32m1(s_det, 0, 4);
+	const vfloat32m1_t det_inv = __riscv_vfrdiv_vf_f32m1(det_splat, 1.0f, 4);
 
 	minor0 = __riscv_vfmul_vv_f32m1(det_inv, minor0, 4);
 	minor1 = __riscv_vfmul_vv_f32m1(det_inv, minor1, 4);
@@ -1009,7 +1010,7 @@ Quat Mat44::GetQuaternion() const
 
 	if (tr >= 0.0f)
 	{
-		float s = sqrt(tr + 1.0f);
+		float s = Sqrt(tr + 1.0f);
 		float is = 0.5f / s;
 		return Quat(
 			(mCol[1].mF32[2] - mCol[2].mF32[1]) * is,
@@ -1025,7 +1026,7 @@ Quat Mat44::GetQuaternion() const
 
 		if (i == 0)
 		{
-			float s = sqrt(mCol[0].mF32[0] - (mCol[1].mF32[1] + mCol[2].mF32[2]) + 1);
+			float s = Sqrt(mCol[0].mF32[0] - (mCol[1].mF32[1] + mCol[2].mF32[2]) + 1);
 			float is = 0.5f / s;
 			return Quat(
 				0.5f * s,
@@ -1035,7 +1036,7 @@ Quat Mat44::GetQuaternion() const
 		}
 		else if (i == 1)
 		{
-			float s = sqrt(mCol[1].mF32[1] - (mCol[2].mF32[2] + mCol[0].mF32[0]) + 1);
+			float s = Sqrt(mCol[1].mF32[1] - (mCol[2].mF32[2] + mCol[0].mF32[0]) + 1);
 			float is = 0.5f / s;
 			return Quat(
 				(mCol[1].mF32[0] + mCol[0].mF32[1]) * is,
@@ -1047,7 +1048,7 @@ Quat Mat44::GetQuaternion() const
 		{
 			JPH_ASSERT(i == 2);
 
-			float s = sqrt(mCol[2].mF32[2] - (mCol[0].mF32[0] + mCol[1].mF32[1]) + 1);
+			float s = Sqrt(mCol[2].mF32[2] - (mCol[0].mF32[0] + mCol[1].mF32[1]) + 1);
 			float is = 0.5f / s;
 			return Quat(
 				(mCol[0].mF32[2] + mCol[2].mF32[0]) * is,

@@ -32,7 +32,7 @@ TEST_SUITE("GJKTests")
 		Sphere s2(c2, 1.0f);
 
 		// Sphere 3 is exactly 2 away from s1
-		float l = 2.0f / sqrt(3.0f);
+		float l = 2.0f / Sqrt(3.0f);
 		Vec3 c3(l, l, l);
 		Sphere s3(c3, 1.0f);
 
@@ -51,7 +51,7 @@ TEST_SUITE("GJKTests")
 		{
 			// Test sphere s1 and s2, they should not collide, verify their closest points
 			Vec3 pa, pb, v = Vec3::sZero();
-			float d = sqrt(gjk.GetClosestPoints(s1, s2, 1.0e-4f, cLargeFloat, v, pa, pb));
+			float d = Sqrt(gjk.GetClosestPoints(s1, s2, 1.0e-4f, cLargeFloat, v, pa, pb));
 			CHECK_APPROX_EQUAL(c2.Length() - 2.0f, d, 1.0e-4f);
 			CHECK_APPROX_EQUAL(c2.Normalized(), pa, 1.0e-4f);
 			CHECK_APPROX_EQUAL(c2 - c2.Normalized(), pb, 1.0e-4f);
@@ -60,7 +60,7 @@ TEST_SUITE("GJKTests")
 		{
 			// Test sphere s1 and s3, they should touch exactly, verify their closest points
 			Vec3 pa, pb, v = Vec3::sZero();
-			float d = sqrt(gjk.GetClosestPoints(s1, s3, 1.0e-4f, cLargeFloat, v, pa, pb));
+			float d = Sqrt(gjk.GetClosestPoints(s1, s3, 1.0e-4f, cLargeFloat, v, pa, pb));
 			CHECK_APPROX_EQUAL(0.0f, d, 1.0e-4f);
 			CHECK_APPROX_EQUAL(c2.Normalized(), pa, 1.0e-4f);
 			CHECK_APPROX_EQUAL(c2.Normalized(), pb, 1.0e-4f);

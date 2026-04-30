@@ -19,7 +19,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(EPATest)
 void EPATest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	AABox box(Vec3(1, 1, -2), Vec3(2, 2, 2));
-	Sphere sphere(Vec3(4, 4, 0), sqrt(8.0f) + 0.01f);
+	Sphere sphere(Vec3(4, 4, 0), Sqrt(8.0f) + 0.01f);
 	Mat44 matrix = Mat44::sRotationTranslation(Quat::sRotation(Vec3(1, 1, 1).Normalized(), 0.25f * JPH_PI), Vec3(1, 2, 3));
 	bool intersecting = CollideBoxSphere(matrix, box, sphere);
 	JPH_ASSERT(intersecting);

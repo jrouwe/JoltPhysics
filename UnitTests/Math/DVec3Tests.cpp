@@ -251,12 +251,12 @@ TEST_SUITE("DVec3Tests")
 	TEST_CASE("TestDVec3Length")
 	{
 		CHECK(DVec3(2, 3, 4).LengthSq() == double(4 + 9 + 16));
-		CHECK(DVec3(2, 3, 4).Length() == sqrt(double(4 + 9 + 16)));
+		CHECK(DVec3(2, 3, 4).Length() == Sqrt(double(4 + 9 + 16)));
 	}
 
 	TEST_CASE("TestDVec3Sqrt")
 	{
-		CHECK(DVec3(13, 15, 17).Sqrt() == DVec3(sqrt(13.0), sqrt(15.0), sqrt(17.0)));
+		CHECK(DVec3(13, 15, 17).Sqrt() == DVec3(Sqrt(13.0), Sqrt(15.0), Sqrt(17.0)));
 	}
 
 	TEST_CASE("TestDVec3Equals")
@@ -314,7 +314,7 @@ TEST_SUITE("DVec3Tests")
 
 	TEST_CASE("TestDVec3Normalize")
 	{
-		CHECK(DVec3(3, 2, 1).Normalized() == DVec3(3, 2, 1) / sqrt(9.0 + 4.0 + 1.0));
+		CHECK(DVec3(3, 2, 1).Normalized() == DVec3(3, 2, 1) / Sqrt(9.0 + 4.0 + 1.0));
 	}
 
 	TEST_CASE("TestDVec3Sign")

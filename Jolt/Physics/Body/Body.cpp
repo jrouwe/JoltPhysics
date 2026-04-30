@@ -243,7 +243,7 @@ bool Body::ApplyBuoyancyImpulse(float inTotalVolume, float inSubmergedVolume, Ve
 		if (relative_center_of_buoyancy_velocity_len_sq > 1.0e-12f)
 		{
 			Vec3 local_relative_center_of_buoyancy_velocity = GetRotation().InverseRotate(relative_center_of_buoyancy_velocity);
-			area = local_relative_center_of_buoyancy_velocity.Abs().Dot(size.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>() * size.Swizzle<SWIZZLE_Z, SWIZZLE_X, SWIZZLE_Y>()) / sqrt(relative_center_of_buoyancy_velocity_len_sq);
+			area = local_relative_center_of_buoyancy_velocity.Abs().Dot(size.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>() * size.Swizzle<SWIZZLE_Z, SWIZZLE_X, SWIZZLE_Y>()) / Sqrt(relative_center_of_buoyancy_velocity_len_sq);
 		}
 
 		// Calculate the impulse
@@ -253,7 +253,7 @@ bool Body::ApplyBuoyancyImpulse(float inTotalVolume, float inSubmergedVolume, Ve
 		float linear_velocity_len_sq = linear_velocity.LengthSq();
 		float drag_delta_linear_velocity_len_sq = (drag_impulse * inverse_mass).LengthSq();
 		if (drag_delta_linear_velocity_len_sq > linear_velocity_len_sq)
-			drag_impulse *= sqrt(linear_velocity_len_sq / drag_delta_linear_velocity_len_sq);
+			drag_impulse *= Sqrt(linear_velocity_len_sq / drag_delta_linear_velocity_len_sq);
 
 		// Calculate the resulting delta linear velocity due to buoyancy and drag
 		Vec3 delta_linear_velocity = (drag_impulse + buoyancy_impulse) * inverse_mass;
@@ -271,7 +271,7 @@ bool Body::ApplyBuoyancyImpulse(float inTotalVolume, float inSubmergedVolume, Ve
 		float angular_velocity_len_sq = angular_velocity.LengthSq();
 		float drag_delta_angular_velocity_len_sq = drag_delta_angular_velocity.LengthSq();
 		if (drag_delta_angular_velocity_len_sq > angular_velocity_len_sq)
-			drag_delta_angular_velocity *= sqrt(angular_velocity_len_sq / drag_delta_angular_velocity_len_sq);
+			drag_delta_angular_velocity *= Sqrt(angular_velocity_len_sq / drag_delta_angular_velocity_len_sq);
 
 		// Calculate total delta angular velocity due to drag and buoyancy
 		Vec3 delta_angular_velocity = drag_delta_angular_velocity + inv_inertia * inRelativeCenterOfBuoyancy.Cross(buoyancy_impulse + drag_impulse);

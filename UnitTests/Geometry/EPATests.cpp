@@ -97,28 +97,28 @@ TEST_SUITE("EPATests")
 		{
 			// Sphere just missing box on edge
 			AABox box(Vec3(1, 1, -2), Vec3(2, 2, 2));
-			Sphere sphere(Vec3(4, 4, 0), sqrt(8.0f) - 0.01f);
+			Sphere sphere(Vec3(4, 4, 0), Sqrt(8.0f) - 0.01f);
 			CHECK(!CollideBoxSphere(inMatrix, box, sphere));
 		}
 
 		{
 			// Sphere just penetrating box on edge
 			AABox box(Vec3(1, 1, -2), Vec3(2, 2, 2));
-			Sphere sphere(Vec3(4, 4, 0), sqrt(8.0f) + 0.01f);
+			Sphere sphere(Vec3(4, 4, 0), Sqrt(8.0f) + 0.01f);
 			CHECK(CollideBoxSphere(inMatrix, box, sphere));
 		}
 
 		{
 			// Sphere just missing box on vertex
 			AABox box(Vec3(1, 1, 1), Vec3(2, 2, 2));
-			Sphere sphere(Vec3(4, 4, 4), sqrt(12.0f) - 0.01f);
+			Sphere sphere(Vec3(4, 4, 4), Sqrt(12.0f) - 0.01f);
 			CHECK(!CollideBoxSphere(inMatrix, box, sphere));
 		}
 
 		{
 			// Sphere just penetrating box on vertex
 			AABox box(Vec3(1, 1, 1), Vec3(2, 2, 2));
-			Sphere sphere(Vec3(4, 4, 4), sqrt(12.0f) + 0.01f);
+			Sphere sphere(Vec3(4, 4, 4), Sqrt(12.0f) + 0.01f);
 			CHECK(CollideBoxSphere(inMatrix, box, sphere));
 		}
 	}

@@ -1094,13 +1094,13 @@ DVec3 DVec3::Sqrt() const
 	__riscv_vse64_v_f64m2(res.mF64, rvv_sqrt, 3);
 	return res;
 #else
-	return DVec3(sqrt(mF64[0]), sqrt(mF64[1]), sqrt(mF64[2]));
+	return DVec3(JPH::Sqrt(mF64[0]), JPH::Sqrt(mF64[1]), JPH::Sqrt(mF64[2]));
 #endif
 }
 
 double DVec3::Length() const
 {
-	return sqrt(Dot(*this));
+	return JPH::Sqrt(Dot(*this));
 }
 
 DVec3 DVec3::Normalized() const
