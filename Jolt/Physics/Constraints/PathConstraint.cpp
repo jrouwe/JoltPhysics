@@ -215,14 +215,14 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 
 	case EMotorState::Position:
 		if (mPositionMotorSettings.mSpringSettings.HasStiffness())
-			mPositionMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, 0.0f, CalculateConstraintValue(), mPositionMotorSettings.mSpringSettings);
+			mPositionMotorConstraintPart.CalculateConstraintPropertiesWithSettingsForMotor(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, 0.0f, CalculateConstraintValue(), mPositionMotorSettings.mSpringSettings);
 		else
 			mPositionMotorConstraintPart.Deactivate();
 		break;
 
 	case EMotorState::PositionAndVelocity:
 		if (mPositionMotorSettings.mSpringSettings.HasStiffnessOrDamping())
-			mPositionMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, -mTargetVelocity, CalculateConstraintValue(), mPositionMotorSettings.mSpringSettings);
+			mPositionMotorConstraintPart.CalculateConstraintPropertiesWithSettingsForMotor(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, -mTargetVelocity, CalculateConstraintValue(), mPositionMotorSettings.mSpringSettings);
 		else
 			mPositionMotorConstraintPart.Deactivate();
 		break;

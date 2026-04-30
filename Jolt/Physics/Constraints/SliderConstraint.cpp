@@ -225,7 +225,7 @@ void SliderConstraint::CalculatePositionLimitsConstraintProperties(float inDelta
 	// Check if distance is within limits
 	bool below_min = mD <= mLimitsMin;
 	if (mHasLimits && (below_min || mD >= mLimitsMax))
-		mPositionLimitsConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - (below_min? mLimitsMin : mLimitsMax), mLimitsSpringSettings);
+		mPositionLimitsConstraintPart.CalculateConstraintPropertiesWithSettingsForLimit(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - (below_min? mLimitsMin : mLimitsMax), mLimitsSpringSettings);
 	else
 		mPositionLimitsConstraintPart.Deactivate();
 }
@@ -247,14 +247,14 @@ void SliderConstraint::CalculateMotorConstraintProperties(float inDeltaTime)
 
 	case EMotorState::Position:
 		if (mMotorSettings.mSpringSettings.HasStiffness())
-			mMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - mTargetPosition, mMotorSettings.mSpringSettings);
+			mMotorConstraintPart.CalculateConstraintPropertiesWithSettingsForMotor(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - mTargetPosition, mMotorSettings.mSpringSettings);
 		else
 			mMotorConstraintPart.Deactivate();
 		break;
 
 	case EMotorState::PositionAndVelocity:
 		if (mMotorSettings.mSpringSettings.HasStiffnessOrDamping())
-			mMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, -mTargetVelocity, mD - mTargetPosition, mMotorSettings.mSpringSettings);
+			mMotorConstraintPart.CalculateConstraintPropertiesWithSettingsForMotor(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, -mTargetVelocity, mD - mTargetPosition, mMotorSettings.mSpringSettings);
 		else
 			mMotorConstraintPart.Deactivate();
 		break;
