@@ -11,6 +11,7 @@
 #include <Utils/RagdollLoader.h>
 #include <Utils/Log.h>
 #include <Utils/AssetStream.h>
+#include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(PoweredRigTest)
 {
@@ -54,6 +55,7 @@ void PoweredRigTest::Initialize()
 
 	// Initialize pose
 	mPose.SetSkeleton(mRagdollSettings->GetSkeleton());
+	mPrevPose.SetSkeleton(mRagdollSettings->GetSkeleton());
 
 	// Position ragdoll
 	mAnimation->Sample(0.0f, mPose);
@@ -63,6 +65,8 @@ void PoweredRigTest::Initialize()
 
 void PoweredRigTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
+	float prev_time = mTime;
+
 	// Update time
 	mTime += inParams.mDeltaTime;
 
@@ -80,7 +84,34 @@ void PoweredRigTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	mPose.Draw(*inParams.mPoseDrawSettings, mDebugRenderer);
 #endif // JPH_DEBUG_RENDERER
 
-	mRagdoll->DriveToPoseUsingMotors(mPose);
+	// Sample previous pose (you can also store this, but since we can scrub back in time we need to resample)
+	mAnimation->Sample(prev_time, mPrevPose);
+	mPrevPose.GetJoint(0) = joint;
+	mPrevPose.SetRootOffset(root_offset);
+	mPrevPose.CalculateJointMatrices();
+
+	// Measure max error to previous target pose (we drove to that last frame so that's what we should have reached now)
+	double avg_error = 0.0, max_error = 0.0f;
+	for (int j = 0; j < mPose.GetSkeleton()->GetJointCount(); ++j)
+	{
+		int constraint_index = mRagdollSettings->GetConstraintIndexForBodyIndex(j);
+		if (constraint_index < 0)
+			continue;
+		TwoBodyConstraint *constraint = mRagdoll->GetConstraint(constraint_index);
+
+		RMat44 target = RMat44::sTranslation(root_offset) * mPrevPose.GetJointMatrix(j);
+		RMat44 actual = constraint->GetBody2()->GetCenterOfMassTransform() * constraint->GetConstraintToBody2Matrix();
+		double error = (target.GetTranslation() - actual.GetTranslation()).Length();
+		max_error = max(max_error, error);
+		avg_error += error;
+	}
+	avg_error /= mPose.GetSkeleton()->GetJointCount();
+	mDebugRenderer->DrawText3D(root_offset, StringFormat("AvgErr: %.3g, MaxErr: %.3g", avg_error, max_error), Color::sWhite, 0.1f);
+
+	if (sMotorMode == 0)
+		mRagdoll->DriveToPoseUsingMotors(mPose);
+	else
+		mRagdoll->DriveToPoseUsingMotors(mPrevPose, mPose, inParams.mDeltaTime);
 }
 
 void PoweredRigTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
@@ -91,6 +122,8 @@ void PoweredRigTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 			inUI->CreateTextButton(animation_name, sAnimations[i], [this, i]() { sAnimationName = sAnimations[i]; RestartTest(); });
 		inUI->ShowMenu(animation_name);
 	});
+
+	inUI->CreateComboBox(inSubMenu, "Motor", { "Position", "PositionAndVelocity" }, (int)sMotorMode, [](int inItem) { sMotorMode = inItem; });
 }
 
 void PoweredRigTest::SaveState(StateRecorder &inStream) const

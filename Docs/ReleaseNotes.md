@@ -21,6 +21,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added `JPH_BUILD_SHARED_LIBS` cmake variable to determine whether to build static or shared libraries (it defaults to `BUILD_SHARED_LIBS`). This allows embedding Jolt as a static library within a shared library.
 * Simulation stats: Added tracking of collision steps. This way we can know by how many steps we need to divide the numbers to get averages per step.
 * Added support for glTF `KHR_physics_rigid_bodies` constraint motors. This adds `ESpringMode::MassNormalizedStiffnessAndDamping` to be able to specify the spring parameters mass-normalized / in acceleration-mode. It also adds `EMotorState::PositionAndVelocity` which creates a force proportional to `stiffness * (position_target - position_current) + damping * (velocity_target - velocity_current)`.
+* Added `Ragdoll::DriveToPoseUsingMotors` variant that drives to a pose using both position and velocity.
 * Various performance and memory optimizations.
 
 ### Bug Fixes

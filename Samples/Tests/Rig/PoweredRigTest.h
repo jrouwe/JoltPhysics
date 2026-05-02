@@ -45,9 +45,13 @@ private:
 	// Filename of animation to load for this test
 	static const char *		sAnimationName;
 
+	// Drive to pose using position motors (0) or position and velocity motors (1)
+	inline static int		sMotorMode = 0;
+
 	float					mTime = 0.0f;
 	Ref<RagdollSettings>	mRagdollSettings;
 	Ref<Ragdoll>			mRagdoll;
 	Ref<SkeletalAnimation>	mAnimation;
+	SkeletonPose			mPrevPose;
 	SkeletonPose			mPose;
 };
