@@ -91,7 +91,7 @@ void PoweredRigTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	mPrevPose.CalculateJointMatrices();
 
 	// Measure max error to previous target pose (we drove to that last frame so that's what we should have reached now)
-	double avg_error = 0.0, max_error = 0.0f;
+	double avg_error = 0.0, max_error = 0.0;
 	for (int j = 0; j < mPose.GetSkeleton()->GetJointCount(); ++j)
 	{
 		int constraint_index = mRagdollSettings->GetConstraintIndexForBodyIndex(j);
@@ -101,7 +101,7 @@ void PoweredRigTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 		RMat44 target = RMat44::sTranslation(root_offset) * mPrevPose.GetJointMatrix(j);
 		RMat44 actual = constraint->GetBody2()->GetCenterOfMassTransform() * constraint->GetConstraintToBody2Matrix();
-		double error = (target.GetTranslation() - actual.GetTranslation()).Length();
+		double error = (double)(target.GetTranslation() - actual.GetTranslation()).Length();
 		max_error = max(max_error, error);
 		avg_error += error;
 	}
