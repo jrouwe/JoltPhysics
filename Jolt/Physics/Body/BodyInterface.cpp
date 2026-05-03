@@ -365,7 +365,7 @@ void BodyInterface::SetObjectLayer(const BodyID &inBodyID, ObjectLayer inLayer)
 		if (body.GetObjectLayer() != inLayer)
 		{
 			// Update the layer on the body
-			mBodyManager->SetBodyObjectLayerInternal(body, inLayer);
+			body.SetObjectLayerInternal(inLayer, mBodyManager->GetBroadPhaseLayerInterface());
 
 			// Notify broadphase of change
 			if (body.IsInBroadPhase())

@@ -15,6 +15,7 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
 #include <Jolt/Physics/Body/BodyLockMulti.h>
 #include <Jolt/Physics/Constraints/PointConstraint.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
@@ -2326,5 +2327,85 @@ TEST_SUITE("PhysicsTests")
 						CHECK(island_index3 == MotionProperties::cInactiveIndex);
 					}
 				}
+	}
+
+	// Tests applying body creation settings after the body has been created
+	TEST_CASE("TestContactsVsSimulationIslands")
+	{
+		PhysicsTestContext c;
+
+		LoggingContactListener contact_listener;
+		c.GetSystem()->SetContactListener(&contact_listener);
+
+		// Create box intersecting with the floor and take one step
+		BodyID floor_id = c.CreateFloor().GetID();
+		Body &box = c.CreateBox(RVec3(0, 0.99_r, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sOne(), EActivation::Activate);
+		BodyID box_id = box.GetID();
+		c.SimulateSingleStep();
+
+		// We should have a contact with the floor
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor_id, SubShapeID(), box_id, SubShapeID()));
+		contact_listener.Clear();
+
+		// Remove the body from the system
+		BodyInterface &bi = c.GetBodyInterface();
+		bi.DeactivateBody(box_id);
+		bi.RemoveBody(box_id);
+
+		// Contact removals are not processed until the next step
+		CHECK(contact_listener.GetEntryCount() == 0);
+
+		// Now change the body using ApplyBodyCreationSettings, use non default parameters for everything
+		BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(1.0_r, 0.99_r, 0), Quat::sRotation(Vec3::sAxisX(), 0.1f), EMotionType::Kinematic, Layers::MOVING);
+		bcs.mObjectLayer = Layers::MOVING2;
+		bcs.mCollisionGroup = CollisionGroup(new GroupFilterTable(10), 1, 2);
+		bcs.mLinearVelocity = Vec3(-0.1f, -0.2f, -0.3f);
+		bcs.mAngularVelocity = Vec3(0.1f, 0.2f, 0.3f);
+		bcs.mUserData = 1234;
+		bcs.mAllowDynamicOrKinematic = true;
+		bcs.mIsSensor = true;
+		bcs.mCollideKinematicVsNonDynamic = true;
+		bcs.mUseManifoldReduction = false;
+		bcs.mApplyGyroscopicForce = true;
+		bcs.mMotionQuality = EMotionQuality::LinearCast;
+		bcs.mEnhancedInternalEdgeRemoval = true;
+		bcs.mAllowSleeping = false;
+		bcs.mFriction = 0.3f;
+		bcs.mRestitution = 0.4f;
+		bcs.mLinearDamping = 0.01f;
+		bcs.mAngularDamping = 0.02f;
+		bcs.mMaxLinearVelocity = 100.0f;
+		bcs.mMaxAngularVelocity = JPH_PI * 60.0f;
+		bcs.mGravityFactor = 0.5f;
+		bcs.mNumVelocityStepsOverride = 1;
+		bcs.mNumPositionStepsOverride = 3;
+		bcs.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
+		bcs.mMassPropertiesOverride.mMass = 4.0f;
+		bcs.mMassPropertiesOverride.mInertia = Mat44::sScale(8.0f);
+		box.ApplyBodyCreationSettings(bcs, c.GetSystem()->GetBroadPhaseLayerInterface());
+
+		// Check that the settings have been applied
+		BodyCreationSettings bcs_check = box.GetBodyCreationSettings();
+		CHECK(bcs_check == bcs);
+
+		// Add the body back to the system
+		bi.AddBody(box_id, EActivation::Activate);
+
+		c.SimulateSingleStep();
+
+		// We should still have a contact with the floor (we didn't invalidate the contact, so the system doesn't know we changed shape)
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Persist, floor_id, SubShapeID(), box_id, SubShapeID()));
+		contact_listener.Clear();
+
+		// Remove and destroy the body
+		bi.DeactivateBody(box_id);
+		bi.RemoveBody(box_id);
+		bi.DestroyBody(box_id);
+
+		c.SimulateSingleStep();
+
+		// We should receive a contact removal event
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor_id, SubShapeID(), box_id, SubShapeID()));
+		contact_listener.Clear();
 	}
 }

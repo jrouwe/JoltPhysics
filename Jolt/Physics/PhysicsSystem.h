@@ -200,6 +200,9 @@ public:
 	/// Returns a locking interface that locks the body so other threads cannot modify it.
 	inline const BodyLockInterfaceLocking &	GetBodyLockInterface() const					{ return mBodyLockInterfaceLocking; }
 
+	/// Return the BroadPhaseLayerInterface that this class has been initialized with
+	const BroadPhaseLayerInterface &GetBroadPhaseLayerInterface() const						{ return mBodyManager.GetBroadPhaseLayerInterface(); }
+
 	/// Broadphase layer filter that decides if two objects can collide, this was passed to the Init function.
 	const ObjectVsBroadPhaseLayerFilter &GetObjectVsBroadPhaseLayerFilter() const			{ return *mObjectVsBroadPhaseLayerFilter; }
 

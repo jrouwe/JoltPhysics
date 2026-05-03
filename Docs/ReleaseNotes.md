@@ -22,6 +22,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Simulation stats: Added tracking of collision steps. This way we can know by how many steps we need to divide the numbers to get averages per step.
 * Added support for glTF `KHR_physics_rigid_bodies` constraint motors. This adds `ESpringMode::MassNormalizedStiffnessAndDamping` to be able to specify the spring parameters mass-normalized / in acceleration-mode. It also adds `EMotorState::PositionAndVelocity` which creates a force proportional to `stiffness * (position_target - position_current) + damping * (velocity_target - velocity_current)`.
 * Added `Ragdoll::DriveToPoseUsingMotors` variant that drives to a pose using both position and velocity.
+* Added `Body::ApplyBodyCreationSettings` and `Body::ApplySoftBodyCreationSettings` to be able to update a body with creation settings after creation.
 * Various performance and memory optimizations.
 
 ### Bug Fixes

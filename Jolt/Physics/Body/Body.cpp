@@ -395,6 +395,46 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	return result;
 }
 
+void Body::ApplyBodyCreationSettings(const BodyCreationSettings &inBodyCreationSettings, const BroadPhaseLayerInterface &inBPLInterface)
+{
+	JPH_ASSERT(IsRigidBody() && !IsInBroadPhase());
+
+	mShape = inBodyCreationSettings.GetShape();
+	mUserData = inBodyCreationSettings.mUserData;
+	SetFriction(inBodyCreationSettings.mFriction);
+	SetRestitution(inBodyCreationSettings.mRestitution);
+	mMotionType = inBodyCreationSettings.mMotionType;
+	SetIsSensor(inBodyCreationSettings.mIsSensor);
+	SetCollideKinematicVsNonDynamic(inBodyCreationSettings.mCollideKinematicVsNonDynamic);
+	SetUseManifoldReduction(inBodyCreationSettings.mUseManifoldReduction);
+	SetApplyGyroscopicForce(inBodyCreationSettings.mApplyGyroscopicForce);
+	SetEnhancedInternalEdgeRemoval(inBodyCreationSettings.mEnhancedInternalEdgeRemoval);
+	SetObjectLayerInternal(inBodyCreationSettings.mObjectLayer, inBPLInterface);
+	mCollisionGroup = inBodyCreationSettings.mCollisionGroup;
+
+	if (inBodyCreationSettings.HasMassProperties())
+	{
+		MotionProperties *mp = mMotionProperties;
+		JPH_ASSERT(mp != nullptr, "Body was created without MotionProperties, ApplyBodyCreationSettings can't create one!");
+		mp->SetLinearDamping(inBodyCreationSettings.mLinearDamping);
+		mp->SetAngularDamping(inBodyCreationSettings.mAngularDamping);
+		mp->SetMaxLinearVelocity(inBodyCreationSettings.mMaxLinearVelocity);
+		mp->SetMaxAngularVelocity(inBodyCreationSettings.mMaxAngularVelocity);
+		mp->SetMassProperties(inBodyCreationSettings.mAllowedDOFs, inBodyCreationSettings.GetMassProperties());
+		mp->SetLinearVelocity(inBodyCreationSettings.mLinearVelocity); // Needs to happen after setting the max linear/angular velocity and setting allowed DOFs
+		mp->SetAngularVelocity(inBodyCreationSettings.mAngularVelocity);
+		mp->SetGravityFactor(inBodyCreationSettings.mGravityFactor);
+		mp->SetNumVelocityStepsOverride(inBodyCreationSettings.mNumVelocityStepsOverride);
+		mp->SetNumPositionStepsOverride(inBodyCreationSettings.mNumPositionStepsOverride);
+		mp->mMotionQuality = inBodyCreationSettings.mMotionQuality;
+		mp->mAllowSleeping = inBodyCreationSettings.mAllowSleeping;
+		JPH_IF_ENABLE_ASSERTS(mp->mCachedBodyType = mBodyType;)
+		JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = mMotionType;)
+	}
+
+	SetPositionAndRotationInternal(inBodyCreationSettings.mPosition, inBodyCreationSettings.mRotation);
+}
+
 SoftBodyCreationSettings Body::GetSoftBodyCreationSettings() const
 {
 	JPH_ASSERT(IsSoftBody());
@@ -421,6 +461,34 @@ SoftBodyCreationSettings Body::GetSoftBodyCreationSettings() const
 	result.mSettings = mp->GetSettings();
 
 	return result;
+}
+
+void Body::ApplySoftBodyCreationSettings(const SoftBodyCreationSettings &inSoftBodyCreationSettings, const BroadPhaseLayerInterface &inBPLInterface)
+{
+	JPH_ASSERT(IsSoftBody() && !IsInBroadPhase());
+
+	mUserData = inSoftBodyCreationSettings.mUserData;
+	SetFriction(inSoftBodyCreationSettings.mFriction);
+	SetRestitution(inSoftBodyCreationSettings.mRestitution);
+	mMotionType = EMotionType::Dynamic;
+	SetObjectLayerInternal(inSoftBodyCreationSettings.mObjectLayer, inBPLInterface);
+	mCollisionGroup = inSoftBodyCreationSettings.mCollisionGroup;
+
+	SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(mMotionProperties);
+	mp->SetLinearDamping(inSoftBodyCreationSettings.mLinearDamping);
+	mp->SetAngularDamping(0);
+	mp->SetMaxLinearVelocity(inSoftBodyCreationSettings.mMaxLinearVelocity);
+	mp->SetMaxAngularVelocity(FLT_MAX);
+	mp->SetLinearVelocity(Vec3::sZero());
+	mp->SetAngularVelocity(Vec3::sZero());
+	mp->SetGravityFactor(inSoftBodyCreationSettings.mGravityFactor);
+	mp->mMotionQuality = EMotionQuality::Discrete;
+	mp->mAllowSleeping = inSoftBodyCreationSettings.mAllowSleeping;
+	JPH_IF_ENABLE_ASSERTS(mp->mCachedBodyType = mBodyType;)
+	JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = mMotionType;)
+	mp->Initialize(inSoftBodyCreationSettings);
+
+	SetPositionAndRotationInternal(inSoftBodyCreationSettings.mPosition, inSoftBodyCreationSettings.mMakeRotationIdentity? Quat::sIdentity() : inSoftBodyCreationSettings.mRotation);
 }
 
 JPH_NAMESPACE_END

@@ -110,6 +110,41 @@ void BodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	mMassPropertiesOverride.RestoreBinaryState(inStream);
 }
 
+bool BodyCreationSettings::operator == (const BodyCreationSettings &inRHS) const
+{
+	return mPosition == inRHS.mPosition
+		&& mRotation == inRHS.mRotation
+		&& mLinearVelocity == inRHS.mLinearVelocity
+		&& mAngularVelocity == inRHS.mAngularVelocity
+		&& mUserData == inRHS.mUserData
+		&& mObjectLayer == inRHS.mObjectLayer
+		&& mCollisionGroup == inRHS.mCollisionGroup
+		&& mMotionType == inRHS.mMotionType
+		&& mAllowedDOFs == inRHS.mAllowedDOFs
+		&& mAllowDynamicOrKinematic == inRHS.mAllowDynamicOrKinematic
+		&& mIsSensor == inRHS.mIsSensor
+		&& mCollideKinematicVsNonDynamic == inRHS.mCollideKinematicVsNonDynamic
+		&& mUseManifoldReduction == inRHS.mUseManifoldReduction
+		&& mApplyGyroscopicForce == inRHS.mApplyGyroscopicForce
+		&& mMotionQuality == inRHS.mMotionQuality
+		&& mEnhancedInternalEdgeRemoval == inRHS.mEnhancedInternalEdgeRemoval
+		&& mAllowSleeping == inRHS.mAllowSleeping
+		&& mFriction == inRHS.mFriction
+		&& mRestitution == inRHS.mRestitution
+		&& mLinearDamping == inRHS.mLinearDamping
+		&& mAngularDamping == inRHS.mAngularDamping
+		&& mMaxLinearVelocity == inRHS.mMaxLinearVelocity
+		&& mMaxAngularVelocity == inRHS.mMaxAngularVelocity
+		&& mGravityFactor == inRHS.mGravityFactor
+		&& mNumVelocityStepsOverride == inRHS.mNumVelocityStepsOverride
+		&& mNumPositionStepsOverride == inRHS.mNumPositionStepsOverride
+		&& mOverrideMassProperties == inRHS.mOverrideMassProperties
+		&& mInertiaMultiplier == inRHS.mInertiaMultiplier
+		&& mMassPropertiesOverride == inRHS.mMassPropertiesOverride
+		&& mShape == inRHS.mShape
+		&& mShapePtr == inRHS.mShapePtr;
+}
+
 Shape::ShapeResult BodyCreationSettings::ConvertShapeSettings()
 {
 	// If we already have a shape, return it

@@ -322,11 +322,17 @@ public:
 	/// Get the transformed shape of this body, which can be used to do collision detection outside of a body lock
 	inline TransformedShape	GetTransformedShape() const										{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess(), BodyAccess::EAccess::Read)); return TransformedShape(mPosition, mRotation, mShape, mID); }
 
-	/// Debug function to convert a body back to a body creation settings object to be able to save/recreate the body later
+	/// Function to convert a body back to a body creation settings object to be able to save/recreate the body later. Can e.g. be used to move a body from one PhysicsSystem to another.
 	BodyCreationSettings	GetBodyCreationSettings() const;
 
-	/// Debug function to convert a soft body back to a soft body creation settings object to be able to save/recreate the body later
+	/// Function to overwrite current body state with inBodyCreationSettings. Can only be done when the body is not in the physics system and cannot add MotionProperties if the body was created without one.
+	void					ApplyBodyCreationSettings(const BodyCreationSettings &inBodyCreationSettings, const BroadPhaseLayerInterface &inBPLInterface);
+
+	/// Function to convert a soft body back to a body creation settings object to be able to save/recreate the body later. Can e.g. be used to move a body from one PhysicsSystem to another.
 	SoftBodyCreationSettings GetSoftBodyCreationSettings() const;
+
+	/// Function to overwrite current body state with inSoftBodyCreationSettings. Can only be done when the body is not in the physics system and cannot add MotionProperties if the body was created without one.
+	void					ApplySoftBodyCreationSettings(const SoftBodyCreationSettings &inSoftBodyCreationSettings, const BroadPhaseLayerInterface &inBPLInterface);
 
 	/// A dummy body that can be used by constraints to attach a constraint to the world instead of another body
 	static Body				sFixedToWorld;
@@ -345,6 +351,9 @@ public:
 	/// Update rotation using an Euler step (used during position integrate & constraint solving)
 	inline void				AddRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime);
 	inline void				SubRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime);
+
+	/// Function to update body's layer (should only be called internally since it also requires updating the broadphase)
+	inline void				SetObjectLayerInternal(ObjectLayer inLayer, const BroadPhaseLayerInterface &inBPLInterface) { mObjectLayer = inLayer; mBroadPhaseLayer = inBPLInterface.GetBroadPhaseLayer(inLayer); }
 
 	/// Flag if body is in the broadphase (should only be called by the BroadPhase)
 	inline void				SetInBroadPhaseInternal(bool inInBroadPhase)					{ if (inInBroadPhase) mFlags.fetch_or(uint8(EFlags::IsInBroadPhase), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::IsInBroadPhase)), memory_order_relaxed); }
