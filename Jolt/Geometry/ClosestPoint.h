@@ -166,12 +166,12 @@ namespace ClosestPoint
 		// See: https://box2d.org/posts/2014/01/troublesome-triangle/
 		// The difference in normals is most pronounced when one edge is much smaller than the others (in which case the other 2 must have roughly the same length).
 		// Therefore we can suffice by just picking the shortest from 2 edges and use that with the 3rd edge to calculate the normal.
-		// We first check which of the edges is shorter and if bc is shorter than ac then we swap a with c to a is always on the shortest edge
+		// In this case we ensure that ab is shorter than bc by swapping a and c if it is not.
 		UVec4 swap_ac;
 		{
-			Vec3 ac = inC - inA;
+			Vec3 ba = inA - inB;
 			Vec3 bc = inC - inB;
-			swap_ac = Vec4::sLess(bc.DotV4(bc), ac.DotV4(ac));
+			swap_ac = Vec4::sLess(bc.DotV4(bc), ba.DotV4(ba));
 		}
 		Vec3 a = Vec3::sSelect(inA, inC, swap_ac);
 		Vec3 c = Vec3::sSelect(inC, inA, swap_ac);
