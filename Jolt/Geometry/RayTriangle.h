@@ -40,7 +40,7 @@ JPH_INLINE float RayTriangle(Vec3Arg inOrigin, Vec3Arg inDirection, Vec3Arg inV0
 	Vec3 u = Vec3::sReplicate(s.Dot(p)) / det;
 
 	// Prepare to test v parameter
-	Vec3 q = s.Cross(e1);
+	Vec3 q = s.CrossPrecise(e1);
 
 	// Calculate v parameter
 	Vec3 v = Vec3::sReplicate(inDirection.Dot(q)) / det;
@@ -121,9 +121,9 @@ JPH_INLINE Vec4 RayTriangle4(Vec3Arg inOrigin, Vec3Arg inDirection, Vec4Arg inV0
 	Vec4 u = Vec4::sXor(sx * px + sy * py + sz * pz, det_sign);
 
 	// Prepare to test v parameter
-	Vec4 qx = sy * e1z - sz * e1y;
-	Vec4 qy = sz * e1x - sx * e1z;
-	Vec4 qz = sx * e1y - sy * e1x;
+	Vec4 qx = Vec4::sDifferenceOfProducts(sy, e1z, sz, e1y);
+	Vec4 qy = Vec4::sDifferenceOfProducts(sz, e1x, sx, e1z);
+	Vec4 qz = Vec4::sDifferenceOfProducts(sx, e1y, sy, e1x);
 
 	// Calculate v parameter and flip sign if determinant was negative
 	Vec4 v = Vec4::sXor(dx * qx + dy * qy + dz * qz, det_sign);
