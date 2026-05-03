@@ -418,22 +418,22 @@ DVec3 DVec3::sGreaterOrEqual(DVec3Arg inV1, DVec3Arg inV2)
 
 DVec3 DVec3::sFusedMultiplyAdd(DVec3Arg inMul1, DVec3Arg inMul2, DVec3Arg inAdd)
 {
-#if defined(JPH_USE_AVX)
-	#ifdef JPH_USE_FMADD
+#ifdef JPH_USE_FMADD
+	#ifdef JPH_USE_AVX
 		return _mm256_fmadd_pd(inMul1.mValue, inMul2.mValue, inAdd.mValue);
+	#elif defined(JPH_USE_NEON)
+		return DVec3({ vmlaq_f64(inAdd.mValue.val[0], inMul1.mValue.val[0], inMul2.mValue.val[0]), vmlaq_f64(inAdd.mValue.val[1], inMul1.mValue.val[1], inMul2.mValue.val[1]) });
+	#elif defined(JPH_USE_RVV)
+		DVec3 res;
+		const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inMul1.mF64, 3);
+		const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inMul2.mF64, 3);
+		const vfloat64m2_t rvv_add = __riscv_vle64_v_f64m2(inAdd.mF64, 3);
+		const vfloat64m2_t fmadd = __riscv_vfmacc_vv_f64m2(rvv_add, v1, v2, 3);
+		__riscv_vse64_v_f64m2(res.mF64, fmadd, 3);
+		return res;
 	#else
-		return _mm256_add_pd(_mm256_mul_pd(inMul1.mValue, inMul2.mValue), inAdd.mValue);
+		return inMul1 * inMul2 + inAdd;
 	#endif
-#elif defined(JPH_USE_NEON)
-	return DVec3({ vmlaq_f64(inAdd.mValue.val[0], inMul1.mValue.val[0], inMul2.mValue.val[0]), vmlaq_f64(inAdd.mValue.val[1], inMul1.mValue.val[1], inMul2.mValue.val[1]) });
-#elif defined(JPH_USE_RVV)
-	DVec3 res;
-	const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inMul1.mF64, 3);
-	const vfloat64m2_t v2 = __riscv_vle64_v_f64m2(inMul2.mF64, 3);
-	const vfloat64m2_t rvv_add = __riscv_vle64_v_f64m2(inAdd.mF64, 3);
-	const vfloat64m2_t fmadd = __riscv_vfmacc_vv_f64m2(rvv_add, v1, v2, 3);
-	__riscv_vse64_v_f64m2(res.mF64, fmadd, 3);
-	return res;
 #else
 	return inMul1 * inMul2 + inAdd;
 #endif

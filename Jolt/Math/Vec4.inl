@@ -349,28 +349,25 @@ UVec4 Vec4::sGreaterOrEqual(Vec4Arg inV1, Vec4Arg inV2)
 
 Vec4 Vec4::sFusedMultiplyAdd(Vec4Arg inMul1, Vec4Arg inMul2, Vec4Arg inAdd)
 {
-#if defined(JPH_USE_SSE)
-	#ifdef JPH_USE_FMADD
+#ifdef JPH_USE_FMADD
+	#ifdef JPH_USE_SSE
 		return _mm_fmadd_ps(inMul1.mValue, inMul2.mValue, inAdd.mValue);
+	#elif defined(JPH_USE_NEON)
+		return vmlaq_f32(inAdd.mValue, inMul1.mValue, inMul2.mValue);
+	#elif defined(JPH_USE_RVV)
+		Vec4 res;
+		const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inMul1.mF32, 4);
+		const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inMul2.mF32, 4);
+		const vfloat32m1_t rvv_add = __riscv_vle32_v_f32m1(inAdd.mF32, 4);
+		const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
+		const vfloat32m1_t fmadd = __riscv_vfadd_vv_f32m1(rvv_add, mul, 4);
+		__riscv_vse32_v_f32m1(res.mF32, fmadd, 4);
+		return res;
 	#else
-		return _mm_add_ps(_mm_mul_ps(inMul1.mValue, inMul2.mValue), inAdd.mValue);
+		return inMul1 * inMul2 + inAdd;
 	#endif
-#elif defined(JPH_USE_NEON)
-	return vmlaq_f32(inAdd.mValue, inMul1.mValue, inMul2.mValue);
-#elif defined(JPH_USE_RVV)
-	Vec4 res;
-	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inMul1.mF32, 4);
-	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inMul2.mF32, 4);
-	const vfloat32m1_t rvv_add = __riscv_vle32_v_f32m1(inAdd.mF32, 4);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
-	const vfloat32m1_t fmadd = __riscv_vfadd_vv_f32m1(rvv_add, mul, 4);
-	__riscv_vse32_v_f32m1(res.mF32, fmadd, 4);
-	return res;
 #else
-	return Vec4(inMul1.mF32[0] * inMul2.mF32[0] + inAdd.mF32[0],
-				inMul1.mF32[1] * inMul2.mF32[1] + inAdd.mF32[1],
-				inMul1.mF32[2] * inMul2.mF32[2] + inAdd.mF32[2],
-				inMul1.mF32[3] * inMul2.mF32[3] + inAdd.mF32[3]);
+	return inMul1 * inMul2 + inAdd;
 #endif
 }
 

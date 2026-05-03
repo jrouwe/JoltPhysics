@@ -130,6 +130,11 @@
 		#define JPH_VECTOR_ALIGNMENT 8 // 32-bit ARM does not support aligning on the stack on 16 byte boundaries
 		#define JPH_DVECTOR_ALIGNMENT 8
 	#endif
+	#ifndef JPH_CROSS_PLATFORM_DETERMINISTIC // FMA is not compatible with cross platform determinism
+		#if defined(__ARM_FEATURE_FMA) && !defined(JPH_USE_FMADD)
+			#define JPH_USE_FMADD
+		#endif
+	#endif
 #elif defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
 	// X86 CPU architecture
 	#define JPH_CPU_X86
