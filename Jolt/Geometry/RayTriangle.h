@@ -22,7 +22,7 @@ JPH_INLINE float RayTriangle(Vec3Arg inOrigin, Vec3Arg inDirection, Vec3Arg inV0
 	Vec3 e2 = inV2 - inV0;
 
 	// Begin calculating determinant - also used to calculate u parameter
-	Vec3 p = inDirection.Cross(e2);
+	Vec3 p = inDirection.CrossPrecise(e2);
 
 	// if determinant is near zero, ray lies in plane of triangle
 	Vec3 det = Vec3::sReplicate(e1.Dot(p));
@@ -95,9 +95,9 @@ JPH_INLINE Vec4 RayTriangle4(Vec3Arg inOrigin, Vec3Arg inDirection, Vec4Arg inV0
 	Vec4 dz = inDirection.SplatZ();
 
 	// Begin calculating determinant - also used to calculate u parameter
-	Vec4 px = dy * e2z - dz * e2y;
-	Vec4 py = dz * e2x - dx * e2z;
-	Vec4 pz = dx * e2y - dy * e2x;
+	Vec4 px = Vec4::sDifferenceOfProducts(dy, e2z, dz, e2y);
+	Vec4 py = Vec4::sDifferenceOfProducts(dz, e2x, dx, e2z);
+	Vec4 pz = Vec4::sDifferenceOfProducts(dx, e2y, dy, e2x);
 
 	// if determinant is near zero, ray lies in plane of triangle
 	Vec4 det = e1x * px + e1y * py + e1z * pz;

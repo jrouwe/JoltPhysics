@@ -977,6 +977,18 @@ Vec4 Vec4::Reciprocal() const
 	return sOne() / mValue;
 }
 
+Vec4 Vec4::sDifferenceOfProducts(Vec4Arg inA, Vec4Arg inB, Vec4Arg inC, Vec4Arg inD)
+{
+#ifdef JPH_USE_FMADD
+	Vec4 cd = inC * inD;
+	Vec4 err = Vec4::sFusedMultiplyAdd(-inC, inD, cd);
+	Vec4 dop = Vec4::sFusedMultiplyAdd(inA, inB, -cd);
+	return dop + err;
+#else
+	return inA * inB - inC * inD;
+#endif
+}
+
 Vec4 Vec4::DotV(Vec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE4_1)

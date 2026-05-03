@@ -102,7 +102,7 @@ float CastSphereVsTriangles::RayCylinder(Vec3Arg inRayDirection, Vec3Arg inCylin
 		return FLT_MAX; // Segment runs parallel to cylinder axis, stop processing, we will either hit at fraction = 0 or we'll hit a vertex
 	float b = axis_len_sq * start.Dot(inRayDirection) - direction_dot_axis * start_dot_axis; // should be multiplied by 2, instead we'll divide a and c by 2 when we solve the quadratic equation
 	float c = axis_len_sq * (start.LengthSq() - Square(inRadius)) - Square(start_dot_axis);
-	float det = Square(b) - a * c; // normally 4 * a * c but since both a and c need to be divided by 2 we lose the 4
+	float det = DifferenceOfProducts(b, b, a, c); // normally 4 * a * c but since both a and c need to be divided by 2 we lose the 4
 	if (det < 0.0f)
 		return FLT_MAX; // No solution to quadratic equation
 

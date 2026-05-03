@@ -425,4 +425,17 @@ TEST_SUITE("Vec3Tests")
 			CHECK(diff < 1.0e-4f);
 		}
 	}
+
+	TEST_CASE("TestDifferenceOfProducts")
+	{
+		Vec3 a = Vec3(33962.035f, 33962.0351f, 33962.0352f), b = Vec3(-30438.8f, -30438.801f, -30438.802f), c = Vec3(41563.4f, 41563.401f, 41563.402f), d = Vec3(-24871.969f, -24871.970f, -24871.971f);
+		Vec3 result = Vec3::sDifferenceOfProducts(a, b, c, d);
+		DVec3 expected = DVec3(a) * DVec3(b) - DVec3(c) * DVec3(d);
+		CHECK(expected == DVec3(-75.165603637695312, 103.16904449462891, 36.836944580078125));
+	#ifdef JPH_USE_FMADD
+		CHECK(result == Vec3(expected));
+	#else
+		CHECK(result == Vec3(-128.0f, 64.0f, 0.0f)); // The products are in the order of 10^9, so the subtraction causes a large loss of precision and we get a very different result. This is expected when fused multiply add instructions are not available.
+	#endif
+	}
 }

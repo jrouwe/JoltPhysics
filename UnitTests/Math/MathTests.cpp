@@ -4,6 +4,7 @@
 
 #include "UnitTestFramework.h"
 #include <Jolt/Math/Mat44.h>
+#include <Jolt/Math/FindRoot.h>
 
 TEST_SUITE("Mat44Tests")
 {
@@ -80,6 +81,53 @@ TEST_SUITE("Mat44Tests")
 		CHECK(!IsPowerOf2(17));
 		CHECK(!IsPowerOf2(65535));
 		CHECK(!IsPowerOf2(65537));
+	}
+
+	TEST_CASE("TestFindRoot")
+	{
+		{
+			// Quadratic, 2 solutions
+			float x1, x2;
+			CHECK(FindRoot(2.0f, 8.0f, 6.0f, x1, x2) == 2);
+			CHECK(x1 == -3.0f);
+			CHECK(x2 == -1.0f);
+		}
+
+		{
+			// Quadratic without b term, 2 solutions
+			float x1, x2;
+			CHECK(FindRoot(2.0f, 0.0f, -8.0f, x1, x2) == 2);
+			CHECK(x1 == -2.0f);
+			CHECK(x2 == 2.0f);
+		}
+
+		{
+			// Quadratic without solution
+			float x1, x2;
+			CHECK(FindRoot(2.0f, 1.0f, 8.0f, x1, x2) == 0);
+		}
+
+		{
+			// Linear
+			float x1, x2;
+			CHECK(FindRoot(0.0f, 8.0f, 4.0f, x1, x2) == 1);
+			CHECK(x1 == -0.5f);
+			CHECK(x2 == -0.5f);
+		}
+
+		{
+			// Constant
+			float x1, x2;
+			CHECK(FindRoot(0.0f, 0.0f, 0.0f, x1, x2) == 1);
+			CHECK(x1 == 0.0f);
+			CHECK(x2 == 0.0f);
+		}
+
+		{
+			// Constant, no solution
+			float x1, x2;
+			CHECK(FindRoot(0.0f, 0.0f, 1.0f, x1, x2) == 0);
+		}
 	}
 
 	TEST_CASE("TestDifferenceOfProducts")

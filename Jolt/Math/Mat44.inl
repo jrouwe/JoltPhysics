@@ -959,7 +959,7 @@ Mat44 Mat44::InversedRotationTranslation() const
 
 float Mat44::GetDeterminant3x3() const
 {
-	return GetAxisX().Dot(GetAxisY().Cross(GetAxisZ()));
+	return GetAxisX().Dot(GetAxisY().CrossPrecise(GetAxisZ()));
 }
 
 Mat44 Mat44::Adjointed3x3() const

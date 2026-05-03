@@ -230,6 +230,9 @@ public:
 	/// Reciprocal vector (1 / value) for each of the components
 	JPH_INLINE Vec4				Reciprocal() const;
 
+	/// Calculates inA * inB - inC * inD with more precision when FMA instructions are available. See DifferenceOfProducts.
+	JPH_INLINE static Vec4		sDifferenceOfProducts(Vec4Arg inA, Vec4Arg inB, Vec4Arg inC, Vec4Arg inD);
+
 	/// Dot product, returns the dot product in X, Y, Z and W components
 	JPH_INLINE Vec4				DotV(Vec4Arg inV2) const;
 

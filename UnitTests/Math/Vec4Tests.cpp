@@ -805,4 +805,25 @@ TEST_SUITE("Vec4Tests")
 			CHECK(diff < 5.0e-3f);
 		}
 	}
+
+	TEST_CASE("TestDifferenceOfProducts")
+	{
+		Vec4 a = Vec4(33962.035f, 33962.0351f, 33962.0352f, 33962.0353f), b = Vec4(-30438.8f, -30438.801f, -30438.802f, -30438.803f), c = Vec4(41563.4f, 41563.401f, 41563.402f, 41563.403f), d = Vec4(-24871.969f, -24871.970f, -24871.971f, -24871.972f);
+		Vec4 result = Vec4::sDifferenceOfProducts(a, b, c, d);
+		double expected[4] = {
+			double(a.GetX()) * double(b.GetX()) - double(c.GetX()) * double(d.GetX()),
+			double(a.GetY()) * double(b.GetY()) - double(c.GetY()) * double(d.GetY()),
+			double(a.GetZ()) * double(b.GetZ()) - double(c.GetZ()) * double(d.GetZ()),
+			double(a.GetW()) * double(b.GetW()) - double(c.GetW()) * double(d.GetW())
+		};
+		CHECK(expected[0] == -75.165603637695312);
+		CHECK(expected[1] == 103.16904449462891);
+		CHECK(expected[2] == 36.836944580078125);
+		CHECK(expected[3] == 118.01546478271484);
+	#ifdef JPH_USE_FMADD
+		CHECK(result == Vec4(float(expected[0]), float(expected[1]), float(expected[2]), float(expected[3])));
+	#else
+		CHECK(result == Vec4(-128.0f, 64.0f, 0.0f, 64.0f)); // The products are in the order of 10^9, so the subtraction causes a large loss of precision and we get a very different result. This is expected when fused multiply add instructions are not available.
+	#endif
+	}
 }
