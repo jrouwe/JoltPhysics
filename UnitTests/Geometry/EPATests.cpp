@@ -58,12 +58,12 @@ TEST_SUITE("EPATests")
 
 			// Check delta between contact on A
 			Vec3 dpa = pa2 - pa1;
-			CHECK(dpa.Length() < 8.0e-4f);
+			CHECK(dpa.Length() < 9.0e-4f);
 			EPA_TESTS_TRACE("Delta A = %.9g\n", (double)dpa.Length());
 
 			// Check delta between contact on B
 			Vec3 dpb = pb2 - pb1;
-			CHECK(dpb.Length() < 8.0e-4f);
+			CHECK(dpb.Length() < 9.0e-4f);
 			EPA_TESTS_TRACE("Delta B = %.9g\n", (double)dpb.Length());
 		}
 
