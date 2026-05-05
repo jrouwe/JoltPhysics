@@ -437,6 +437,7 @@ public:
 	static inline bool					sDrawConstraints = false;								///< Draw the current state of the constraints for iteration 0 when creating them
 	static inline bool					sDrawWalkStairs = false;								///< Draw the state of the walk stairs algorithm
 	static inline bool					sDrawStickToFloor = false;								///< Draw the state of the stick to floor algorithm
+	static inline bool					sDrawSupportingVolume = false;							///< Draw the supporting volume plane
 #endif
 
 	/// Uniquely identifies a contact between a character and another body or character

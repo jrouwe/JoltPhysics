@@ -1397,6 +1397,12 @@ void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadP
 	if (inDeltaTime <= 0.0f)
 		return;
 
+#ifdef JPH_DEBUG_RENDERER
+	// Draw supporting volume pre movement
+	if (sDrawSupportingVolume)
+		DebugRenderer::sInstance->DrawPlane(mPosition - mSupportingVolume.GetConstant() * mSupportingVolume.GetNormal(), mSupportingVolume.GetNormal(), Color::sBlue, 1.0f);
+#endif // JPH_DEBUG_RENDERER
+
 	StartTrackingContactChanges();
 	JPH_SCOPE_EXIT([this]() { FinishTrackingContactChanges(); });
 

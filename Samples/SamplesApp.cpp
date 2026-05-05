@@ -612,6 +612,7 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 				mDebugUI->CreateCheckBox(draw_character, "Draw Character Virtual Constraints", CharacterVirtual::sDrawConstraints, [](UICheckBox::EState inState) { CharacterVirtual::sDrawConstraints = inState == UICheckBox::STATE_CHECKED; });
 				mDebugUI->CreateCheckBox(draw_character, "Draw Character Virtual Walk Stairs", CharacterVirtual::sDrawWalkStairs, [](UICheckBox::EState inState) { CharacterVirtual::sDrawWalkStairs = inState == UICheckBox::STATE_CHECKED; });
 				mDebugUI->CreateCheckBox(draw_character, "Draw Character Virtual Stick To Floor", CharacterVirtual::sDrawStickToFloor, [](UICheckBox::EState inState) { CharacterVirtual::sDrawStickToFloor = inState == UICheckBox::STATE_CHECKED; });
+				mDebugUI->CreateCheckBox(draw_character, "Draw Character Supporting Volume", CharacterVirtual::sDrawSupportingVolume, [](UICheckBox::EState inState) { CharacterVirtual::sDrawSupportingVolume = inState == UICheckBox::STATE_CHECKED; });
 				mDebugUI->ShowMenu(draw_character);
 			});
 			mDebugUI->CreateTextButton(drawing_options, "Draw Soft Body", [this](){
