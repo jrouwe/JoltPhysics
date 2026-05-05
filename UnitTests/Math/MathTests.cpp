@@ -132,7 +132,7 @@ TEST_SUITE("Mat44Tests")
 
 	TEST_CASE("TestDifferenceOfProducts")
 	{
-		float a = 33962.035f, b = -30438.8f, c = 41563.4f, d = -24871.969f;
+		volatile float a = 33962.035f, b = -30438.8f, c = 41563.4f, d = -24871.969f;
 		float result = DifferenceOfProducts(a, b, c, d);
 		double expected = double(a) * double(b) - double(c) * double(d);
 		CHECK(expected == -75.165603637695312);
