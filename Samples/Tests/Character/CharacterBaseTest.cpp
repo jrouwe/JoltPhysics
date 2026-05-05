@@ -342,6 +342,20 @@ void CharacterBaseTest::Initialize()
 			mBodyInterface->CreateAndAddBody(BodyCreationSettings(funnel, RVec3(10.0f, 0.1f, 5.0f) + rotation * Vec3(0.2f, 0, 0), rotation * Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(40.0f)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 		}
 
+		// Create mesh with a steep slope and an acute angle with triangles that face downwards
+		{
+			TriangleList triangles;
+			triangles.push_back(Triangle(Vec3(-0.5f, 0, 0), Vec3(0.5f, 0, 0), Vec3(-0.5f, 1.1f, -1)));
+			triangles.push_back(Triangle(Vec3(0.5f, 0, 0), Vec3(0.5f, 1.1f, -1), Vec3(-0.5f, 1.1f, -1)));
+			triangles.push_back(Triangle(Vec3(-0.5f, 0, 0), Vec3(-0.5f, 0, -1), Vec3(0.5f, 0, 0)));
+			triangles.push_back(Triangle(Vec3(0.5f, 0, 0), Vec3(-0.5f, 0, -1), Vec3(0.5f, 0, -1)));
+
+			MeshShapeSettings mesh(triangles);
+			mesh.SetEmbedded();
+			BodyCreationSettings wall(&mesh, RVec3(12.5f, 0.5f, 4.0f), Quat::sRotation(Vec3::sAxisY(), JPH_PI), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(wall, EActivation::DontActivate);
+		}
+
 		// Create small bumps
 		{
 			BodyCreationSettings step(new BoxShape(Vec3(2.0f, 0.5f * cSmallBumpHeight, 0.5f * cSmallBumpWidth), 0.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
