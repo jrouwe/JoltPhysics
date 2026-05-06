@@ -92,7 +92,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// as the character only reports contacts as it is sliding through the world. If 2 sub shapes hit at the same time then
 	// most likely only one will be reported as it stops the character and prevents the 2nd one from being seen.
 	uint num_contacts = 0;
-	for (const CharacterVirtual::Contact &c : mCharacter->GetActiveContacts())
+	for (const CharacterContact &c : mCharacter->GetActiveContacts())
 		if (c.mHadCollision)
 		{
 			JPH_ASSERT(std::find(mActiveContacts.begin(), mActiveContacts.end(), c) != mActiveContacts.end());
@@ -241,6 +241,15 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 	inStream.Read(mActiveContacts);
 }
 
+bool CharacterVirtualTest::OnContactValidate(const CharacterVirtual *inCharacter, const CharacterContact &inContact)
+{
+	// Only accept back facing contacts if the surface normal (which was flipped) points outside of a cone of 30 degrees from the up axis (to prevent being able to stand on upside down faces)
+	// This prevents us from sticking on the bottom plane of the 'steep slope and an acute angle with triangles that face downwards'
+	// (but you can use a different condition like tagging materials to indicate which ones are double sided)
+	return !inContact.mIsBackFacingContact
+		|| inContact.mSurfaceNormal.Dot(inCharacter->GetUp()) < 0.866025f;
+}
+
 void CharacterVirtualTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
 {
 	// Apply artificial velocity to the character when standing on the conveyor belt
@@ -248,17 +257,17 @@ void CharacterVirtualTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharac
 		ioLinearVelocity += Vec3(0, 0, 2);
 }
 
-void CharacterVirtualTest::OnContactCommon(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnContactCommon(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings)
 {
 	// Draw a box around the character when it enters the sensor
-	if (inBodyID2 == mSensorBody)
+	if (inContact.mBodyB == mSensorBody)
 	{
 		AABox box = inCharacter->GetShape()->GetWorldSpaceBounds(inCharacter->GetCenterOfMassTransform(), Vec3::sOne());
 		mDebugRenderer->DrawBox(box, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 	}
 
 	// Dynamic boxes on the ramp go through all permutations
-	Array<BodyID>::const_iterator i = find(mRampBlocks.begin(), mRampBlocks.end(), inBodyID2);
+	Array<BodyID>::const_iterator i = find(mRampBlocks.begin(), mRampBlocks.end(), inContact.mBodyB);
 	if (i != mRampBlocks.end())
 	{
 		size_t index = i - mRampBlocks.begin();
@@ -269,36 +278,35 @@ void CharacterVirtualTest::OnContactCommon(const CharacterVirtual *inCharacter, 
 	// If we encounter an object that can push the player, enable sliding
 	if (inCharacter == mCharacter
 		&& ioSettings.mCanPushCharacter
-		&& mPhysicsSystem->GetBodyInterface().GetMotionType(inBodyID2) != EMotionType::Static)
+		&& inContact.mMotionTypeB != EMotionType::Static)
 		mAllowSliding = true;
 }
 
-void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings)
 {
-	OnContactCommon(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+	OnContactCommon(inCharacter, inContact, ioSettings);
 
 	if (inCharacter == mCharacter)
 	{
 	#ifdef CHARACTER_TRACE_CONTACTS
 		Trace("Contact added with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
 	#endif
-		CharacterVirtual::ContactKey c(inBodyID2, inSubShapeID2);
-		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), c) != mActiveContacts.end())
+		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), inContact) != mActiveContacts.end())
 			FatalError("Got an add contact that should have been a persisted contact");
-		mActiveContacts.push_back(c);
+		mActiveContacts.push_back(inContact);
 	}
 }
 
-void CharacterVirtualTest::OnContactPersisted(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnContactPersisted(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings)
 {
-	OnContactCommon(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+	OnContactCommon(inCharacter, inContact, ioSettings);
 
 	if (inCharacter == mCharacter)
 	{
 	#ifdef CHARACTER_TRACE_CONTACTS
 		Trace("Contact persisted with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
 	#endif
-		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inBodyID2, inSubShapeID2)) == mActiveContacts.end())
+		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), inContact) == mActiveContacts.end())
 			FatalError("Got a persisted contact that should have been an add contact");
 	}
 }
@@ -310,18 +318,18 @@ void CharacterVirtualTest::OnContactRemoved(const CharacterVirtual *inCharacter,
 	#ifdef CHARACTER_TRACE_CONTACTS
 		Trace("Contact removed with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
 	#endif
-		ContactSet::iterator it = std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inBodyID2, inSubShapeID2));
+		ContactSet::iterator it = std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterContactKey(inBodyID2, inSubShapeID2));
 		if (it == mActiveContacts.end())
 			FatalError("Got a remove contact that has not been added");
 		mActiveContacts.erase(it);
 	}
 }
 
-void CharacterVirtualTest::OnCharacterContactCommon(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnCharacterContactCommon(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings)
 {
 	// Characters can only be pushed in their own update
 	if (sPlayerCanPushOtherCharacters)
-		ioSettings.mCanPushCharacter = sOtherCharactersCanPushPlayer || inOtherCharacter == mCharacter;
+		ioSettings.mCanPushCharacter = sOtherCharactersCanPushPlayer || inContact.mCharacterB == mCharacter;
 	else if (sOtherCharactersCanPushPlayer)
 		ioSettings.mCanPushCharacter = inCharacter == mCharacter;
 	else
@@ -332,32 +340,31 @@ void CharacterVirtualTest::OnCharacterContactCommon(const CharacterVirtual *inCh
 		mAllowSliding = true;
 }
 
-void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings)
 {
-	OnCharacterContactCommon(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+	OnCharacterContactCommon(inCharacter, inContact, ioSettings);
 
 	if (inCharacter == mCharacter)
 	{
 	#ifdef CHARACTER_TRACE_CONTACTS
 		Trace("Contact added with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
 	#endif
-		CharacterVirtual::ContactKey c(inOtherCharacter->GetID(), inSubShapeID2);
-		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), c) != mActiveContacts.end())
+		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), inContact) != mActiveContacts.end())
 			FatalError("Got an add contact that should have been a persisted contact");
-		mActiveContacts.push_back(c);
+		mActiveContacts.push_back(inContact);
 	}
 }
 
-void CharacterVirtualTest::OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings)
 {
-	OnCharacterContactCommon(inCharacter, inOtherCharacter, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
+	OnCharacterContactCommon(inCharacter, inContact, ioSettings);
 
 	if (inCharacter == mCharacter)
 	{
 	#ifdef CHARACTER_TRACE_CONTACTS
 		Trace("Contact persisted with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
 	#endif
-		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inOtherCharacter->GetID(), inSubShapeID2)) == mActiveContacts.end())
+		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), inContact) == mActiveContacts.end())
 			FatalError("Got a persisted contact that should have been an add contact");
 	}
 }
@@ -369,7 +376,7 @@ void CharacterVirtualTest::OnCharacterContactRemoved(const CharacterVirtual *inC
 	#ifdef CHARACTER_TRACE_CONTACTS
 		Trace("Contact removed with character %08x, sub shape %08x", inOtherCharacterID.GetValue(), inSubShapeID2.GetValue());
 	#endif
-		ContactSet::iterator it = std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterVirtual::ContactKey(inOtherCharacterID, inSubShapeID2));
+		ContactSet::iterator it = std::find(mActiveContacts.begin(), mActiveContacts.end(), CharacterContactKey(inOtherCharacterID, inSubShapeID2));
 		if (it == mActiveContacts.end())
 			FatalError("Got a remove contact that has not been added");
 		mActiveContacts.erase(it);

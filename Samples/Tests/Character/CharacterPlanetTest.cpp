@@ -198,7 +198,7 @@ void CharacterPlanetTest::OnStep(const PhysicsStepListenerContext &inContext)
 	}
 }
 
-void CharacterPlanetTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterPlanetTest::OnContactAdded(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings)
 {
 	// We don't want the spheres to push the player character
 	ioSettings.mCanPushCharacter = false;

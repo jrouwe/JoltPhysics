@@ -352,8 +352,8 @@ void CharacterBaseTest::Initialize()
 
 			MeshShapeSettings mesh(triangles);
 			mesh.SetEmbedded();
-			BodyCreationSettings wall(&mesh, RVec3(12.5f, 0.5f, 4.0f), Quat::sRotation(Vec3::sAxisY(), JPH_PI), EMotionType::Static, Layers::NON_MOVING);
-			mBodyInterface->CreateAndAddBody(wall, EActivation::DontActivate);
+			BodyCreationSettings body(&mesh, RVec3(12.5f, 0.5f, 4.0f), Quat::sRotation(Vec3::sAxisY(), JPH_PI), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(body, EActivation::DontActivate);
 		}
 
 		// Create small bumps
