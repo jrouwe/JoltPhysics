@@ -33,26 +33,26 @@ public:
 		SubShapeID					mSubShapeID2;
 	};
 
-	virtual bool					OnContactValidate(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) override
+	virtual bool					OnContactValidate(const CharacterVirtual *inCharacter, const CharacterContact &inContact) override
 	{
-		mLog.push_back({ EType::ValidateBody, inCharacter, inBodyID2, CharacterID(), inSubShapeID2 });
+		mLog.push_back({ EType::ValidateBody, inCharacter, inContact.mBodyB, CharacterID(), inContact.mSubShapeIDB });
 		return true;
 	}
 
-	virtual bool					OnCharacterContactValidate(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2) override
+	virtual bool					OnCharacterContactValidate(const CharacterVirtual *inCharacter, const CharacterContact &inContact) override
 	{
-		mLog.push_back({ EType::ValidateCharacter, inCharacter, BodyID(), inOtherCharacter->GetID(), inSubShapeID2 });
+		mLog.push_back({ EType::ValidateCharacter, inCharacter, BodyID(), inContact.mCharacterB->GetID(), inContact.mSubShapeIDB });
 		return true;
 	}
 
-	virtual void					OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	virtual void					OnContactAdded(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings) override
 	{
-		mLog.push_back({ EType::AddBody, inCharacter, inBodyID2, CharacterID(), inSubShapeID2 });
+		mLog.push_back({ EType::AddBody, inCharacter, inContact.mBodyB, CharacterID(), inContact.mSubShapeIDB });
 	}
 
-	virtual void					OnContactPersisted(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	virtual void					OnContactPersisted(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings) override
 	{
-		mLog.push_back({ EType::PersistBody, inCharacter, inBodyID2, CharacterID(), inSubShapeID2 });
+		mLog.push_back({ EType::PersistBody, inCharacter, inContact.mBodyB, CharacterID(), inContact.mSubShapeIDB });
 	}
 
 	virtual void					OnContactRemoved(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) override
@@ -60,14 +60,14 @@ public:
 		mLog.push_back({ EType::RemoveBody, inCharacter, inBodyID2, CharacterID(), inSubShapeID2 });
 	}
 
-	virtual void					OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	virtual void					OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings) override
 	{
-		mLog.push_back({ EType::AddCharacter, inCharacter, BodyID(), inOtherCharacter->GetID(), inSubShapeID2 });
+		mLog.push_back({ EType::AddCharacter, inCharacter, BodyID(), inContact.mCharacterB->GetID(), inContact.mSubShapeIDB });
 	}
 
-	virtual void					OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	virtual void					OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings) override
 	{
-		mLog.push_back({ EType::PersistCharacter, inCharacter, BodyID(), inOtherCharacter->GetID(), inSubShapeID2 });
+		mLog.push_back({ EType::PersistCharacter, inCharacter, BodyID(), inContact.mCharacterB->GetID(), inContact.mSubShapeIDB });
 	}
 
 	virtual void					OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterID &inOtherCharacterID, const SubShapeID &inSubShapeID2) override
