@@ -130,8 +130,12 @@ TEST_SUITE("Mat44Tests")
 		}
 	}
 
+	JPH_SUPPRESS_WARNING_PUSH
+	JPH_MSVC_SUPPRESS_WARNING(4746) // volatile access of 'X' is subject to / volatile : <iso | ms> setting; consider using __iso_volatile_load / store intrinsic functions
+
 	TEST_CASE("TestDifferenceOfProducts")
 	{
+		// Mark 'volatile' to try to prevent the compiler from doing the calculation at compile time
 		volatile float a = 33962.035f, b = -30438.8f, c = 41563.4f, d = -24871.969f;
 		float result = DifferenceOfProducts(a, b, c, d);
 		double expected = double(a) * double(b) - double(c) * double(d);
@@ -142,4 +146,6 @@ TEST_SUITE("Mat44Tests")
 		CHECK(result == -128.0f); // The products are in the order of 10^9, so the subtraction causes a large loss of precision and we get a very different result. This is expected when fused multiply add instructions are not available.
 	#endif
 	}
+
+	JPH_SUPPRESS_WARNING_POP
 }
