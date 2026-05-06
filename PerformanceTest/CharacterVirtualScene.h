@@ -200,23 +200,23 @@ public:
 	}
 
 	// See: CharacterContactListener
-	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings) override
 	{
 		HashCombine(mHash, 1);
 		HashCombine(mHash, inCharacter->GetID());
-		HashCombine(mHash, inBodyID2);
-		HashCombine(mHash, inSubShapeID2.GetValue());
-		HashCombine(mHash, inContactPosition);
-		HashCombine(mHash, inContactNormal);
+		HashCombine(mHash, inContact.mBodyB);
+		HashCombine(mHash, inContact.mSubShapeIDB.GetValue());
+		HashCombine(mHash, inContact.mPosition);
+		HashCombine(mHash, inContact.mContactNormal);
 	}
-	virtual void			OnContactPersisted(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	virtual void			OnContactPersisted(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings) override
 	{
 		HashCombine(mHash, 2);
 		HashCombine(mHash, inCharacter->GetID());
-		HashCombine(mHash, inBodyID2);
-		HashCombine(mHash, inSubShapeID2.GetValue());
-		HashCombine(mHash, inContactPosition);
-		HashCombine(mHash, inContactNormal);
+		HashCombine(mHash, inContact.mBodyB);
+		HashCombine(mHash, inContact.mSubShapeIDB.GetValue());
+		HashCombine(mHash, inContact.mPosition);
+		HashCombine(mHash, inContact.mContactNormal);
 	}
 	virtual void			OnContactRemoved(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) override
 	{
@@ -225,23 +225,23 @@ public:
 		HashCombine(mHash, inBodyID2);
 		HashCombine(mHash, inSubShapeID2.GetValue());
 	}
-	virtual void			OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	virtual void			OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings) override
 	{
 		HashCombine(mHash, 4);
 		HashCombine(mHash, inCharacter->GetID());
-		HashCombine(mHash, inOtherCharacter->GetID());
-		HashCombine(mHash, inSubShapeID2.GetValue());
-		HashCombine(mHash, inContactPosition);
-		HashCombine(mHash, inContactNormal);
+		HashCombine(mHash, inContact.mCharacterB->GetID());
+		HashCombine(mHash, inContact.mSubShapeIDB.GetValue());
+		HashCombine(mHash, inContact.mPosition);
+		HashCombine(mHash, inContact.mContactNormal);
 	}
-	virtual void			OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override
+	virtual void			OnCharacterContactPersisted(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings) override
 	{
 		HashCombine(mHash, 5);
 		HashCombine(mHash, inCharacter->GetID());
-		HashCombine(mHash, inOtherCharacter->GetID());
-		HashCombine(mHash, inSubShapeID2.GetValue());
-		HashCombine(mHash, inContactPosition);
-		HashCombine(mHash, inContactNormal);
+		HashCombine(mHash, inContact.mCharacterB->GetID());
+		HashCombine(mHash, inContact.mSubShapeIDB.GetValue());
+		HashCombine(mHash, inContact.mPosition);
+		HashCombine(mHash, inContact.mContactNormal);
 	}
 	virtual void			OnCharacterContactRemoved(const CharacterVirtual *inCharacter, const CharacterID &inOtherCharacterID, const SubShapeID &inSubShapeID2) override
 	{

@@ -46,7 +46,7 @@ public:
 	virtual void			OnStep(const PhysicsStepListenerContext &inContext) override;
 
 	// See: CharacterContactListener
-	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override;
+	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const CharacterContact &inContact, CharacterContactSettings &ioSettings) override;
 
 private:
 	// Planet size
