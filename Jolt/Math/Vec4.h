@@ -319,7 +319,7 @@ public:
 	};
 };
 
-static_assert(std::is_trivial<Vec4>(), "Is supposed to be a trivial type!");
+static_assert(std::is_trivially_default_constructible<Vec4>() && std::is_trivially_copyable<Vec4>(), "Is supposed to be a trivial type!");
 
 JPH_NAMESPACE_END
 

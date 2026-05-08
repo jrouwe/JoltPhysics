@@ -307,7 +307,7 @@ public:
 	};
 };
 
-static_assert(std::is_trivial<Vec3>(), "Is supposed to be a trivial type!");
+static_assert(std::is_trivially_default_constructible<Vec3>() && std::is_trivially_copyable<Vec3>(), "Is supposed to be a trivial type!");
 
 JPH_NAMESPACE_END
 
