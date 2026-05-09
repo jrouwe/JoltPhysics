@@ -276,6 +276,9 @@ int main(int argc, char** argv)
 	// Start profiling this program
 	JPH_PROFILE_START("Main");
 
+	// Start the determinism log
+	JPH_DET_LOG_OPEN();
+
 	// Trace header
 	Trace("Motion Quality, Thread Count, Steps / Second, Hash");
 
@@ -498,6 +501,9 @@ int main(int argc, char** argv)
 	delete Factory::sInstance;
 	Factory::sInstance = nullptr;
 
+	// End the determinism log
+	JPH_DET_LOG_CLOSE();
+
 	// End profiling this program
 	JPH_PROFILE_END();
 
@@ -509,6 +515,11 @@ int main(int argc, char** argv)
 // Main entry point for android
 void android_main(struct android_app *ioApp)
 {
+#ifdef JPH_ENABLE_DETERMINISM_LOG
+    // Determine base path for performance log
+	DeterminismLog::sBasePath = ioApp->activity->externalDataPath;
+#endif
+
 	// Run the regular main function
 	const char *args[] = { "Unused", "-s=ConvexVsMesh", "-t=max" };
 	main(size(args), (char **)args);
