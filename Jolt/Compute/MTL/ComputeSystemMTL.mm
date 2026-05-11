@@ -71,7 +71,17 @@ ComputeShaderResult ComputeSystemMTL::CreateComputeShader(const char *inName, ui
 	// Create the pipeline
 	NSError *error = nil;
 	MTLComputePipelineReflection *reflection = nil;
-	id<MTLComputePipelineState> pipeline_state = [mDevice newComputePipelineStateWithFunction: function options: MTLPipelineOptionBindingInfo | MTLPipelineOptionBufferTypeInfo reflection: &reflection error: &error];
+	// Note: MTLPipelineOptionBindingInfo was introduced in iOS 17 / macOS 14 SDK
+	// (renamed from MTLPipelineOptionArgumentInfo). Fall back to the old name on
+	// older SDKs so the file still compiles with Xcode <= 15.x toolchains.
+	#if (defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 170000) \
+		|| (defined(__MAC_OS_X_VERSION_MAX_ALLOWED) && __MAC_OS_X_VERSION_MAX_ALLOWED >= 140000) \
+		|| (defined(__TV_OS_VERSION_MAX_ALLOWED) && __TV_OS_VERSION_MAX_ALLOWED >= 170000)
+		MTLPipelineOption pipeline_options = MTLPipelineOptionBindingInfo | MTLPipelineOptionBufferTypeInfo;
+	#else
+		MTLPipelineOption pipeline_options = MTLPipelineOptionArgumentInfo | MTLPipelineOptionBufferTypeInfo;
+	#endif
+	id<MTLComputePipelineState> pipeline_state = [mDevice newComputePipelineStateWithFunction: function options: pipeline_options reflection: &reflection error: &error];
 	if (error != nil || pipeline_state == nil)
 	{
 		result.SetError("Failed to create compute pipeline");
