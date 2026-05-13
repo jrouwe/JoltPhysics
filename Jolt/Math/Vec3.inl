@@ -1009,6 +1009,9 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	Type shuf = _mm_movehdup_ps(mul);
 	Type sums = _mm_add_ps(mul, shuf);
 	shuf = _mm_movehl_ps(mul, mul);
+#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+	shuf = _mm_add_ps(_mm_setzero_ps(), shuf);
+#endif
 	sums = _mm_add_ps(sums, shuf);
 	Type len_sq = _mm_shuffle_ps(sums, sums, _MM_SHUFFLE(0, 0, 0, 0));
 	// clang with '-ffast-math' (which you should not use!) can generate _mm_rsqrt_ps
