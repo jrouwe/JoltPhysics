@@ -1166,7 +1166,10 @@ float Vec3::ReduceAdd() const
 	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(v, zeros, 3);
 	return __riscv_vfmv_f_s_f32m1_f32(sum);
 #else
-	return (mF32[0] + mF32[1]) + mF32[2];
+	float sum = 0.0f;
+	for (int i = 0; i < 3; i++)
+		sum += mF32[i];
+	return sum;
 #endif
 }
 
