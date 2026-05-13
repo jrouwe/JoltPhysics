@@ -356,8 +356,6 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	device_create_info.queueCreateInfoCount = num_queues;
 	device_create_info.pQueueCreateInfos = queue_create_info;
-	device_create_info.enabledLayerCount = instance_create_info.enabledLayerCount;
-	device_create_info.ppEnabledLayerNames = instance_create_info.ppEnabledLayerNames;
 	device_create_info.enabledExtensionCount = uint32(required_device_extensions.size());
 	device_create_info.ppEnabledExtensionNames = required_device_extensions.data();
 	device_create_info.pNext = &enabled_features2;
