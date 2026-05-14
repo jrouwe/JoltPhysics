@@ -412,9 +412,9 @@ For an angular motor, the units are Newton Meters. The formula is Torque = Inert
 
 When settings the force or torque limits to [-FLT_MAX, FLT_MAX] a velocity motor will accelerate the bodies to the desired relative velocity in a single time step (if no other forces act on those bodies).
 
-How a Position or PositionAndVelocity motor works can be configured through MotorSettings::mSpringSettings.mMode (see ESpringMode). They can currently work in 3 different ways:
+How a Position or PositionAndVelocity motor works can be configured through MotorSettings::mSpringSettings.mMode (see [ESpringMode](@ref ESpringMode)). They can currently work in 3 different ways:
 
-### Stiffness and Damping (ESpringMode::StiffnessAndDamping) {#stiffness-and-damping}
+### Stiffness and Damping {#stiffness-and-damping}
 
 This uses the traditional stiffness and damping parameters of a dampened spring.
 For a linear spring the equation is: force = stiffness * (target_position - current_position) + damping * (target_velocity - current_velocity).
@@ -425,7 +425,7 @@ Note that stiffness values are large numbers. To calculate a ballpark value for 
 force = stiffness * delta_spring_length = mass * gravity <=> stiffness = mass * gravity / delta_spring_length.
 So if your object weighs 1500 kg and the spring compresses by 2 meters, you need a stiffness in the order of 1500 * 9.81 / 2 ~ 7500 N/m.
 
-### Mass Normalized Stiffness and Damping (ESpringMode::MassNormalizedStiffnessAndDamping) {#mass-normalized-stiffness-and-damping}
+### Mass Normalized Stiffness and Damping {#mass-normalized-stiffness-and-damping}
 
 The linear spring equation becomes: effective_mass * (stiffness * (target_position - current_position) + damping * (target_velocity - current_velocity)).
 The angular spring equation becomes: effective_inertia * (stiffness * (target_angle - current_angle) + damping * (target_angular_velocity - current_angular_velocity)).
@@ -434,7 +434,7 @@ Units of stiffness are 1 / s^2 for a linear spring and 1 / rad s^2 for an angula
 
 Effective mass / inertia is the mass / inertia as seen by the constraint. Since the stiffness is multiplied by the effective mass / inertia of the constraint, you can use much smaller stiffness values and they will be mass independent. Effectively you specify the linear / angular acceleration, so this mode is also known as acceleration mode.
 
-### Frequency and Damping (ESpringMode::FrequencyAndDamping) {#frequency-and-damping}
+### Frequency and Damping {#frequency-and-damping}
 
 In this case you specify the spring by its natural frequency (Hz) and damping ratio (no units). They are implemented as described in [Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011](https://box2d.org/files/ErinCatto_SoftConstraints_GDC2011.pdf).
 
@@ -787,7 +787,7 @@ Jolt uses reference counting for a number of its classes (everything that inheri
 * SkeletalAnimation
 * SkeletonMapper
 
-Reference counting objects start with a reference count of 0. If you want to keep ownership of the object, you need to call [object->AddRef()](@ref RefTarget::AddRef), this will increment the reference count. If you want to release ownership you call [object->ReleaseRef()](@ref RefTarget::Release), this will decrement the reference count and if the reference count reaches 0 the object will be destroyed. If, after newing, you pass a reference counted object on to another object (e.g. a ShapeSettings to a CompoundShapeSettings or a Shape to a Body) then that other object will take a reference, in that case it is not needed take a reference yourself beforehand so you can skip the calls to ```AddRef/Release```. Note that it is also possible to do ```auto x = new XXX``` followed by ```delete x``` for a reference counted object if no one ever took a reference. The safest way of working with reference counting objects is to use the Ref or RefConst classes, these automatically manage the reference count for you when assigning a new value or on destruction:
+Reference counting objects start with a reference count of 0. If you want to keep ownership of the object, you need to call [object->AddRef()](@ref RefTarget::AddRef), this will increment the reference count. If you want to release ownership you call [object->Release()](@ref RefTarget::Release), this will decrement the reference count and if the reference count reaches 0 the object will be destroyed. If, after newing, you pass a reference counted object on to another object (e.g. a ShapeSettings to a CompoundShapeSettings or a Shape to a Body) then that other object will take a reference. In that case it is not needed take a reference yourself beforehand so you can skip the calls to ```AddRef/Release```. Note that it is also possible to do ```XXX *x = new XXX``` followed by ```delete x``` for a reference counted object if no one ever took a reference. The safest way of working with reference counting objects is to use the Ref or RefConst classes, these automatically manage the reference count for you when assigning a new value or on destruction:
 
 ```
 // Calls 'AddRef' to keep a reference the shape
