@@ -392,24 +392,51 @@ Contact constraints (when bodies collide) are not handled through the [Constrain
 
 ## Constraint Motors {#constraint-motors}
 
-Most of the constraints support motors (see [MotorSettings](@ref MotorSettings)) which allow you to apply forces/torques on two constrained bodies to drive them to a relative position/orientation. There are two types of motors:
+Most of the constraints support motors (see [MotorSettings](@ref MotorSettings)) which allow you to apply forces / torques on two constrained bodies to drive them to a relative position / orientation. There are two types of motors:
 * Linear motors: These motors drive the relative position between two bodies. A linear motor would, for example, slide a body along a straight line when you use a slider constraint.
 * Angular motors: These motors drive the relative rotation between two bodies. An example is a hinge constraint. The motor drives the rotation along the hinge axis.
 
-Motors can have three states (see [EMotorState](@ref EMotorState) or e.g. SliderConstraint::SetMotorState):
-* Off: The motor is not doing any work.
-* Velocity: This type of motor drives the relative velocity between bodies. For a slider constraint, you would push the bodies towards/away from each other with constant velocity. For a hinge constraint, you would rotate the bodies relative to each other with constant velocity. Set the target velocity through e.g. SliderConstraint::SetTargetVelocity / HingeConstraint::SetTargetAngularVelocity.
-* Position: This type of motor drives the relative position between bodies. For a slider constraint, you can specify the relative distance you want to achieve between the bodies. For a hinge constraint you can specify the relative angle you want to achieve between the bodies. Set the target position through e.g. SliderConstraint::SetTargetPosition / HingeConstraint::SetTargetAngle.
+The applied force of a motor is proportional to: stiffness * (target_position - current_position) + damping * (target_velocity - current_velocity).
 
-Motors apply a force (when driving position) or torque (when driving angle) every simulation step to achieve the desired velocity or position. You can control the maximum force/torque that the motor can apply through MotorSettings::mMinForceLimit, MotorSettings::mMaxForceLimit, MotorSettings::mMinTorqueLimit and MotorSettings::mMaxTorqueLimit. Note that if a motor is driving to a position, the torque limits are not used. If a constraint is driving to an angle, the force limits are not used.
+Motors can have three states (see [EMotorState](@ref EMotorState) or e.g. SliderConstraint::SetMotorState):
+* Off: The motor is not doing any work. In the equation above: stiffness = 0 and damping = 0.
+* Velocity: This type of motor drives the relative velocity between bodies. In the equation above: stiffness = 0 and damping = infinite. For a slider constraint, you would push the bodies towards / away from each other with constant velocity. For a hinge constraint, you would rotate the bodies relative to each other with constant velocity. Set the target velocity through e.g. SliderConstraint::SetTargetVelocity / HingeConstraint::SetTargetAngularVelocity.
+* Position: This type of motor drives the relative position between bodies. In the equation above: target_velocity = 0. For a slider constraint, you can specify the relative distance you want to achieve between the bodies. For a hinge constraint you can specify the relative angle you want to achieve between the bodies. Set the target position through e.g. SliderConstraint::SetTargetPosition / HingeConstraint::SetTargetAngle.
+* PositionAndVelocity: This type of motor drives both the position and velocity. This uses the full equation above.
+
+Motors apply a force (when driving position) or torque (when driving angle) every simulation step to achieve the desired velocity or position. You can control the maximum force / torque that the motor can apply through MotorSettings::mMinForceLimit, MotorSettings::mMaxForceLimit, MotorSettings::mMinTorqueLimit and MotorSettings::mMaxTorqueLimit. Note that if a motor is driving to a position, the torque limits are not used. If a constraint is driving to an angle, the force limits are not used.
 
 Usually the limits are symmetric, so you would set -mMinForceLimit = mMaxForceLimit. This way the motor can push at an equal rate as it can pull. If you would set the range to e.g. [0, FLT_MAX] then the motor would only be able to push in the positive direction. The units for the force limits are Newtons and the values can get pretty big. If your motor doesn't seem to do anything, chances are that you have set the value too low. Since Force = Mass * Acceleration you can calculate the approximate force that a motor would need to supply in order to be effective. Usually the range is set to [-FLT_MAX, FLT_MAX] which lets the motor achieve its target as fast as possible.
 
-For an angular motor, the units are Newton Meters. The formula is Torque = Inertia * Angular Acceleration. Inertia of a solid sphere is 2/5 * Mass * Radius^2. You can use this to get a sense of the amount of torque needed to get the angular acceleration you want. Again, you'd usually set the range to [-FLT_MAX, FLT_MAX] to not limit the motor.
+For an angular motor, the units are Newton Meters. The formula is Torque = Inertia * Angular Acceleration. Inertia of a solid sphere is 2 / 5 * Mass * Radius^2. You can use this to get a sense of the amount of torque needed to get the angular acceleration you want. Again, you'd usually set the range to [-FLT_MAX, FLT_MAX] to not limit the motor.
 
 When settings the force or torque limits to [-FLT_MAX, FLT_MAX] a velocity motor will accelerate the bodies to the desired relative velocity in a single time step (if no other forces act on those bodies).
 
-Position motors have two additional parameters: Frequency (MotorSettings::mSpringSettings.mFrequency, Hz) and damping (MotorSettings::mSpringSettings.mDamping, no units). They are implemented as described in [Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011](https://box2d.org/files/ErinCatto_SoftConstraints_GDC2011.pdf).
+How a Position or PositionAndVelocity motor works can be configured through MotorSettings::mSpringSettings.mMode (see ESpringMode). They can currently work in 3 different ways:
+
+### Stiffness and Damping (ESpringMode::StiffnessAndDamping) {#stiffness-and-damping}
+
+This uses the traditional stiffness and damping parameters of a dampened spring.
+For a linear spring the equation is: force = stiffness * (target_position - current_position) + damping * (target_velocity - current_velocity).
+For an angular spring it is: torque = stiffness * (target_angle - current_angle) + damping * (target_angular_velocity - current_angular_velocity).
+Units of stiffness are N / m for a linear spring and N m / rad for an angular spring. Units of damping are N s / m for a linear spring and N s m / rad for an angular spring.
+
+Note that stiffness values are large numbers. To calculate a ballpark value for the needed stiffness you can use:
+force = stiffness * delta_spring_length = mass * gravity <=> stiffness = mass * gravity / delta_spring_length.
+So if your object weighs 1500 kg and the spring compresses by 2 meters, you need a stiffness in the order of 1500 * 9.81 / 2 ~ 7500 N/m.
+
+### Mass Normalized Stiffness and Damping (ESpringMode::MassNormalizedStiffnessAndDamping) {#mass-normalized-stiffness-and-damping}
+
+The linear spring equation becomes: effective_mass * (stiffness * (target_position - current_position) + damping * (target_velocity - current_velocity)).
+The angular spring equation becomes: effective_inertia * (stiffness * (target_angle - current_angle) + damping * (target_angular_velocity - current_angular_velocity)).
+
+Units of stiffness are 1 / s^2 for a linear spring and 1 / rad s^2 for an angular spring. Units of damping are 1 / s for a linear spring and 1 / rad s for an angular spring.
+
+Effective mass / inertia is the mass / inertia as seen by the constraint. Since the stiffness is multiplied by the effective mass / inertia of the constraint, you can use much smaller stiffness values and they will be mass independent. Effectively you specify the linear / angular acceleration, so this mode is also known as acceleration mode.
+
+### Frequency and Damping (ESpringMode::FrequencyAndDamping) {#frequency-and-damping}
+
+In this case you specify the spring by its natural frequency (Hz) and damping ratio (no units). They are implemented as described in [Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011](https://box2d.org/files/ErinCatto_SoftConstraints_GDC2011.pdf).
 
 You can see a position motor as a spring between the target position and the rigid body. The force applied to reach the target is linear with the distance between current position and target position. When there is no damping, the position motor will cause the rigid body to oscillate around its target.
 
