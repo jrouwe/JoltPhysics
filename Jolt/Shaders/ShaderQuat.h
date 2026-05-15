@@ -46,10 +46,11 @@ inline JPH_Quat JPH_QuatDecompress(uint inValue)
 	const uint cNumBits = 9;
 	const uint cMask = (1u << cNumBits) - 1;
 	const uint cMaxValue = cMask - 1; // Need odd number of buckets to quantize to or else we can't encode 0
+	const int cHalfMaxValue = int(cMaxValue >> 1);
 	const float cScale = 2.0f * cOneOverSqrt2 / float(cMaxValue);
 
 	// Restore two components
-	float3 v3 = float3(float(inValue & cMask), float((inValue >> cNumBits) & cMask), float((inValue >> (2 * cNumBits)) & cMask)) * cScale - float3(cOneOverSqrt2, cOneOverSqrt2, cOneOverSqrt2);
+	float3 v3 = float3(float(int(inValue & cMask) - cHalfMaxValue), float(int((inValue >> cNumBits) & cMask) - cHalfMaxValue), float(int(inValue >> (2 * cNumBits)) & cMask) - cHalfMaxValue) * cScale;
 
 	// Restore the highest component
 	float4 v = float4(v3, sqrt(max(1.0f - dot(v3, v3), 0.0f)));

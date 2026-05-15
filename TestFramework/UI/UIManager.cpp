@@ -7,6 +7,7 @@
 #include <UI/UIManager.h>
 #include <UI/UIAnimationSlide.h>
 #include <Jolt/Core/Profiler.h>
+#include <Jolt/Core/FPException.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Font.h>
 
@@ -264,6 +265,10 @@ void UIManager::DrawQuad(int inX, int inY, int inWidth, int inHeight, const UITe
 
 	if (inQuad.mTexture != nullptr)
 	{
+		// UV calculations below can generate exceptions
+		FPExceptionDisableInvalid disable_invalid;
+		JPH_UNUSED(disable_invalid);
+
 		bool has_inner = inQuad.HasInnerPart();
 
 		Ref<RenderPrimitive> primitive = mRenderer->CreateRenderPrimitive(PipelineState::ETopology::Triangle);
