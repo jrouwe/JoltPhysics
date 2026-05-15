@@ -267,6 +267,7 @@ void UIManager::DrawQuad(int inX, int inY, int inWidth, int inHeight, const UITe
 	{
 		// UV calculations below can generate exceptions
 		FPExceptionDisableInvalid disable_invalid;
+		JPH_UNUSED(disable_invalid);
 
 		bool has_inner = inQuad.HasInnerPart();
 

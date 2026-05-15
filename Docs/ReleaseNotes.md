@@ -38,6 +38,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed `CharacterVirtual::GetFirstContactForSweep` crashing if the body that it hit was removed from another thread between `CastShape` and `GetTransformedShape`.
 * Fixed an issue that broke cross platform determinism between ARM64 and x64 builds when compiling with double precision.
 * Fixed some warnings when compiling with clang using C++26.
+* Fixed unit test failures + floating point exceptions in Samples when using MSVC 18.6.0.
 
 ## v5.5.0
 
