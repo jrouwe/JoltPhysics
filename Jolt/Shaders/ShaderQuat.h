@@ -50,7 +50,7 @@ inline JPH_Quat JPH_QuatDecompress(uint inValue)
 	const float cScale = 2.0f * cOneOverSqrt2 / float(cMaxValue);
 
 	// Restore two components
-	float3 v3 = float3(float(int(inValue & cMask) - cHalfMaxValue), float(int((inValue >> cNumBits) & cMask) - cHalfMaxValue), float((inValue >> (2 * cNumBits)) & cMask) - cHalfMaxValue) * cScale;
+	float3 v3 = float3(float(int(inValue & cMask) - cHalfMaxValue), float(int((inValue >> cNumBits) & cMask) - cHalfMaxValue), float(int(inValue >> (2 * cNumBits)) & cMask) - cHalfMaxValue) * cScale;
 
 	// Restore the highest component
 	float4 v = float4(v3, sqrt(max(1.0f - dot(v3, v3), 0.0f)));

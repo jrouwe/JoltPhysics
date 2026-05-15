@@ -1484,7 +1484,7 @@ Vec4 Vec4::sDecompressUnitVector(uint32 inValue)
 	constexpr float cScale = 2.0f * cOneOverSqrt2 / float(cMaxValue);
 
 	// Restore three components
-	Vec4 v = Vec4(float(int(inValue & cMask) - cHalfMaxValue), float(int((inValue >> cNumBits) & cMask) - cHalfMaxValue), float((inValue >> (2 * cNumBits)) & cMask) - cHalfMaxValue, 0) * cScale;
+	Vec4 v = Vec4(float(int(inValue & cMask) - cHalfMaxValue), float(int((inValue >> cNumBits) & cMask) - cHalfMaxValue), float(int(inValue >> (2 * cNumBits)) & cMask) - cHalfMaxValue, 0) * cScale;
 	JPH_ASSERT(v.GetW() == 0.0f);
 
 	// Restore the highest component
