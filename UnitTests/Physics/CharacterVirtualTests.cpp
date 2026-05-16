@@ -270,7 +270,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// After 1 step we should be on the slope
 			character.Step();
 			CHECK(character.mCharacter->GetGroundState() == expected_ground_state);
-			CHECK_APPROX_EQUAL(character.GetPosition(), position_after_1_step, 2.0e-6f);
+			CHECK_APPROX_EQUAL(character.GetPosition(), position_after_1_step, 1.0e-5f);
 
 			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
 			character.mCharacter->SetLinearVelocity(Vec3::sZero());
