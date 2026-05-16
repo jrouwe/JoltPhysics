@@ -229,7 +229,7 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: cmake_vs2026_cl.bat -DDOUBLE_PRECISION=${{matrix.double_precision}}
+      run: ./cmake_vs2026_cl.bat -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
       run: msbuild Build\VS2026_CL\JoltPhysics.slnx /property:Configuration=${{matrix.build_type}} -m
     - name: Test
@@ -251,7 +251,7 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: cmake_vs2026_cl.bat -DENABLE_OBJECT_STREAM=NO
+      run: ./cmake_vs2026_cl.bat -DENABLE_OBJECT_STREAM=NO
     - name: Build
       run: msbuild Build\VS2026_CL\JoltPhysics.slnx /property:Configuration=${{matrix.build_type}} -m
     - name: Test
@@ -273,7 +273,7 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: cmake_vs2026_cl.bat -DBUILD_SHARED_LIBS=Yes
+      run: ./cmake_vs2026_cl.bat -DBUILD_SHARED_LIBS=Yes
     - name: Build
       run: msbuild Build\VS2026_CL\JoltPhysics.slnx /property:Configuration=${{matrix.build_type}} -m
     - name: Test
@@ -295,7 +295,7 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: cmake_vs2026_cl_32bit.bat
+      run: ./cmake_vs2026_cl_32bit.bat
     - name: Build
       run: msbuild Build\VS2026_CL_32BIT\JoltPhysics.slnx /property:Configuration=${{matrix.build_type}} -m
     - name: Test
@@ -317,7 +317,7 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: cmake_vs2026_cl_arm.bat
+      run: ./cmake_vs2026_cl_arm.bat
     - name: Build
       run: msbuild Build\VS2026_CL_ARM\JoltPhysics.slnx /property:Configuration=${{matrix.build_type}} -m
 
@@ -340,7 +340,7 @@ jobs:
       run: choco install windows-sdk-11-version-22H2-all -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: cmake_vs2026_cl_arm_32bit.bat
+      run: ./cmake_vs2026_cl_arm_32bit.bat
     - name: Build
       run: msbuild Build\VS2026_CL_ARM_32BIT\JoltPhysics.slnx /property:Configuration=${{matrix.build_type}} -m
 
@@ -360,7 +360,7 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: cmake_vs2026_clang.bat -DDOUBLE_PRECISION=${{matrix.double_precision}}
+      run: ./cmake_vs2026_clang.bat -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
       run: msbuild Build\VS2026_Clang\JoltPhysics.slnx /property:Configuration=${{matrix.build_type}} -m
     - name: Test
