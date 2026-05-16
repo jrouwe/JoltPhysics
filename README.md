@@ -98,7 +98,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 
 ## Supported platforms
 
-* Windows (Desktop or UWP) x86/x64/ARM32/ARM64
+* Windows x86/x64/ARM64
 * Linux (tested on Ubuntu) x86/x64/ARM32/ARM64/RISC-V64/LoongArch64/PowerPC64LE
 * FreeBSD
 * Android x86/x64/ARM32/ARM64
@@ -125,7 +125,7 @@ Some algorithms used by Jolt are described in detail in my GDC 2022 talk: Archit
 
 ## Compiling
 
-* Compiles with Visual Studio 2019+, Clang 10+ or GCC 9+.
+* Compiles with Visual Studio 2022+, Clang 16+ or GCC 12+.
 * Uses C++ 17.
 * Depends only on the standard template library.
 * Doesn't use RTTI.
