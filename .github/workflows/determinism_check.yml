@@ -151,7 +151,7 @@ jobs:
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   msvc_cl:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     name: Visual Studio CL Determinism Check
 
     steps:
@@ -161,27 +161,27 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_vs2022_cl.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_vs2026_cl.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
-      run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=Distribution
+      run: msbuild Build\VS2026_CL\JoltPhysics.slnx /property:Configuration=Distribution
     - name: Unit Tests
-      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL/Distribution
       run: ./UnitTests.exe
     - name: Test ConvexVsMesh
-      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
     - name: Test Ragdoll
-      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
     - name: Test Pyramid
-      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid "-validate_hash=$env:PYRAMID_HASH"
     - name: Test CharacterVirtual
-      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL/Distribution
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual "-validate_hash=$env:CHARACTER_VIRTUAL_HASH"
 
   msvc_cl_32:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     name: Visual Studio CL 32-bit Determinism Check
 
     steps:
@@ -191,23 +191,23 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_vs2022_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_vs2026_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
-      run: msbuild Build\VS2022_CL_32BIT\JoltPhysics.sln /property:Configuration=Distribution
+      run: msbuild Build\VS2026_CL_32BIT\JoltPhysics.slnx /property:Configuration=Distribution
     - name: Unit Tests
-      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL_32BIT/Distribution
       run: ./UnitTests.exe
     - name: Test ConvexVsMesh
-      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL_32BIT/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
     - name: Test Ragdoll
-      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL_32BIT/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
     - name: Test Pyramid
-      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL_32BIT/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid "-validate_hash=$env:PYRAMID_HASH"
     - name: Test CharacterVirtual
-      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      working-directory: ${{github.workspace}}/Build/VS2026_CL_32BIT/Distribution
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual "-validate_hash=$env:CHARACTER_VIRTUAL_HASH"
 
   macos:
