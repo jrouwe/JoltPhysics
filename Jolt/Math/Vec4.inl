@@ -997,7 +997,7 @@ float Vec4::ReduceSum() const
 #elif defined(JPH_USE_NEON)
 	return vaddvq_f32(mValue);
 #elif defined(JPH_USE_RVV)
-	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mValue, 4);
+	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
 	return __riscv_vfmv_f_s_f32m1_f32(RVVSumElementsFloat32x4(v));
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
