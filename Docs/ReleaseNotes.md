@@ -36,6 +36,15 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Kinematic bodies were assigned to the same island as bodies that were constrained to / in contact with them. This led to larger simulation islands and impacted performance.
 * Fixed contact callbacks for body with motion quality `LinearCast` vs a soft body. Previously, the contacts would be reported accidentally through the regular `ContactListener`. Now they're properly reported through the `SoftBodyContactListener`.
 * Fixed `CharacterVirtual::GetFirstContactForSweep` crashing if the body that it hit was removed from another thread between `CastShape` and `GetTransformedShape`.
+* Fixed an issue that broke cross platform determinism between ARM64 and x64 builds when compiling with double precision.
+* Fixed some warnings when compiling with clang using C++26.
+* Fixed unit test failures + floating point exceptions in Samples when using MSVC 18.6.0.
+
+### Deprecated
+
+* Support for Universal Windows Platform (not properly supported on VS2026 anymore).
+* Support for Windows ARM32 (not properly supported on VS2026 anymore).
+* Support for compilers older than Visual Studio 2022, Clang 16 or GCC 12.
 
 ## v5.5.0
 

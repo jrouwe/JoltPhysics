@@ -234,8 +234,8 @@ DVec3::operator Vec3() const
 	__m128 low = _mm_cvtpd_ps(mValue.mLow);
 	__m128 high = _mm_cvtpd_ps(mValue.mHigh);
 	return _mm_shuffle_ps(low, high, _MM_SHUFFLE(1, 0, 1, 0));
-#elif defined(JPH_USE_NEON)
-	return vcvt_high_f32_f64(vcvtx_f32_f64(mValue.val[0]), mValue.val[1]);
+#elif defined(JPH_USE_NEON) && !defined(JPH_COMPILER_MSVC) // Disabled on MSVC because of internal compiler error: https://developercommunity.visualstudio.com/t/ARM64-NEON-vcvt_f32_f64-with-fp:fast-tr/11088003
+	return vcvt_high_f32_f64(vcvt_f32_f64(mValue.val[0]), mValue.val[1]);
 #elif defined(JPH_USE_RVV)
 	Vec3 v;
 	const vfloat64m2_t src = __riscv_vle64_v_f64m2(mF64, 3);

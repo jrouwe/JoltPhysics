@@ -1413,8 +1413,6 @@ void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllo
 
 void ContactConstraintManager::ConstraintIdxToConstraintOffset(uint32 *ioConstraintIdxBegin, const uint32 *inConstraintIdxEnd) const
 {
-	JPH_PROFILE_FUNCTION();
-
 	for (uint32 *i = ioConstraintIdxBegin; i < inConstraintIdxEnd; ++i)
 		*i = mConstraintIdxToOffset[*i];
 }

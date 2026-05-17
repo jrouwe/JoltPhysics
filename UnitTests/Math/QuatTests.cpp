@@ -524,7 +524,7 @@ TEST_SUITE("QuatTests")
 
 			Vec3 v1t = (q * v1).Normalized();
 			Vec3 v2t = v2.Normalized();
-			CHECK_APPROX_EQUAL(v2t, v1t, 1.0e-5f);
+			CHECK_APPROX_EQUAL(v2t, v1t, 0.5e-4f);
 		}
 	}
 

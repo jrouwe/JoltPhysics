@@ -1235,10 +1235,11 @@ Vec3 Vec3::sDecompressUnitVector(uint32 inValue)
 	constexpr uint cNumBits = 14;
 	constexpr uint cMask = (1u << cNumBits) - 1;
 	constexpr uint cMaxValue = cMask - 1; // Need odd number of buckets to quantize to or else we can't encode 0
+	constexpr int cHalfMaxValue = int(cMaxValue >> 1);
 	constexpr float cScale = 2.0f * cOneOverSqrt2 / float(cMaxValue);
 
 	// Restore two components
-	Vec3 v = Vec3(UVec4(inValue & cMask, (inValue >> cNumBits) & cMask, 0, 0).ToFloat()) * cScale - Vec3(cOneOverSqrt2, cOneOverSqrt2, 0.0f);
+	Vec3 v = Vec3(float(int(inValue & cMask) - cHalfMaxValue), float(int((inValue >> cNumBits) & cMask) - cHalfMaxValue), 0) * cScale;
 	JPH_ASSERT(v.GetZ() == 0.0f);
 
 	// Restore the highest component

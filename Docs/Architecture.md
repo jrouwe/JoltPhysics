@@ -45,6 +45,86 @@ Always use the batch adding functions when possible! Adding many bodies, one at 
 
 You can call AddBody, RemoveBody, AddBody, RemoveBody to temporarily remove and later reinsert a body into the simulation.
 
+## Mass Properties {#mass-properties}
+
+By default, the mass and inertia of a body are automatically calculated from its shape and density. This behavior is controlled by [BodyCreationSettings::mOverrideMassProperties](@ref BodyCreationSettings::mOverrideMassProperties) (see [EOverrideMassProperties](@ref EOverrideMassProperties)):
+
+* EOverrideMassProperties::CalculateMassAndInertia (default) - Both mass and inertia are derived from the shape density.
+* EOverrideMassProperties::CalculateInertia - The mass is taken from [BodyCreationSettings::mMassPropertiesOverride](@ref BodyCreationSettings::mMassPropertiesOverride).mMass and the inertia is calculated from the shape density and then scaled to match the provided mass.
+* EOverrideMassProperties::MassAndInertiaProvided - Both mass and inertia are taken directly from [BodyCreationSettings::mMassPropertiesOverride](@ref BodyCreationSettings::mMassPropertiesOverride). This is required for shapes that cannot compute their own mass and inertia, such as [MeshShape](@ref MeshShape).
+
+The [BodyCreationSettings::mInertiaMultiplier](@ref BodyCreationSettings::mInertiaMultiplier) can be used to scale the calculated inertia tensor. A value larger than 1 makes the body harder to rotate (as if mass is distributed further from the center), and a value smaller than 1 makes it easier to rotate. This applies whenever the inertia is computed by the system (i.e. not when `MassAndInertiaProvided` is used).
+
+Creating a dynamic mesh body with explicit mass and inertia:
+
+	JPH::BodyCreationSettings settings(mesh_shape, position, rotation, JPH::EMotionType::Dynamic, layer);
+	settings.mOverrideMassProperties = JPH::EOverrideMassProperties::MassAndInertiaProvided;
+	settings.mMassPropertiesOverride.mMass = 100.0f;
+	settings.mMassPropertiesOverride.mInertia = JPH::Mat44::sScale(10.0f); // Diagonal inertia tensor
+
+Using the shape's inertia but scaling it up to make a body more resistant to rotation:
+
+	JPH::BodyCreationSettings settings(shape, position, rotation, JPH::EMotionType::Dynamic, layer);
+	settings.mInertiaMultiplier = 2.0f; // Twice the resistance to rotation
+
+## Degrees of Freedom {#degrees-of-freedom}
+
+By default, dynamic and kinematic bodies are free to translate and rotate along all three world-space axes. You can restrict this using [BodyCreationSettings::mAllowedDOFs](@ref BodyCreationSettings::mAllowedDOFs) which takes a combination of flags from [EAllowedDOFs](@ref EAllowedDOFs):
+
+* EAllowedDOFs::TranslationX, EAllowedDOFs::TranslationY, EAllowedDOFs::TranslationZ - Allow translation along the respective world-space axis.
+* EAllowedDOFs::RotationX, EAllowedDOFs::RotationY, EAllowedDOFs::RotationZ - Allow rotation around the respective world-space axis.
+* EAllowedDOFs::All (default) - All six degrees of freedom are allowed.
+* EAllowedDOFs::Plane2D - A preset equivalent to `TranslationX | TranslationY | RotationZ`, which constrains the body to move in the XY plane and rotate only around the Z axis. Useful for 2D simulations.
+
+Note that EAllowedDOFs::None is not valid and will crash. Use a static body instead.
+
+## Friction and Restitution {#friction-and-restitution}
+
+Each body has a friction and a restitution value, set through [BodyCreationSettings::mFriction](@ref BodyCreationSettings::mFriction) and [BodyCreationSettings::mRestitution](@ref BodyCreationSettings::mRestitution). Both are dimensionless numbers, usually in the range [0, 1]:
+
+* Friction - Controls how much a body resists sliding against another surface. A value of 0 means no friction (perfectly slippery), and a value of 1 means the friction force equals the normal force pressing the two bodies together.
+* Restitution - Controls how elastic (bouncy) a collision is. A value of 0 means a completely inelastic collision (no bounce), and a value of 1 means a completely elastic collision (full bounce).
+
+Note that bodies can have negative friction or restitution values, but the *combined* value (see below) should never go below zero.
+
+When two bodies collide, their individual friction and restitution values are combined into a single value using a combine function. The defaults are:
+
+* Friction - Geometric mean (`sqrt(friction1 * friction2)`)
+* Restitution - Maximum (`max(restitution1, restitution2)`)
+
+You can override these defaults per `PhysicsSystem` using [PhysicsSystem::SetCombineFriction](@ref PhysicsSystem::SetCombineFriction) and [PhysicsSystem::SetCombineRestitution](@ref PhysicsSystem::SetCombineRestitution). The combine function receives both bodies and their sub shape IDs (an indication of where the contact was), so you can implement per-material behavior:
+
+	physics_system.SetCombineFriction([](const JPH::Body &inBody1, const JPH::SubShapeID &, const JPH::Body &inBody2, const JPH::SubShapeID &)
+	{
+		// Use the minimum friction of the two bodies instead of the geometric mean
+		return min(inBody1.GetFriction(), inBody2.GetFriction());
+	});
+
+Friction and restitution can be changed after body creation using [BodyInterface::SetFriction](@ref BodyInterface::SetFriction) and [BodyInterface::SetRestitution](@ref BodyInterface::SetRestitution).
+
+To vary friction or restitution per triangle of a [MeshShape](@ref MeshShape) see the following [example](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/General/FrictionPerTriangleTest.cpp).
+
+## Linear and Angular Damping {#linear-and-angular-damping}
+
+Damping gradually reduces the velocity of a body over time, simulating energy loss due to air resistance or internal friction. It is applied every simulation step, independently of any contact or constraint forces.
+
+Two damping coefficients are available on [BodyCreationSettings](@ref BodyCreationSettings):
+
+* [mLinearDamping](@ref BodyCreationSettings::mLinearDamping) - Reduces linear velocity according to `dv/dt = -c * v`.
+* [mAngularDamping](@ref BodyCreationSettings::mAngularDamping) - Reduces angular velocity according to `dw/dt = -c * w`.
+
+Both values must be zero or positive and are usually close to 0. A value of 0 disables the respective damping entirely. Higher values cause the body to slow down more quickly.
+
+These can be changed after body creation using [MotionProperties::SetLinearDamping](@ref MotionProperties::SetLinearDamping) and [MotionProperties::SetAngularDamping](@ref MotionProperties::SetAngularDamping), accessed via [Body::GetMotionProperties](@ref Body::GetMotionProperties).
+
+Creating a body that comes to rest quickly and does not spin for long:
+
+	JPH::BodyCreationSettings settings(shape, position, rotation, JPH::EMotionType::Dynamic, layer);
+	settings.mLinearDamping = 0.2f;
+	settings.mAngularDamping = 0.5f;
+
+Note that damping is a simple exponential decay and is not physically based.
+
 ## Multithreaded Access {#multi-threaded-access}
 
 Jolt is designed to be accessed from multiple threads so the body interface comes in two flavors: A locking and a non-locking variant. The locking variant uses a mutex array (a fixed size array of mutexes, bodies are associated with a mutex through hashing and multiple bodies use the same mutex, see [MutexArray](@ref MutexArray)) to prevent concurrent access to the same body. The non-locking variant doesn't use mutexes, so requires the user to be careful.
@@ -79,7 +159,7 @@ If you're only accessing the physics system from a single thread, you can use Bo
 Note that there are still some restrictions:
 
 * You cannot read from / write to bodies or constraints while PhysicsSystem::Update is running. As soon as the Update starts, all body / constraint mutexes are locked.
-* Collision callbacks (see ContactListener) are called from within the PhysicsSystem::Update call from multiple threads. You can only read the body data during a callback.
+* Collision callbacks (see ContactListener, SoftBodyContactListener) are called from within the PhysicsSystem::Update call from multiple threads. You can only read the body data during a callback.
 * Activation callbacks (see BodyActivationListener) are called in the same way. Again you should only read the body during the callback and not make any modifications.
 * Step callbacks (see PhysicsStepListener) are also called from PhysicsSystem::Update from multiple threads. You're responsible for making sure that there are no race conditions. In a step listener you can read/write bodies or constraints but you cannot add/remove them.
 
@@ -109,6 +189,28 @@ Next to this there are a number of decorator shapes that change the behavior of 
 * [ScaledShape](@ref ScaledShape) - This shape can scale a child shape. Note that if a shape is rotated first and then scaled, you can introduce shearing which is not supported by the library.
 * [RotatedTranslatedShape](@ref RotatedTranslatedShape) - This shape can rotate and translate a child shape, it can e.g. be used to offset a sphere from the origin.
 * [OffsetCenterOfMassShape](@ref OffsetCenterOfMassShape) - This shape does not change its child shape but it does shift the calculated center of mass for that shape. It allows you to e.g. shift the center of mass of a vehicle down to improve its handling.
+
+### Sub Shape IDs {#sub-shape-ids}
+
+A [SubShapeID](@ref SubShapeID) is a compact 32-bit identifier that encodes the full path through a shape hierarchy down to a specific leaf element, such as a triangle in a [MeshShape](@ref MeshShape) or a child shape within a [CompoundShape](@ref CompoundShape).
+
+The bits of a `SubShapeID` are allocated from the least-significant end, one level at a time as the hierarchy is traversed. Each level of the hierarchy consumes as many bits as needed to address all of its children. For example:
+
+* `CompoundShape A` has 5 children -> needs 3 bits (`AAA`).
+* Child `CompoundShape B` has 3 children -> needs 2 bits (`BB`).
+* Child `MeshShape C` needs 7 bits to identify a triangle (`CCCCCCC`), exact number of bits needed depends on the structure of the mesh shape.
+
+The resulting bit pattern for a triangle in `C` is: `CCCCCCC BB AAA` (least-significant bits first).
+
+A fully empty `SubShapeID` has all bits set to 1 (`0xFFFFFFFF`). You can check for this using [SubShapeID::IsEmpty](@ref SubShapeID::IsEmpty).
+
+Sub shape IDs are provided whenever collision results are returned. Given a `SubShapeID` and the root shape, you can query various properties of the leaf, e.g.:
+
+* [Shape::GetLeafShape](@ref Shape::GetLeafShape) - Traverses the hierarchy and returns the leaf `Shape` pointer, along with any remainder bits in the ID.
+* [Shape::GetMaterial](@ref Shape::GetMaterial) - Returns the [PhysicsMaterial](@ref PhysicsMaterial) assigned to that sub shape.
+* [Shape::GetSubShapeUserData](@ref Shape::GetSubShapeUserData) - Returns the user data value stored on that sub shape, which can be used to identify the shape in application code.
+
+A `SubShapeID` becomes invalid when the structure of the shape it refers to changes. For example, removing a child from a `MutableCompoundShape` will invalidate any previously obtained sub shape IDs for that compound. This is particularly relevant when caching sub shape IDs across frames - see the notes in [ContactListener::OnContactPersisted](@ref ContactListener::OnContactPersisted) and [ContactListener::OnContactRemoved](@ref ContactListener::OnContactRemoved).
 
 ### Dynamic Mesh Shapes {#dynamic-mesh-shapes}
 
@@ -392,24 +494,51 @@ Contact constraints (when bodies collide) are not handled through the [Constrain
 
 ## Constraint Motors {#constraint-motors}
 
-Most of the constraints support motors (see [MotorSettings](@ref MotorSettings)) which allow you to apply forces/torques on two constrained bodies to drive them to a relative position/orientation. There are two types of motors:
+Most of the constraints support motors (see [MotorSettings](@ref MotorSettings)) which allow you to apply forces / torques on two constrained bodies to drive them to a relative position / orientation. There are two types of motors:
 * Linear motors: These motors drive the relative position between two bodies. A linear motor would, for example, slide a body along a straight line when you use a slider constraint.
 * Angular motors: These motors drive the relative rotation between two bodies. An example is a hinge constraint. The motor drives the rotation along the hinge axis.
 
-Motors can have three states (see [EMotorState](@ref EMotorState) or e.g. SliderConstraint::SetMotorState):
-* Off: The motor is not doing any work.
-* Velocity: This type of motor drives the relative velocity between bodies. For a slider constraint, you would push the bodies towards/away from each other with constant velocity. For a hinge constraint, you would rotate the bodies relative to each other with constant velocity. Set the target velocity through e.g. SliderConstraint::SetTargetVelocity / HingeConstraint::SetTargetAngularVelocity.
-* Position: This type of motor drives the relative position between bodies. For a slider constraint, you can specify the relative distance you want to achieve between the bodies. For a hinge constraint you can specify the relative angle you want to achieve between the bodies. Set the target position through e.g. SliderConstraint::SetTargetPosition / HingeConstraint::SetTargetAngle.
+The applied force of a motor is proportional to: stiffness * (target_position - current_position) + damping * (target_velocity - current_velocity).
 
-Motors apply a force (when driving position) or torque (when driving angle) every simulation step to achieve the desired velocity or position. You can control the maximum force/torque that the motor can apply through MotorSettings::mMinForceLimit, MotorSettings::mMaxForceLimit, MotorSettings::mMinTorqueLimit and MotorSettings::mMaxTorqueLimit. Note that if a motor is driving to a position, the torque limits are not used. If a constraint is driving to an angle, the force limits are not used.
+Motors can have three states (see [EMotorState](@ref EMotorState) or e.g. SliderConstraint::SetMotorState):
+* Off: The motor is not doing any work. In the equation above: stiffness = 0 and damping = 0.
+* Velocity: This type of motor drives the relative velocity between bodies. In the equation above: stiffness = 0 and damping = infinite. For a slider constraint, you would push the bodies towards / away from each other with constant velocity. For a hinge constraint, you would rotate the bodies relative to each other with constant velocity. Set the target velocity through e.g. SliderConstraint::SetTargetVelocity / HingeConstraint::SetTargetAngularVelocity.
+* Position: This type of motor drives the relative position between bodies. In the equation above: target_velocity = 0. For a slider constraint, you can specify the relative distance you want to achieve between the bodies. For a hinge constraint you can specify the relative angle you want to achieve between the bodies. Set the target position through e.g. SliderConstraint::SetTargetPosition / HingeConstraint::SetTargetAngle.
+* PositionAndVelocity: This type of motor drives both the position and velocity. This uses the full equation above.
+
+Motors apply a force (when driving position) or torque (when driving angle) every simulation step to achieve the desired velocity or position. You can control the maximum force / torque that the motor can apply through MotorSettings::mMinForceLimit, MotorSettings::mMaxForceLimit, MotorSettings::mMinTorqueLimit and MotorSettings::mMaxTorqueLimit. Note that if a motor is driving to a position, the torque limits are not used. If a constraint is driving to an angle, the force limits are not used.
 
 Usually the limits are symmetric, so you would set -mMinForceLimit = mMaxForceLimit. This way the motor can push at an equal rate as it can pull. If you would set the range to e.g. [0, FLT_MAX] then the motor would only be able to push in the positive direction. The units for the force limits are Newtons and the values can get pretty big. If your motor doesn't seem to do anything, chances are that you have set the value too low. Since Force = Mass * Acceleration you can calculate the approximate force that a motor would need to supply in order to be effective. Usually the range is set to [-FLT_MAX, FLT_MAX] which lets the motor achieve its target as fast as possible.
 
-For an angular motor, the units are Newton Meters. The formula is Torque = Inertia * Angular Acceleration. Inertia of a solid sphere is 2/5 * Mass * Radius^2. You can use this to get a sense of the amount of torque needed to get the angular acceleration you want. Again, you'd usually set the range to [-FLT_MAX, FLT_MAX] to not limit the motor.
+For an angular motor, the units are Newton Meters. The formula is Torque = Inertia * Angular Acceleration. Inertia of a solid sphere is 2 / 5 * Mass * Radius^2. You can use this to get a sense of the amount of torque needed to get the angular acceleration you want. Again, you'd usually set the range to [-FLT_MAX, FLT_MAX] to not limit the motor.
 
 When settings the force or torque limits to [-FLT_MAX, FLT_MAX] a velocity motor will accelerate the bodies to the desired relative velocity in a single time step (if no other forces act on those bodies).
 
-Position motors have two additional parameters: Frequency (MotorSettings::mSpringSettings.mFrequency, Hz) and damping (MotorSettings::mSpringSettings.mDamping, no units). They are implemented as described in [Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011](https://box2d.org/files/ErinCatto_SoftConstraints_GDC2011.pdf).
+How a Position or PositionAndVelocity motor works can be configured through MotorSettings::mSpringSettings.mMode (see [ESpringMode](@ref ESpringMode)). They can currently work in 3 different ways:
+
+### Stiffness and Damping {#stiffness-and-damping}
+
+This uses the traditional stiffness and damping parameters of a dampened spring.
+For a linear spring the equation is: force = stiffness * (target_position - current_position) + damping * (target_velocity - current_velocity).
+For an angular spring it is: torque = stiffness * (target_angle - current_angle) + damping * (target_angular_velocity - current_angular_velocity).
+Units of stiffness are N / m for a linear spring and N m / rad for an angular spring. Units of damping are N s / m for a linear spring and N s m / rad for an angular spring.
+
+Note that stiffness values are large numbers. To calculate a ballpark value for the needed stiffness you can use:
+force = stiffness * delta_spring_length = mass * gravity <=> stiffness = mass * gravity / delta_spring_length.
+So if your object weighs 1500 kg and the spring compresses by 2 meters, you need a stiffness in the order of 1500 * 9.81 / 2 ~ 7500 N/m.
+
+### Mass Normalized Stiffness and Damping {#mass-normalized-stiffness-and-damping}
+
+The linear spring equation becomes: effective_mass * (stiffness * (target_position - current_position) + damping * (target_velocity - current_velocity)).
+The angular spring equation becomes: effective_inertia * (stiffness * (target_angle - current_angle) + damping * (target_angular_velocity - current_angular_velocity)).
+
+Units of stiffness are 1 / s^2 for a linear spring and 1 / rad s^2 for an angular spring. Units of damping are 1 / s for a linear spring and 1 / rad s for an angular spring.
+
+Effective mass / inertia is the mass / inertia as seen by the constraint. Since the stiffness is multiplied by the effective mass / inertia of the constraint, you can use much smaller stiffness values and they will be mass independent. Effectively you specify the linear / angular acceleration, so this mode is also known as acceleration mode.
+
+### Frequency and Damping {#frequency-and-damping}
+
+In this case you specify the spring by its natural frequency (Hz) and damping ratio (no units). They are implemented as described in [Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011](https://box2d.org/files/ErinCatto_SoftConstraints_GDC2011.pdf).
 
 You can see a position motor as a spring between the target position and the rigid body. The force applied to reach the target is linear with the distance between current position and target position. When there is no damping, the position motor will cause the rigid body to oscillate around its target.
 
@@ -672,6 +801,7 @@ Some caveats:
 * The source code must be compiled with the same defines, e.g. you can't have one platform using JPH_DOUBLE_PRECISION and another not.
 * Broadphase queries (BroadPhaseQuery) are NOT deterministic because the broad phase can be modified from multiple threads. As bodies are modified, their bounding boxes get widened until the next maintenance update. This may be several calls to PhysicsSystem::Update later. If you want to do a broadphase query determinisically then create a custom CollisionCollector that in its AddHit function repeats the query against the actual bounding box of the body (Body::GetWorldSpaceBounds) and accept only hits that collide with this bounding box. Also ensure that you order the results consistently.
 * Narrowphase queries (NarrowPhaseQuery) will return consistent results, but the order in which the results are received can change. This is again due the fact that the broadphase can be modified from multiple threads.
+* Various listener classes (BodyActivationListener, PhysicsStepListener, SoftBodyContactListener and ContactListener) are called from multiple threads. This means the order in which you receive callbacks is not deterministic. You may need to store and sort the information from these callbacks if your logic depends on information from multiple callbacks.
 
 It is quite difficult to verify cross platform determinism, so this feature is less tested than other features. With every build, the following architectures are verified to produce the same results for a number of scenes:
 
@@ -760,7 +890,7 @@ Jolt uses reference counting for a number of its classes (everything that inheri
 * SkeletalAnimation
 * SkeletonMapper
 
-Reference counting objects start with a reference count of 0. If you want to keep ownership of the object, you need to call [object->AddRef()](@ref RefTarget::AddRef), this will increment the reference count. If you want to release ownership you call [object->ReleaseRef()](@ref RefTarget::Release), this will decrement the reference count and if the reference count reaches 0 the object will be destroyed. If, after newing, you pass a reference counted object on to another object (e.g. a ShapeSettings to a CompoundShapeSettings or a Shape to a Body) then that other object will take a reference, in that case it is not needed take a reference yourself beforehand so you can skip the calls to ```AddRef/Release```. Note that it is also possible to do ```auto x = new XXX``` followed by ```delete x``` for a reference counted object if no one ever took a reference. The safest way of working with reference counting objects is to use the Ref or RefConst classes, these automatically manage the reference count for you when assigning a new value or on destruction:
+Reference counting objects start with a reference count of 0. If you want to keep ownership of the object, you need to call [object->AddRef()](@ref RefTarget::AddRef), this will increment the reference count. If you want to release ownership you call [object->Release()](@ref RefTarget::Release), this will decrement the reference count and if the reference count reaches 0 the object will be destroyed. If, after newing, you pass a reference counted object on to another object (e.g. a ShapeSettings to a CompoundShapeSettings or a Shape to a Body) then that other object will take a reference. In that case it is not needed take a reference yourself beforehand so you can skip the calls to ```AddRef/Release```. Note that it is also possible to do ```XXX *x = new XXX``` followed by ```delete x``` for a reference counted object if no one ever took a reference. The safest way of working with reference counting objects is to use the Ref or RefConst classes, these automatically manage the reference count for you when assigning a new value or on destruction:
 
 ```
 // Calls 'AddRef' to keep a reference the shape

@@ -8,10 +8,11 @@ inline float3 JPH_Vec3DecompressUnit(uint inValue)
 	const uint cNumBits = 14;
 	const uint cMask = (1u << cNumBits) - 1;
 	const uint cMaxValue = cMask - 1; // Need odd number of buckets to quantize to or else we can't encode 0
+	const int cHalfMaxValue = int(cMaxValue >> 1);
 	const float cScale = 2.0f * cOneOverSqrt2 / float(cMaxValue);
 
 	// Restore two components
-	float2 v2 = float2(float(inValue & cMask), float((inValue >> cNumBits) & cMask)) * cScale - float2(cOneOverSqrt2, cOneOverSqrt2);
+	float2 v2 = float2(float(int(inValue & cMask) - cHalfMaxValue), float(int((inValue >> cNumBits) & cMask) - cHalfMaxValue)) * cScale;
 
 	// Restore the highest component
 	float3 v = float3(v2, sqrt(max(1.0f - dot(v2, v2), 0.0f)));

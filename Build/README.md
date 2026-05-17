@@ -19,45 +19,58 @@ You can use Jolt/Jolt.h in your precompiled header to speed up compilation.
 
 ## Defines
 
-There are a number of user configurable defines that turn on/off certain features:
+There are a number of user configurable C++ defines that turn on/off certain features. Many of them are controllable to similarly named cmake options:
 <details>
 	<summary>General Options (click to see more)</summary>
 	<ul>
-		<li>JPH_SHARED_LIBRARY - Use the Jolt library as a shared library. Use JPH_BUILD_SHARED_LIBRARY to build Jolt as a shared library.</li>
-		<li>JPH_PROFILE_ENABLED - Turns on the internal profiler.</li>
-		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h). Use JPH_USE_EXTERNAL_PROFILE option to enable this from CMake config.</li>
-		<li>JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.</li>
-		<li>JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.</li>
-		<li>JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.</li>
-		<li>JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).</li>
 		<li>JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.</li>
-		<li>JPH_DET_LOG - Turn on a lot of extra logging to help debug determinism issues when JPH_CROSS_PLATFORM_DETERMINISTIC is turned on.</li>
-		<li>JPH_ENABLE_ASSERTS - Compiles the library so that it rises an assert in case of failures. The library ignores these failures otherwise.</li>
+		<li>JPH_DEBUG - Enables extra internal checking. On by default when NDEBUG is not set. Can be disabled by defining JPH_NO_DEBUG.</li>
+		<li>JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.</li>
+		<li>JPH_DEFAULT_ALLOCATE_ALIGNMENT - Indicates the default alignment of a memory allocation on this platform. Defaults to __STDCPP_DEFAULT_NEW_ALIGNMENT__.</li>
+		<li>JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.</li>
+		<li>JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.</li>
 		<li>JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.</li>
+		<li>JPH_ENABLE_ASSERTS - Compiles the library so that it rises an assert in case of failures. The library ignores these failures otherwise.</li>
+		<li>JPH_ENABLE_DETERMINISM_LOG - Turn on a lot of extra logging to help debug determinism issues when JPH_CROSS_PLATFORM_DETERMINISTIC is turned on.</li>
+		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h). Use JPH_USE_EXTERNAL_PROFILE option to enable this from CMake config.</li>
+		<li>JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).</li>
+		<li>JPH_NO_FORCE_INLINE - Don't use force inlining but fall back to a regular 'inline'.</li>
 		<li>JPH_OBJECT_LAYER_BITS - Defines the size of ObjectLayer, must be 16 or 32 bits.</li>
 		<li>JPH_OBJECT_STREAM - Includes the code to serialize physics data in the ObjectStream format (mostly used by the examples).</li>
-		<li>JPH_NO_FORCE_INLINE - Don't use force inlining but fall back to a regular 'inline'.</li>
+		<li>JPH_PROFILE_ENABLED - Turns on the internal profiler.</li>
+		<li>JPH_SHARED_LIBRARY - Use the Jolt library as a shared library. Use JPH_BUILD_SHARED_LIBRARY to build Jolt as a shared library.</li>
+		<li>JPH_TRACK_BROADPHASE_STATS - Enables PhysicsSystem::ReportBroadphaseStats, which outputs stats to the TTY about the broad phase.</li>
+		<li>JPH_TRACK_NARROWPHASE_STATS - Enables NarrowPhaseStat::sReportStats(), which outputs stats to the TTY about the narrow phase.</li>
+		<li>JPH_TRACK_SIMULATION_STATS - Keeps track of how much time each body costs to simulate. Can be output to the TTY using PhysicsSystem::ReportSimulationStats but can also be accessed through MotionProperties::GetSimulationStats.</li>
 		<li>JPH_USE_STD_VECTOR - Use std::vector instead of Jolt's own Array class.</li>
-		<li>CPP_RTTI_ENABLED - Enable C++ RTTI for the library. Disabled by default.</li>
-		<li>JPH_USE_DX12 - Implement the DX12 version of ComputeSystem.</li>
-		<li>JPH_USE_VK - Implement the Vulkan version of ComputeSystem.</li>
-		<li>JPH_USE_MTL - Implement the Metal version of ComputeSystem.</li>
-		<li>JPH_USE_CPU_COMPUTE - Implement the CPU fallback version of ComputeSystem (mainly for debugging purposes).</li>
 	</ul>
 </details>
 
 <details>
 	<summary>CPU Instruction Sets (click to see more)</summary>
 	<ul>
-		<li>JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (default: on, x86/x64 only)</li>
-		<li>JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (default: on, x86/x64 only)</li>
-		<li>JPH_USE_F16C - Enable half float CPU instructions (default: on, x86/x64 only)</li>
-		<li>JPH_USE_LZCNT - Enable the lzcnt CPU instruction (default: on, x86/x64 only)</li>
-		<li>JPH_USE_TZCNT - Enable the tzcnt CPU instruction (default: on, x86/x64 only)</li>
 		<li>JPH_USE_AVX - Enable AVX CPU instructions (default: on, x86/x64 only)</li>
 		<li>JPH_USE_AVX2 - Enable AVX2 CPU instructions (default: on, x86/x64 only)</li>
 		<li>JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (default: off, x86/x64 only)</li>
+		<li>JPH_USE_F16C - Enable half float CPU instructions (default: on, x86/x64 only)</li>
 		<li>JPH_USE_FMADD - Enable fused multiply add CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_LZCNT - Enable the lzcnt CPU instruction (default: on, x86/x64 only)</li>
+		<li>JPH_USE_NEON - Enable NEON on ARM (default: on for 64-bit ARM)</li> 
+		<li>JPH_USE_RVV - Enable RVV on RISC-V (default: off)</li>
+		<li>JPH_USE_SSE - Use SSE2 instructions (enabled on x86/x64)</li>
+		<li>JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_TZCNT - Enable the tzcnt CPU instruction (default: on, x86/x64 only)</li>
+	</ul>
+</details>
+
+<details>
+	<summary>Compute backends. Used to perform computations on the GPU.</summary>
+	<ul>
+		<li>JPH_USE_CPU_COMPUTE - Implement the CPU fallback version of ComputeSystem (mainly for debugging purposes).</li>
+		<li>JPH_USE_DX12 - Implement the DX12 version of ComputeSystem.</li>
+		<li>JPH_USE_MTL - Implement the Metal version of ComputeSystem.</li>
+		<li>JPH_USE_VK - Implement the Vulkan version of ComputeSystem.</li>
 	</ul>
 </details>
 
@@ -77,43 +90,32 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 		<details>
 			<summary>MSVC CL (default compiler)</summary>
 			<ul>
-				<li>Download Visual Studio 2022 (Community or other edition)</li>
+				<li>Download Visual Studio 2026 (Community or other edition)</li>
 				<li>Download CMake 3.20+ (https://cmake.org/download/)</li>
-				<li>Run cmake_vs2022_cl.bat</li>
-				<li>Open the resulting project file VS2022_CL\JoltPhysics.sln</li>
+				<li>Run cmake_vs2026_cl.bat</li>
+				<li>Open the resulting project file VS2026_CL\JoltPhysics.sln</li>
 				<li>Compile and run either 'Samples' or 'UnitTests'</li>
 			</ul>
 		</details>
 		<details>
 			<summary>MSVC CL - 32 bit</summary>
 			<ul>
-				<li>Download Visual Studio 2022 (Community or other edition)</li>
+				<li>Download Visual Studio 2026 (Community or other edition)</li>
 				<li>Download CMake 3.20+ (https://cmake.org/download/)</li>
-				<li>Run cmake_vs2022_cl_32bit.bat</li>
-				<li>Open the resulting project file VS2022_CL_32BIT\JoltPhysics.sln</li>
+				<li>Run cmake_vs2026_cl_32bit.bat</li>
+				<li>Open the resulting project file VS2026_CL_32BIT\JoltPhysics.sln</li>
 				<li>Compile and run either 'Samples' or 'UnitTests'</li>
 			</ul>
 		</details>
 		<details>
 			<summary>MSVC Clang compiler</summary>
 			<ul>
-				<li>Download Visual Studio 2022 (Community or other edition)</li>
+				<li>Download Visual Studio 2026 (Community or other edition)</li>
 				<li>Make sure to install "C++ Clang Compiler for Windows 11.0.0+" and "C++ Clang-cl for v142+ build tools (x64/x86)" using the Visual Studio Installer</li>
 				<li>Download CMake 3.20+ (https://cmake.org/download/)</li>
-				<li>Run cmake_vs2022_clang.bat</li>
-				<li>Open the resulting project file VS2022_Clang\JoltPhysics.sln</li>
+				<li>Run cmake_vs2026_clang.bat</li>
+				<li>Open the resulting project file VS2026_Clang\JoltPhysics.sln</li>
 				<li>Compile and run either 'Samples' or 'UnitTests'</li>
-			</ul>
-		</details>
-		<details>
-			<summary>MSVC Universal Windows Platform</summary>
-			<ul>
-				<li>Download Visual Studio 2022+ (Community or other edition)</li>
-				<li>Make sure to install "Universal Windows Platform development" using the Visual Studio Installer</li>
-				<li>Download CMake 3.20+ (https://cmake.org/download/)</li>
-				<li>Run cmake_vs2022_uwp.bat</li>
-				<li>Open the resulting project file VS2022_UWP\JoltPhysics.sln</li>
-				<li>Compile and run 'UnitTests'</li>
 			</ul>
 		</details>
 		<details>
@@ -131,23 +133,41 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 
 <details>
 	<summary>Linux (Ubuntu)</summary>
-	<ul>
-		<li>Install clang (apt-get install clang)</li>
-		<li>Install cmake (apt-get install cmake)</li>
-		<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html">Vulkan SDK</a></li>
-		<li>Run: ./cmake_linux_clang_gcc.sh</li>
-		<li>Go to the Linux_Debug folder</li>
-		<li>Run: make -j$(nproc) && ./UnitTests</li>
-		<li>If you built the samples you can run: ./Samples</li>
-	</ul>
+	<ul style="list-style: none"><li>
+		<details>
+			<summary>Using make</summary>
+			<ul>
+				<li>Install clang (apt-get install clang)</li>
+				<li>Install cmake (apt-get install cmake)</li>
+				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html">Vulkan SDK</a></li>
+				<li>Run: ./cmake_linux_clang_gcc.sh</li>
+				<li>Go to the Linux_Debug folder</li>
+				<li>Run: make -j$(nproc) && ./UnitTests</li>
+				<li>If you built the samples you can run: ./Samples</li>
+			</ul>
+		</details>
+		<details>
+			<summary>Using ninja</summary>
+			<ul>
+				<li>Install clang (apt-get install clang)</li>
+				<li>Install cmake (apt-get install cmake)</li>
+				<li>Install ninja (apt-get install ninja-build)</li>
+				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html">Vulkan SDK</a></li>
+				<li>Run: ./cmake_ninja.sh</li>
+				<li>Go to the Ninja_MultiConfig folder</li>
+				<li>Run: cmake --build . --config Debug && ./UnitTests</li>
+				<li>If you built the samples you can run: ./Debug/Samples</li>
+			</ul>
+		</details>
+	</li></ul>
 </details>
 
 <details>
 	<summary>Android</summary>
 	<ul>
-		<li>Install Android Studio 2020.3.1+ (https://developer.android.com/studio/)</li>
-		<li>Open the 'Android' folder in Android Studio and wait until gradle finishes</li>
-		<li>Select 'Run' / 'Run...' and 'UnitTests'</li>
+		<li>Install Android Studio (https://developer.android.com/studio/)</li>
+		<li>Open the 'Build/Android' folder in Android Studio and wait until gradle finishes</li>
+		<li>Select 'Run' and 'UnitTests'</li>
 		<li>If the screen turns green after a while the unit tests succeeded, when red they failed (see the android log for details)</li>
 	</ul>
 </details>
@@ -194,7 +214,6 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 * A vcpkg package is available [here](https://github.com/microsoft/vcpkg/tree/master/ports/joltphysics).
 * A xmake package is available [here](https://github.com/xmake-io/xmake-repo/tree/dev/packages/j/joltphysics).
 * A conan package is available [here](https://conan.io/center/recipes/joltphysics)
-* Jolt has been verified to build with [ninja](https://ninja-build.org/) through CMake.
 
 ## Errors
 

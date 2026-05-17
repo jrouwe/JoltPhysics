@@ -7,4 +7,4 @@ echo - C++ Clang Compiler for Windows 20+
 echo - MSBuild support for LLVM (clang-cl) toolset
 echo Using the Visual Studio Installer
 echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-echo Open VS2026_Clang_Double/JoltPhysics.sln to build the project.
+echo Open VS2026_Clang_Double/JoltPhysics.slnx to build the project.

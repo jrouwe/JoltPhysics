@@ -289,7 +289,7 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 	if (inCharacter == mCharacter)
 	{
 	#ifdef CHARACTER_TRACE_CONTACTS
-		Trace("Contact added with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
+		Trace("Contact added with body %08x, sub shape %08x", inContact.mBodyB.GetIndexAndSequenceNumber(), inContact.mSubShapeIDB.GetValue());
 	#endif
 		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), inContact) != mActiveContacts.end())
 			FatalError("Got an add contact that should have been a persisted contact");
@@ -304,7 +304,7 @@ void CharacterVirtualTest::OnContactPersisted(const CharacterVirtual *inCharacte
 	if (inCharacter == mCharacter)
 	{
 	#ifdef CHARACTER_TRACE_CONTACTS
-		Trace("Contact persisted with body %08x, sub shape %08x", inBodyID2.GetIndexAndSequenceNumber(), inSubShapeID2.GetValue());
+		Trace("Contact persisted with body %08x, sub shape %08x", inContact.mBodyB.GetIndexAndSequenceNumber(), inContact.mSubShapeIDB.GetValue());
 	#endif
 		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), inContact) == mActiveContacts.end())
 			FatalError("Got a persisted contact that should have been an add contact");
@@ -347,7 +347,7 @@ void CharacterVirtualTest::OnCharacterContactAdded(const CharacterVirtual *inCha
 	if (inCharacter == mCharacter)
 	{
 	#ifdef CHARACTER_TRACE_CONTACTS
-		Trace("Contact added with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
+		Trace("Contact added with character %08x, sub shape %08x", inContact.mCharacterB->GetID().GetValue(), inContact.mSubShapeIDB.GetValue());
 	#endif
 		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), inContact) != mActiveContacts.end())
 			FatalError("Got an add contact that should have been a persisted contact");
@@ -362,7 +362,7 @@ void CharacterVirtualTest::OnCharacterContactPersisted(const CharacterVirtual *i
 	if (inCharacter == mCharacter)
 	{
 	#ifdef CHARACTER_TRACE_CONTACTS
-		Trace("Contact persisted with character %08x, sub shape %08x", inOtherCharacter->GetID().GetValue(), inSubShapeID2.GetValue());
+		Trace("Contact persisted with character %08x, sub shape %08x", inContact.mCharacterB->GetID().GetValue(), inContact.mSubShapeIDB.GetValue());
 	#endif
 		if (std::find(mActiveContacts.begin(), mActiveContacts.end(), inContact) == mActiveContacts.end())
 			FatalError("Got a persisted contact that should have been an add contact");

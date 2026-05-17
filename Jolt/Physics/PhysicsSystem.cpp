@@ -1048,8 +1048,6 @@ void PhysicsSystem::sDefaultSimCollideBodyVsBody(const Body &inBody1, const Body
 
 void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair)
 {
-	JPH_PROFILE_FUNCTION();
-
 	// Fetch body pair
 	Body *body1 = &mBodyManager.GetBody(inBodyPair.mBodyA);
 	Body *body2 = &mBodyManager.GetBody(inBodyPair.mBodyB);
@@ -1837,8 +1835,6 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 
 			virtual void				AddHit(const ShapeCastResult &inResult) override
 			{
-				JPH_PROFILE_FUNCTION();
-
 				// Check if this is a possible earlier hit than the one before
 				float fraction = inResult.mFraction;
 				if (fraction < mCCDBody.mFractionPlusSlop)
@@ -1977,8 +1973,6 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 
 			virtual void				AddHit(const BroadPhaseCastResult &inResult) override
 			{
-				JPH_PROFILE_FUNCTION();
-
 				JPH_ASSERT(inResult.mFraction <= GetEarlyOutFraction(), "This hit should not have been passed on to the collector");
 
 				// Test if we're colliding with ourselves
