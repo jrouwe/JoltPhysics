@@ -252,11 +252,38 @@ TEST_SUITE("Vec3Tests")
 		CHECK(Vec3(-1, 2, -3).Abs() == Vec3(1, 2, 3));
 	}
 
+	TEST_CASE("TestVec3ReduceSum")
+	{
+		CHECK(Vec3(1, 10, 100).ReduceSum() == 111);
+#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		// Test handling of -0.0f
+		CHECK(BitCast<uint32>(Vec3(-0.0f, -0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec3(-0.0f, -0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec3(-0.0f, 0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec3(-0.0f, 0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec3(0.0f, -0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec3(0.0f, -0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec3(0.0f, 0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec3(0.0f, 0.0f, 0.0f).ReduceSum()) == 0);
+#endif
+	}
+
 	TEST_CASE("TestVec3Dot")
 	{
 		CHECK(Vec3(1, 2, 3).Dot(Vec3(4, 5, 6)) == float(1 * 4 + 2 * 5 + 3 * 6));
 		CHECK(Vec3(1, 2, 3).DotV(Vec3(4, 5, 6)) == Vec3::sReplicate(1 * 4 + 2 * 5 + 3 * 6));
 		CHECK(Vec3(1, 2, 3).DotV4(Vec3(4, 5, 6)) == Vec4::sReplicate(1 * 4 + 2 * 5 + 3 * 6));
+#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		// Test handling of -0.0f
+		CHECK(BitCast<uint32>(Vec3(-0.0f, -0.0f, -0.0f).Dot(Vec3::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec3(-0.0f, -0.0f, 0.0f).Dot(Vec3::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec3(-0.0f, 0.0f, -0.0f).Dot(Vec3::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec3(-0.0f, 0.0f, 0.0f).Dot(Vec3::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec3(0.0f, -0.0f, -0.0f).Dot(Vec3::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec3(0.0f, -0.0f, 0.0f).Dot(Vec3::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec3(0.0f, 0.0f, -0.0f).Dot(Vec3::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec3(0.0f, 0.0f, 0.0f).Dot(Vec3::sReplicate(1.0f))) == 0);
+#endif
 	}
 
 	TEST_CASE("TestVec3Length")
