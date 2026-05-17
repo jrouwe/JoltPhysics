@@ -45,6 +45,86 @@ Always use the batch adding functions when possible! Adding many bodies, one at 
 
 You can call AddBody, RemoveBody, AddBody, RemoveBody to temporarily remove and later reinsert a body into the simulation.
 
+## Mass Properties {#mass-properties}
+
+By default, the mass and inertia of a body are automatically calculated from its shape and density. This behavior is controlled by [BodyCreationSettings::mOverrideMassProperties](@ref BodyCreationSettings::mOverrideMassProperties) (see [EOverrideMassProperties](@ref EOverrideMassProperties)):
+
+* EOverrideMassProperties::CalculateMassAndInertia (default) - Both mass and inertia are derived from the shape density.
+* EOverrideMassProperties::CalculateInertia - The mass is taken from [BodyCreationSettings::mMassPropertiesOverride](@ref BodyCreationSettings::mMassPropertiesOverride).mMass and the inertia is calculated from the shape density and then scaled to match the provided mass.
+* EOverrideMassProperties::MassAndInertiaProvided - Both mass and inertia are taken directly from [BodyCreationSettings::mMassPropertiesOverride](@ref BodyCreationSettings::mMassPropertiesOverride). This is required for shapes that cannot compute their own mass and inertia, such as [MeshShape](@ref MeshShape).
+
+The [BodyCreationSettings::mInertiaMultiplier](@ref BodyCreationSettings::mInertiaMultiplier) can be used to scale the calculated inertia tensor. A value larger than 1 makes the body harder to rotate (as if mass is distributed further from the center), and a value smaller than 1 makes it easier to rotate. This applies whenever the inertia is computed by the system (i.e. not when `MassAndInertiaProvided` is used).
+
+Creating a dynamic mesh body with explicit mass and inertia:
+
+	JPH::BodyCreationSettings settings(mesh_shape, position, rotation, JPH::EMotionType::Dynamic, layer);
+	settings.mOverrideMassProperties = JPH::EOverrideMassProperties::MassAndInertiaProvided;
+	settings.mMassPropertiesOverride.mMass = 100.0f;
+	settings.mMassPropertiesOverride.mInertia = JPH::Mat44::sScale(10.0f); // Diagonal inertia tensor
+
+Using the shape's inertia but scaling it up to make a body more resistant to rotation:
+
+	JPH::BodyCreationSettings settings(shape, position, rotation, JPH::EMotionType::Dynamic, layer);
+	settings.mInertiaMultiplier = 2.0f; // Twice the resistance to rotation
+
+## Degrees of Freedom {#degrees-of-freedom}
+
+By default, dynamic and kinematic bodies are free to translate and rotate along all three world-space axes. You can restrict this using [BodyCreationSettings::mAllowedDOFs](@ref BodyCreationSettings::mAllowedDOFs) which takes a combination of flags from [EAllowedDOFs](@ref EAllowedDOFs):
+
+* EAllowedDOFs::TranslationX, EAllowedDOFs::TranslationY, EAllowedDOFs::TranslationZ - Allow translation along the respective world-space axis.
+* EAllowedDOFs::RotationX, EAllowedDOFs::RotationY, EAllowedDOFs::RotationZ - Allow rotation around the respective world-space axis.
+* EAllowedDOFs::All (default) - All six degrees of freedom are allowed.
+* EAllowedDOFs::Plane2D - A preset equivalent to `TranslationX | TranslationY | RotationZ`, which constrains the body to move in the XY plane and rotate only around the Z axis. Useful for 2D simulations.
+
+Note that EAllowedDOFs::None is not valid and will crash. Use a static body instead.
+
+## Friction and Restitution {#friction-and-restitution}
+
+Each body has a friction and a restitution value, set through [BodyCreationSettings::mFriction](@ref BodyCreationSettings::mFriction) and [BodyCreationSettings::mRestitution](@ref BodyCreationSettings::mRestitution). Both are dimensionless numbers, usually in the range [0, 1]:
+
+* Friction - Controls how much a body resists sliding against another surface. A value of 0 means no friction (perfectly slippery), and a value of 1 means the friction force equals the normal force pressing the two bodies together.
+* Restitution - Controls how elastic (bouncy) a collision is. A value of 0 means a completely inelastic collision (no bounce), and a value of 1 means a completely elastic collision (full bounce).
+
+Note that bodies can have negative friction or restitution values, but the *combined* value (see below) should never go below zero.
+
+When two bodies collide, their individual friction and restitution values are combined into a single value using a combine function. The defaults are:
+
+* Friction - Geometric mean (`sqrt(friction1 * friction2)`)
+* Restitution - Maximum (`max(restitution1, restitution2)`)
+
+You can override these defaults per `PhysicsSystem` using [PhysicsSystem::SetCombineFriction](@ref PhysicsSystem::SetCombineFriction) and [PhysicsSystem::SetCombineRestitution](@ref PhysicsSystem::SetCombineRestitution). The combine function receives both bodies and their sub shape IDs (an indication of where the contact was), so you can implement per-material behavior:
+
+	physics_system.SetCombineFriction([](const JPH::Body &inBody1, const JPH::SubShapeID &, const JPH::Body &inBody2, const JPH::SubShapeID &)
+	{
+		// Use the minimum friction of the two bodies instead of the geometric mean
+		return min(inBody1.GetFriction(), inBody2.GetFriction());
+	});
+
+Friction and restitution can be changed after body creation using [BodyInterface::SetFriction](@ref BodyInterface::SetFriction) and [BodyInterface::SetRestitution](@ref BodyInterface::SetRestitution).
+
+To vary friction or restitution per triangle of a [MeshShape](@ref MeshShape) see the following [example](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/General/FrictionPerTriangleTest.cpp).
+
+## Linear and Angular Damping {#linear-and-angular-damping}
+
+Damping gradually reduces the velocity of a body over time, simulating energy loss due to air resistance or internal friction. It is applied every simulation step, independently of any contact or constraint forces.
+
+Two damping coefficients are available on [BodyCreationSettings](@ref BodyCreationSettings):
+
+* [mLinearDamping](@ref BodyCreationSettings::mLinearDamping) - Reduces linear velocity according to `dv/dt = -c * v`.
+* [mAngularDamping](@ref BodyCreationSettings::mAngularDamping) - Reduces angular velocity according to `dw/dt = -c * w`.
+
+Both values must be zero or positive and are usually close to 0. A value of 0 disables the respective damping entirely. Higher values cause the body to slow down more quickly.
+
+These can be changed after body creation using [MotionProperties::SetLinearDamping](@ref MotionProperties::SetLinearDamping) and [MotionProperties::SetAngularDamping](@ref MotionProperties::SetAngularDamping), accessed via [Body::GetMotionProperties](@ref Body::GetMotionProperties).
+
+Creating a body that comes to rest quickly and does not spin for long:
+
+	JPH::BodyCreationSettings settings(shape, position, rotation, JPH::EMotionType::Dynamic, layer);
+	settings.mLinearDamping = 0.2f;
+	settings.mAngularDamping = 0.5f;
+
+Note that damping is a simple exponential decay and is not physically based.
+
 ## Multithreaded Access {#multi-threaded-access}
 
 Jolt is designed to be accessed from multiple threads so the body interface comes in two flavors: A locking and a non-locking variant. The locking variant uses a mutex array (a fixed size array of mutexes, bodies are associated with a mutex through hashing and multiple bodies use the same mutex, see [MutexArray](@ref MutexArray)) to prevent concurrent access to the same body. The non-locking variant doesn't use mutexes, so requires the user to be careful.
@@ -79,7 +159,7 @@ If you're only accessing the physics system from a single thread, you can use Bo
 Note that there are still some restrictions:
 
 * You cannot read from / write to bodies or constraints while PhysicsSystem::Update is running. As soon as the Update starts, all body / constraint mutexes are locked.
-* Collision callbacks (see ContactListener) are called from within the PhysicsSystem::Update call from multiple threads. You can only read the body data during a callback.
+* Collision callbacks (see ContactListener, SoftBodyContactListener) are called from within the PhysicsSystem::Update call from multiple threads. You can only read the body data during a callback.
 * Activation callbacks (see BodyActivationListener) are called in the same way. Again you should only read the body during the callback and not make any modifications.
 * Step callbacks (see PhysicsStepListener) are also called from PhysicsSystem::Update from multiple threads. You're responsible for making sure that there are no race conditions. In a step listener you can read/write bodies or constraints but you cannot add/remove them.
 
@@ -109,6 +189,28 @@ Next to this there are a number of decorator shapes that change the behavior of 
 * [ScaledShape](@ref ScaledShape) - This shape can scale a child shape. Note that if a shape is rotated first and then scaled, you can introduce shearing which is not supported by the library.
 * [RotatedTranslatedShape](@ref RotatedTranslatedShape) - This shape can rotate and translate a child shape, it can e.g. be used to offset a sphere from the origin.
 * [OffsetCenterOfMassShape](@ref OffsetCenterOfMassShape) - This shape does not change its child shape but it does shift the calculated center of mass for that shape. It allows you to e.g. shift the center of mass of a vehicle down to improve its handling.
+
+### Sub Shape IDs {#sub-shape-ids}
+
+A [SubShapeID](@ref SubShapeID) is a compact 32-bit identifier that encodes the full path through a shape hierarchy down to a specific leaf element, such as a triangle in a [MeshShape](@ref MeshShape) or a child shape within a [CompoundShape](@ref CompoundShape).
+
+The bits of a `SubShapeID` are allocated from the least-significant end, one level at a time as the hierarchy is traversed. Each level of the hierarchy consumes as many bits as needed to address all of its children. For example:
+
+* `CompoundShape A` has 5 children -> needs 3 bits (`AAA`).
+* Child `CompoundShape B` has 3 children -> needs 2 bits (`BB`).
+* Child `MeshShape C` needs 7 bits to identify a triangle (`CCCCCCC`), exact number of bits needed depends on the structure of the mesh shape.
+
+The resulting bit pattern for a triangle in `C` is: `CCCCCCC BB AAA` (least-significant bits first).
+
+A fully empty `SubShapeID` has all bits set to 1 (`0xFFFFFFFF`). You can check for this using [SubShapeID::IsEmpty](@ref SubShapeID::IsEmpty).
+
+Sub shape IDs are provided whenever collision results are returned. Given a `SubShapeID` and the root shape, you can query various properties of the leaf, e.g.:
+
+* [Shape::GetLeafShape](@ref Shape::GetLeafShape) - Traverses the hierarchy and returns the leaf `Shape` pointer, along with any remainder bits in the ID.
+* [Shape::GetMaterial](@ref Shape::GetMaterial) - Returns the [PhysicsMaterial](@ref PhysicsMaterial) assigned to that sub shape.
+* [Shape::GetSubShapeUserData](@ref Shape::GetSubShapeUserData) - Returns the user data value stored on that sub shape, which can be used to identify the shape in application code.
+
+A `SubShapeID` becomes invalid when the structure of the shape it refers to changes. For example, removing a child from a `MutableCompoundShape` will invalidate any previously obtained sub shape IDs for that compound. This is particularly relevant when caching sub shape IDs across frames - see the notes in [ContactListener::OnContactPersisted](@ref ContactListener::OnContactPersisted) and [ContactListener::OnContactRemoved](@ref ContactListener::OnContactRemoved).
 
 ### Dynamic Mesh Shapes {#dynamic-mesh-shapes}
 
