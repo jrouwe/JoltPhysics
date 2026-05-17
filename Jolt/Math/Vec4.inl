@@ -986,81 +986,48 @@ Vec4 Vec4::sDifferenceOfProducts(Vec4Arg inA, Vec4Arg inB, Vec4Arg inC, Vec4Arg 
 #endif
 }
 
-Vec4 Vec4::DotV(Vec4Arg inV2) const
+float Vec4::ReduceSum() const
 {
 #if defined(JPH_USE_SSE4_1)
-	return _mm_dp_ps(mValue, inV2.mValue, 0xff);
+	Type shuf = _mm_movehdup_ps(mValue); // [y, y, w, w]
+	Type sums = _mm_add_ps(mValue, shuf); // [x + y, y + y, z + w, w + w]
+	shuf = _mm_movehl_ps(sums, sums); // [z + w, w + w, z + w, w + w]
+	sums = _mm_add_ps(sums, shuf); // [(x + y) + (z + w), ...]
+	return _mm_cvtss_f32(sums);
 #elif defined(JPH_USE_NEON)
-	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
-	return vdupq_n_f32(vaddvq_f32(mul));
+	return vaddvq_f32(mValue);
 #elif defined(JPH_USE_RVV)
-	Vec4 res;
-	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
-	vfloat32m1_t dot = RVVSumElementsFloat32x4(mul);
-	const vfloat32m1_t splat = __riscv_vrgather_vx_f32m1(dot, 0, 4);
-	__riscv_vse32_v_f32m1(res.mF32, splat, 4);
-	return res;
+	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mValue, 4);
+	return __riscv_vfmv_f_s_f32m1_f32(RVVSumElementsFloat32x4(v));
 #else
 	// Brackets placed so that the order is consistent with the vectorized version
-	return Vec4::sReplicate((mF32[0] * inV2.mF32[0] + mF32[1] * inV2.mF32[1]) + (mF32[2] * inV2.mF32[2] + mF32[3] * inV2.mF32[3]));
+	return (mF32[0] + mF32[1]) + (mF32[2] + mF32[3]);
 #endif
 }
 
 float Vec4::Dot(Vec4Arg inV2) const
 {
-#if defined(JPH_USE_SSE4_1)
-	return _mm_cvtss_f32(_mm_dp_ps(mValue, inV2.mValue, 0xff));
-#elif defined(JPH_USE_NEON)
-	float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
-	return vaddvq_f32(mul);
-#elif defined(JPH_USE_RVV)
-	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 4);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
-	return __riscv_vfmv_f_s_f32m1_f32(RVVSumElementsFloat32x4(mul));
-#else
-	// Brackets placed so that the order is consistent with the vectorized version
-	return (mF32[0] * inV2.mF32[0] + mF32[1] * inV2.mF32[1]) + (mF32[2] * inV2.mF32[2] + mF32[3] * inV2.mF32[3]);
-#endif
+	return (*this * inV2).ReduceSum();
+}
+
+Vec4 Vec4::DotV(Vec4Arg inV2) const
+{
+	return Vec4::sReplicate(Dot(inV2));
 }
 
 float Vec4::LengthSq() const
 {
-#if defined(JPH_USE_SSE4_1)
-	return _mm_cvtss_f32(_mm_dp_ps(mValue, mValue, 0xff));
-#elif defined(JPH_USE_NEON)
-	float32x4_t mul = vmulq_f32(mValue, mValue);
-	return vaddvq_f32(mul);
-#elif defined(JPH_USE_RVV)
-	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 4);
-	return __riscv_vfmv_f_s_f32m1_f32(RVVSumElementsFloat32x4(mul));
-#else
-	// Brackets placed so that the order is consistent with the vectorized version
-	return (mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]);
-#endif
+	return Dot(*this);
 }
 
 float Vec4::Length() const
 {
-#if defined(JPH_USE_SSE4_1)
-	return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(mValue, mValue, 0xff)));
-#elif defined(JPH_USE_NEON)
-	float32x4_t mul = vmulq_f32(mValue, mValue);
-	float32x2_t sum = vdup_n_f32(vaddvq_f32(mul));
-	return vget_lane_f32(vsqrt_f32(sum), 0);
-#elif defined(JPH_USE_RVV)
-	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 4);
-	const vfloat32m1_t sum = RVVSumElementsFloat32x4(mul);
-	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(sum, 1);
-	return __riscv_vfmv_f_s_f32m1_f32(sqrt);
-#else
-	// Brackets placed so that the order is consistent with the vectorized version
-	return JPH::Sqrt((mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]));
-#endif
+	return JPH::Sqrt(LengthSq());
+}
+
+Vec4 Vec4::Normalized() const
+{
+	return *this / Length();
 }
 
 Vec4 Vec4::Sqrt() const
@@ -1079,7 +1046,6 @@ Vec4 Vec4::Sqrt() const
 	return Vec4(JPH::Sqrt(mF32[0]), JPH::Sqrt(mF32[1]), JPH::Sqrt(mF32[2]), JPH::Sqrt(mF32[3]));
 #endif
 }
-
 
 Vec4 Vec4::GetSign() const
 {
@@ -1117,31 +1083,6 @@ JPH_INLINE Vec4 Vec4::FlipSign() const
 	static_assert(Z == 1 || Z == -1, "Z must be 1 or -1");
 	static_assert(W == 1 || W == -1, "W must be 1 or -1");
 	return Vec4::sXor(*this, Vec4(X > 0? 0.0f : -0.0f, Y > 0? 0.0f : -0.0f, Z > 0? 0.0f : -0.0f, W > 0? 0.0f : -0.0f));
-}
-
-Vec4 Vec4::Normalized() const
-{
-#if defined(JPH_USE_SSE4_1)
-	return _mm_div_ps(mValue, _mm_sqrt_ps(_mm_dp_ps(mValue, mValue, 0xff)));
-#elif defined(JPH_USE_NEON)
-	float32x4_t mul = vmulq_f32(mValue, mValue);
-	float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
-	return vdivq_f32(mValue, vsqrtq_f32(sum));
-#elif defined(JPH_USE_RVV)
-	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 4);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 4);
-
-	const vfloat32m1_t sum = RVVSumElementsFloat32x4(mul);
-	const vfloat32m1_t sum_splat = __riscv_vrgather_vx_f32m1(sum, 0, 4);
-	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(sum_splat, 4);
-	const vfloat32m1_t norm_v = __riscv_vfdiv_vv_f32m1(v, sqrt, 4);
-
-	Vec4 vec;
-	__riscv_vse32_v_f32m1(vec.mF32, norm_v, 4);
-	return vec;
-#else
-	return *this / Length();
-#endif
 }
 
 void Vec4::StoreFloat4(Float4 *outV) const
@@ -1217,13 +1158,6 @@ float Vec4::ReduceMax() const
 {
 	Vec4 v = sMax(mValue, Swizzle<SWIZZLE_Y, SWIZZLE_UNUSED, SWIZZLE_W, SWIZZLE_UNUSED>());
 	v = sMax(v, v.Swizzle<SWIZZLE_Z, SWIZZLE_UNUSED, SWIZZLE_UNUSED, SWIZZLE_UNUSED>());
-	return v.GetX();
-}
-
-float Vec4::ReduceSum() const
-{
-	Vec4 v = *this + Swizzle<SWIZZLE_Y, SWIZZLE_UNUSED, SWIZZLE_W, SWIZZLE_UNUSED>();
-	v += v.Swizzle<SWIZZLE_Z, SWIZZLE_UNUSED, SWIZZLE_UNUSED, SWIZZLE_UNUSED>();
 	return v.GetX();
 }
 

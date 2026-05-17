@@ -118,6 +118,25 @@ TEST_SUITE("Vec4Tests")
 
 		CHECK(v1.ReduceSum() == 1 + 6 + 3 + 8);
 		CHECK(v2.ReduceSum() == -5 + 2 - 7 + 4);
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		// Test handling of -0.0f
+		CHECK(BitCast<uint32>(Vec4(-0.0f, -0.0f, -0.0f, -0.0f).ReduceSum()) == 0x80000000u);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, -0.0f, -0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, -0.0f, 0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, -0.0f, 0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, 0.0f, -0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, 0.0f, -0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, 0.0f, 0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, 0.0f, 0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, -0.0f, -0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, -0.0f, -0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, -0.0f, 0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, -0.0f, 0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, 0.0f, -0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, 0.0f, -0.0f, 0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, 0.0f, 0.0f, -0.0f).ReduceSum()) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, 0.0f, 0.0f, 0.0f).ReduceSum()) == 0);
+	#endif
 	}
 
 	TEST_CASE("TestVec4Clamp")
@@ -499,6 +518,25 @@ TEST_SUITE("Vec4Tests")
 	{
 		CHECK(Vec4(1, 2, 3, 4).Dot(Vec4(5, 6, 7, 8)) == float(1 * 5 + 2 * 6 + 3 * 7 + 4 * 8));
 		CHECK(Vec4(1, 2, 3, 4).DotV(Vec4(5, 6, 7, 8)) == Vec4::sReplicate(1 * 5 + 2 * 6 + 3 * 7 + 4 * 8));
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		// Test handling of -0.0f
+		CHECK(BitCast<uint32>(Vec4(-0.0f, -0.0f, -0.0f, -0.0f).Dot(Vec4::sReplicate(1.0f))) == 0x80000000u);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, -0.0f, -0.0f, 0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, -0.0f, 0.0f, -0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, -0.0f, 0.0f, 0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, 0.0f, -0.0f, -0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, 0.0f, -0.0f, 0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, 0.0f, 0.0f, -0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(-0.0f, 0.0f, 0.0f, 0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, -0.0f, -0.0f, -0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, -0.0f, -0.0f, 0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, -0.0f, 0.0f, -0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, -0.0f, 0.0f, 0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, 0.0f, -0.0f, -0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, 0.0f, -0.0f, 0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, 0.0f, 0.0f, -0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+		CHECK(BitCast<uint32>(Vec4(0.0f, 0.0f, 0.0f, 0.0f).Dot(Vec4::sReplicate(1.0f))) == 0);
+	#endif
 	}
 
 	TEST_CASE("TestVec4Length")
