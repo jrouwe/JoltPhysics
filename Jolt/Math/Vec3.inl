@@ -926,7 +926,7 @@ float Vec3::ReduceSum() const
 
 float Vec3::Dot(Vec3Arg inV2) const
 {
-    return (*this * inV2).ReduceSum();
+	return (*this * inV2).ReduceSum();
 }
 
 Vec3 Vec3::DotV(Vec3Arg inV2) const
