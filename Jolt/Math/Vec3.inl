@@ -891,84 +891,50 @@ Vec3 Vec3::CrossPrecise(Vec3Arg inV2) const
 	return sDifferenceOfProducts(*this, inV2.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>(), Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>(), inV2).Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_X>();
 }
 
-Vec3 Vec3::DotV(Vec3Arg inV2) const
+float Vec3::ReduceAdd() const
 {
-#if defined(JPH_USE_RVV)
-	Vec3 res;
+#if defined(JPH_USE_SSE4_1)
+	Type shuf = _mm_movehdup_ps(mValue);
+	Type sums = _mm_add_ps(mValue, shuf);
+	shuf = _mm_movehl_ps(mValue, mValue);
+	sums = _mm_add_ps(sums, shuf);
+	return _mm_cvtss_f32(sums);
+#elif defined(JPH_USE_NEON)
+	Type v = vsetq_lane_f32(0, mValue, 3);
+	return vaddvq_f32(v);
+#elif defined(JPH_USE_RVV)
 	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
-	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 3);
-	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 3);
-	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	const vfloat32m1_t splat = __riscv_vrgather_vx_f32m1(sum, 0, 3);
-	__riscv_vse32_v_f32m1(res.mF32, splat, 3);
-	return res;
+	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
+	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(v, zeros, 3);
+	return __riscv_vfmv_f_s_f32m1_f32(sum);
 #else
-	return Vec3::sReplicate(Dot(inV2));
-#endif
-}
-
-Vec4 Vec3::DotV4(Vec3Arg inV2) const
-{
-#if defined(JPH_USE_RVV)
-	Vec4 res;
-	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
-	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 3);
-	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 3);
-	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	const vfloat32m1_t splat = __riscv_vrgather_vx_f32m1(sum, 0, 4);
-	__riscv_vse32_v_f32m1(res.mF32, splat, 4);
-	return res;
-#else
-	return Vec4::sReplicate(Dot(inV2));
+	return (mF32[0] + mF32[1]) + mF32[2];
 #endif
 }
 
 float Vec3::Dot(Vec3Arg inV2) const
 {
-#if defined(JPH_USE_RVV)
-	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
-	const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(mF32, 3);
-	const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inV2.mF32, 3);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 3);
-	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	return __riscv_vfmv_f_s_f32m1_f32(sum);
-#else
     return (*this * inV2).ReduceAdd();
-#endif
+}
+
+Vec3 Vec3::DotV(Vec3Arg inV2) const
+{
+	return Vec3::sReplicate(Dot(inV2));
+}
+
+Vec4 Vec3::DotV4(Vec3Arg inV2) const
+{
+	return Vec4::sReplicate(Dot(inV2));
 }
 
 float Vec3::LengthSq() const
 {
-#if defined(JPH_USE_RVV)
-	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
-	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
-	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	return __riscv_vfmv_f_s_f32m1_f32(sum);
-#else
 	return Dot(*this);
-#endif
 }
 
 float Vec3::Length() const
 {
-#if defined(JPH_USE_NEON)
-	// Minor differences in NaN handling make sqrt() produce
-	// a few extra instructions. Hence, we need to hand-roll
-	// this one for efficiency.
-	return vget_lane_f32(vsqrt_f32(vdup_n_f32(LengthSq())), 0);
-#elif defined(JPH_USE_RVV)
-	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
-	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
-	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(sum, 1);
-	return __riscv_vfmv_f_s_f32m1_f32(sqrt);
-#else
 	return JPH::Sqrt(LengthSq());
-#endif
 }
 
 Vec3 Vec3::Sqrt() const
@@ -990,21 +956,7 @@ Vec3 Vec3::Sqrt() const
 
 Vec3 Vec3::Normalized() const
 {
-#if defined(JPH_USE_RVV)
-	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
-	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
-	const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v, v, 3);
-	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(mul, zeros, 3);
-	const vfloat32m1_t splat = __riscv_vrgather_vx_f32m1(sum, 0, 3);
-	const vfloat32m1_t sqrt = __riscv_vfsqrt_v_f32m1(splat, 3);
-	const vfloat32m1_t norm_v = __riscv_vfdiv_vv_f32m1(v, sqrt, 3);
-
-	Vec3 res;
-	__riscv_vse32_v_f32m1(res.mF32, norm_v, 3);
-	return res;
-#else
 	return *this / Length();
-#endif
 }
 
 Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
@@ -1149,33 +1101,6 @@ float Vec3::ReduceMax() const
 	Vec3 v = sMax(mValue, Swizzle<SWIZZLE_Y, SWIZZLE_UNUSED, SWIZZLE_Z>());
 	v = sMax(v, v.Swizzle<SWIZZLE_Z, SWIZZLE_UNUSED, SWIZZLE_UNUSED>());
 	return v.GetX();
-}
-
-float Vec3::ReduceAdd() const
-{
-#if defined(JPH_USE_SSE4_1)
-	Type shuf = _mm_movehdup_ps(mValue);
-	Type sums = _mm_add_ps(mValue, shuf);
-	shuf = _mm_movehl_ps(mValue, mValue);
-#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
-	shuf = _mm_add_ps(_mm_setzero_ps(), shuf);
-#endif
-	sums = _mm_add_ps(sums, shuf);
-	return _mm_cvtss_f32(sums);
-#elif defined(JPH_USE_NEON)
-	Type v = vsetq_lane_f32(0, mValue, 3);
-	return vaddvq_f32(v);
-#elif defined(JPH_USE_RVV)
-	const vfloat32m1_t zeros = __riscv_vfmv_v_f_f32m1(0.0f, 3);
-	const vfloat32m1_t v = __riscv_vle32_v_f32m1(mF32, 3);
-	const vfloat32m1_t sum = __riscv_vfredosum_vs_f32m1_f32m1(v, zeros, 3);
-	return __riscv_vfmv_f_s_f32m1_f32(sum);
-#else
-	float sum = 0.0f;
-	for (int i = 0; i < 3; i++)
-		sum += mF32[i];
-	return sum;
-#endif
 }
 
 Vec3 Vec3::GetNormalizedPerpendicular() const
