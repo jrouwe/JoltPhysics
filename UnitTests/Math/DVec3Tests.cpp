@@ -159,8 +159,8 @@ TEST_SUITE("DVec3Tests")
 
 	TEST_CASE("TestDVec3Select")
 	{
-		const double cTrue2 = BitCast<double>(uint64(1) << 63);
-		const double cFalse2 = BitCast<double>(~uint64(0) >> 1);
+		constexpr double cTrue2 = BitCast<double>(uint64(1) << 63);
+		constexpr double cFalse2 = BitCast<double>(~uint64(0) >> 1);
 
 		CHECK(DVec3::sSelect(DVec3(1, 2, 3), DVec3(4, 5, 6), DVec3(DVec3::cTrue, DVec3::cFalse, DVec3::cTrue)) == DVec3(4, 2, 6));
 		CHECK(DVec3::sSelect(DVec3(1, 2, 3), DVec3(4, 5, 6), DVec3(DVec3::cFalse, DVec3::cTrue, DVec3::cFalse)) == DVec3(1, 5, 3));
