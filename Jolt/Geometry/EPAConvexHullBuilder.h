@@ -707,6 +707,8 @@ private:
 #endif
 };
 
+JPH_PRECISE_MATH_ON
+
 EPAConvexHullBuilder::Triangle::Triangle(int inIdx0, int inIdx1, int inIdx2, const Vec3 *inPositions)
 {
 	// Fill in indexes
@@ -835,5 +837,7 @@ EPAConvexHullBuilder::Triangle::Triangle(int inIdx0, int inIdx1, int inIdx2, con
 		}
 	}
 }
+
+JPH_PRECISE_MATH_OFF
 
 JPH_NAMESPACE_END

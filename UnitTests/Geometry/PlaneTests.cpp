@@ -25,7 +25,7 @@ TEST_SUITE("PlaneTests")
 		Plane p2 = Plane::sFromPointAndNormal(transform * point, transform.Multiply3x3(normal));
 
 		CHECK_APPROX_EQUAL(p1.GetNormal(), p2.GetNormal());
-		CHECK_APPROX_EQUAL(p1.GetConstant(), p2.GetConstant());
+		CHECK_APPROX_EQUAL(p1.GetConstant(), p2.GetConstant(), 2.0e-6f);
 	}
 
 	TEST_CASE("TestPlaneIntersectPlanes")

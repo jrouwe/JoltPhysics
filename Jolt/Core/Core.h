@@ -608,6 +608,28 @@ static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 // Macro to indicate that a parameter / variable is unused
 #define JPH_UNUSED(x)			(void)x
 
+// Macro to enable floating point precise mode
+#if defined(JPH_COMPILER_CLANG)
+	#define JPH_PRECISE_MATH_ON										\
+		_Pragma("clang diagnostic push")							\
+		_Pragma("clang diagnostic ignored \"-Wignored-pragmas\"")	\
+		_Pragma("float_control(precise, on, push)")					\
+		_Pragma("clang diagnostic pop")
+	#define JPH_PRECISE_MATH_OFF									\
+		_Pragma("clang diagnostic push")							\
+		_Pragma("clang diagnostic ignored \"-Wignored-pragmas\"")	\
+		_Pragma("float_control(pop)")								\
+		_Pragma("clang diagnostic pop")
+#elif defined(JPH_COMPILER_MSVC)
+	#define JPH_PRECISE_MATH_ON										\
+		__pragma(float_control(precise, on, push))
+	#define JPH_PRECISE_MATH_OFF									\
+		__pragma(float_control(pop))
+#else
+	#define JPH_PRECISE_MATH_ON
+	#define JPH_PRECISE_MATH_OFF
+#endif
+
 // Check if Thread Sanitizer is enabled
 #ifdef __has_feature
 	#if __has_feature(thread_sanitizer)
