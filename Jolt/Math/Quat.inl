@@ -338,7 +338,7 @@ void Quat::GetSwingTwist(Quat &outSwing, Quat &outTwist) const
 Quat Quat::LERP(QuatArg inDestination, float inFraction) const
 {
 	float scale0 = 1.0f - inFraction;
-	return Quat(Vec4::sReplicate(scale0) * mValue + Vec4::sReplicate(inFraction) * inDestination.mValue);
+	return Quat(scale0 * mValue + inFraction * inDestination.mValue);
 }
 
 Quat Quat::SLERP(QuatArg inDestination, float inFraction) const
@@ -375,7 +375,7 @@ Quat Quat::SLERP(QuatArg inDestination, float inFraction) const
 	}
 
 	// Interpolate between the two quaternions
-	return Quat(Vec4::sReplicate(scale0) * mValue + Vec4::sReplicate(scale1) * inDestination.mValue).Normalized();
+	return Quat(scale0 * mValue + scale1 * inDestination.mValue).Normalized();
 }
 
 Vec3 Quat::operator * (Vec3Arg inValue) const
