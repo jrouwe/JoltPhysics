@@ -262,6 +262,11 @@ Mat44 Mat44::operator * (Mat44Arg inM) const
 		result.mCol[i].mValue = t;
 	}
 #elif defined(JPH_USE_RVV)
+	const vfloat32m1_t col0 = __riscv_vle32_v_f32m1(mCol[0].mF32, 4);
+	const vfloat32m1_t col1 = __riscv_vle32_v_f32m1(mCol[1].mF32, 4);
+	const vfloat32m1_t col2 = __riscv_vle32_v_f32m1(mCol[2].mF32, 4);
+	const vfloat32m1_t col3 = __riscv_vle32_v_f32m1(mCol[3].mF32, 4);
+
 	for (int i = 0; i < 4; ++i)
 	{
 		const float *c = inM.mCol[i].mF32;
@@ -269,11 +274,6 @@ Mat44 Mat44::operator * (Mat44Arg inM) const
 		const vfloat32m1_t rep_1 = __riscv_vfmv_v_f_f32m1(c[1], 4);
 		const vfloat32m1_t rep_2 = __riscv_vfmv_v_f_f32m1(c[2], 4);
 		const vfloat32m1_t rep_3 = __riscv_vfmv_v_f_f32m1(c[3], 4);
-
-		const vfloat32m1_t col0 = __riscv_vle32_v_f32m1(mCol[0].mF32, 4);
-		const vfloat32m1_t col1 = __riscv_vle32_v_f32m1(mCol[1].mF32, 4);
-		const vfloat32m1_t col2 = __riscv_vle32_v_f32m1(mCol[2].mF32, 4);
-		const vfloat32m1_t col3 = __riscv_vle32_v_f32m1(mCol[3].mF32, 4);
 
 		const vfloat32m1_t mul1 = __riscv_vfmul_vv_f32m1(col1, rep_1, 4);
 		const vfloat32m1_t mul2 = __riscv_vfmul_vv_f32m1(col2, rep_2, 4);
@@ -451,16 +451,16 @@ Mat44 Mat44::Multiply3x3(Mat44Arg inM) const
 		result.mCol[i].mValue = t;
 	}
 #elif defined(JPH_USE_RVV)
+	const vfloat32m1_t col0 = __riscv_vle32_v_f32m1(mCol[0].mF32, 4);
+	const vfloat32m1_t col1 = __riscv_vle32_v_f32m1(mCol[1].mF32, 4);
+	const vfloat32m1_t col2 = __riscv_vle32_v_f32m1(mCol[2].mF32, 4);
+
 	for (int i = 0; i < 3; ++i)
 	{
 		const float* col_i = inM.mCol[i].mF32;
 		const vfloat32m1_t v0 = __riscv_vfmv_v_f_f32m1(col_i[0], 4);
 		const vfloat32m1_t v1 = __riscv_vfmv_v_f_f32m1(col_i[1], 4);
 		const vfloat32m1_t v2 = __riscv_vfmv_v_f_f32m1(col_i[2], 4);
-
-		const vfloat32m1_t col0 = __riscv_vle32_v_f32m1(mCol[0].mF32, 4);
-		const vfloat32m1_t col1 = __riscv_vle32_v_f32m1(mCol[1].mF32, 4);
-		const vfloat32m1_t col2 = __riscv_vle32_v_f32m1(mCol[2].mF32, 4);
 
 		const vfloat32m1_t mul1 = __riscv_vfmul_vv_f32m1(v1, col1, 4);
 		const vfloat32m1_t mul2 = __riscv_vfmul_vv_f32m1(v2, col2, 4);
