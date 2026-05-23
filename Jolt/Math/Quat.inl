@@ -290,20 +290,21 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
 
 Vec3 Quat::GetEulerAngles() const
 {
-	float y_sq = GetY() * GetY();
+	float x = GetX(), y = GetY(), z = GetZ(), w = GetW();
+	float y_sq = y * y;
 
 	// X
-	float t0 = 2.0f * (GetW() * GetX() + GetY() * GetZ());
-	float t1 = 1.0f - 2.0f * (GetX() * GetX() + y_sq);
+	float t0 = 2.0f * (w * x + y * z);
+	float t1 = 1.0f - 2.0f * (x * x + y_sq);
 
 	// Y
-	float t2 = 2.0f * (GetW() * GetY() - GetZ() * GetX());
+	float t2 = 2.0f * (w * y - z * x);
 	t2 = t2 > 1.0f? 1.0f : t2;
 	t2 = t2 < -1.0f? -1.0f : t2;
 
 	// Z
-	float t3 = 2.0f * (GetW() * GetZ() + GetX() * GetY());
-	float t4 = 1.0f - 2.0f * (y_sq + GetZ() * GetZ());
+	float t3 = 2.0f * (w * z + x * y);
+	float t4 = 1.0f - 2.0f * (y_sq + z * z);
 
 	return Vec3(ATan2(t0, t1), ASin(t2), ATan2(t3, t4));
 }
