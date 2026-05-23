@@ -359,8 +359,7 @@ Vec4 Vec4::sFusedMultiplyAdd(Vec4Arg inMul1, Vec4Arg inMul2, Vec4Arg inAdd)
 		const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inMul1.mF32, 4);
 		const vfloat32m1_t v2 = __riscv_vle32_v_f32m1(inMul2.mF32, 4);
 		const vfloat32m1_t rvv_add = __riscv_vle32_v_f32m1(inAdd.mF32, 4);
-		const vfloat32m1_t mul = __riscv_vfmul_vv_f32m1(v1, v2, 4);
-		const vfloat32m1_t fmadd = __riscv_vfadd_vv_f32m1(rvv_add, mul, 4);
+		const vfloat32m1_t fmadd = __riscv_vfmacc_vv_f32m1(rvv_add, v1, v2, 4);
 		__riscv_vse32_v_f32m1(res.mF32, fmadd, 4);
 		return res;
 	#else
@@ -1149,16 +1148,24 @@ int Vec4::GetSignBits() const
 
 float Vec4::ReduceMin() const
 {
+#ifdef JPH_USE_NEON
+	return vminvq_f32(mValue);
+#else
 	Vec4 v = sMin(mValue, Swizzle<SWIZZLE_Y, SWIZZLE_UNUSED, SWIZZLE_W, SWIZZLE_UNUSED>());
 	v = sMin(v, v.Swizzle<SWIZZLE_Z, SWIZZLE_UNUSED, SWIZZLE_UNUSED, SWIZZLE_UNUSED>());
 	return v.GetX();
+#endif
 }
 
 float Vec4::ReduceMax() const
 {
+#ifdef JPH_USE_NEON
+	return vmaxvq_f32(mValue);
+#else
 	Vec4 v = sMax(mValue, Swizzle<SWIZZLE_Y, SWIZZLE_UNUSED, SWIZZLE_W, SWIZZLE_UNUSED>());
 	v = sMax(v, v.Swizzle<SWIZZLE_Z, SWIZZLE_UNUSED, SWIZZLE_UNUSED, SWIZZLE_UNUSED>());
 	return v.GetX();
+#endif
 }
 
 void Vec4::SinCos(Vec4 &outSin, Vec4 &outCos) const

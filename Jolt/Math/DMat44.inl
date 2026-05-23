@@ -268,16 +268,16 @@ DMat44 DMat44::operator * (Mat44Arg inM) const
 		result.mCol[i].mValue = t;
 	}
 #elif defined(JPH_USE_RVV)
+	const vfloat32m1_t col0 = __riscv_vle32_v_f32m1(mCol[0].mF32, 4);
+	const vfloat32m1_t col1 = __riscv_vle32_v_f32m1(mCol[1].mF32, 4);
+	const vfloat32m1_t col2 = __riscv_vle32_v_f32m1(mCol[2].mF32, 4);
+
 	for (int i = 0; i < 3; ++i)
 	{
 		const Vec4 v = inM.GetColumn4(i);
 		const vfloat32m1_t v0 = __riscv_vfmv_v_f_f32m1(v.mF32[0], 4);
 		const vfloat32m1_t v1 = __riscv_vfmv_v_f_f32m1(v.mF32[1], 4);
 		const vfloat32m1_t v2 = __riscv_vfmv_v_f_f32m1(v.mF32[2], 4);
-
-		const vfloat32m1_t col0 = __riscv_vle32_v_f32m1(mCol[0].mF32, 4);
-		const vfloat32m1_t col1 = __riscv_vle32_v_f32m1(mCol[1].mF32, 4);
-		const vfloat32m1_t col2 = __riscv_vle32_v_f32m1(mCol[2].mF32, 4);
 
 		vfloat32m1_t t = __riscv_vfmul_vv_f32m1(v0, col0, 4);
 		t = __riscv_vfmacc_vv_f32m1(t, col1, v1, 4);
@@ -322,16 +322,16 @@ DMat44 DMat44::operator * (DMat44Arg inM) const
 		result.mCol[i].mValue = t;
 	}
 #elif defined(JPH_USE_RVV)
+	const vfloat32m1_t col0 = __riscv_vle32_v_f32m1(mCol[0].mF32, 4);
+	const vfloat32m1_t col1 = __riscv_vle32_v_f32m1(mCol[1].mF32, 4);
+	const vfloat32m1_t col2 = __riscv_vle32_v_f32m1(mCol[2].mF32, 4);
+
 	for (int i = 0; i < 3; ++i)
 	{
 		const float *col_i = inM.mCol[i].mF32;
 		const vfloat32m1_t v0 = __riscv_vfmv_v_f_f32m1(col_i[0], 4);
 		const vfloat32m1_t v1 = __riscv_vfmv_v_f_f32m1(col_i[1], 4);
 		const vfloat32m1_t v2 = __riscv_vfmv_v_f_f32m1(col_i[2], 4);
-
-		const vfloat32m1_t col0 = __riscv_vle32_v_f32m1(mCol[0].mF32, 4);
-		const vfloat32m1_t col1 = __riscv_vle32_v_f32m1(mCol[1].mF32, 4);
-		const vfloat32m1_t col2 = __riscv_vle32_v_f32m1(mCol[2].mF32, 4);
 
 		vfloat32m1_t t = __riscv_vfmul_vv_f32m1(v0, col0, 4);
 		t = __riscv_vfmacc_vv_f32m1(t, col1, v1, 4);
@@ -367,7 +367,7 @@ DMat44 DMat44::PreScaled(Vec3Arg inScale) const
 DMat44 DMat44::PostScaled(Vec3Arg inScale) const
 {
 	Vec4 scale(inScale, 1);
-	return DMat44(scale * mCol[0], scale * mCol[1], scale * mCol[2], DVec3(scale) * mCol3);
+	return DMat44(scale * mCol[0], scale * mCol[1], scale * mCol[2], DVec3(inScale) * mCol3);
 }
 
 DMat44 DMat44::PreTranslated(Vec3Arg inTranslation) const
