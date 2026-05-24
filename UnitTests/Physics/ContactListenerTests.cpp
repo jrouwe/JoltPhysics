@@ -418,7 +418,7 @@ TEST_SUITE("ContactListenerTests")
 
 			// Check that the box is moving with the correct linear/angular velocity
 			CHECK_APPROX_EQUAL(box.GetLinearVelocity(), floor.GetRotation() * listener.mLocalSpaceLinearVelocity, 0.005f);
-			CHECK_APPROX_EQUAL(box.GetAngularVelocity(), floor.GetRotation() * listener.mLocalSpaceAngularVelocity, 1.0e-4f);
+			CHECK_APPROX_EQUAL(box.GetAngularVelocity(), floor.GetRotation() * listener.mLocalSpaceAngularVelocity, 2.0e-4f);
 		}
 	}
 
