@@ -802,6 +802,7 @@ Some caveats:
 * Broadphase queries (BroadPhaseQuery) are NOT deterministic because the broad phase can be modified from multiple threads. As bodies are modified, their bounding boxes get widened until the next maintenance update. This may be several calls to PhysicsSystem::Update later. If you want to do a broadphase query determinisically then create a custom CollisionCollector that in its AddHit function repeats the query against the actual bounding box of the body (Body::GetWorldSpaceBounds) and accept only hits that collide with this bounding box. Also ensure that you order the results consistently.
 * Narrowphase queries (NarrowPhaseQuery) will return consistent results, but the order in which the results are received can change. This is again due the fact that the broadphase can be modified from multiple threads.
 * Various listener classes (BodyActivationListener, PhysicsStepListener, SoftBodyContactListener and ContactListener) are called from multiple threads. This means the order in which you receive callbacks is not deterministic. You may need to store and sort the information from these callbacks if your logic depends on information from multiple callbacks.
+* PhysicsSystem::GetActiveBodies will return the list of active bodies in a non-deterministic order (because bodies are activated from multiple threads).
 
 It is quite difficult to verify cross platform determinism, so this feature is less tested than other features. With every build, the following architectures are verified to produce the same results for a number of scenes:
 
