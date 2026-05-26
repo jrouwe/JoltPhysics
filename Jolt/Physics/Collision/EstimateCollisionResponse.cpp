@@ -6,13 +6,12 @@
 
 #include <Jolt/Physics/Collision/EstimateCollisionResponse.h>
 #include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/ContactConstraintPart.h>
 
 JPH_NAMESPACE_BEGIN
 
 void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, CollisionEstimationResult &outResult, float inCombinedFriction, float inCombinedRestitution, float inMinVelocityForRestitution, uint inNumIterations)
 {
-	// Note this code is based on AxisConstraintPart, see that class for more comments on the math
-
 	ContactPoints::size_type num_points = inManifold.mRelativeContactPointsOn1.size();
 	JPH_ASSERT(num_points == inManifold.mRelativeContactPointsOn2.size());
 
@@ -74,65 +73,11 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	Vec3 com1 = Vec3(inBody1.GetCenterOfMassPosition() - inManifold.mBaseOffset);
 	Vec3 com2 = Vec3(inBody2.GetCenterOfMassPosition() - inManifold.mBaseOffset);
 
-	struct AxisConstraint
-	{
-		inline void		Initialize(Vec3Arg inR1, Vec3Arg inR2, Vec3Arg inWorldSpaceNormal, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2)
-		{
-			// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1
-			mR1PlusUxAxis = inR1.Cross(inWorldSpaceNormal);
-			mR2xAxis = inR2.Cross(inWorldSpaceNormal);
-			mInvI1_R1PlusUxAxis = inInvI1.Multiply3x3(mR1PlusUxAxis);
-			mInvI2_R2xAxis = inInvI2.Multiply3x3(mR2xAxis);
-			mEffectiveMass = 1.0f / (inInvM1 + mInvI1_R1PlusUxAxis.Dot(mR1PlusUxAxis) + inInvM2 + mInvI2_R2xAxis.Dot(mR2xAxis));
-			mBias = 0.0f;
-		}
-
-		inline float	SolveGetLambda(Vec3Arg inWorldSpaceNormal, const CollisionEstimationResult &inResult) const
-		{
-			// Calculate jacobian multiplied by linear/angular velocity
-			float jv = inWorldSpaceNormal.Dot(inResult.mLinearVelocity1 - inResult.mLinearVelocity2) + mR1PlusUxAxis.Dot(inResult.mAngularVelocity1) - mR2xAxis.Dot(inResult.mAngularVelocity2);
-
-			// Lagrange multiplier is:
-			//
-			// lambda = -K^-1 (J v + b)
-			return mEffectiveMass * (jv - mBias);
-		}
-
-		inline void		SolveApplyLambda(Vec3Arg inWorldSpaceNormal, float inInvM1, float inInvM2, float inLambda, CollisionEstimationResult &ioResult) const
-		{
-			// Apply impulse to body velocities
-			ioResult.mLinearVelocity1 -= (inLambda * inInvM1) * inWorldSpaceNormal;
-			ioResult.mAngularVelocity1 -= inLambda * mInvI1_R1PlusUxAxis;
-			ioResult.mLinearVelocity2 += (inLambda * inInvM2) * inWorldSpaceNormal;
-			ioResult.mAngularVelocity2 += inLambda * mInvI2_R2xAxis;
-		}
-
-		inline void		Solve(Vec3Arg inWorldSpaceNormal, float inInvM1, float inInvM2, float inMinLambda, float inMaxLambda, float &ioTotalLambda, CollisionEstimationResult &ioResult) const
-		{
-			// Calculate new total lambda
-			float total_lambda = ioTotalLambda + SolveGetLambda(inWorldSpaceNormal, ioResult);
-
-			// Clamp impulse
-			total_lambda = Clamp(total_lambda, inMinLambda, inMaxLambda);
-
-			SolveApplyLambda(inWorldSpaceNormal, inInvM1, inInvM2, total_lambda - ioTotalLambda, ioResult);
-
-			ioTotalLambda = total_lambda;
-		}
-
-		Vec3			mR1PlusUxAxis;
-		Vec3			mR2xAxis;
-		Vec3			mInvI1_R1PlusUxAxis;
-		Vec3			mInvI2_R2xAxis;
-		float			mEffectiveMass;
-		float			mBias;
-	};
-
 	struct Constraint
 	{
-		AxisConstraint	mContact;
-		AxisConstraint	mFriction1;
-		AxisConstraint	mFriction2;
+		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>	mContact;
+		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>	mFriction1;
+		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>	mFriction2;
 	};
 
 	// Initialize the constraint properties
@@ -146,10 +91,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		Vec3 r1 = p - com1;
 		Vec3 r2 = p - com2;
 
-		// Initialize contact constraint
-		constraint.mContact.Initialize(r1, r2, inManifold.mWorldSpaceNormal, inv_m1, inv_m2, inv_i1, inv_i2);
-
 		// Handle elastic collisions
+		float bias = 0.0f;
 		if (inCombinedRestitution > 0.0f)
 		{
 			// Calculate velocity of contact point
@@ -158,14 +101,22 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 
 			// If it is big enough, apply restitution
 			if (normal_velocity < -inMinVelocityForRestitution)
-				constraint.mContact.mBias = inCombinedRestitution * normal_velocity;
+				bias = inCombinedRestitution * normal_velocity;
 		}
 
+		// Ensure we start with no initial impulse
+		constraint.mContact.SetTotalLambda(0.0f);
+		constraint.mFriction1.SetTotalLambda(0.0f);
+		constraint.mFriction2.SetTotalLambda(0.0f);
+
+		// Initialize contact constraint
+		constraint.mContact.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, inManifold.mWorldSpaceNormal, bias);
+
+		// Initialize friction constraints
 		if (inCombinedFriction > 0.0f)
 		{
-			// Initialize friction constraints
-			constraint.mFriction1.Initialize(r1, r2, outResult.mTangent1, inv_m1, inv_m2, inv_i1, inv_i2);
-			constraint.mFriction2.Initialize(r1, r2, outResult.mTangent2, inv_m1, inv_m2, inv_i1, inv_i2);
+			constraint.mFriction1.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, outResult.mTangent1);
+			constraint.mFriction2.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, outResult.mTangent2);
 		}
 	}
 
@@ -179,14 +130,13 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		if (inCombinedFriction > 0.0f && iteration > 0) // For first iteration the contact impulse is zero so there's no point in applying friction
 			for (uint c = 0; c < num_points; ++c)
 			{
-				const Constraint &constraint = constraints[c];
-				CollisionEstimationResult::Impulse &impulse = outResult.mImpulses[c];
+				Constraint &constraint = constraints[c];
 
-				float lambda1 = impulse.mFrictionImpulse1 + constraint.mFriction1.SolveGetLambda(outResult.mTangent1, outResult);
-				float lambda2 = impulse.mFrictionImpulse2 + constraint.mFriction2.SolveGetLambda(outResult.mTangent2, outResult);
+				float lambda1 = constraint.mFriction1.SolveVelocityConstraintGetTotalLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, outResult.mTangent1);
+				float lambda2 = constraint.mFriction2.SolveVelocityConstraintGetTotalLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, outResult.mTangent2);
 
 				// Calculate max impulse based on contact impulse
-				float max_impulse = inCombinedFriction * impulse.mContactImpulse;
+				float max_impulse = inCombinedFriction * constraint.mContact.GetTotalLambda();
 
 				// If the total lambda that we will apply is too large, scale it back
 				float total_lambda_sq = Square(lambda1) + Square(lambda2);
@@ -197,16 +147,23 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 					lambda2 *= scale;
 				}
 
-				constraint.mFriction1.SolveApplyLambda(outResult.mTangent1, inv_m1, inv_m2, lambda1 - impulse.mFrictionImpulse1, outResult);
-				constraint.mFriction2.SolveApplyLambda(outResult.mTangent2, inv_m1, inv_m2, lambda2 - impulse.mFrictionImpulse2, outResult);
-
-				impulse.mFrictionImpulse1 = lambda1;
-				impulse.mFrictionImpulse2 = lambda2;
+				constraint.mFriction1.SolveVelocityConstraintApplyLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, inv_m1, inv_m2, outResult.mTangent1, lambda1);
+				constraint.mFriction2.SolveVelocityConstraintApplyLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, inv_m1, inv_m2, outResult.mTangent2, lambda2);
 			}
 
 		// Solve contact constraints last
 		for (uint c = 0; c < num_points; ++c)
-			constraints[c].mContact.Solve(inManifold.mWorldSpaceNormal, inv_m1, inv_m2, 0.0f, FLT_MAX, outResult.mImpulses[c].mContactImpulse, outResult);
+			constraints[c].mContact.SolveVelocityConstraint(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, inv_m1, inv_m2, inManifold.mWorldSpaceNormal, 0.0f, FLT_MAX);
+	}
+
+	// Store impulses
+	for (uint c = 0; c < num_points; ++c)
+	{
+		Constraint &constraint = constraints[c];
+
+		outResult.mImpulses[c].mContactImpulse = constraint.mContact.GetTotalLambda();
+		outResult.mImpulses[c].mFrictionImpulse1 = constraint.mFriction1.GetTotalLambda();
+		outResult.mImpulses[c].mFrictionImpulse2 = constraint.mFriction2.GetTotalLambda();
 	}
 }
 
