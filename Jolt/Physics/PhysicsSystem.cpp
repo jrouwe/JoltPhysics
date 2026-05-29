@@ -2109,6 +2109,85 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 	sFinalizeContactAllocator(*ioStep, contact_allocator);
 }
 
+template <EMotionType Type2>
+void PhysicsSystem::sSolveCCDContact(Body &ioBody1, float inInvM1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, Body &ioBody2, Vec3Arg inR2, Vec3Arg inContactNormal, float inNormalVelocityBias, Vec3Arg inFrictionDirection, const ContactSettings &inContactSettings)
+{
+	MotionProperties *body_mp = ioBody1.GetMotionProperties();
+
+	// Get inverse mass of body 2
+	float inv_m2;
+	Mat44 inv_i2;
+	if constexpr (Type2 == EMotionType::Dynamic)
+	{
+		inv_m2 = inContactSettings.mInvMassScale2 * ioBody2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
+		inv_i2 = inContactSettings.mInvInertiaScale2 * ioBody2.GetInverseInertia();
+	}
+	else
+	{
+		inv_m2 = 0.0f;
+		inv_i2 = Mat44::sZero();
+	}
+
+	// Get velocities
+	Vec3 linear_velocity1 = body_mp->GetLinearVelocity();
+	Vec3 angular_velocity1 = body_mp->GetAngularVelocity();
+	Vec3 linear_velocity2, angular_velocity2;
+	if constexpr (Type2 != EMotionType::Static)
+	{
+		const MotionProperties *body2_mp = ioBody2.GetMotionPropertiesUnchecked();
+		linear_velocity2 = body2_mp->GetLinearVelocity();
+		angular_velocity2 = body2_mp->GetAngularVelocity();
+	}
+	else
+	{
+		linear_velocity2 = Vec3::sZero();
+		angular_velocity2 = Vec3::sZero();
+	}
+
+	// Add the required padding to ContactConstraintPart
+	struct ConstraintPart : public ContactConstraintPart<EMotionType::Dynamic, Type2>
+	{
+		using ContactConstraintPart<EMotionType::Dynamic, Type2>::ContactConstraintPart;
+		[[maybe_unused]] uint32 mPadding;
+	};
+
+	// Solve contact constraint
+	ConstraintPart contact_constraint;
+	contact_constraint.SetTotalLambda(0.0f);
+	contact_constraint.CalculateConstraintProperties(inInvM1, inInvI1, inR1PlusU, inv_m2, inv_i2, inR2, inContactNormal, inNormalVelocityBias);
+	contact_constraint.SolveVelocityConstraint(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, inInvM1, inv_m2, inContactNormal, -FLT_MAX, FLT_MAX);
+
+	// Apply friction
+	if (inContactSettings.mCombinedFriction > 0.0f)
+	{
+		// Calculate friction direction by removing normal velocity from the relative velocity
+		float friction_direction_len_sq = inFrictionDirection.LengthSq();
+		if (friction_direction_len_sq > 1.0e-12f)
+		{
+			// Normalize friction direction
+			Vec3 friction_direction = inFrictionDirection / Sqrt(friction_direction_len_sq);
+
+			// Calculate max friction impulse
+			float max_lambda_f = inContactSettings.mCombinedFriction * contact_constraint.GetTotalLambda();
+
+			ConstraintPart friction;
+			friction.SetTotalLambda(0.0f);
+			friction.CalculateConstraintProperties(inInvM1, inInvI1, inR1PlusU, inv_m2, inv_i2, inR2, friction_direction, 0.0f);
+			friction.SolveVelocityConstraint(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, inInvM1, inv_m2, friction_direction, -max_lambda_f, max_lambda_f);
+		}
+	}
+
+	// Write back velocities
+	body_mp->SetLinearVelocityClamped(linear_velocity1);
+	body_mp->SetAngularVelocityClamped(angular_velocity1);
+	if constexpr (Type2 != EMotionType::Static)
+	{
+		MotionProperties *body2_mp = ioBody2.GetMotionProperties();
+		body2_mp->SetLinearVelocityClamped(linear_velocity2);
+		body2_mp->SetAngularVelocityClamped(angular_velocity2);
+	}
+}
+
 void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
@@ -2202,6 +2281,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 
 					// Calculate inverse mass for body 1
 					float inv_m1 = contact_settings.mInvMassScale1 * body_mp->GetInverseMass();
+					Mat44 inv_i1 = contact_settings.mInvInertiaScale1 * body1.GetInverseInertia();
 
 					if (body2.IsRigidBody())
 					{
@@ -2220,39 +2300,17 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 						else
 							normal_velocity_bias = 0.0f;
 
-						// Get inverse mass of body 2
-						float inv_m2 = body2.GetMotionPropertiesUnchecked() != nullptr? contact_settings.mInvMassScale2 * body2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked() : 0.0f;
+						// Calculate direction in which the friction operates
+						Vec3 friction_direction = relative_velocity - normal_velocity * ccd_body->mContactNormal;
 
-						// Solve contact constraint
-						ConcreteContactConstraintPart contact_constraint;
-						contact_constraint.SolveVelocityConstraint(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, ccd_body->mContactNormal, normal_velocity_bias, -FLT_MAX, FLT_MAX);
-
-						// Apply friction
-						if (contact_settings.mCombinedFriction > 0.0f)
-						{
-							// Calculate friction direction by removing normal velocity from the relative velocity
-							Vec3 friction_direction = relative_velocity - normal_velocity * ccd_body->mContactNormal;
-							float friction_direction_len_sq = friction_direction.LengthSq();
-							if (friction_direction_len_sq > 1.0e-12f)
-							{
-								// Normalize friction direction
-								friction_direction /= Sqrt(friction_direction_len_sq);
-
-								// Calculate max friction impulse
-								float max_lambda_f = contact_settings.mCombinedFriction * contact_constraint.GetTotalLambda();
-
-								ConcreteContactConstraintPart friction;
-								friction.SolveVelocityConstraint(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, friction_direction, 0.0f, -max_lambda_f, max_lambda_f);
-							}
-						}
-
-						// Clamp velocity of body 2
-						if (body2.IsDynamic())
-						{
-							MotionProperties *body2_mp = body2.GetMotionProperties();
-							body2_mp->ClampLinearVelocity();
-							body2_mp->ClampAngularVelocity();
-						}
+						// Dispatch to the correct form
+						using DispatchFunc = void (*)(Body &, float, Mat44Arg, Vec3Arg, Body &, Vec3Arg, Vec3Arg, float, Vec3Arg, const ContactSettings &);
+						static const DispatchFunc table[3] = {
+							sSolveCCDContact<EMotionType::Static>,
+							sSolveCCDContact<EMotionType::Kinematic>,
+							sSolveCCDContact<EMotionType::Dynamic>
+						};
+						table[(int)body2.GetMotionType()](body1, inv_m1, inv_i1, r1_plus_u, body2, r2, ccd_body->mContactNormal, normal_velocity_bias, friction_direction, contact_settings);
 					}
 					else
 					{
@@ -2293,12 +2351,14 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 
 						// Calculate resulting velocity change (the math here is similar to AxisConstraintPart but without an inertia term for body 2 as we treat it as a point mass)
 						Vec3 r1_plus_u_x_n = r1_plus_u.Cross(ccd_body->mContactNormal);
-						Vec3 invi1_r1_plus_u_x_n = contact_settings.mInvInertiaScale1 * body1.GetInverseInertia().Multiply3x3(r1_plus_u_x_n);
+						Vec3 invi1_r1_plus_u_x_n = inv_i1.Multiply3x3(r1_plus_u_x_n);
 						float jv = r1_plus_u_x_n.Dot(body_mp->GetAngularVelocity()) - normal_velocity - normal_velocity_bias;
 						float inv_effective_mass = inv_m1 + inv_m2 + invi1_r1_plus_u_x_n.Dot(r1_plus_u_x_n);
 						float lambda = jv / inv_effective_mass;
 						body_mp->SubLinearVelocityStep((lambda * inv_m1) * ccd_body->mContactNormal);
+						body_mp->ClampLinearVelocity();
 						body_mp->SubAngularVelocityStep(lambda * invi1_r1_plus_u_x_n);
+						body_mp->ClampAngularVelocity();
 						Vec3 delta_v2 = inv_body2_transform.Multiply3x3(lambda * ccd_body->mContactNormal);
 						vtx0.mVelocity += delta_v2 * vtx0.mInvMass;
 						vtx1.mVelocity += delta_v2 * vtx1.mInvMass;
@@ -2317,10 +2377,6 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 							soft_mp->RequestContactCallback();
 						}
 					}
-
-					// Clamp velocity of body 1
-					body_mp->ClampLinearVelocity();
-					body_mp->ClampAngularVelocity();
 
 					// Activate the 2nd body if it is not already active
 					if (body2.IsDynamic() && !body2.IsActive())
