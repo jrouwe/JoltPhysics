@@ -51,21 +51,21 @@ public:
 		const float pos_range = 0.9f * half_box_size;
 
 		// Create hollow box to enclose the objects
-		BodyCreationSettings body_settings(new BoxShape(Vec3(half_box_size, wall_thickness, half_box_size)), RVec3(0, -half_box_size, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings body_settings(new BoxShape(Vec3(half_box_size, wall_thickness, half_box_size)), RVec3(0, -Real(half_box_size), 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 		body_settings.mRestitution = 1.0f;
 		body_settings.mFriction = 1.0f;
 		bi.CreateAndAddBody(body_settings, EActivation::DontActivate);
-		body_settings.mPosition = RVec3(0, half_box_size, 0);
+		body_settings.mPosition = RVec3(0, Real(half_box_size), 0);
 		bi.CreateAndAddBody(body_settings, EActivation::DontActivate);
-		body_settings.mPosition = RVec3(0, 0, -half_box_size);
+		body_settings.mPosition = RVec3(0, 0, -Real(half_box_size));
 		body_settings.mRotation = Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI);
 		bi.CreateAndAddBody(body_settings, EActivation::DontActivate);
-		body_settings.mPosition = RVec3(0, 0, half_box_size);
+		body_settings.mPosition = RVec3(0, 0, Real(half_box_size));
 		bi.CreateAndAddBody(body_settings, EActivation::DontActivate);
-		body_settings.mPosition = RVec3(-half_box_size, 0, 0);
+		body_settings.mPosition = RVec3(-Real(half_box_size), 0, 0);
 		body_settings.mRotation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
 		bi.CreateAndAddBody(body_settings, EActivation::DontActivate);
-		body_settings.mPosition = RVec3(half_box_size, 0, 0);
+		body_settings.mPosition = RVec3(Real(half_box_size), 0, 0);
 		bi.CreateAndAddBody(body_settings, EActivation::DontActivate);
 
 		// Create dynamic box
@@ -78,7 +78,7 @@ public:
 		for (int i = 0; i < 5000; ++i)
 		{
 			dynamic_body_settings.SetShape(mShapes[i % mShapes.size()]);
-			dynamic_body_settings.mPosition = RVec3(random_float(rnd, -pos_range, pos_range), random_float(rnd, -pos_range, pos_range), random_float(rnd, -pos_range, pos_range));
+			dynamic_body_settings.mPosition = RVec3(Real(random_float(rnd, -pos_range, pos_range)), Real(random_float(rnd, -pos_range, pos_range)), Real(random_float(rnd, -pos_range, pos_range)));
 			dynamic_body_settings.mRotation = Quat::sRandom(rnd);
 			dynamic_body_settings.mFriction = random_float(rnd, 0.5f, 1.0f);
 			dynamic_body_settings.mRestitution = random_float(rnd, 0.9f, 1.0f);
