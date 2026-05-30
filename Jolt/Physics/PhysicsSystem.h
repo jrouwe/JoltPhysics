@@ -308,6 +308,10 @@ private:
 	/// Called at the end of JobSolveVelocityConstraints to check if bodies need to go to sleep and to update their bounding box in the broadphase
 	void						CheckSleepAndUpdateBounds(uint32 inIslandIndex, const PhysicsUpdateContext *ioContext, const PhysicsUpdateContext::Step *ioStep, BodiesToSleep &ioBodiesToSleep);
 
+	/// Helper function that solves the velocity of a CCD contact
+	template <EMotionType Type2>
+	static void					sSolveCCDContact(Body &ioBody1, float inInvM1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, Body &ioBody2, Vec3Arg inR2, Vec3Arg inContactNormal, float inNormalVelocityBias, Vec3Arg inFrictionDirection, const ContactSettings &inContactSettings);
+
 	/// Number of constraints to process at once in JobDetermineActiveConstraints
 	static constexpr int		cDetermineActiveConstraintsBatchSize = 64;
 
