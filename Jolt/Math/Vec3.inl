@@ -472,10 +472,14 @@ Vec3 Vec3::sUnitSpherical(float inTheta, float inPhi)
 template <class Random>
 Vec3 Vec3::sRandom(Random &inRandom)
 {
-	std::uniform_real_distribution<float> zero_to_one(0.0f, 1.0f);
-	float theta = JPH_PI * zero_to_one(inRandom);
-	float phi = 2.0f * JPH_PI * zero_to_one(inRandom);
-	return sUnitSpherical(theta, phi);
+	// Generating uniform unit random vectors in Rn - Andersen Ang
+	// See: https://angms.science/doc/RM/randUnitVec.pdf
+	float z = -1.0f + 2.0f * float(inRandom() - inRandom.min()) / float(inRandom.max() - inRandom.min());
+	float r = JPH::Sqrt(1.0f - Square(z));
+	float theta = 2.0f * JPH_PI * float(inRandom() - inRandom.min()) / float(inRandom.max() - inRandom.min());
+	Vec4 s, c;
+	Vec4::sReplicate(theta).SinCos(s, c);
+	return Vec3(r * s.GetX(), r * c.GetX(), z);
 }
 
 bool Vec3::operator == (Vec3Arg inV2) const
