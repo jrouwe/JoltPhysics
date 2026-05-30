@@ -259,12 +259,13 @@ Quat Quat::sFromTo(Vec3Arg inFrom, Vec3Arg inTo)
 template <class Random>
 Quat Quat::sRandom(Random &inRandom)
 {
-	std::uniform_real_distribution<float> zero_to_one(0.0f, 1.0f);
-	float x0 = zero_to_one(inRandom);
+	// Using Uniform Random Rotations - Graphics Gems III - Ken Shoemake
+	float x0 = float(inRandom() - inRandom.min()) / float(inRandom.max() - inRandom.min());
 	float r1 = Sqrt(1.0f - x0), r2 = Sqrt(x0);
-	std::uniform_real_distribution<float> zero_to_two_pi(0.0f, 2.0f * JPH_PI);
+	float theta1 = 2.0f * JPH_PI * float(inRandom() - inRandom.min()) / float(inRandom.max() - inRandom.min());
+	float theta2 = 2.0f * JPH_PI * float(inRandom() - inRandom.min()) / float(inRandom.max() - inRandom.min());
 	Vec4 s, c;
-	Vec4(zero_to_two_pi(inRandom), zero_to_two_pi(inRandom), 0, 0).SinCos(s, c);
+	Vec4(theta1, theta2, 0, 0).SinCos(s, c);
 	return Quat(s.GetX() * r1, c.GetX() * r1, s.GetY() * r2, c.GetY() * r2);
 }
 

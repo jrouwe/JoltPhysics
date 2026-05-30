@@ -47,6 +47,7 @@ JPH_SUPPRESS_WARNINGS
 #include "LargeMeshScene.h"
 #include "CharacterVirtualScene.h"
 #include "MaxBodiesScene.h"
+#include "HighSpeedScene.h"
 
 // Time step for physics
 constexpr float cDeltaTime = 1.0f / 60.0f;
@@ -122,6 +123,8 @@ int main(int argc, char** argv)
 				scene = unique_ptr<PerformanceTestScene>(new CharacterVirtualScene);
 			else if (strcmp(arg + 3, "MaxBodies") == 0)
 				scene = unique_ptr<MaxBodiesScene>(new MaxBodiesScene);
+			else if (strcmp(arg + 3, "HighSpeed") == 0)
+				scene = unique_ptr<PerformanceTestScene>(new HighSpeedScene);
 			else
 			{
 				Trace("Invalid scene");
