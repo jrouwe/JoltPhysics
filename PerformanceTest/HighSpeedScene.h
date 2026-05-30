@@ -74,11 +74,16 @@ public:
 
 		// Create many instances with high velocity (don't use std::uniform_real_distribution as that is not cross platform deterministic)
 		mt19937 rnd;
-		auto random_float = [](mt19937 &inRnd, float inMin, float inMax) { return inMin + (inRnd() - inRnd.min()) * (inMax - inMin) / (inRnd.max() - inRnd.min()); };
+		auto random_float = [](mt19937 &inRnd, float inMin, float inMax) { return inMin + float(inRnd() - inRnd.min()) * (inMax - inMin) / float(inRnd.max() - inRnd.min()); };
 		for (int i = 0; i < 5000; ++i)
 		{
+			// Note that we explicitly order x, y and z. Calling this in the constructor means they get called in a different order on different platforms. This breaks cross platform determinism.
+			Real x(random_float(rnd, -pos_range, pos_range));
+			Real y(random_float(rnd, -pos_range, pos_range));
+			Real z(random_float(rnd, -pos_range, pos_range));
+
 			dynamic_body_settings.SetShape(mShapes[i % mShapes.size()]);
-			dynamic_body_settings.mPosition = RVec3(Real(random_float(rnd, -pos_range, pos_range)), Real(random_float(rnd, -pos_range, pos_range)), Real(random_float(rnd, -pos_range, pos_range)));
+			dynamic_body_settings.mPosition = RVec3(x, y, z);
 			dynamic_body_settings.mRotation = Quat::sRandom(rnd);
 			dynamic_body_settings.mFriction = random_float(rnd, 0.5f, 1.0f);
 			dynamic_body_settings.mRestitution = random_float(rnd, 0.9f, 1.0f);
