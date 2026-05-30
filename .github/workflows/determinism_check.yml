@@ -186,7 +186,7 @@ jobs:
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
     - name: Test HighSpeed
       working-directory: ${{github.workspace}}/Build/VS2026_CL/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed "-validate_hash=$env:HIGH_SPEED_HASH"
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/VS2026_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
@@ -219,7 +219,7 @@ jobs:
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
     - name: Test HighSpeed
       working-directory: ${{github.workspace}}/Build/VS2026_CL_32BIT/Distribution
-      run: ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed "-validate_hash=$env:HIGH_SPEED_HASH"
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/VS2026_CL_32BIT/Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
@@ -297,7 +297,7 @@ jobs:
       run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH_DOUBLE}
     - name: Test HighSpeed
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH_DOUBLE}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH_DOUBLE}
