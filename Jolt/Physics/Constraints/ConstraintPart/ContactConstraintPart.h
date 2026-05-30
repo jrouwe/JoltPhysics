@@ -120,6 +120,9 @@ public:
 	{
 		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-5f));
 
+		// Store bias
+		this->mBias = inBias;
+
 		// Calculate inverse effective mass: K = J M^-1 J^T
 		float inv_effective_mass;
 
@@ -158,10 +161,7 @@ public:
 		if (inv_effective_mass == 0.0f)
 			this->Deactivate();
 		else
-		{
 			this->mEffectiveMass = 1.0f / inv_effective_mass;
-			this->mBias = inBias;
-		}
 	}
 
 	/// See AxisConstraintPart::WarmStart
