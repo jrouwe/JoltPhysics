@@ -78,9 +78,9 @@ public:
 		for (int i = 0; i < 5000; ++i)
 		{
 			// Note that we explicitly order x, y and z. Calling this in the constructor means they get called in a different order on different platforms. This breaks cross platform determinism.
-			Real x(random_float(rnd, -pos_range, pos_range));
-			Real y(random_float(rnd, -pos_range, pos_range));
-			Real z(random_float(rnd, -pos_range, pos_range));
+			Real x = Real(random_float(rnd, -pos_range, pos_range));
+			Real y = Real(random_float(rnd, -pos_range, pos_range));
+			Real z = Real(random_float(rnd, -pos_range, pos_range));
 
 			dynamic_body_settings.SetShape(mShapes[i % mShapes.size()]);
 			dynamic_body_settings.mPosition = RVec3(x, y, z);
