@@ -5,27 +5,30 @@ COMPILER=""
 SHARED_LIB=false
 POSTFIX_DEBUG=false
 ENV_SCRIPT=""
-CMAKE_EXTRA_ARGS=""
 
-for arg in "$@"; do
-  case "$arg" in
+while [ $# -gt 0 ]; do
+  case "$1" in
     --shared)
       SHARED_LIB=true
+      shift
       ;;
     --postfix-debug)
       POSTFIX_DEBUG=true
+      shift
       ;;
     --env-script=*)
-      ENV_SCRIPT="${arg#*=}"
+      ENV_SCRIPT="${1#*=}"
+      shift
       ;;
     *)
       if [ -z "$BUILD_TYPE" ]; then
-        BUILD_TYPE="$arg"
+        BUILD_TYPE="$1"
       elif [ -z "$COMPILER" ]; then
-        COMPILER="$arg"
+        COMPILER="$1"
       else
-        CMAKE_EXTRA_ARGS="$CMAKE_EXTRA_ARGS $arg"
+        break
       fi
+      shift
       ;;
   esac
 done
@@ -59,21 +62,15 @@ if [ "$SHARED_LIB" = true ]; then
   BUILD_DIR=${BUILD_DIR}_shared
   SHARED_ARG="-DBUILD_SHARED_LIBS=ON"
 fi
-if [ -n "$POSTFIX_ARG" ]; then
-  CMAKE_EXTRA_ARGS="$CMAKE_EXTRA_ARGS $POSTFIX_ARG"
-fi
-if [ -n "$SHARED_ARG" ]; then
-  CMAKE_EXTRA_ARGS="$CMAKE_EXTRA_ARGS $SHARED_ARG"
-fi
 
 echo Generating Makefile for build type \"$BUILD_TYPE\" and compiler \"$COMPILER\" in folder \"$BUILD_DIR\"
 cmake -S . -B $BUILD_DIR -G "Unix Makefiles" \
   -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
   -DCMAKE_CXX_COMPILER=$COMPILER \
-  $CMAKE_EXTRA_ARGS
+  "$@" $POSTFIX_ARG $SHARED_ARG
 
-echo ""
-echo Compile by running:
-echo "cd ${BUILD_DIR} && make -j$(nproc)"
-echo Run tests: ./UnitTests
-echo ""
+  echo ""
+  echo Compile by running:
+  echo "cd ${BUILD_DIR} && make -j$(nproc)"
+  echo Run tests: ./UnitTests
+  echo ""
