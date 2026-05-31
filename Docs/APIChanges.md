@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v5.5.0 and latest
 
+* 20260531 - Changed the friction model. The simulation changed slightly because of this (obviously the effects accumulate over time). `EstimateCollisionResponse` now returns 2 linear and 1 angular friction impulse instead of per contact point friction impulse. (0f58921ed9b42f3296d37163d7e1b69903175741)
 * 20260506 - Renamed `CharacterVirtual::Contact` to `CharacterContact` and `CharacterVirtual::ContactKey` to `CharacterContactKey`. `CharacterContactListener` will now receive a full `CharacterContact` instead of just a few parameters. Beware that the old `inContactNormal` parameter needs to be replaced with `-inContact.mContactNormal`. (94bfc55c0ae9abb80f80897c6be08aa1415288cb)
 * 20260410 - Fixed contact callbacks for body with motion quality LinearCast vs a soft body. Previously, the contacts would be reported accidentally through the regular ContactListener. Now they're properly reported through the SoftBodyContactListener. (63765d19bae439ea4a9f93d186d6f1d94029229b)
 * 20260307 - *SBS* - Added support for HeightFieldShapeSettings::mBitsPerSample > 8 which adds 1 byte to the binary serialization format and renders it incompatible with previous saved data. (449b645b71a7a47aa0d7bdcb5f9c197f1ddff5b0)

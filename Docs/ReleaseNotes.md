@@ -15,7 +15,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 	* Supports collision with the environment, although it only supports ConvexHull and CompoundShapes at the moment.
 	* The roots of the hairs can be skinned to the scalp mesh.
 	* Note that this is still work in progress, some things that still need to be done are listed in Hair.h.
-* Increased maximum value of HeightFieldShape::mBitsPerSample to 16 to be able to create height fields that more closely match the uncompressed height values.
+* Implemented a new friction model. This friction model is cheaper to execute (15 % faster, 40% less memory for Pyramid test) and doesn't favor the first contact manifold point. Instead of applying friction at every contact point, we now calculate the average contact point and apply friction there. Friction consists of 2 linear constraints and 1 angular constraint. The linear constraints use the `friction_coefficient * sum(contact_impulse)` to determine the max linear friction impulse, the angular constraint uses `friction_coefficient * sum(distance_friction_point_to_contact_point * contact_impulse)` to determine the max angular friction impulse.
+* Increased maximum value of `HeightFieldShape::mBitsPerSample` to 16 to be able to create height fields that more closely match the uncompressed height values.
 * Made tolerance that's used in the internal edge removal algorithm configurable in `CollideShapeSettings::mInternalEdgeRemovalVertexToleranceSq` and `PhysicsSettings::mInternalEdgeRemovalVertexToleranceSq`.
 * Added support for RISC-V RVV, the SIMD extension for RISC-V.
 * Added `JPH_BUILD_SHARED_LIBS` cmake variable to determine whether to build static or shared libraries (it defaults to `BUILD_SHARED_LIBS`). This allows embedding Jolt as a static library within a shared library.
