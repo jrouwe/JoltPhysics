@@ -1755,6 +1755,61 @@ TEST_SUITE("PhysicsTests")
 		}
 	}
 
+	TEST_CASE("TestAngularFriction")
+	{
+		const float friction_floor = 0.2f;
+		const float friction_box = 0.3f;
+		const float combined_friction = Sqrt(friction_floor * friction_box);
+
+		// Create a context with space for 8 constraints
+		PhysicsTestContext c(1.0f / 60.0f, 1, 0, 1024, 4096, 8);
+
+		// Create floor
+		Body &floor = c.CreateFloor();
+		floor.SetFriction(friction_floor);
+
+		// Create box with an angular velocity that will make it rotate on the floor (making sure it intersects a little bit initially)
+		RVec3 cInitialPosition(10, 0.999_r, 10);
+		BodyCreationSettings box_settings(new BoxShape(Vec3::sOne()), cInitialPosition, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		box_settings.mFriction = friction_box;
+		box_settings.mAngularDamping = 0;
+		box_settings.mAngularVelocity = Vec3(0, 10, 0);
+		Body &box = *c.GetBodyInterface().CreateBody(box_settings);
+		c.GetBodyInterface().AddBody(box.GetID(), EActivation::Activate);
+
+		// Force that the box exerts on the floor
+		float contact_force = c.GetSystem()->GetGravity().Length() / box.GetMotionProperties()->GetInverseMass();
+
+		// Assuming we apply friction at each contact point (the corners of the box). The angular friction torque will be this:
+		float cDistanceToContactPoint = Sqrt(2.0f);
+		float friction_torque = combined_friction * cDistanceToContactPoint * contact_force;
+
+		// And then we can calculate the acceleration
+		Vec3 friction_angular_acceleration = Vec3(0, box.GetInverseInertia()(2, 2) * friction_torque, 0);
+
+		// Simulate
+		Vec3 angular_velocity = box_settings.mAngularVelocity;
+		Quat rotation = box_settings.mRotation;
+		for (int i = 0; i < 60; ++i)
+		{
+			c.SimulateSingleStep();
+
+			// Integrate our own simulation
+			angular_velocity -= friction_angular_acceleration * c.GetDeltaTime();
+			float angular_velocity_len = angular_velocity.Length();
+			rotation = (Quat::sRotation(angular_velocity / angular_velocity_len, angular_velocity_len * c.GetDeltaTime()) * rotation).Normalized();
+		}
+
+		CHECK(angular_velocity.GetY() >= 0.0f); // Check that we are slowing down but haven't reversed direction yet
+		CHECK(angular_velocity.GetY() < 5.0f); // Check that we lost significant speed
+
+		// Note that the result is not very accurate so we need quite a high tolerance
+		CHECK_APPROX_EQUAL(box.GetCenterOfMassPosition(), cInitialPosition, 1.0e-4f);
+		CHECK_APPROX_EQUAL(box.GetRotation(), rotation, 2.0e-3f);
+		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), Vec3::sZero(), 4.0e-4f);
+		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), angular_velocity, 5.0e-3f);
+	}
+
 	TEST_CASE("TestAllowedDOFs")
 	{
 		for (uint allowed_dofs = 1; allowed_dofs <= 0b111111; ++allowed_dofs)

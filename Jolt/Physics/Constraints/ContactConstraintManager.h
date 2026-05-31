@@ -11,6 +11,7 @@
 #include <Jolt/Physics/Collision/Shape/SubShapeIDPair.h>
 #include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/ContactConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/AngularFrictionConstraintPart.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Core/HashCombine.h>
 #include <Jolt/Core/NonCopyable.h>
@@ -275,10 +276,9 @@ private:
 
 		/// Total applied impulse during the last update that it was used
 		float					mNonPenetrationLambda;
-		Vector<2>				mFrictionLambda;
 	};
 
-	static_assert(sizeof(CachedContactPoint) == 36, "Unexpected size");
+	static_assert(sizeof(CachedContactPoint) == 28, "Unexpected size");
 	static_assert(alignof(CachedContactPoint) == 4, "Assuming 4 byte aligned");
 
 	/// A single cached manifold
@@ -302,6 +302,10 @@ private:
 		/// Note: this value is read through sLoadFloat3Unsafe.
 		Float3					mContactNormal;
 
+		/// Total applied impulse during the last update that it was used
+		Vector<2>				mFrictionLambda;
+		float					mAngularFrictionLambda;
+
 		/// Flags for this cached manifold
 		enum class EFlags : uint16
 		{
@@ -319,7 +323,7 @@ private:
 		CachedContactPoint		mContactPoints[1];
 	};
 
-	static_assert(sizeof(CachedManifold) == 56, "This structure is expect to not contain any waste due to alignment");
+	static_assert(sizeof(CachedManifold) == 60, "This structure is expect to not contain any waste due to alignment");
 	static_assert(alignof(CachedManifold) == 4, "Assuming 4 byte aligned");
 
 	/// Define a map that maps SubShapeIDPair -> manifold
@@ -377,6 +381,7 @@ private:
 		MKVAndCreated			FindOrCreate(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, uint64 inKeyHash, int inNumContactPoints);
 		uint32					ToHandle(const MKeyValue *inKeyValue) const;
 		const MKeyValue *		FromHandle(uint32 inHandle) const;
+		MKeyValue *				FromHandle(uint32 inHandle);
 
 		/// Find / create entry for BodyPair -> CachedBodyPair
 		const BPKeyValue *		Find(const BodyPair &inKey, uint64 inKeyHash) const;
@@ -421,6 +426,8 @@ private:
 
 	ManifoldCache				mCache[2];									///< We have one cache to read from and one to write to
 	int							mCacheWriteIdx = 0;							///< Which cache we're currently writing to
+	ManifoldCache *				mReadCache = nullptr;						///< The cache we're currently reading from (fixed at the start of the step so that it remains even after we swap mCacheWriteIdx in FinalizeContactCacheAndCallContactPointRemovedCallbacks, valid only during stepping)
+	ManifoldCache *				mWriteCache = nullptr;						///< The cache we're currently writing to (fixed at the start of the step so that it remains even after we swap mCacheWriteIdx in FinalizeContactCacheAndCallContactPointRemovedCallbacks, valid only during stepping)
 
 	/// World space contact point, used for solving penetrations
 	template <EMotionType Type1, EMotionType Type2>
@@ -429,17 +436,15 @@ private:
 	public:
 		using ConstraintPart = ContactConstraintPart<Type1, Type2>;
 
-		/// Calculate constraint properties for the parts below
-		JPH_INLINE void			CalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, Vec3Arg inGravity, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings, float inMinVelocityForRestitution);
+		/// Calculate constraint properties for the non penetration constraint
+		JPH_INLINE void			CalculateNonPenetrationConstraintProperties(float inDeltaTime, Vec3Arg inGravity, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, float inMinVelocityForRestitution);
 
 		/// The constraint parts
 		ConstraintPart			mNonPenetrationConstraint;
-		ConstraintPart			mFrictionConstraint1;
-		ConstraintPart			mFrictionConstraint2;
 		// Note that this needs to be followed by data of size float, see comment at ContactConstraintPart
 
-		/// Contact cache
-		CachedContactPoint *	mContactPoint;
+		/// Distance between the friction center and this contact point
+		float					mDistanceToFrictionCenter;
 	};
 
 	class ContactConstraintBase
@@ -468,6 +473,7 @@ private:
 		float					mInvInertiaScale1;
 		float					mInvMass2;
 		float					mInvInertiaScale2;
+		uint32					mCachedManifoldHandle;
 		uint32					mNumContactPoints;
 	};
 
@@ -476,10 +482,18 @@ private:
 	class ContactConstraint : public ContactConstraintBase
 	{
 	public:
+		/// Calculate constraint properties for the friction constraint
+		JPH_INLINE void			CalculateFrictionConstraintProperties(const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, const RVec3 *inWorldSpaceContacts, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings);
+
 	#ifdef JPH_DEBUG_RENDERER
 		/// Draw the state of the contact constraint
-		void					Draw(DebugRenderer *inRenderer, ColorArg inManifoldColor) const;
+		void					Draw(DebugRenderer *inRenderer, const ManifoldCache &inManifoldCache, ColorArg inManifoldColor) const;
 	#endif // JPH_DEBUG_RENDERER
+
+		ContactConstraintPart<Type1, Type2> mFrictionConstraint1;
+		ContactConstraintPart<Type1, Type2>	mFrictionConstraint2;
+		AngularFrictionConstraintPart<Type1, Type2> mAngularFrictionConstraint;
+		// Note that this needs to be followed by data of size float, see comment at AngularFrictionPart/ContactConstraintPart
 
 		WorldContactPoint<Type1, Type2> mContactPoints[1];
 	};
@@ -497,7 +511,7 @@ public:
 private:
 	/// Create a new contact constraint
 	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE ContactConstraint<Type1, Type2> *CreateConstraint(bool &ioActivateAndLinkBodies, Body &inBody1, Body &inBody2, uint64 inSortKey, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints);
+	JPH_INLINE ContactConstraint<Type1, Type2> *CreateConstraint(bool &ioActivateAndLinkBodies, Body &inBody1, Body &inBody2, uint64 inSortKey, uint32 inCachedManifoldHandle, Vec3Arg inWorldSpaceNormal, const ContactSettings &inSettings, uint32 inNumContactPoints);
 
 	/// Internal helper function to add a contact constraint from the cache. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
@@ -525,11 +539,11 @@ private:
 
 	/// Internal helper function to store lambdas applied during sSolveVelocityConstraint.
 	template <EMotionType Type1, EMotionType Type2>
-	static void					sStoreAppliedImpulses(ContactConstraintBase &ioConstraint);
+	static void					sStoreAppliedImpulses(ContactConstraintBase &ioConstraint, ManifoldCache &inManifoldCache);
 
 	/// Internal helper function to solve a single position constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	static bool					sSolvePositionConstraint(ContactConstraintBase &ioConstraint, Body &ioBody1, Body &ioBody2, const PhysicsSettings &inSettings);
+	static bool					sSolvePositionConstraint(ContactConstraintBase &ioConstraint, Body &ioBody1, Body &ioBody2, const PhysicsSettings &inSettings, const ManifoldCache &inManifoldCache);
 
 	/// The main physics settings instance
 	const PhysicsSettings &		mPhysicsSettings;
