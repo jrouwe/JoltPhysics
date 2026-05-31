@@ -465,10 +465,10 @@ jobs:
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
-    - name: Test HighSpeed
-      working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH}
 # This is really slow so disabled for the moment
+#    - name: Test HighSpeed
+#      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+#      run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH}
 #    - name: Test Ragdoll
 #      working-directory: ${{github.workspace}}/Build/Linux_Distribution
 #      run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
