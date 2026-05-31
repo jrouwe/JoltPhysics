@@ -257,6 +257,12 @@ inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key
 }
 
 template <class Key, class Value>
+inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::FromHandle(uint32 inHandle)
+{
+	return mAllocator.template FromOffset<KeyValue>(inHandle);
+}
+
+template <class Key, class Value>
 inline void LockFreeHashMap<Key, Value>::GetAllKeyValues(Array<const KeyValue *> &outAll) const
 {
 	for (const atomic<uint32> *bucket = mBuckets; bucket < mBuckets + mNumBuckets; ++bucket)

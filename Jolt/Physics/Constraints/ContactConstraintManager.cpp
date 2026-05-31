@@ -370,6 +370,11 @@ const ContactConstraintManager::MKeyValue *ContactConstraintManager::ManifoldCac
 	return mCachedManifolds.FromHandle(inHandle);
 }
 
+ContactConstraintManager::MKeyValue *ContactConstraintManager::ManifoldCache::FromHandle(uint32 inHandle)
+{
+	return mCachedManifolds.FromHandle(inHandle);
+}
+
 const ContactConstraintManager::BPKeyValue *ContactConstraintManager::ManifoldCache::Find(const BodyPair &inKey, uint64 inKeyHash) const
 {
 	JPH_ASSERT(mIsFinalized);
@@ -1812,10 +1817,10 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 }
 
 template <EMotionType Type1, EMotionType Type2>
-void ContactConstraintManager::sStoreAppliedImpulses(ContactConstraintBase &ioConstraint, const ManifoldCache &inManifoldCache)
+void ContactConstraintManager::sStoreAppliedImpulses(ContactConstraintBase &ioConstraint, ManifoldCache &inManifoldCache)
 {
 	ContactConstraint<Type1, Type2> &constraint = static_cast<ContactConstraint<Type1, Type2> &>(ioConstraint);
-	CachedManifold &cached_manifold = const_cast<CachedManifold &>(inManifoldCache.FromHandle(constraint.mCachedManifoldHandle)->GetValue());
+	CachedManifold &cached_manifold = inManifoldCache.FromHandle(constraint.mCachedManifoldHandle)->GetValue();
 
 	for (uint32 i = 0; i < constraint.mNumContactPoints; ++i)
 	{
@@ -1832,7 +1837,7 @@ void ContactConstraintManager::sStoreAppliedImpulses(ContactConstraintBase &ioCo
 void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintOffsetBegin, const uint32 *inConstraintOffsetEnd) const
 {
 	// Build dispatch table
-	using DispatchFunc = void (*)(ContactConstraintBase &, const ManifoldCache &);
+	using DispatchFunc = void (*)(ContactConstraintBase &, ManifoldCache &);
 	static const DispatchFunc table[3][3] = {
 		{
 			nullptr, // Static vs static doesn't exist

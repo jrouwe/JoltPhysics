@@ -381,6 +381,7 @@ private:
 		MKVAndCreated			FindOrCreate(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, uint64 inKeyHash, int inNumContactPoints);
 		uint32					ToHandle(const MKeyValue *inKeyValue) const;
 		const MKeyValue *		FromHandle(uint32 inHandle) const;
+		MKeyValue *				FromHandle(uint32 inHandle);
 
 		/// Find / create entry for BodyPair -> CachedBodyPair
 		const BPKeyValue *		Find(const BodyPair &inKey, uint64 inKeyHash) const;
@@ -538,7 +539,7 @@ private:
 
 	/// Internal helper function to store lambdas applied during sSolveVelocityConstraint.
 	template <EMotionType Type1, EMotionType Type2>
-	static void					sStoreAppliedImpulses(ContactConstraintBase &ioConstraint, const ManifoldCache &inManifoldCache);
+	static void					sStoreAppliedImpulses(ContactConstraintBase &ioConstraint, ManifoldCache &inManifoldCache);
 
 	/// Internal helper function to solve a single position constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
