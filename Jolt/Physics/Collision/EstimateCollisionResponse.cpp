@@ -70,14 +70,24 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	Vec3 com1 = Vec3(inBody1.GetCenterOfMassPosition() - inManifold.mBaseOffset);
 	Vec3 com2 = Vec3(inBody2.GetCenterOfMassPosition() - inManifold.mBaseOffset);
 
+	// Add the required padding to ContactConstraintPart and AngularFrictionConstraintPart
+	struct ConstraintPart : public ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>
+	{
+		using ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>::ContactConstraintPart;
+		[[maybe_unused]] uint32 mPadding;
+	};
+	struct AngularConstraintPart : public AngularFrictionConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>
+	{
+		using AngularFrictionConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>::AngularFrictionConstraintPart;
+		[[maybe_unused]] uint32 mPadding;
+	};
+
 	// Initialize the constraint properties
-	ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> contact_constraints[ContactPoints::Capacity];
+	ConstraintPart contact_constraints[ContactPoints::Capacity];
 	Vec3 contact_points[ContactPoints::Capacity];
 	Vec3 friction_point = Vec3::sZero();
 	for (uint c = 0; c < num_points; ++c)
 	{
-		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> &constraint = contact_constraints[c];
-
 		// Calculate contact points relative to body 1 and 2
 		Vec3 p = 0.5f * (inManifold.mRelativeContactPointsOn1[c] + inManifold.mRelativeContactPointsOn2[c]);
 
@@ -103,6 +113,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		}
 
 		// Initialize contact constraint
+		ConstraintPart &constraint = contact_constraints[c];
 		constraint.SetTotalLambda(0.0f);
 		constraint.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, inManifold.mWorldSpaceNormal, bias);
 	}
@@ -119,8 +130,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	outResult.mFrictionPoint = friction_point;
 
 	// Initialize friction constraints
-	ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> friction1, friction2;
-	AngularFrictionConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> angular_friction;
+	ConstraintPart friction1, friction2;
+	AngularConstraintPart angular_friction;
 	angular_friction.SetTotalLambda(0.0f);
 	friction1.SetTotalLambda(0.0f);
 	friction2.SetTotalLambda(0.0f);
