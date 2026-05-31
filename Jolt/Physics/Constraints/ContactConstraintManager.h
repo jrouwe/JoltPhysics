@@ -483,7 +483,7 @@ private:
 	{
 	public:
 		/// Calculate constraint properties for the friction constraint
-		JPH_INLINE void			CalculateFrictionConstraintProperties(const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3 *inWorldSpaceContacts, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings);
+		JPH_INLINE void			CalculateFrictionConstraintProperties(const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, const RVec3 *inWorldSpaceContacts, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings);
 
 	#ifdef JPH_DEBUG_RENDERER
 		/// Draw the state of the contact constraint

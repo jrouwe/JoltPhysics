@@ -138,7 +138,7 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint<Type1, Type2>::Calcu
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <EMotionType Type1, EMotionType Type2>
-void ContactConstraintManager::ContactConstraint<Type1, Type2>::CalculateFrictionConstraintProperties(const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3 *inWorldSpaceContacts, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings)
+void ContactConstraintManager::ContactConstraint<Type1, Type2>::CalculateFrictionConstraintProperties(const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, const RVec3 *inWorldSpaceContacts, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings)
 {
 	// Calculate friction part
 	if (inSettings.mCombinedFriction > 0.0f)
