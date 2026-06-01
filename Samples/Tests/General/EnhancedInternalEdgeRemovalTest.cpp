@@ -42,13 +42,13 @@ void EnhancedInternalEdgeRemovalTest::CreateSlidingObjects(RVec3Arg inStart)
 		pos += RVec3(0, 0, 5.0_r);
 
 		// Compound
-		RefConst<Shape> box = new BoxShape(Vec3::sReplicate(0.1f));
+		RefConst<Shape> box = new BoxShape(Vec3::sReplicate(0.2f));
 		StaticCompoundShapeSettings compound;
 		compound.SetEmbedded();
 		for (int x = 0; x < 2; ++x)
 			for (int y = 0; y < 2; ++y)
 				for (int z = 0; z < 2; ++z)
-					compound.AddShape(Vec3(x == 0? -1.9f : 1.9f, y == 0? -1.9f : 1.9f, z == 0? -1.9f : 1.9f), Quat::sIdentity(), box);
+					compound.AddShape(Vec3(x == 0? -1.8f : 1.8f, y == 0? -1.8f : 1.8f, z == 0? -1.8f : 1.8f), Quat::sIdentity(), box);
 		BodyCreationSettings compound_bcs(&compound, pos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		compound_bcs.mLinearVelocity = Vec3(20, 0, 0);
 		compound_bcs.mEnhancedInternalEdgeRemoval = enhanced_removal == 1;
