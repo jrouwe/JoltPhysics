@@ -42,7 +42,6 @@ protected:
 	// Note: Constructor will not be called
 	float						mEffectiveMass;
 	float						mTotalLambda;
-	float						mBias;
 };
 
 template <>
@@ -83,7 +82,6 @@ protected:
 };
 
 /// This is a copy of AxisConstraintPart, specialized to handle contact constraints. See the documentation of AxisConstraintPart for more documentation behind the math.
-/// Warning: Make sure there is 1 float of padding after this class because we read using Vec3::sLoadFloat3Unsafe and a Float3 is the last member.
 template <EMotionType Type1, EMotionType Type2>
 class ContactConstraintPart : public ContactConstraintPart1<Type1>, public ContactConstraintPart2<Type2>
 {
@@ -116,7 +114,7 @@ public:
 		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-5f));
 
 		// Store bias
-		this->mBias = inBias;
+		mBias = inBias;
 
 		// Calculate inverse effective mass: K = J M^-1 J^T
 		float inv_effective_mass;
@@ -190,7 +188,7 @@ public:
 		// Lagrange multiplier is:
 		//
 		// lambda = -K^-1 (J v + b)
-		float lambda = this->mEffectiveMass * (jv - this->mBias);
+		float lambda = this->mEffectiveMass * (jv - mBias);
 
 		// Return the total accumulated lambda
 		return this->mTotalLambda + lambda;
@@ -237,6 +235,10 @@ public:
 
 		return false;
 	}
+
+private:
+	// Note: Constructor will not be called. This serves as 1 extra float so we can read the previous member using Vec3::sLoadFloat3Unsafe
+	float						mBias;
 };
 
 static_assert(sizeof(ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>) == 3 * sizeof(float) + 4 * sizeof(Float3));

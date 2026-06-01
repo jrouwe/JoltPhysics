@@ -36,7 +36,6 @@ protected:
 };
 
 /// This is a copy of AngleConstraintPart, specialized to handle contact constraints. See the documentation of AngleConstraintPart for more documentation behind the math.
-/// Warning: Make sure there is 1 float of padding after this class because we read using Vec3::sLoadFloat3Unsafe and a Float3 is the last member.
 template <EMotionType Type1, EMotionType Type2>
 class AngularFrictionConstraintPart : public AngularFrictionConstraintPart1<Type1>, public AngularFrictionConstraintPart2<Type2>
 {
@@ -61,6 +60,9 @@ public:
 	inline void					CalculateConstraintProperties(Mat44Arg inInvI1, Mat44Arg inInvI2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
 		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-4f));
+
+		// Store bias
+		mBias = inBias;
 
 		Vec3 invi1_axis, invi2_axis;
 		if constexpr (Type1 == EMotionType::Dynamic)
@@ -87,10 +89,7 @@ public:
 		if (inv_effective_mass == 0.0f)
 			this->Deactivate();
 		else
-		{
 			this->mEffectiveMass = 1.0f / inv_effective_mass;
-			this->mBias = inBias;
-		}
 	}
 
 	/// See: AngleConstraintPart::WarmStart
@@ -113,13 +112,17 @@ public:
 		else
 			JPH_ASSERT(false); // Static vs static is nonsensical!
 
-		float lambda = this->mEffectiveMass * (jv - this->mBias);
+		float lambda = this->mEffectiveMass * (jv - mBias);
 		float new_lambda = Clamp(this->mTotalLambda + lambda, inMinLambda, inMaxLambda); // Clamp impulse
 		lambda = new_lambda - this->mTotalLambda; // Lambda potentially got clamped, calculate the new impulse to apply
 		this->mTotalLambda = new_lambda; // Store accumulated impulse
 
 		return ApplyVelocityStep(ioAngularVelocity1, ioAngularVelocity2, lambda);
 	}
+
+private:
+	// Note: Constructor will not be called. This serves as 1 extra float so we can read the previous member using Vec3::sLoadFloat3Unsafe
+	float						mBias;
 };
 
 static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>) == 3 * sizeof(float) + 2 * sizeof(Float3));

@@ -2144,15 +2144,8 @@ void PhysicsSystem::sSolveCCDContact(Body &ioBody1, float inInvM1, Mat44Arg inIn
 		angular_velocity2 = Vec3::sZero();
 	}
 
-	// Add the required padding to ContactConstraintPart
-	struct ConstraintPart : public ContactConstraintPart<EMotionType::Dynamic, Type2>
-	{
-		using ContactConstraintPart<EMotionType::Dynamic, Type2>::ContactConstraintPart;
-		[[maybe_unused]] uint32 mPadding;
-	};
-
 	// Solve contact constraint
-	ConstraintPart contact_constraint;
+	ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> contact_constraint;
 	contact_constraint.SetTotalLambda(0.0f);
 	contact_constraint.CalculateConstraintProperties(inInvM1, inInvI1, inR1PlusU, inv_m2, inv_i2, inR2, inContactNormal, inNormalVelocityBias);
 	contact_constraint.SolveVelocityConstraint(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, inInvM1, inv_m2, inContactNormal, -FLT_MAX, FLT_MAX);
@@ -2170,7 +2163,7 @@ void PhysicsSystem::sSolveCCDContact(Body &ioBody1, float inInvM1, Mat44Arg inIn
 			// Calculate max friction impulse
 			float max_lambda_f = inContactSettings.mCombinedFriction * contact_constraint.GetTotalLambda();
 
-			ConstraintPart friction;
+			ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> friction;
 			friction.SetTotalLambda(0.0f);
 			friction.CalculateConstraintProperties(inInvM1, inInvI1, inR1PlusU, inv_m2, inv_i2, inR2, friction_direction, 0.0f);
 			friction.SolveVelocityConstraint(linear_velocity1, angular_velocity1, linear_velocity2, angular_velocity2, inInvM1, inv_m2, friction_direction, -max_lambda_f, max_lambda_f);

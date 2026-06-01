@@ -493,7 +493,6 @@ private:
 		ContactConstraintPart<Type1, Type2> mFrictionConstraint1;
 		ContactConstraintPart<Type1, Type2>	mFrictionConstraint2;
 		AngularFrictionConstraintPart<Type1, Type2> mAngularFrictionConstraint;
-		// Note that this needs to be followed by data of size float, see comment at AngularFrictionPart/ContactConstraintPart
 
 		WorldContactPoint<Type1, Type2> mContactPoints[1];
 	};
