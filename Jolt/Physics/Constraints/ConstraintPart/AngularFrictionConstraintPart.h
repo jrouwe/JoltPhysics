@@ -62,6 +62,9 @@ public:
 	{
 		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-4f));
 
+		// Store bias
+		this->mBias = inBias;
+
 		Vec3 invi1_axis, invi2_axis;
 		if constexpr (Type1 == EMotionType::Dynamic)
 		{
@@ -87,10 +90,7 @@ public:
 		if (inv_effective_mass == 0.0f)
 			this->Deactivate();
 		else
-		{
 			this->mEffectiveMass = 1.0f / inv_effective_mass;
-			this->mBias = inBias;
-		}
 	}
 
 	/// See: AngleConstraintPart::WarmStart
