@@ -20,7 +20,6 @@ env:
   UBUNTU_GCC_POWERPC_VERSION: powerpc64le-linux-gnu-g++-14
   UBUNTU_GCC_LOONGARCH_VERSION: loongarch64-linux-gnu-g++-14
   SDE_VERSION: '10.8.0-2026-03-15'
-  SDE_DOWNLOAD_ID: '915934'
 
 on:
   push:
@@ -104,11 +103,20 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v6
+    - name: Cache Intel SDE
+      id: cache-sde
+      uses: actions/cache@v5
+      with:
+        path: sde-external-${{env.SDE_VERSION}}-lin
+        key: sde-${{env.SDE_VERSION}}
     - name: Install Intel SDE
+      if: steps.cache-sde.outputs.cache-hit != 'true'
       run: |
-        wget -q https://downloadmirror.intel.com/${{env.SDE_DOWNLOAD_ID}}/sde-external-${{env.SDE_VERSION}}-lin.tar.xz
-        tar -xf sde-external-${{env.SDE_VERSION}}-lin.tar.xz
-        echo "SDE_PATH=$PWD/sde-external-${{env.SDE_VERSION}}-lin" >> $GITHUB_ENV
+        wget -O sde.tar.xz https://raw.githubusercontent.com/jrouwe/JoltPhysicsCI/main/sde-external-${{env.SDE_VERSION}}-lin.tar.xz
+        file sde.tar.xz | grep -q 'XZ compressed' || { echo "ERROR: Downloaded file is not a valid XZ archive"; file sde.tar.xz; exit 1; }
+        tar -xf sde.tar.xz
+    - name: Set SDE path
+      run: echo "SDE_PATH=$PWD/sde-external-${{env.SDE_VERSION}}-lin" >> $GITHUB_ENV
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DUSE_AVX512=ON
