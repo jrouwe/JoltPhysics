@@ -1636,19 +1636,22 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	if (!GetFirstContactForSweep(new_position, down, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
 		return false; // No floor found, we're in mid air, cancel stair walk
 
+	bool too_steep = IsSlopeTooSteep(contact.mSurfaceNormal);
+
 #ifdef JPH_DEBUG_RENDERER
 	// Draw sweep down
 	if (sDrawWalkStairs)
 	{
 		RVec3 debug_pos = new_position + contact.mFraction * down;
-		DebugRenderer::sInstance->DrawArrow(new_position, debug_pos, Color::sWhite, 0.01f);
-		DebugRenderer::sInstance->DrawArrow(contact.mPosition, contact.mPosition + contact.mSurfaceNormal, Color::sWhite, 0.01f);
-		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sOne(), Color::sWhite, false, true);
+		Color color = too_steep? Color::sRed : Color::sWhite;
+		DebugRenderer::sInstance->DrawArrow(new_position, debug_pos, color, 0.01f);
+		DebugRenderer::sInstance->DrawArrow(contact.mPosition, contact.mPosition + contact.mSurfaceNormal, color, 0.01f);
+		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sOne(), color, false, true);
 	}
 #endif // JPH_DEBUG_RENDERER
 
 	// Test for floor that will support the character
-	if (IsSlopeTooSteep(contact.mSurfaceNormal))
+	if (too_steep)
 	{
 		// If no test position was provided, we cancel the stair walk
 		if (inStepForwardTest.IsNearZero())
@@ -1674,18 +1677,21 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 		if (!GetFirstContactForSweep(test_position, down, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
 			return false;
 
+		too_steep = IsSlopeTooSteep(test_contact.mSurfaceNormal);
+
 	#ifdef JPH_DEBUG_RENDERER
 		// Draw 2nd sweep down
 		if (sDrawWalkStairs)
 		{
 			RVec3 debug_pos = test_position + test_contact.mFraction * down;
-			DebugRenderer::sInstance->DrawArrow(test_position, debug_pos, Color::sCyan, 0.01f);
-			DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mSurfaceNormal, Color::sCyan, 0.01f);
-			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sOne(), Color::sCyan, false, true);
+			Color color = too_steep? Color::sRed : Color::sCyan;
+			DebugRenderer::sInstance->DrawArrow(test_position, debug_pos, color, 0.01f);
+			DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mSurfaceNormal, color, 0.01f);
+			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sOne(), color, false, true);
 		}
 	#endif // JPH_DEBUG_RENDERER
 
-		if (IsSlopeTooSteep(test_contact.mSurfaceNormal))
+		if (too_steep)
 			return false;
 	}
 
