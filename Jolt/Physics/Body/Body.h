@@ -150,10 +150,12 @@ public:
 	inline Vec3				GetLinearVelocity() const										{ return !IsStatic()? mMotionProperties->GetLinearVelocity() : Vec3::sZero(); }
 
 	/// Set world space linear velocity of the center of mass (unit: m/s).
+	/// Note that it is illegal to set a non-zero linear velocity on a sleeping body without waking it up afterwards.
 	/// If you want the body to wake up when it is sleeping, use BodyInterface::SetLinearVelocity instead.
 	void					SetLinearVelocity(Vec3Arg inLinearVelocity)						{ JPH_ASSERT(!IsStatic()); mMotionProperties->SetLinearVelocity(inLinearVelocity); }
 
 	/// Set world space linear velocity of the center of mass, will make sure the value is clamped against the maximum linear velocity.
+	/// Note that it is illegal to set a non-zero linear velocity on a sleeping body without waking it up afterwards.
 	/// If you want the body to wake up when it is sleeping, use BodyInterface::SetLinearVelocity instead.
 	void					SetLinearVelocityClamped(Vec3Arg inLinearVelocity)				{ JPH_ASSERT(!IsStatic()); mMotionProperties->SetLinearVelocityClamped(inLinearVelocity); }
 
@@ -161,10 +163,12 @@ public:
 	inline Vec3				GetAngularVelocity() const										{ return !IsStatic()? mMotionProperties->GetAngularVelocity() : Vec3::sZero(); }
 
 	/// Set world space angular velocity of the center of mass (unit: rad/s).
+	/// Note that it is illegal to set a non-zero angular velocity on a sleeping body without waking it up afterwards.
 	/// If you want the body to wake up when it is sleeping, use BodyInterface::SetAngularVelocity instead.
 	void					SetAngularVelocity(Vec3Arg inAngularVelocity)					{ JPH_ASSERT(!IsStatic()); mMotionProperties->SetAngularVelocity(inAngularVelocity); }
 
 	/// Set world space angular velocity of the center of mass, will make sure the value is clamped against the maximum angular velocity.
+	/// Note that it is illegal to set a non-zero angular velocity on a sleeping body without waking it up afterwards.
 	/// If you want the body to wake up when it is sleeping, use BodyInterface::SetAngularVelocity instead.
 	void					SetAngularVelocityClamped(Vec3Arg inAngularVelocity)			{ JPH_ASSERT(!IsStatic()); mMotionProperties->SetAngularVelocityClamped(inAngularVelocity); }
 
@@ -216,7 +220,8 @@ public:
 	/// If you want the body to wake up when it is sleeping, use BodyInterface::AddAngularImpulse instead.
 	inline void				AddAngularImpulse(Vec3Arg inAngularImpulse);
 
-	/// Set velocity of body such that it will be positioned at inTargetPosition/Rotation in inDeltaTime seconds.
+	/// Set velocity of body such that it will be positioned at inTargetPosition/inTargetRotation in inDeltaTime seconds.
+	/// Note that it is illegal to provide a new position/orientation on a sleeping body without waking it up afterwards.
 	/// If you want the body to wake up when it is sleeping, use BodyInterface::MoveKinematic instead.
 	void					MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime);
 
@@ -301,6 +306,18 @@ public:
 	{
 		AABox actual_body_bounds = mShape->GetWorldSpaceBounds(GetCenterOfMassTransform(), Vec3::sOne());
 		JPH_ASSERT(actual_body_bounds == mBounds, "Mismatch between cached bounding box and actual bounding box");
+	}
+
+	/// Validates that a body that is sleeping has zero velocity.
+	inline void				ValidateMotion() const
+	{
+		if (!IsStatic() && !IsActive())
+		{
+			// If this fails then you have set a velocity on a body without waking it up.
+			// Use BodyInterface::SetLinearVelocity or BodyInterface::SetAngularVelocity to set the velocity and wake up the body at the same time.
+			JPH_ASSERT(mMotionProperties->GetLinearVelocity() == Vec3::sZero(), "Sleeping body has non-zero linear velocity!");
+			JPH_ASSERT(mMotionProperties->GetAngularVelocity() == Vec3::sZero(), "Sleeping body has non-zero angular velocity!");
+		}
 	}
 #endif // JPH_ENABLE_ASSERTS
 

@@ -22,6 +22,12 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(TwoBodyConstraintSettings)
 
 void TwoBodyConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager)
 {
+#ifdef JPH_ENABLE_ASSERTS
+	// Validates that a body that is sleeping has zero velocity.
+	mBody1->ValidateMotion();
+	mBody2->ValidateMotion();
+#endif
+
 	bool body1_dynamic = mBody1->IsDynamic();
 	bool body2_dynamic = mBody2->IsDynamic();
 

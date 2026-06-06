@@ -42,22 +42,32 @@ public:
 	/// Get world space linear velocity of the center of mass
 	inline Vec3				GetLinearVelocity() const										{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess(), BodyAccess::EAccess::Read)); return mLinearVelocity; }
 
-	/// Set world space linear velocity of the center of mass
+	/// Set world space linear velocity of the center of mass.
+	/// Note that it is illegal to set a non-zero linear velocity on a sleeping body without waking it up afterwards.
+	/// If you want the body to wake up when it is sleeping, use BodyInterface::SetLinearVelocity instead.
 	void					SetLinearVelocity(Vec3Arg inLinearVelocity)						{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess(), BodyAccess::EAccess::ReadWrite)); JPH_ASSERT(inLinearVelocity.Length() <= mMaxLinearVelocity); mLinearVelocity = LockTranslation(inLinearVelocity); }
 
-	/// Set world space linear velocity of the center of mass, will make sure the value is clamped against the maximum linear velocity
+	/// Set world space linear velocity of the center of mass, will make sure the value is clamped against the maximum linear velocity.
+	/// Note that it is illegal to set a non-zero linear velocity on a sleeping body without waking it up afterwards.
+	/// If you want the body to wake up when it is sleeping, use BodyInterface::SetLinearVelocity instead.
 	void					SetLinearVelocityClamped(Vec3Arg inLinearVelocity)				{ mLinearVelocity = LockTranslation(inLinearVelocity); ClampLinearVelocity(); }
 
 	/// Get world space angular velocity of the center of mass
 	inline Vec3				GetAngularVelocity() const										{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess(), BodyAccess::EAccess::Read)); return mAngularVelocity; }
 
-	/// Set world space angular velocity of the center of mass
+	/// Set world space angular velocity of the center of mass.
+	/// Note that it is illegal to set a non-zero angular velocity on a sleeping body without waking it up afterwards.
+	/// If you want the body to wake up when it is sleeping, use BodyInterface::SetAngularVelocity instead.
 	void					SetAngularVelocity(Vec3Arg inAngularVelocity)					{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess(), BodyAccess::EAccess::ReadWrite)); JPH_ASSERT(inAngularVelocity.Length() <= mMaxAngularVelocity); mAngularVelocity = LockAngular(inAngularVelocity); }
 
-	/// Set world space angular velocity of the center of mass, will make sure the value is clamped against the maximum angular velocity
+	/// Set world space angular velocity of the center of mass, will make sure the value is clamped against the maximum angular velocity.
+	/// Note that it is illegal to set a non-zero angular velocity on a sleeping body without waking it up afterwards.
+	/// If you want the body to wake up when it is sleeping, use BodyInterface::SetAngularVelocity instead.
 	void					SetAngularVelocityClamped(Vec3Arg inAngularVelocity)			{ mAngularVelocity = LockAngular(inAngularVelocity); ClampAngularVelocity(); }
 
 	/// Set velocity of body such that it will be rotate/translate by inDeltaPosition/Rotation in inDeltaTime seconds.
+	/// Note that it is illegal to provide non-zero delta position/rotation on a sleeping body without waking it up afterwards.
+	/// If you want the body to wake up when it is sleeping, use BodyInterface::MoveKinematic instead.
 	inline void				MoveKinematic(Vec3Arg inDeltaPosition, QuatArg inDeltaRotation, float inDeltaTime);
 
 	///@name Velocity limits

@@ -814,7 +814,7 @@ void PhysicsSystem::JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioConte
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We read constraints and positions
-	BodyAccess::Grant grant(BodyAccess::EAccess::None, BodyAccess::EAccess::Read);
+	BodyAccess::Grant grant(BodyAccess::EAccess::Read, BodyAccess::EAccess::Read);
 
 	// Can only activate bodies
 	BodyManager::GrantActiveBodiesAccess grant_active(true, false);
@@ -1054,6 +1054,9 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 	JPH_ASSERT(body1->IsActive());
 
 	JPH_DET_LOG("ProcessBodyPair: id1: " << inBodyPair.mBodyA << " id2: " << inBodyPair.mBodyB << " p1: " << body1->GetCenterOfMassPosition() << " p2: " << body2->GetCenterOfMassPosition() << " r1: " << body1->GetRotation() << " r2: " << body2->GetRotation());
+
+	// Validates that a body that is sleeping has zero velocity.
+	JPH_IF_ENABLE_ASSERTS(body2->ValidateMotion());
 
 	// Check for soft bodies
 	if (body2->IsSoftBody())
