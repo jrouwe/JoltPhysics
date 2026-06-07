@@ -931,7 +931,7 @@ void MeshShape::sCastConvexVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	visitor.mBoxCenter = inShapeCast.mShapeWorldBounds.GetCenter();
-	visitor.mBoxExtent = inShapeCast.mShapeWorldBounds.GetExtent();
+	visitor.mBoxExtent = inShapeCast.mShapeWorldBounds.GetExtent() + Vec3::sReplicate(inShapeCastSettings.mExtraConvexRadius);
 	shape->WalkTreePerTriangle(inSubShapeIDCreator2, visitor);
 }
 

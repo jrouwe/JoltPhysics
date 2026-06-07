@@ -300,7 +300,7 @@ void PlaneShape::sCastConvexVsPlane(const ShapeCast &inShapeCast, const ShapeCas
 	Vec3 normal_in_convex_shape_space = inShapeCast.mCenterOfMassStart.Multiply3x3Transposed(normal);
 	Vec3 support_point = inShapeCast.mCenterOfMassStart * shape1_support->GetSupport(-normal_in_convex_shape_space);
 	float signed_distance = plane.SignedDistance(support_point);
-	float convex_radius = shape1_support->GetConvexRadius();
+	float convex_radius = shape1_support->GetConvexRadius() + inShapeCastSettings.mExtraConvexRadius;
 	float penetration_depth = -signed_distance + convex_radius;
 	float dot = inShapeCast.mDirection.Dot(normal);
 
