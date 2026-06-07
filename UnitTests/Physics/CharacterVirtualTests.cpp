@@ -859,7 +859,7 @@ TEST_SUITE("CharacterVirtualTests")
 		float character2_radius = character2.mRadiusStanding + character2.mCharacterSettings.mCharacterPadding;
 		float separation = character1_radius + character2_radius;
 		RVec3 expected_colliding_with_character = character2.mInitialPosition - Vec3(separation, 0, 0);
-		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_character, 1.0e-3f);
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_character);
 		CHECK(character1.GetNumContacts() == 2);
 		CHECK(character1.HasCollidedWith(floor_id));
 		CHECK(character1.HasCollidedWith(character2.mCharacter));
@@ -876,7 +876,7 @@ TEST_SUITE("CharacterVirtualTests")
 		character1.Simulate(1.0f);
 
 		// Character 1 should have stopped at character 2
-		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_character, 1.0e-3f);
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_character);
 		CHECK(character1.GetNumContacts() == 2);
 		CHECK(character1.HasCollidedWith(floor_id));
 		CHECK(character1.HasCollidedWith(character2.mCharacter));
@@ -895,7 +895,7 @@ TEST_SUITE("CharacterVirtualTests")
 
 		// Expect that it ends up at the box
 		RVec3 expected_colliding_with_box = box_position - Vec3(character1_radius + box_extent.GetX(), 0, 0);
-		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_box, 1.0e-3f);
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_box);
 		CHECK(character1.GetNumContacts() == 2);
 		CHECK(character1.HasCollidedWith(floor_id));
 		CHECK(character1.HasCollidedWith(box_id));
@@ -912,7 +912,7 @@ TEST_SUITE("CharacterVirtualTests")
 		character1.Simulate(1.0f);
 
 		// Expect that it ends up at the box
-		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_box, 1.0e-3f);
+		CHECK_APPROX_EQUAL(character1.GetPosition(), expected_colliding_with_box);
 		CHECK(character1.GetNumContacts() == 2);
 		CHECK(character1.HasCollidedWith(floor_id));
 		CHECK(character1.HasCollidedWith(box_id));

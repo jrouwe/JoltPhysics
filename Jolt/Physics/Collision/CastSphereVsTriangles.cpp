@@ -30,7 +30,7 @@ CastSphereVsTriangles::CastSphereVsTriangles(const ShapeCast &inShapeCast, const
 	const SphereShape *sphere = static_cast<const SphereShape *>(inShapeCast.mShape);
 
 	// Scale the radius
-	mRadius = sphere->GetRadius() * abs(inShapeCast.mScale.GetX());
+	mRadius = sphere->GetRadius() * abs(inShapeCast.mScale.GetX()) + inShapeCastSettings.mExtraConvexRadius;
 
 	// Determine if shape is inside out or not
 	mScaleSign = ScaleHelpers::IsInsideOut(inScale)? -1.0f : 1.0f;

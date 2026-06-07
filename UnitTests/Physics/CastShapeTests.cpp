@@ -511,4 +511,69 @@ TEST_SUITE("CastShapeTests")
 		CHECK_APPROX_EQUAL(cast_shape_collector.mHit.mContactPointOn1, Vec3(0, 0, 1), 1.0e-4f);
 		CHECK_APPROX_EQUAL(cast_shape_collector.mHit.mContactPointOn2, Vec3(0, 0, 1), 1.0e-4f);
 	}
+
+	// Test CastShape with extra convex radius
+	TEST_CASE("TestCastShapeExtraConvexRadius")
+	{
+		// Set settings
+		ShapeCastSettings settings;
+		settings.mExtraConvexRadius = 0.5f; // Add 0.5 extra radius
+		settings.mReturnDeepestPoint = true;
+		settings.mBackFaceModeTriangles = EBackFaceMode::CollideWithBackFaces;
+		settings.mBackFaceModeConvex = EBackFaceMode::CollideWithBackFaces;
+
+		// Create a scaled sphere: effective radius=0.5
+		Ref<Shape> scaled_sphere = new ScaledShape(new SphereShape(0.1f), Vec3::sReplicate(5.0f));
+
+		// Scale the sphere during the cast: effective radius=2
+		// We want to hit an object at y=11, we start it at y=14 so it should hit after moving by 0.5
+		// Cast length is set low enough so that when the bounding box of the swept object is not enlarged by 0.5, it will hit the target object
+		RShapeCast shape_cast { scaled_sphere, Vec3::sReplicate(4.0f), RMat44::sTranslation(RVec3(0, 14, 0)), Vec3(0, -0.8f, 0) };
+
+		{
+			PhysicsTestContext c;
+
+			// Create box to collide against, effective top of box is at y=11
+			BoxShapeSettings box(Vec3::sOne());
+			box.SetEmbedded();
+			ScaledShapeSettings scaled_box(&box, Vec3(10, 1, 1));
+			scaled_box.SetEmbedded();
+			Body &body2 = c.CreateBody(&scaled_box, RVec3(0, 1, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+			// Shape is intersecting at the start
+			AllHitCollisionCollector<CastShapeCollector> collector;
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
+			CHECK(collector.mHits.size() == 1);
+			const ShapeCastResult &result = collector.mHits.front();
+			CHECK(result.mBodyID2 == body2.GetID());
+			CHECK_APPROX_EQUAL(result.mFraction, 0.5f / 0.8f);
+			CHECK_APPROX_EQUAL(result.mPenetrationAxis.Normalized(), Vec3(0, -1, 0));
+			CHECK(result.mPenetrationDepth == 0);
+			CHECK_APPROX_EQUAL(result.mContactPointOn1, Vec3(0, 11, 0));
+			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(0, 11, 0));
+			CHECK(!result.mIsBackFaceHit);
+		}
+
+		{
+			PhysicsTestContext c;
+
+			// Create triangle to collide against, triangle is at y=11
+			TriangleShapeSettings triangle(Vec3(50, 10, 0), Vec3(-50, 10, 0), Vec3(0, 10, 50));
+			triangle.SetEmbedded();
+			Body &body2 = c.CreateBody(&triangle, RVec3(0, 1, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+			// Shape is intersecting at the start
+			AllHitCollisionCollector<CastShapeCollector> collector;
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
+			CHECK(collector.mHits.size() == 1);
+			const ShapeCastResult &result = collector.mHits.front();
+			CHECK(result.mBodyID2 == body2.GetID());
+			CHECK_APPROX_EQUAL(result.mFraction, 0.5f / 0.8f);
+			CHECK_APPROX_EQUAL(result.mPenetrationAxis.Normalized(), Vec3(0, -1, 0));
+			CHECK(result.mPenetrationDepth == 0);
+			CHECK_APPROX_EQUAL(result.mContactPointOn1, Vec3(0, 11, 0));
+			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(0, 11, 0));
+			CHECK(!result.mIsBackFaceHit);
+		}
+	}
 }

@@ -207,6 +207,7 @@ private:
 	EActiveEdgeMode			mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;	// How to handle active edges when doing a collision probe check.
 	ECollectFacesMode		mCollectFacesMode = ECollectFacesMode::NoFaces;				// If we should collect colliding faces
 	float					mMaxSeparationDistance = 0.0f;								// Max separation distance for collide shape test
+	float					mExtraConvexRadius = 0.0f;									// Extra convex radius for the cast shape test
 	bool					mTreatConvexAsSolid = true;									// For ray casts if the shape should be treated as solid or if the ray should only collide with the surface
 	bool					mReturnDeepestPoint = true;									// For shape casts, when true this will return the deepest point
 	bool					mUseShrunkenShapeAndConvexRadius = false;					// Shrink then expand the shape by the convex radius

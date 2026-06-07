@@ -647,6 +647,7 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 			mDebugUI->CreateComboBox(probe_options, "Active Edge Mode", { "Only Active", "All" }, (int)mActiveEdgeMode, [this](int inItem) { mActiveEdgeMode = (EActiveEdgeMode)inItem; });
 			mDebugUI->CreateComboBox(probe_options, "Collect Faces Mode", { "Collect Faces", "No Faces" }, (int)mCollectFacesMode, [this](int inItem) { mCollectFacesMode = (ECollectFacesMode)inItem; });
 			mDebugUI->CreateSlider(probe_options, "Max Separation Distance", mMaxSeparationDistance, 0.0f, 5.0f, 0.1f, [this](float inValue) { mMaxSeparationDistance = inValue; });
+			mDebugUI->CreateSlider(probe_options, "Extra Convex Radius", mExtraConvexRadius, 0.0f, 5.0f, 0.1f, [this](float inValue) { mExtraConvexRadius = inValue; });
 			mDebugUI->CreateCheckBox(probe_options, "Treat Convex As Solid", mTreatConvexAsSolid, [this](UICheckBox::EState inState) { mTreatConvexAsSolid = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(probe_options, "Return Deepest Point", mReturnDeepestPoint, [this](UICheckBox::EState inState) { mReturnDeepestPoint = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(probe_options, "Shrunken Shape + Convex Radius", mUseShrunkenShapeAndConvexRadius, [this](UICheckBox::EState inState) { mUseShrunkenShapeAndConvexRadius = inState == UICheckBox::STATE_CHECKED; });
@@ -1468,7 +1469,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 						// Draw material
 						const PhysicsMaterial *material2 = hit_body.GetShape()->GetMaterial(hit.mSubShapeID2);
-						mDebugRenderer->DrawText3D(contact_position2, material2->GetDebugName());
+						mDebugRenderer->DrawText3D(contact_position2, material2->GetDebugName() + StringFormat(", pen=%.3f", (double)hit.mPenetrationDepth));
 
 						// Draw faces
 						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape1Face, Color::sYellow, 0.01f);
@@ -1493,6 +1494,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 			// Settings
 			ShapeCastSettings settings;
+			settings.mExtraConvexRadius = mExtraConvexRadius;
 			settings.mUseShrunkenShapeAndConvexRadius = mUseShrunkenShapeAndConvexRadius;
 			settings.mActiveEdgeMode = mActiveEdgeMode;
 			settings.mBackFaceModeTriangles = mBackFaceModeTriangles;
@@ -1583,7 +1585,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 						// Draw material
 						const PhysicsMaterial *material2 = hit_body.GetShape()->GetMaterial(hit.mSubShapeID2);
-						mDebugRenderer->DrawText3D(position, material2->GetDebugName());
+						mDebugRenderer->DrawText3D(position, material2->GetDebugName() + StringFormat(", pen=%.3f", (double)hit.mPenetrationDepth));
 
 						// Draw faces
 						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape1Face, Color::sYellow, 0.01f);
