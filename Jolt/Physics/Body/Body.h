@@ -315,8 +315,8 @@ public:
 		{
 			// If this fails then you have set a velocity on a body without waking it up.
 			// Use BodyInterface::SetLinearVelocity or BodyInterface::SetAngularVelocity to set the velocity and wake up the body at the same time.
-			JPH_ASSERT(mMotionProperties->GetLinearVelocity() == Vec3::sZero(), "Sleeping body has non-zero linear velocity!");
-			JPH_ASSERT(mMotionProperties->GetAngularVelocity() == Vec3::sZero(), "Sleeping body has non-zero angular velocity!");
+			JPH_ASSERT(mMotionProperties->GetLinearVelocity().IsNearZero(), "Sleeping body has non-zero linear velocity!");
+			JPH_ASSERT(mMotionProperties->GetAngularVelocity().IsNearZero(), "Sleeping body has non-zero angular velocity!");
 		}
 	}
 #endif // JPH_ENABLE_ASSERTS
