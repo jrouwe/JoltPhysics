@@ -69,6 +69,11 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	// and the penetration axis is the shortest distance along to push B out of collision, we use the inverse of the triangle normal as an initial penetration axis. This has been seen
 	// to improve performance by approx. 5% over using a fixed axis like (1, 0, 0).
 	Vec3 penetration_axis = -triangle_normal, point1, point2;
+
+	// Ensure that we do not pass in a near zero penetration axis
+	if (penetration_axis.IsNearZero())
+		penetration_axis = Vec3::sAxisX();
+
 	EPAPenetrationDepth pen_depth;
 	EPAPenetrationDepth::EStatus status;
 
