@@ -576,4 +576,22 @@ TEST_SUITE("CastShapeTests")
 			CHECK(!result.mIsBackFaceHit);
 		}
 	}
+
+	// Test CastShape between two boxes that are initially intersecting and off center
+	TEST_CASE("TestCastShapeInitiallyIntersecting")
+	{
+		PhysicsTestContext c;
+		c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1.5f, 0.5f, 1.5f), EActivation::DontActivate);
+
+		RefConst<Shape> box_shape = new BoxShape(Vec3(0.5f, 0.5f, 0.5f));
+		RShapeCast shape_cast(box_shape, Vec3::sReplicate(1.0f), RMat44::sRotationTranslation(Quat::sIdentity(), RVec3(0.01_r, 0.95_r, 0)), Vec3(0, -0.5f, 0));
+
+		ShapeCastSettings settings;
+		ClosestHitCollisionCollector<CastShapeCollector> collector;
+		c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
+
+		CHECK(collector.HadHit());
+		CHECK(collector.mHit.mFraction == 0.0f);
+		CHECK(!collector.mHit.mIsBackFaceHit);
+	}
 }
