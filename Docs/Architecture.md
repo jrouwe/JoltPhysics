@@ -694,7 +694,11 @@ Whenever a body hits an inactive edge, the contact normal is the face normal. Wh
 
 By tweaking MeshShapeSettings::mActiveEdgeCosThresholdAngle or HeightFieldShapeSettings::mActiveEdgeCosThresholdAngle you can determine the angle at which an edge is considered an active edge. By default this is 5 degrees, making this bigger reduces the amount of ghost collisions but can create simulation artifacts if you hit the edge straight on.
 
-To further reduce ghost collisions, you can turn on BodyCreationSettings::mEnhancedInternalEdgeRemoval. When enabling this setting, additional checks will be made at run-time to detect if an edge is active or inactive based on all of the contact points between the two bodies. Beware that this algorithm only considers 2 bodies at a time, so if the two green boxes above belong to two different bodies, the ghost collision can still occur. Use a StaticCompoundShape to combine the boxes in a single body to allow the system to eliminate ghost collisions between the blue and the two green boxes. You can also use this functionality for your custom collision tests by making use of InternalEdgeRemovingCollector.
+To further reduce ghost collisions, you can turn on BodyCreationSettings::mEnhancedInternalEdgeRemoval. When enabling this setting, additional checks will be made at run-time to detect if an edge is active or inactive, this only works if:
+* Edges between shapes are shared. For example, if the 2 green boxes above have different sizes in the direction of the edge, ghost collisions can still occur. In the same way, triangles connected so that they form a T-edge can also cause ghost collisions.
+* Shared edges need to be part of the same shape. So if the two green boxes above belong to two different bodies, the ghost collision can still occur. Use a StaticCompoundShape to combine the green boxes in a single body to allow the system to eliminate ghost collisions between the blue box and the two green boxes.
+
+You can also use this functionality for your custom collision tests by making use of InternalEdgeRemovingCollector.
 
 # Character Controllers {#character-controllers}
 
