@@ -1635,18 +1635,19 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	Vec3 down = -up + inStepDownExtra;
 	if (!GetFirstContactForSweep(new_position, down, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
 		return false; // No floor found, we're in mid air, cancel stair walk
+	RVec3 final_position = new_position + contact.mFraction * down;
 
-	bool too_steep = IsSlopeTooSteep(contact.mSurfaceNormal);
+	Vec3 surface_normal = contact.mSurfaceNormal;
+	bool too_steep = IsSlopeTooSteep(surface_normal);
 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw sweep down
 	if (sDrawWalkStairs)
 	{
-		RVec3 debug_pos = new_position + contact.mFraction * down;
 		Color color = too_steep? Color::sRed : Color::sWhite;
-		DebugRenderer::sInstance->DrawArrow(new_position, debug_pos, color, 0.01f);
+		DebugRenderer::sInstance->DrawArrow(new_position, final_position, color, 0.01f);
 		DebugRenderer::sInstance->DrawArrow(contact.mPosition, contact.mPosition + contact.mSurfaceNormal, color, 0.01f);
-		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sOne(), color, false, true);
+		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(final_position, mRotation, mShape), Vec3::sOne(), color, false, true);
 	}
 #endif // JPH_DEBUG_RENDERER
 
@@ -1677,7 +1678,8 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 		if (!GetFirstContactForSweep(test_position, down, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
 			return false;
 
-		too_steep = IsSlopeTooSteep(test_contact.mSurfaceNormal);
+		surface_normal = test_contact.mSurfaceNormal;
+		too_steep = IsSlopeTooSteep(surface_normal);
 
 	#ifdef JPH_DEBUG_RENDERER
 		// Draw 2nd sweep down
@@ -1695,12 +1697,12 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 			return false;
 	}
 
-	// Calculate new down position
-	down *= contact.mFraction;
-	new_position += down;
+	// If we don't gain any height compared to our contact then the stair walk is pointless
+	if (Vec3(final_position - mPosition).Dot(surface_normal) < 1.0e-4f)
+		return false;
 
 	// Move the character to the new location
-	MoveToContact(new_position, contact, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter, inAllocator);
+	MoveToContact(final_position, contact, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter, inAllocator);
 
 	// Override ground state to 'on ground', it is possible that the contact normal is too steep, but in this case the inStepForwardTest has found a contact normal that is not too steep
 	mGroundState = EGroundState::OnGround;
