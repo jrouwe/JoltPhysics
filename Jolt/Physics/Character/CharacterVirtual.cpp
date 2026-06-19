@@ -80,7 +80,10 @@ void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *
 
 	// Get world space bounds of the character in the form of center and extent
 	Vec3 origin = shape_cast.mShapeWorldBounds.GetCenter();
-	Vec3 extents = shape_cast.mShapeWorldBounds.GetExtent();
+	Vec3 extents = shape_cast.mShapeWorldBounds.GetExtent() + Vec3::sReplicate(inShapeCastSettings.mExtraConvexRadius);
+
+	// Create a copy of the settings so we can modify it for each character we test against
+	ShapeCastSettings cast_settings = inShapeCastSettings;
 
 	// Iterate over all characters
 	for (const CharacterVirtual *c : mCharacters)
@@ -90,10 +93,13 @@ void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *
 			// Make shape 2 relative to inBaseOffset
 			Mat44 transform2 = c->GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
 
+			// We need to add the padding of character 2 so that we will detect collision with its outer shell
+			cast_settings.mExtraConvexRadius = inShapeCastSettings.mExtraConvexRadius + c->GetCharacterPadding();
+
 			// Sweep bounding box of the character against the bounding box of the other character to see if they can collide
 			const Shape *shape2 = c->GetShape();
 			AABox bounds2 = shape2->GetWorldSpaceBounds(transform2, Vec3::sOne());
-			bounds2.ExpandBy(extents);
+			bounds2.ExpandBy(extents + Vec3::sReplicate(c->GetCharacterPadding()));
 			if (!RayAABoxHits(origin, inDirection, bounds2.mMin, bounds2.mMax))
 				continue;
 
@@ -101,7 +107,7 @@ void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *
 			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
 
 			// Note that this collides against the character's shape without padding, this will be corrected for in CharacterVirtual::GetFirstContactForSweep
-			CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, inShapeCastSettings, shape2, Vec3::sOne(), { }, transform2, SubShapeIDCreator(), SubShapeIDCreator(), ioCollector);
+			CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, cast_settings, shape2, Vec3::sOne(), { }, transform2, SubShapeIDCreator(), SubShapeIDCreator(), ioCollector);
 		}
 
 	// Reset the user data
@@ -1798,17 +1804,24 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 				// horizontally to actually end up at the top of the step.
 				Vec3 step_forward = step_forward_normalized * max(inSettings.mWalkStairsMinStepForward, desired_horizontal_step_len - achieved_horizontal_step_len);
 
-				// Calculate how far to scan ahead for a floor. This is only used in case the floor normal at step_forward is too steep.
-				// In that case an additional check will be performed at this distance to check if that normal is not too steep.
-				// Start with the ground normal in the horizontal plane and normalizing it
-				Vec3 step_forward_test = -mGroundNormal;
-				step_forward_test -= step_forward_test.Dot(mUp) * mUp;
-				step_forward_test = step_forward_test.NormalizedOr(step_forward_normalized);
-
-				// If this normalized vector and the character forward vector is bigger than a preset angle, we use the character forward vector instead of the ground normal
-				// to do our forward test
-				if (step_forward_test.Dot(step_forward_normalized) < inSettings.mWalkStairsCosAngleForwardContact)
-					step_forward_test = step_forward_normalized;
+				// Find the contact that is most opposing our movement. Our extra walk stairs test is going to go in that direction instead
+				// of the movement direction. This allows us to step up stairs if we're moving at a big angle along the stairs.
+				Vec3 step_forward_test = step_forward_normalized;
+				float max_dot = inSettings.mWalkStairsCosAngleForwardContact; // Discard contacts that have an angle that is too big
+				for (const CharacterContact &c : mActiveContacts)
+					if (c.mHadCollision
+						&& !c.mWasDiscarded
+						&& c.mSurfaceNormal.Dot(desired_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
+						&& IsSlopeTooSteep(c.mSurfaceNormal)) // Slope too steep
+					{
+						Vec3 test = -(c.mSurfaceNormal - c.mSurfaceNormal.Dot(mUp) * mUp).Normalized();
+						float dot = test.Dot(step_forward_normalized);
+						if (dot > max_dot)
+						{
+							step_forward_test = test;
+							max_dot = dot;
+						}
+					}
 
 				// Calculate the correct magnitude for the test vector
 				step_forward_test *= inSettings.mWalkStairsStepForwardTest;
