@@ -14,6 +14,7 @@ JPH_CLANG_SUPPRESS_WARNING("-Wdouble-promotion")
 #endif // JPH_DOUBLE_PRECISION
 JPH_CLANG_SUPPRESS_WARNING("-Wswitch-enum")
 JPH_CLANG_SUPPRESS_WARNING("-Wswitch")
+JPH_CLANG_SUPPRESS_UNIQUE_OBJECT_DUPLICATION_WARNING
 JPH_MSVC_SUPPRESS_WARNING(4061) // enumerator 'X' in switch of enum 'X' is not explicitly handled by a case label
 JPH_MSVC_SUPPRESS_WARNING(4062) // enumerator 'X' in switch of enum 'X' is not handled
 

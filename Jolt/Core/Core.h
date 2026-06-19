@@ -278,9 +278,15 @@
 			#endif
 		#endif
 	#endif
+
+	#define JPH_IF_SHARED_LIBRARY(x) x
+	#define JPH_IF_NOT_SHARED_LIBRARY(x)
 #else
 	// If the define is not set, we use static linking and symbols don't need to be imported or exported
 	#define JPH_EXPORT
+
+	#define JPH_IF_SHARED_LIBRARY(x)
+	#define JPH_IF_NOT_SHARED_LIBRARY(x) x
 #endif
 
 #ifndef JPH_EXPORT_GCC_BUG_WORKAROUND
@@ -292,52 +298,84 @@
 
 // Pragmas to store / restore the warning state and to disable individual warnings
 #ifdef JPH_COMPILER_CLANG
-#define JPH_PRAGMA(x)					_Pragma(#x)
-#define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(clang diagnostic push)
-#define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(clang diagnostic pop)
-#define JPH_CLANG_SUPPRESS_WARNING(w)	JPH_PRAGMA(clang diagnostic ignored w)
-#if __clang_major__ >= 13
-	#define JPH_CLANG_13_PLUS_SUPPRESS_WARNING(w) JPH_CLANG_SUPPRESS_WARNING(w)
+	#define JPH_PRAGMA(x)					_Pragma(#x)
+	#define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(clang diagnostic push)
+	#define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(clang diagnostic pop)
+	#define JPH_CLANG_SUPPRESS_WARNING(w)	JPH_PRAGMA(clang diagnostic ignored w)
+	#if __has_warning("-Wdeprecated-copy")
+		#define JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WARNING JPH_CLANG_SUPPRESS_WARNING("-Wdeprecated-copy")
+	#endif
+	#if __has_warning("-Wdeprecated-copy-with-dtor")
+		#define JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WITH_DTOR_WARNING JPH_CLANG_SUPPRESS_WARNING("-Wdeprecated-copy-with-dtor")
+	#endif
+	#if __has_warning("-Wunsafe-buffer-usage")
+		#define JPH_CLANG_SUPPRESS_UNSAFE_BUFFER_USAGE_WARNING JPH_CLANG_SUPPRESS_WARNING("-Wunsafe-buffer-usage")
+	#endif
+	#if __has_warning("-Wimplicit-int-float-conversion")
+		#define JPH_CLANG_SUPPRESS_IMPLICIT_INT_FLOAT_CONVERSION_WARNING JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-int-float-conversion")
+	#endif
+	#if __has_warning("-Wunique-object-duplication")
+		#define JPH_CLANG_SUPPRESS_UNIQUE_OBJECT_DUPLICATION_WARNING JPH_CLANG_SUPPRESS_WARNING("-Wunique-object-duplication")
+	#endif
+	#if __has_warning("-Wnrvo")
+		#define JPH_CLANG_SUPPRESS_NRVO_WARNING JPH_CLANG_SUPPRESS_WARNING("-Wnrvo")
+	#endif
+	#if __has_warning("-Wc2y-extensions")
+		#define JPH_CLANG_SUPPRESS_WC2Y_EXTENSIONS_WARNING JPH_CLANG_SUPPRESS_WARNING("-Wc2y-extensions")
+	#endif
 #else
-	#define JPH_CLANG_13_PLUS_SUPPRESS_WARNING(w)
+	#define JPH_CLANG_SUPPRESS_WARNING(w)
 #endif
-#if __clang_major__ >= 16
-	#define JPH_CLANG_16_PLUS_SUPPRESS_WARNING(w) JPH_CLANG_SUPPRESS_WARNING(w)
-#else
-	#define JPH_CLANG_16_PLUS_SUPPRESS_WARNING(w)
+#ifndef JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WARNING
+	#define JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WARNING
 #endif
-#else
-#define JPH_CLANG_SUPPRESS_WARNING(w)
-#define JPH_CLANG_13_PLUS_SUPPRESS_WARNING(w)
-#define JPH_CLANG_16_PLUS_SUPPRESS_WARNING(w)
+#ifndef JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WITH_DTOR_WARNING
+	#define JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WITH_DTOR_WARNING
 #endif
+#ifndef JPH_CLANG_SUPPRESS_UNSAFE_BUFFER_USAGE_WARNING
+	#define JPH_CLANG_SUPPRESS_UNSAFE_BUFFER_USAGE_WARNING
+#endif
+#ifndef JPH_CLANG_SUPPRESS_IMPLICIT_INT_FLOAT_CONVERSION_WARNING
+	#define JPH_CLANG_SUPPRESS_IMPLICIT_INT_FLOAT_CONVERSION_WARNING
+#endif
+#ifndef JPH_CLANG_SUPPRESS_UNIQUE_OBJECT_DUPLICATION_WARNING
+	#define JPH_CLANG_SUPPRESS_UNIQUE_OBJECT_DUPLICATION_WARNING
+#endif
+#ifndef JPH_CLANG_SUPPRESS_NRVO_WARNING
+	#define JPH_CLANG_SUPPRESS_NRVO_WARNING
+#endif
+#ifndef JPH_CLANG_SUPPRESS_WC2Y_EXTENSIONS_WARNING
+	#define JPH_CLANG_SUPPRESS_WC2Y_EXTENSIONS_WARNING
+#endif
+
 #ifdef JPH_COMPILER_GCC
-#define JPH_PRAGMA(x)					_Pragma(#x)
-#define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(GCC diagnostic push)
-#define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(GCC diagnostic pop)
-#define JPH_GCC_SUPPRESS_WARNING(w)		JPH_PRAGMA(GCC diagnostic ignored w)
+	#define JPH_PRAGMA(x)					_Pragma(#x)
+	#define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(GCC diagnostic push)
+	#define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(GCC diagnostic pop)
+	#define JPH_GCC_SUPPRESS_WARNING(w)		JPH_PRAGMA(GCC diagnostic ignored w)
 #else
-#define JPH_GCC_SUPPRESS_WARNING(w)
+	#define JPH_GCC_SUPPRESS_WARNING(w)
 #endif
+
 #ifdef JPH_COMPILER_MSVC
-#define JPH_PRAGMA(x)					__pragma(x)
-#define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(warning (push))
-#define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(warning (pop))
-#define JPH_MSVC_SUPPRESS_WARNING(w)	JPH_PRAGMA(warning (disable : w))
-#if _MSC_VER >= 1920 && _MSC_VER < 1930
-	#define JPH_MSVC2019_SUPPRESS_WARNING(w) JPH_MSVC_SUPPRESS_WARNING(w)
+	#define JPH_PRAGMA(x)					__pragma(x)
+	#define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(warning (push))
+	#define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(warning (pop))
+	#define JPH_MSVC_SUPPRESS_WARNING(w)	JPH_PRAGMA(warning (disable : w))
+	#if _MSC_VER >= 1920 && _MSC_VER < 1930
+		#define JPH_MSVC2019_SUPPRESS_WARNING(w) JPH_MSVC_SUPPRESS_WARNING(w)
+	#else
+		#define JPH_MSVC2019_SUPPRESS_WARNING(w)
+	#endif
+	#if _MSC_VER >= 1950
+	#define JPH_MSVC2026_PLUS_SUPPRESS_WARNING(w) JPH_MSVC_SUPPRESS_WARNING(w)
+	#else
+	#define JPH_MSVC2026_PLUS_SUPPRESS_WARNING(w)
+	#endif
 #else
+	#define JPH_MSVC_SUPPRESS_WARNING(w)
 	#define JPH_MSVC2019_SUPPRESS_WARNING(w)
-#endif
-#if _MSC_VER >= 1950
-#define JPH_MSVC2026_PLUS_SUPPRESS_WARNING(w) JPH_MSVC_SUPPRESS_WARNING(w)
-#else
-#define JPH_MSVC2026_PLUS_SUPPRESS_WARNING(w)
-#endif
-#else
-#define JPH_MSVC_SUPPRESS_WARNING(w)
-#define JPH_MSVC2019_SUPPRESS_WARNING(w)
-#define JPH_MSVC2026_PLUS_SUPPRESS_WARNING(w)
+	#define JPH_MSVC2026_PLUS_SUPPRESS_WARNING(w)
 #endif
 
 // Disable common warnings triggered by Jolt when compiling with -Wall
@@ -362,10 +400,13 @@
 	JPH_CLANG_SUPPRESS_WARNING("-Wdocumentation-unknown-command")								\
 	JPH_CLANG_SUPPRESS_WARNING("-Wctad-maybe-unsupported")										\
 	JPH_CLANG_SUPPRESS_WARNING("-Wswitch-default")												\
-	JPH_CLANG_13_PLUS_SUPPRESS_WARNING("-Wdeprecated-copy")										\
-	JPH_CLANG_13_PLUS_SUPPRESS_WARNING("-Wdeprecated-copy-with-dtor")							\
-	JPH_CLANG_16_PLUS_SUPPRESS_WARNING("-Wunsafe-buffer-usage")									\
-	JPH_IF_NOT_ANDROID(JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-int-float-conversion"))			\
+	JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WARNING													\
+	JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WITH_DTOR_WARNING										\
+	JPH_CLANG_SUPPRESS_UNSAFE_BUFFER_USAGE_WARNING												\
+	JPH_CLANG_SUPPRESS_IMPLICIT_INT_FLOAT_CONVERSION_WARNING									\
+	JPH_CLANG_SUPPRESS_WARNING("-Wpadded")														\
+	JPH_IF_NOT_SHARED_LIBRARY(JPH_CLANG_SUPPRESS_UNIQUE_OBJECT_DUPLICATION_WARNING)				\
+	JPH_CLANG_SUPPRESS_NRVO_WARNING																\
 																								\
 	JPH_GCC_SUPPRESS_WARNING("-Wcomment")														\
 	JPH_GCC_SUPPRESS_WARNING("-Winvalid-offsetof")												\
@@ -438,6 +479,7 @@
 // Suppress warnings generated by the standard template library
 #define JPH_SUPPRESS_WARNINGS_STD_BEGIN															\
 	JPH_SUPPRESS_WARNING_PUSH																	\
+	JPH_CLANG_SUPPRESS_WARNING("-Wpadded")														\
 	JPH_MSVC_SUPPRESS_WARNING(4365)																\
 	JPH_MSVC_SUPPRESS_WARNING(4619)																\
 	JPH_MSVC_SUPPRESS_WARNING(4710)																\
