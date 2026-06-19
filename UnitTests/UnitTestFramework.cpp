@@ -27,8 +27,10 @@ using namespace JPH;
 #define DOCTEST_CONFIG_IMPLEMENT
 #define DOCTEST_CONFIG_NO_WINDOWS_SEH
 
+JPH_CLANG_SUPPRESS_WC2Y_EXTENSIONS_WARNING
+
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
-JPH_CLANG_16_PLUS_SUPPRESS_WARNING("-Wunsafe-buffer-usage")
+JPH_CLANG_SUPPRESS_UNSAFE_BUFFER_USAGE_WARNING
 JPH_MSVC2026_PLUS_SUPPRESS_WARNING(4865) // wingdi.h(2806,1): '<unnamed-enum-DISPLAYCONFIG_OUTPUT_TECHNOLOGY_OTHER>': the underlying type will change from 'int' to '__int64' when '/Zc:enumTypes' is specified on the command line
 JPH_MSVC2026_PLUS_SUPPRESS_WARNING(5291) // 'doctest::DiscardOStream': deriving from the base class 'std::basic_ostream<char,std::char_traits<char>>' can cause potential runtime issues due to an ABI bug. Recommend adding a 4-byte data member to the base class for the padding at the end of it to work around this bug.
 #include "doctest.h"
