@@ -320,9 +320,6 @@
 	#if __has_warning("-Wnrvo")
 		#define JPH_CLANG_SUPPRESS_NRVO_WARNING JPH_CLANG_SUPPRESS_WARNING("-Wnrvo")
 	#endif
-	#if __has_warning("-Wc2y-extensions")
-		#define JPH_CLANG_SUPPRESS_WC2Y_EXTENSIONS_WARNING JPH_CLANG_SUPPRESS_WARNING("-Wc2y-extensions")
-	#endif
 #else
 	#define JPH_CLANG_SUPPRESS_WARNING(w)
 #endif
@@ -343,9 +340,6 @@
 #endif
 #ifndef JPH_CLANG_SUPPRESS_NRVO_WARNING
 	#define JPH_CLANG_SUPPRESS_NRVO_WARNING
-#endif
-#ifndef JPH_CLANG_SUPPRESS_WC2Y_EXTENSIONS_WARNING
-	#define JPH_CLANG_SUPPRESS_WC2Y_EXTENSIONS_WARNING
 #endif
 
 #ifdef JPH_COMPILER_GCC
