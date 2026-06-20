@@ -1814,12 +1814,18 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 						&& c.mSurfaceNormal.Dot(desired_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
 						&& IsSlopeTooSteep(c.mSurfaceNormal)) // Slope too steep
 					{
-						Vec3 test = -(c.mSurfaceNormal - c.mSurfaceNormal.Dot(mUp) * mUp).Normalized();
-						float dot = test.Dot(step_forward_normalized);
-						if (dot > max_dot)
+						// Remove vertical component of the surface normal and negate it so that it points in the direction of movement
+						Vec3 test = c.mSurfaceNormal.Dot(mUp) * mUp - c.mSurfaceNormal;
+						float test_len = test.Length();
+						if (test_len > 1.0e-6f)
 						{
-							step_forward_test = test;
-							max_dot = dot;
+							test /= test_len;
+							float dot = test.Dot(step_forward_normalized);
+							if (dot > max_dot)
+							{
+								step_forward_test = test;
+								max_dot = dot;
+							}
 						}
 					}
 
