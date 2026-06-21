@@ -106,7 +106,7 @@ void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *
 			// Collector needs to know which character we're colliding with
 			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
 
-			// Note that this collides against the character's shape without padding, this will be corrected for in CharacterVirtual::GetFirstContactForSweep
+			// Note that this collides against the character's shape without padding, this will be corrected for in CharacterVirtual::ValidateMovement
 			CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, cast_settings, shape2, Vec3::sOne(), { }, transform2, SubShapeIDCreator(), SubShapeIDCreator(), ioCollector);
 		}
 
@@ -333,10 +333,11 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 	}
 }
 
-void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inResult)
+template <bool IgnoreInitialOverlap>
+void CharacterVirtual::ContactCastCollector<IgnoreInitialOverlap>::AddHit(const ShapeCastResult &inResult)
 {
 	if (inResult.mFraction < mContact.mFraction // Since we're doing checks against the world and against characters, we may get a hit with a higher fraction than the previous hit
-		&& inResult.mFraction > 0.0f // Ignore collisions at fraction = 0
+		&& (!IgnoreInitialOverlap || inResult.mFraction > 0.0f) // Ignore collisions at fraction = 0
 		&& inResult.mPenetrationAxis.Dot(mDisplacement) > 0.0f) // Ignore penetrations that we're moving away from
 	{
 		// Test if this contact should be ignored
@@ -565,7 +566,7 @@ inline static bool sCorrectFractionForCharacterPadding(const Shape *inShape, Mat
 	}
 }
 
-bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDisplacement, CharacterContact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
+bool CharacterVirtual::ValidateMovement(RVec3Arg inPosition, Vec3Arg inDisplacement, CharacterContact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
 {
 	// Too small distance -> skip checking
 	float displacement_len_sq = inDisplacement.LengthSq();
@@ -593,7 +594,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	CharacterContact contact;
 	contact.mFraction = 1.0f + character_padding_fraction;
 	RVec3 base_offset = start.GetTranslation();
-	ContactCastCollector collector(mSystem, this, inDisplacement, mUp, inIgnoredContacts, base_offset, contact);
+	ContactCastCollector<true> collector(mSystem, this, inDisplacement, mUp, inIgnoredContacts, base_offset, contact);
 	collector.ResetEarlyOutFraction(contact.mFraction);
 	RShapeCast shape_cast(mShape, Vec3::sOne(), start, inDisplacement);
 	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, base_offset, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, body_filter, inShapeFilter);
@@ -655,6 +656,46 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	// Ensure that we never return a fraction that's bigger than 1 (which could happen due to float precision issues).
 	outContact.mFraction = min(outContact.mFraction, 1.0f);
 
+	return true;
+}
+
+bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDisplacement, CharacterContact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
+{
+	// Calculate start transform
+	RMat44 start = GetCenterOfMassTransform(inPosition, mRotation, mShape);
+
+	// Settings for the cast
+	ShapeCastSettings settings;
+	settings.mExtraConvexRadius = mCharacterPadding;
+	settings.mBackFaceModeTriangles = mBackFaceMode;
+	settings.mBackFaceModeConvex = EBackFaceMode::IgnoreBackFaces;
+	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
+	settings.mUseShrunkenShapeAndConvexRadius = true;
+	settings.mReturnDeepestPoint = false;
+
+	// Body filter
+	IgnoreSingleBodyFilterChained body_filter(mInnerBodyID, inBodyFilter);
+
+	// Cast shape
+	CharacterContact contact;
+	contact.mFraction = 1.0f + FLT_MIN;
+	RVec3 base_offset = start.GetTranslation();
+	ContactCastCollector<false> collector(mSystem, this, inDisplacement, mUp, inIgnoredContacts, base_offset, contact);
+	RShapeCast shape_cast(mShape, Vec3::sOne(), start, inDisplacement);
+	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, base_offset, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, body_filter, inShapeFilter);
+
+	// Also collide with other characters
+	if (mCharacterVsCharacterCollision != nullptr)
+	{
+		collector.SetContext(nullptr); // We're no longer colliding with a transformed shape, reset
+		mCharacterVsCharacterCollision->CastCharacter(this, start, inDisplacement, settings, base_offset, collector);
+	}
+
+	if (contact.mBodyB.IsInvalid() && contact.mCharacterIDB.IsInvalid())
+		return false;
+
+	// Store contact
+	outContact = contact;
 	return true;
 }
 
@@ -875,7 +916,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 				// Constraint should be ignored, remove it from the list
 				c->mContact->mWasDiscarded = true;
 
-				// Mark it as ignored for GetFirstContactForSweep
+				// Mark it as ignored for ValidateMovement
 				ioIgnoredContacts.emplace_back(*c->mContact);
 				continue;
 			}
@@ -1289,7 +1330,7 @@ void CharacterVirtual::MoveShape(RVec3 &ioPosition, Vec3Arg inVelocity, float in
 
 		// Do a sweep to test if the path is really unobstructed
 		CharacterContact cast_contact;
-		if (GetFirstContactForSweep(ioPosition, displacement, cast_contact, ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
+		if (ValidateMovement(ioPosition, displacement, cast_contact, ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
 		{
 			displacement *= cast_contact.mFraction;
 			time_simulated *= cast_contact.mFraction;
@@ -1572,11 +1613,11 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	StartTrackingContactChanges();
 	JPH_SCOPE_EXIT([this]() { FinishTrackingContactChanges(); });
 
-	// Move up
+	// Move up. Note that we used ValidateMovement here so that we ignore initial collisions and character padding on the sides while moving up. This makes moving up a bit easier.
 	Vec3 up = inStepUp;
 	CharacterContact contact;
 	IgnoredContactList dummy_ignored_contacts(inAllocator);
-	if (GetFirstContactForSweep(mPosition, up, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
+	if (ValidateMovement(mPosition, up, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
 	{
 		if (contact.mFraction < 1.0e-6f)
 			return false; // No movement, cancel
@@ -1595,13 +1636,12 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	// Collect normals of steep slopes that we would like to walk stairs on.
 	// We need to do this before calling MoveShape because it will update mActiveContacts.
 	Vec3 character_velocity = inStepForward / inDeltaTime;
-	Vec3 horizontal_velocity = character_velocity - character_velocity.Dot(mUp) * mUp;
 	Array<Vec3, STLTempAllocator<Vec3>> steep_slope_normals(inAllocator);
 	steep_slope_normals.reserve(mActiveContacts.size());
 	for (const CharacterContact &c : mActiveContacts)
 		if (c.mHadCollision
 			&& !c.mWasDiscarded
-			&& c.mSurfaceNormal.Dot(horizontal_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
+			&& c.mSurfaceNormal.Dot(character_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
 			&& IsSlopeTooSteep(c.mSurfaceNormal)) // Slope too steep
 			steep_slope_normals.push_back(c.mSurfaceNormal);
 	if (steep_slope_normals.empty())
@@ -1619,14 +1659,23 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	// so we need to cancel the stair walk or else we will move faster than we should as we've done
 	// normal movement first and then stair walk.
 	bool made_progress = false;
-	float max_dot = -0.05f * inStepForward.Length();
+	float step_forward_length = inStepForward.Length();
+	Vec3 step_forward_normalized = inStepForward / step_forward_length;
 	for (const Vec3 &normal : steep_slope_normals)
-		if (normal.Dot(horizontal_movement) < max_dot)
+	{
+		Vec3 direction = normal.Dot(mUp) * mUp - normal;
+		float direction_len = direction.Length();
+		if (direction_len > 1.0e-6f)
 		{
-			// We moved more than 5% of the forward step against a steep slope, accept this as progress
-			made_progress = true;
-			break;
+			direction /= direction_len;
+			if (direction.Dot(step_forward_normalized) > 0.707107f // If angle between forward and movement is more than 45 degrees we were mostly sliding
+				&& direction.Dot(horizontal_movement) > 0.05f * step_forward_length) // If we did not achieve 5% of movement cancel too
+			{
+				made_progress = true;
+				break;
+			}
 		}
+	}
 	if (!made_progress)
 		return false;
 
@@ -1798,15 +1847,9 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 			if (achieved_horizontal_step_len + 1.0e-4f < desired_horizontal_step_len
 				&& CanWalkStairs(desired_velocity))
 			{
-				// Calculate how much we should step forward
-				// Note that we clamp the step forward to a minimum distance. This is done because at very high frame rates the delta time
-				// may be very small, causing a very small step forward. If the step becomes small enough, we may not move far enough
-				// horizontally to actually end up at the top of the step.
-				Vec3 step_forward = step_forward_normalized * max(inSettings.mWalkStairsMinStepForward, desired_horizontal_step_len - achieved_horizontal_step_len);
-
 				// Find the contact that is most opposing our movement. Our extra walk stairs test is going to go in that direction instead
 				// of the movement direction. This allows us to step up stairs if we're moving at a big angle along the stairs.
-				Vec3 step_forward_test = step_forward_normalized;
+				Vec3 walk_stairs_direction = step_forward_normalized;
 				float max_dot = inSettings.mWalkStairsCosAngleForwardContact; // Discard contacts that have an angle that is too big
 				for (const CharacterContact &c : mActiveContacts)
 					if (c.mHadCollision
@@ -1823,14 +1866,18 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 							float dot = test.Dot(step_forward_normalized);
 							if (dot > max_dot)
 							{
-								step_forward_test = test;
+								walk_stairs_direction = test;
 								max_dot = dot;
 							}
 						}
 					}
 
-				// Calculate the correct magnitude for the test vector
-				step_forward_test *= inSettings.mWalkStairsStepForwardTest;
+				// Calculate how much we should step forward
+				// Note that we clamp the step forward to a minimum distance. This is done because at very high frame rates the delta time
+				// may be very small, causing a very small step forward. If the step becomes small enough, we may not move far enough
+				// horizontally to actually end up at the top of the step.
+				Vec3 step_forward = walk_stairs_direction * max(inSettings.mWalkStairsMinStepForward, desired_horizontal_step_len - achieved_horizontal_step_len);
+				Vec3 step_forward_test = walk_stairs_direction * inSettings.mWalkStairsStepForwardTest;
 
 				WalkStairs(inDeltaTime, inSettings.mWalkStairsStepUp, step_forward, step_forward_test, inSettings.mWalkStairsStepDownExtra, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter, inAllocator);
 			}

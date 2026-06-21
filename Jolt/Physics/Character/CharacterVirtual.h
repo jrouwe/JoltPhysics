@@ -587,6 +587,7 @@ private:
 	};
 
 	// A collision collector that collects hits for CastShape
+	template <bool IgnoreInitialOverlap>
 	class ContactCastCollector : public CastShapeCollector
 	{
 	public:
@@ -651,7 +652,14 @@ private:
 	// Handle contact with physics object that we're colliding against
 	bool								HandleContact(Vec3Arg inVelocity, Constraint &ioConstraint, float inDeltaTime);
 
-	// Does a swept test of the shape from inPosition with displacement inDisplacement, returns true if there was a collision
+	// Does a swept test of the shape from inPosition with displacement inDisplacement, returns true if there was a collision.
+	// This sweeps to see if there is enough space for the character to move. Character padding is only applied in the movement direction of the character.
+	// Ignores collisions when they already exist at the start of the movement.
+	bool								ValidateMovement(RVec3Arg inPosition, Vec3Arg inDisplacement, CharacterContact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const;
+
+	// Does a swept test of the shape from inPosition with displacement inDisplacement, returns true if there was a collision.
+	// This does a full sweep of character including character padding.
+	// Includes collisions when they already exist at the start of the movement.
 	bool								GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDisplacement, CharacterContact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const;
 
 	// Store contacts so that we have proper ground information
