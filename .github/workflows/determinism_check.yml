@@ -40,7 +40,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -71,7 +71,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -102,7 +102,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Cache Intel SDE
       id: cache-sde
       uses: actions/cache@v5
@@ -147,7 +147,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
@@ -178,7 +178,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
@@ -211,7 +211,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
@@ -246,7 +246,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install Vulkan SDK
       run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
     - name: Configure CMake
@@ -285,7 +285,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install Vulkan SDK
       run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
     - name: Configure CMake
@@ -321,7 +321,7 @@ jobs:
     name: ARM Clang Determinism Check
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
@@ -355,7 +355,7 @@ jobs:
     name: ARM Clang 32-bit Determinism Check
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
@@ -389,7 +389,7 @@ jobs:
     name: ARM GCC Determinism Check
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
@@ -423,7 +423,7 @@ jobs:
     name: RISC-V GCC Determinism Check
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
@@ -457,7 +457,7 @@ jobs:
     name: RISC-V Clang RVV Determinism Check
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Update index
       run: sudo apt-get update
     - name: Install RISC-V Support
@@ -492,7 +492,7 @@ jobs:
     name: PowerPC Little Endian GCC Determinism Check
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
@@ -524,7 +524,7 @@ jobs:
     name: LoongArch GCC Determinism Check
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
@@ -557,7 +557,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup emsdk
       uses: mymindstorm/setup-emsdk@v16
       with:
@@ -598,7 +598,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup emsdk
       uses: mymindstorm/setup-emsdk@v16
       with:
