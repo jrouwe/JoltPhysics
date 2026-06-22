@@ -616,7 +616,7 @@ void CharacterBaseTest::Initialize()
 	{
 		// Load scene
 		Ref<PhysicsScene> scene;
-		AssetStream stream(String(sSceneName) + ".bof", std::ios::in | std::ios::binary);
+		AssetStream stream(ToLower(String(sSceneName)) + ".bof", std::ios::in | std::ios::binary);
 		if (!ObjectStreamIn::sReadObject(stream.Get(), scene))
 			FatalError("Failed to load scene");
 		scene->FixInvalidScales();
