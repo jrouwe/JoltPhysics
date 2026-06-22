@@ -30,7 +30,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install Vulkan
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
@@ -52,7 +52,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install Vulkan
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
@@ -80,7 +80,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install Vulkan
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
@@ -102,7 +102,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Update APT
       run: sudo apt update
     - name: Install G++-Multilib
@@ -127,7 +127,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install Vulkan
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
@@ -149,7 +149,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install Vulkan
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
@@ -171,7 +171,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install Vulkan
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
@@ -197,7 +197,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
@@ -224,7 +224,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
@@ -246,7 +246,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
@@ -268,7 +268,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
@@ -290,7 +290,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
@@ -312,7 +312,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
@@ -332,7 +332,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
     - name: Configure CMake
@@ -356,7 +356,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install Vulkan
       run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
     - name: Configure CMake
@@ -379,7 +379,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup Java
       uses: actions/setup-java@v5
       with:
@@ -397,7 +397,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
     - name: Build
@@ -409,7 +409,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup emsdk
       uses: mymindstorm/setup-emsdk@v16
       with:
