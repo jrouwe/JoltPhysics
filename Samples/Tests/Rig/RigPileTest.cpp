@@ -29,11 +29,13 @@ const char *RigPileTest::sScenes[] =
 {
 	"PerlinMesh",
 	"PerlinHeightField",
+#ifdef JPH_OBJECT_STREAM
 	"Terrain1",
 	"Terrain2",
+#endif // JPH_OBJECT_STREAM
 };
 
-#ifdef JPH_DEBUG
+#if defined(JPH_DEBUG) || !defined(JPH_OBJECT_STREAM)
 	const char *RigPileTest::sSceneName = "PerlinMesh";
 	int RigPileTest::sPileSize = 5;
 	int RigPileTest::sNumPilesPerAxis = 2;
@@ -65,7 +67,7 @@ void RigPileTest::Initialize()
 	{
 		// Load scene
 		Ref<PhysicsScene> scene;
-		AssetStream stream(String(sSceneName) + ".bof", std::ios::in | std::ios::binary);
+		AssetStream stream(ToLower(String(sSceneName)) + ".bof", std::ios::in | std::ios::binary);
 		if (!ObjectStreamIn::sReadObject(stream.Get(), scene))
 			FatalError("Failed to load scene");
 		for (BodyCreationSettings &body : scene->GetBodies())
