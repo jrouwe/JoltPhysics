@@ -1,6 +1,7 @@
 # Projects Using Jolt
 
 * [Artillery Eco](https://github.com/OversizedSunCoreDev/ArtilleryEco) - Plugin for Unreal Engine 5 (UE5).
+* [Autodesk Synthesis](https://synthesis.autodesk.com/) - React-based robotics simulator & 3D exporter for the FIRST Robotics competition.
 * [Blood Line: A Rebel Moon Game](https://www.rebelmoongame.com/) - An online co-op action game set in the rebel moon universe.
 * [Bonjolt](https://bonjolt.com/) - A tool to create bone based secondary motion in Maya with a plugin for Unreal Engine.
 * [Dagor Engine](https://github.com/GaijinEntertainment/DagorEngine) - An open source engine used by [War Thunder](https://warthunder.com/). See [here](https://github.com/GaijinEntertainment/DagorEngine/tree/main/prog/engine/phys/physJolt).
