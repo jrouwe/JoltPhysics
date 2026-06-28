@@ -4,6 +4,7 @@
 
 #include <Jolt/Jolt.h>
 
+#include <Jolt/Physics/Hair/RegisterHair.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/RTTI.h>
 
