@@ -192,11 +192,6 @@ void RegisterTypesInternal(uint64 inVersionID)
 		PhysicsMaterial::sDefault = new PhysicsMaterialSimple("Default", Color::sGrey);
 }
 
-void RegisterHair()
-{
-	Factory::sInstance->Register(JPH_RTTI(HairSettings));
-}
-
 void UnregisterTypes()
 {
 	// Unregister all types

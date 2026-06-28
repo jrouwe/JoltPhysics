@@ -375,6 +375,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Hair/HairSettings.h
 	${JOLT_PHYSICS_ROOT}/Physics/Hair/HairShaders.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Hair/HairShaders.h
+	${JOLT_PHYSICS_ROOT}/Physics/Hair/RegisterHair.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Hair/RegisterHair.h
 	${JOLT_PHYSICS_ROOT}/Physics/IslandBuilder.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/IslandBuilder.h
 	${JOLT_PHYSICS_ROOT}/Physics/LargeIslandSplitter.cpp

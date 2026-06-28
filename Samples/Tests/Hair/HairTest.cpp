@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Hair/RegisterHair.h>
 #include <Jolt/Core/StreamWrapper.h>
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
