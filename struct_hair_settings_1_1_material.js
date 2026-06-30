@@ -1,0 +1,26 @@
+var struct_hair_settings_1_1_material =
+[
+    [ "GetBendCompliance", "struct_hair_settings_1_1_material.html#a422cc63544c851e9ba4320dde115a406", null ],
+    [ "GlobalPoseOnly", "struct_hair_settings_1_1_material.html#a18ffbc5210899955d8cae98aee3e74e9", null ],
+    [ "NeedsGrid", "struct_hair_settings_1_1_material.html#a1e1281e0ee9511a1ea123eee4daaf2a4", null ],
+    [ "mAngularDamping", "struct_hair_settings_1_1_material.html#a21160d1752254231a131bb1d4f992423", null ],
+    [ "mBendCompliance", "struct_hair_settings_1_1_material.html#ab551f287954252c34868f6e2d3cb0b72", null ],
+    [ "mBendComplianceMultiplier", "struct_hair_settings_1_1_material.html#af059adb46bc09948944c61eaff98dc0f", null ],
+    [ "mEnableCollision", "struct_hair_settings_1_1_material.html#a7cd6b6d33640a09341e3ce8120df424d", null ],
+    [ "mEnableLRA", "struct_hair_settings_1_1_material.html#a125a11cca8c05237e0154d671effa249", null ],
+    [ "mFriction", "struct_hair_settings_1_1_material.html#aaa76605732d86a3edbc6f9148922e58b", null ],
+    [ "mGlobalPose", "struct_hair_settings_1_1_material.html#a7122f8851174d62a969acdbfa50bb529", null ],
+    [ "mGravityFactor", "struct_hair_settings_1_1_material.html#a0c5520ccb1998a31e1f6107814174907", null ],
+    [ "mGravityPreloadFactor", "struct_hair_settings_1_1_material.html#a6910071c9a964ae341a4c883eb32a217", null ],
+    [ "mGridDensityForceFactor", "struct_hair_settings_1_1_material.html#a06d01afb2a95508fc66e594599804e8a", null ],
+    [ "mGridVelocityFactor", "struct_hair_settings_1_1_material.html#a000e25a378fbc7c94e5a437b82f35e50", null ],
+    [ "mHairRadius", "struct_hair_settings_1_1_material.html#aa32f10733742c7490ad293d9f88128f2", null ],
+    [ "mInertiaMultiplier", "struct_hair_settings_1_1_material.html#a0e48a2ccebf77ba8fa3f6fec6f60e064", null ],
+    [ "mLinearDamping", "struct_hair_settings_1_1_material.html#ab8afc4c61004e5e7e88284f87c78042a", null ],
+    [ "mMaxAngularVelocity", "struct_hair_settings_1_1_material.html#a0312cc05841a4b12d080b57a26f57513", null ],
+    [ "mMaxLinearVelocity", "struct_hair_settings_1_1_material.html#a420bfc0d43aa7082bee62d8fc6bbecc0", null ],
+    [ "mSimulationStrandsFraction", "struct_hair_settings_1_1_material.html#ab9a1ae7dce40ca8df91224bbc551c6f1", null ],
+    [ "mSkinGlobalPose", "struct_hair_settings_1_1_material.html#a114a391545ea965ec57fe9f008b077b9", null ],
+    [ "mStretchCompliance", "struct_hair_settings_1_1_material.html#a9945b849d012296966a138bd7505a27d", null ],
+    [ "mWorldTransformInfluence", "struct_hair_settings_1_1_material.html#a6711e3ab789fc2c936967d98c62dc490", null ]
+];
