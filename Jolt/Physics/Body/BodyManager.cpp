@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyShape.h>
@@ -360,6 +361,45 @@ Body *BodyManager::RemoveBodyInternal(const BodyID &inBodyID)
 	return body;
 }
 
+void BodyManager::RestoreFreeList(const Array<uint32> &inSavedFreeList)
+{
+	LockAllBodies();
+
+	// Grow body slots if needed upfront
+	if (!inSavedFreeList.empty())
+	{
+		uint32 max_saved_slot = 0;
+		for (uint32 slot : inSavedFreeList)
+			max_saved_slot = max(max_saved_slot, slot);
+
+		if (max_saved_slot >= (uint32)mBodies.size())
+			mBodies.resize(max_saved_slot + 1, (Body *)cBodyIDFreeListEnd);
+	}
+
+	Array<uint8> in_saved((uint32)mBodies.size(), uint8(0));
+	for (uint32 slot : inSavedFreeList)
+		in_saved[slot] = 1;
+
+	// Put free slots that weren't saved at the end so they don't affect saved slot order
+	uintptr_t next = cBodyIDFreeListEnd;
+	for (uint32 i = (uint32)mBodies.size(); i-- > 0; )
+		if ((uintptr_t(mBodies[i]) & cIsFreedBody) != 0 && !in_saved[i])
+		{
+			mBodies[i] = (Body *)next;
+			next = (uintptr_t(i) << cFreedBodyIndexShift) | cIsFreedBody;
+		}
+	for (int j = (int)inSavedFreeList.size() - 1; j >= 0; --j)
+	{
+		uint32 slot = inSavedFreeList[j];
+		JPH_ASSERT((uintptr_t(mBodies[slot]) & cIsFreedBody) != 0, "Saved free slot is occupied, was a body not destroyed?");
+		mBodies[slot] = (Body *)next;
+		next = (uintptr_t(slot) << cFreedBodyIndexShift) | cIsFreedBody;
+	}
+	mBodyIDFreeListStart = next;
+
+	UnlockAllBodies();
+}
+
 #if defined(JPH_DEBUG) && defined(JPH_ENABLE_ASSERTS)
 
 void BodyManager::ValidateFreeList() const
@@ -701,8 +741,10 @@ void BodyManager::UnlockAllBodies() const
 	mBodyMutexes.UnlockAll();
 }
 
-void BodyManager::SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const
+void BodyManager::SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter, bool inSaveIdSequences) const
 {
+	JPH_ASSERT(!inSaveIdSequences || inFilter == nullptr, "Filtered bodies cannot be represented in the state, so id sequences cannot be restored deterministically");
+
 	{
 		LockAllBodies();
 
@@ -723,13 +765,47 @@ void BodyManager::SaveState(StateRecorder &inStream, const StateRecorderFilter *
 			b->SaveState(inStream);
 		}
 
+		if (inSaveIdSequences)
+		{
+			// Write sequence numbers for body slots not currently in the broad phase so we can fully restore the slot counters
+			// since they may not be used by bodies anymore but we still want to make sure the the next counter allocation is correct
+			uint32 num_entries = 0;
+			for (uint32 i = 0, n = (uint32)mBodies.size(); i < n; ++i)
+			{
+				const Body *b = mBodies[i];
+				if ((!sIsValidBodyPointer(b) || !b->IsInBroadPhase()) && mBodySequenceNumbers[i] != 0)
+					++num_entries;
+			}
+			inStream.Write(num_entries);
+			for (uint32 i = 0, n = (uint32)mBodies.size(); i < n; ++i)
+			{
+				const Body *b = mBodies[i];
+				if ((!sIsValidBodyPointer(b) || !b->IsInBroadPhase()) && mBodySequenceNumbers[i] != 0)
+				{
+					inStream.Write(i);
+					inStream.Write(mBodySequenceNumbers[i]);
+				}
+			}
+
+			// Write the free list order so we can rebuild it (see: RestoreFreeList)
+			uint32 num_free_slots = 0;
+			for (uintptr_t ptr = mBodyIDFreeListStart; ptr != cBodyIDFreeListEnd; ptr = uintptr_t(mBodies[ptr >> cFreedBodyIndexShift]))
+				++num_free_slots;
+			inStream.Write(num_free_slots);
+			for (uintptr_t ptr = mBodyIDFreeListStart; ptr != cBodyIDFreeListEnd; ptr = uintptr_t(mBodies[ptr >> cFreedBodyIndexShift]))
+				inStream.Write(uint32(ptr >> cFreedBodyIndexShift));
+		}
+
 		UnlockAllBodies();
 	}
 }
 
-bool BodyManager::RestoreState(StateRecorder &inStream)
+bool BodyManager::RestoreState(StateRecorder &inStream, BroadPhase *ioBroadPhase, bool inRestoreIdSequences, bool inDestroyBodiesNotInState)
 {
-	BodyIDVector bodies_to_activate, bodies_to_deactivate;
+	JPH_ASSERT(ioBroadPhase != nullptr || (!inRestoreIdSequences && !inDestroyBodiesNotInState), "Broad phase is required to correct body IDs and destroy bodies");
+
+	BodyIDVector bodies_to_activate, bodies_to_deactivate, bodies_to_destroy, ids_changed;
+	Array<uint32> saved_free_list;
 
 	{
 		LockAllBodies();
@@ -772,6 +848,28 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 					}
 					b->RestoreState(inStream);
 				}
+
+			// Consume the sequence number and free list sections, just walk past it
+			if (inRestoreIdSequences)
+			{
+				uint32 num_entries = 0;
+				inStream.Read(num_entries);
+				for (uint32 i = 0; i < num_entries; ++i)
+				{
+					uint32 idx;
+					inStream.Read(idx);
+					uint8 seq;
+					inStream.Read(seq);
+				}
+
+				uint32 num_free_slots = 0;
+				inStream.Read(num_free_slots);
+				for (uint32 i = 0; i < num_free_slots; ++i)
+				{
+					uint32 slot;
+					inStream.Read(slot);
+				}
+			}
 		}
 		else
 		{
@@ -779,28 +877,112 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 			uint32 num_bodies = 0;
 			inStream.Read(num_bodies);
 
+			// Reset all sequence numbers
+			// slots present in the state are restored below whether recorded directly or in recorded ids
+			// slots created after the snapshot correctly start over at 0
+			if (inRestoreIdSequences)
+				std::fill(mBodySequenceNumbers.begin(), mBodySequenceNumbers.end(), uint8(0));
+
+			uint32 slot = 0;
+			uint32 num_slots = (uint32)mBodies.size();
+
 			// Iterate over the stored bodies and restore their state
-			for (uint32 idx = 0; idx < num_bodies; ++idx)
+			// while also collecting bodies that are not present in the state
+			for (uint32 stream_idx = 0; stream_idx < num_bodies; ++stream_idx)
 			{
-				BodyID body_id;
-				inStream.Read(body_id);
-				Body *b = TryGetBody(body_id);
-				if (b == nullptr)
+				BodyID stream_id;
+				inStream.Read(stream_id);
+
+				// Walk slots until we get to the one that should be holding this body
+				// Any body we pass on the way is not present in the state and is collected for destruction if that is enabled
+				while (slot < num_slots)
+				{
+					Body *b = mBodies[slot];
+					if (!sIsValidBodyPointer(b))
+					{
+						++slot;
+						continue;
+					}
+					if (b->IsInBroadPhase() && b->GetID().GetIndex() >= stream_id.GetIndex())
+						break;
+					if (inDestroyBodiesNotInState)
+						bodies_to_destroy.push_back(b->GetID());
+					++slot;
+				}
+
+				Body *b = slot < num_slots ? mBodies[slot] : nullptr;
+				if (b == nullptr || !sIsValidBodyPointer(b) || b->GetID().GetIndex() != stream_id.GetIndex())
 				{
 					JPH_ASSERT(false, "Restoring state for non-existing body");
 					UnlockAllBodies();
 					return false;
 				}
+
+				// we can't change the id of a body that is registered in the broad phase we reregister it under its restored id after the walk
+				if (inRestoreIdSequences)
+				{
+					mBodySequenceNumbers[slot] = stream_id.GetSequenceNumber();
+					if (b->mID != stream_id)
+						ids_changed.push_back(b->mID);
+				}
+				else if (b->mID != stream_id)
+				{
+					JPH_ASSERT(false, "Body sequence number mismatch");
+					UnlockAllBodies();
+					return false;
+				}
+
 				bool is_active;
 				inStream.Read(is_active);
 				if (is_active != b->IsActive())
 				{
+					// use the current id for now,  correct it later
 					if (is_active)
-						bodies_to_activate.push_back(body_id);
+						bodies_to_activate.push_back(b->mID);
 					else
-						bodies_to_deactivate.push_back(body_id);
+						bodies_to_deactivate.push_back(b->mID);
 				}
 				b->RestoreState(inStream);
+				++slot;
+			}
+
+			// All remaining bodies are not present in the state
+			if (inDestroyBodiesNotInState)
+				while (slot < num_slots)
+				{
+					Body *b = mBodies[slot];
+					if (sIsValidBodyPointer(b))
+						bodies_to_destroy.push_back(b->GetID());
+					++slot;
+				}
+
+			// Restore sequence numbers for body slots that were not in the broad phase at save time
+			if (inRestoreIdSequences)
+			{
+				uint32 num_entries = 0;
+				inStream.Read(num_entries);
+				for (uint32 i = 0; i < num_entries; ++i)
+				{
+					uint32 idx;
+					inStream.Read(idx);
+					uint8 seq;
+					inStream.Read(seq);
+					if (idx < (uint32)mBodySequenceNumbers.size())
+						mBodySequenceNumbers[idx] = seq;
+				}
+
+				// Read the free list but apply later once the bodies not in the state have been destroyed so we can free those slots potentially
+				uint32 num_free_slots = 0;
+				inStream.Read(num_free_slots);
+				if (inDestroyBodiesNotInState)
+					saved_free_list.reserve(num_free_slots);
+				for (uint32 i = 0; i < num_free_slots; ++i)
+				{
+					uint32 free_slot;
+					inStream.Read(free_slot);
+					if (inDestroyBodiesNotInState)
+						saved_free_list.push_back(free_slot);
+				}
 			}
 		}
 
@@ -822,6 +1004,48 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 			RemoveBodyFromActiveBodies(*body);
 		}
 	}
+
+	// Finally... reregister bodies who have ids that drifted from the saved value
+	// The broad phase and the active body list track bodies by id, so remove the body under its old id, change it, then readd.
+	if (!ids_changed.empty())
+	{
+		ioBroadPhase->RemoveBodies(ids_changed.data(), (int)ids_changed.size());
+		{
+			UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
+			for (BodyID &id : ids_changed)
+			{
+				Body *b = mBodies[id.GetIndex()];
+				bool active = b->IsActive();
+				if (active)
+					RemoveBodyFromActiveBodies(*b);
+				b->mID = id = BodyID(id.GetIndex(), mBodySequenceNumbers[id.GetIndex()]); // The restored sequence number was stored during the walk above
+				if (active)
+					AddBodyToActiveBodies(*b);
+			}
+		}
+		BroadPhase::AddState add_state = ioBroadPhase->AddBodiesPrepare(ids_changed.data(), (int)ids_changed.size());
+		ioBroadPhase->AddBodiesFinalize(ids_changed.data(), (int)ids_changed.size(), add_state);
+	}
+
+	// Destroy bodies that are not present in the state
+	if (!bodies_to_destroy.empty())
+	{
+		// Move bodies that are in the broad phase to the front, they need to be deactivated and removed from the broad phase before they can be destroyed
+		int num_in_broad_phase = 0;
+		for (int i = 0; i < (int)bodies_to_destroy.size(); ++i)
+			if (GetBody(bodies_to_destroy[i]).IsInBroadPhase())
+				std::swap(bodies_to_destroy[num_in_broad_phase++], bodies_to_destroy[i]);
+		if (num_in_broad_phase > 0)
+		{
+			DeactivateBodies(bodies_to_destroy.data(), num_in_broad_phase);
+			ioBroadPhase->RemoveBodies(bodies_to_destroy.data(), num_in_broad_phase);
+		}
+		DestroyBodies(bodies_to_destroy.data(), (int)bodies_to_destroy.size());
+	}
+
+	// Rebuild the free list in saved order so future body creation produces the same ids
+	if (inRestoreIdSequences && inDestroyBodiesNotInState)
+		RestoreFreeList(saved_free_list);
 
 	return true;
 }

@@ -15,6 +15,7 @@ class BodyCreationSettings;
 class SoftBodyCreationSettings;
 class BodyActivationListener;
 class StateRecorderFilter;
+class BroadPhase;
 struct PhysicsSettings;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;
@@ -206,11 +207,15 @@ public:
 	/// Return the BroadPhaseLayerInterface that this class has been initialized with
 	const BroadPhaseLayerInterface &GetBroadPhaseLayerInterface() const			{ return *mBroadPhaseLayerInterface; }
 
-	/// Saving state for replay
-	void							SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
+	/// Saving state for replay.
+	/// If inSaveIdSequences is true, also writes the body id sequence numbers and free list (see EStateRecorderState::IdSequences).
+	void							SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter, bool inSaveIdSequences = false) const;
 
 	/// Restoring state for replay. Returns false if failed.
-	bool							RestoreState(StateRecorder &inStream);
+	/// If inRestoreIdSequences is true, restores the body id sequence numbers and free list so that bodies created after the restore get the same ids they got originally
+	/// If inDestroyBodiesNotInState is true, bodies not present in the state are destroyed.
+	/// ioBroadPhase is required when either flag is set.
+	bool							RestoreState(StateRecorder &inStream, BroadPhase *ioBroadPhase = nullptr, bool inRestoreIdSequences = false, bool inDestroyBodiesNotInState = false);
 
 	/// Save the state of a single body for replay
 	void							SaveBodyState(const Body &inBody, StateRecorder &inStream) const;
@@ -330,6 +335,9 @@ private:
 
 	/// Helper function to delete a body (which could actually be a BodyWithMotionProperties)
 	inline static void				sDeleteBody(Body *inBody);
+
+	/// Rebuild the body id free list so that the slots in inSavedFreeList come first (in that order), followed by any other free slots
+	void							RestoreFreeList(const Array<uint32> &inSavedFreeList);
 
 #if defined(JPH_DEBUG) && defined(JPH_ENABLE_ASSERTS)
 	/// Function to check that the free list is not corrupted

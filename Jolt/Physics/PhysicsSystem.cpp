@@ -2907,9 +2907,10 @@ void PhysicsSystem::SaveState(StateRecorder &inStream, EStateRecorderState inSta
 		inStream.Write(mPreviousStepDeltaTime);
 		inStream.Write(mGravity);
 	}
-
+	
+	JPH_ASSERT(!(uint8(inState) & uint8(EStateRecorderState::IdSequences)) || (uint8(inState) & uint8(EStateRecorderState::Bodies)), "IdSequences must be combined with Bodies");
 	if (uint8(inState) & uint8(EStateRecorderState::Bodies))
-		mBodyManager.SaveState(inStream, inFilter);
+		mBodyManager.SaveState(inStream, inFilter, uint8(inState) & uint8(EStateRecorderState::IdSequences));
 
 	if (uint8(inState) & uint8(EStateRecorderState::Contacts))
 		mContactManager.SaveState(inStream, inFilter);
@@ -2918,7 +2919,7 @@ void PhysicsSystem::SaveState(StateRecorder &inStream, EStateRecorderState inSta
 		mConstraintManager.SaveState(inStream, inFilter);
 }
 
-bool PhysicsSystem::RestoreState(StateRecorder &inStream, const StateRecorderFilter *inFilter)
+bool PhysicsSystem::RestoreState(StateRecorder &inStream, const StateRecorderFilter *inFilter, bool inDestroyBodiesNotInState)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -2933,7 +2934,7 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream, const StateRecorderFil
 
 	if (uint8(state) & uint8(EStateRecorderState::Bodies))
 	{
-		if (!mBodyManager.RestoreState(inStream))
+		if (!mBodyManager.RestoreState(inStream, mBroadPhase, uint8(state) & uint8(EStateRecorderState::IdSequences), inDestroyBodiesNotInState))
 			return false;
 
 		// Update bounding boxes for all bodies in the broadphase

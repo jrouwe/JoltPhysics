@@ -19,12 +19,14 @@ JPH_GCC_SUPPRESS_WARNING("-Wshadow") // GCC complains about the 'Constraints' va
 /// A bit field that determines which aspects of the simulation to save
 enum class EStateRecorderState : uint8
 {
-	None				= 0,														///< Save nothing
-	Global				= 1,														///< Save global physics system state (delta time, gravity, etc.)
-	Bodies				= 2,														///< Save the state of bodies
-	Contacts			= 4,														///< Save the state of contacts
-	Constraints			= 8,														///< Save the state of constraints
-	All					= Global | Bodies | Contacts | Constraints					///< Save all state
+	None					= 0,													///< Save nothing
+	Global					= 1,													///< Save global physics system state (delta time, gravity, etc.)
+	Bodies					= 2,													///< Save the state of bodies
+	Contacts				= 4,													///< Save the state of contacts
+	Constraints				= 8,													///< Save the state of constraints
+	All						= Global | Bodies | Contacts | Constraints,				///< Save all state
+
+	IdSequences				= 16													///< Save body id sequence number generation data so that bodies created after a restore get the same ids they got originally. Must be combined with Bodies.
 };
 
 JPH_SUPPRESS_WARNING_POP
