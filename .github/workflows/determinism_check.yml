@@ -247,6 +247,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v7
+    - name: Install Metal Toolchain
+      run: xcodebuild -downloadComponent MetalToolchain
     - name: Install Vulkan SDK
       run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
     - name: Configure CMake
@@ -286,6 +288,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v7
+    - name: Install Metal Toolchain
+      run: xcodebuild -downloadComponent MetalToolchain
     - name: Install Vulkan SDK
       run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
     - name: Configure CMake
