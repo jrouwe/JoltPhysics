@@ -66,12 +66,12 @@ public:
 	uint32						GetMaxConstraints() const											{ return mMaxConstraints; }
 
 	/// Check with the listener if inBody1 and inBody2 could collide, returns false if not
-	inline ValidateResult		ValidateContactPoint(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) const
+	inline ValidateResult		ValidateContactPoint(ValidateType inType, const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) const
 	{
 		if (mContactListener == nullptr)
 			return ValidateResult::AcceptAllContactsForThisBodyPair;
 
-		return mContactListener->OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult);
+		return mContactListener->OnContactValidate(inType, inBody1, inBody2, inBaseOffset, inCollisionResult);
 	}
 
 	/// Sets up the constraint buffer. Should be called before starting collision detection.

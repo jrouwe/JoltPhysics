@@ -31,7 +31,7 @@ public:
 		ContactManifold				mManifold;
 	};
 
-	virtual ValidateResult			OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) override
+	virtual ValidateResult			OnContactValidate([[maybe_unused]] ValidateType inType, const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) override
 	{
 		// Check ordering contract between body 1 and body 2
 		bool contract = inBody1.GetMotionType() >= inBody2.GetMotionType()

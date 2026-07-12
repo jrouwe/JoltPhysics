@@ -94,7 +94,7 @@ void ContactListenerTest::PostPhysicsUpdate(float inDeltaTime)
 	mPredictedVelocities.clear();
 }
 
-ValidateResult ContactListenerTest::OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
+ValidateResult ContactListenerTest::OnContactValidate([[maybe_unused]] ValidateType inType, const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
 {
 	// Body 1 and 2 should never collide
 	return ((&inBody1 == mBody[0] && &inBody2 == mBody[1]) || (&inBody1 == mBody[1] && &inBody2 == mBody[0]))? ValidateResult::RejectAllContactsForThisBodyPair : ValidateResult::AcceptAllContactsForThisBodyPair;

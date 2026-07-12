@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Core/QuickSort.h>
 
-ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
+ValidateResult ContactListenerImpl::OnContactValidate([[maybe_unused]] ValidateType inType, const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
 {
 	// Check ordering contract between body 1 and body 2
 	bool contract = inBody1.GetMotionType() >= inBody2.GetMotionType()
@@ -20,9 +20,9 @@ ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const
 
 	ValidateResult result;
 	if (mNext != nullptr)
-		result = mNext->OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult);
+		result = mNext->OnContactValidate(inType, inBody1, inBody2, inBaseOffset, inCollisionResult);
 	else
-		result = ContactListener::OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult);
+		result = ContactListener::OnContactValidate(inType, inBody1, inBody2, inBaseOffset, inCollisionResult);
 
 	RVec3 contact_point = inBaseOffset + inCollisionResult.mContactPointOn1;
 	DebugRenderer::sInstance->DrawArrow(contact_point, contact_point - inCollisionResult.mPenetrationAxis.NormalizedOr(Vec3::sZero()), Color::sBlue, 0.05f);
