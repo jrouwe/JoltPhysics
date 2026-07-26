@@ -12,6 +12,7 @@
 #include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 #include <Jolt/Geometry/EPAPenetrationDepth.h>
 #include <Jolt/Geometry/Plane.h>
+#include <Jolt/Geometry/ClosestPoint.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -83,7 +84,24 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	// Check result of collision detection
 	if (status == EPAPenetrationDepth::EStatus::NotColliding)
 		return;
-	else if (status == EPAPenetrationDepth::EStatus::Indeterminate)
+
+	// Mesh triangles with edges much longer than the query shape cause float32 cancellation in
+	// the simplex cross products, so GJK/EPA can report witness points that are implausibly far
+	// apart. A real contact keeps point1 and point2 within the query shape's own size; use the
+	// squared bounding-box diagonal as the largest plausible witness separation.
+	Vec3 bounds_size = mBoundsOf1.mMax - mBoundsOf1.mMin;
+	float max_contact_dist_sq = bounds_size.LengthSq();
+
+	// GJK Colliding can return point1 outside the shape bounds, or point2 blown to a far triangle
+	// vertex while point1 looks plausible
+	if (status == EPAPenetrationDepth::EStatus::Colliding)
+	{
+		AABox expanded_bounds(mBoundsOf1.mMin - bounds_size, mBoundsOf1.mMax + bounds_size);
+		if (!expanded_bounds.Contains(point1) || (point2 - point1).LengthSq() > max_contact_dist_sq)
+			status = EPAPenetrationDepth::EStatus::Indeterminate;
+	}
+
+	if (status == EPAPenetrationDepth::EStatus::Indeterminate)
 	{
 		// Need to run expensive EPA algorithm
 
@@ -103,6 +121,20 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 		// Perform EPA step
 		if (!pen_depth.GetPenetrationDepthStepEPA(shape1_add_max_separation_distance, triangle, mCollideShapeSettings.mPenetrationTolerance, penetration_axis, point1, point2))
 			return;
+
+		// EPA can converge to the wrong facet and report the witnesses far apart. Snap point2 to
+		// the closest point on the triangle; if they are still further apart than the shape, point1
+		// is unreliable too, so discard rather than feed a bogus deep penetration downstream.
+		if ((point2 - point1).LengthSq() > max_contact_dist_sq)
+		{
+			uint32 set;
+			point2 = ClosestPoint::GetClosestPointOnTriangle(v0 - point1, v1 - point1, v2 - point1, set) + point1;
+
+			// The snapped point2 no longer matches EPA's axis; recompute it A->B and re-check.
+			penetration_axis = point2 - point1;
+			if (penetration_axis.LengthSq() > max_contact_dist_sq) // both points unfixable, skip contact
+				return;
+		}
 	}
 
 	// Check if the penetration is bigger than the early out fraction
