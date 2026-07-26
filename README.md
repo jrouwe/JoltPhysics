@@ -111,7 +111,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 ## Required CPU features
 
 * On x86/x64 the minimal requirements are SSE2. The library can be compiled using SSE4.1, SSE4.2, AVX, AVX2, or AVX512.
-* On ARM64 the library uses NEON and FP16. On ARM32 it can be compiled without any special CPU instructions.
+* On ARM64 (AArch64) the library uses NEON and is compatible with ARMv8-A. On ARM32 (AArch32) it doesn't use any special CPU instructions.
 
 ## Documentation
 
