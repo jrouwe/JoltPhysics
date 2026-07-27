@@ -67,7 +67,8 @@ namespace ClosestPoint
 			// Denominator must be positive:
 			// |v0|^2 * |v1|^2 - (v0 . v1)^2 = |v0|^2 * |v1|^2 * (1 - cos(angle)^2) >= 0
 			float denominator = DifferenceOfProducts(d00, d11, d01, d01);
-			if (denominator < 1.0e-12f)
+			// (1 - cos(angle)^2) == 1.0e-6 or angle ~ 0.06 degrees which means the triangle is degenerate and we fall back to calculating the closest point on the longest edge
+			if (denominator <= 1.0e-6f * d00 * d11)
 			{
 				// Degenerate triangle, return coordinates along longest edge
 				if (d00 > d11)
@@ -97,7 +98,7 @@ namespace ClosestPoint
 			float d12 = v1.Dot(v2);
 
 			float denominator = DifferenceOfProducts(d11, d22, d12, d12);
-			if (denominator < 1.0e-12f)
+			if (denominator <= 1.0e-6f * d11 * d22)
 			{
 				// Degenerate triangle, return coordinates along longest edge
 				if (d11 > d22)

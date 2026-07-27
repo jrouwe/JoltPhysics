@@ -5,6 +5,7 @@
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
@@ -357,5 +358,44 @@ TEST_SUITE("ConvexVsTrianglesTest")
 	TEST_CASE("TestSphereVsTriangles")
 	{
 		sTestConvexVsTriangles<CollideSphereVsTriangles>();
+	}
+
+	// Regression test for EPA producing a degenerate contact when the mesh triangle has
+	// a very long edge relative to the query shape. In production a ~200 m needle triangle
+	// against a 0.3 m capsule caused EPA to converge to the wrong Minkowski polytope facet
+	// (float32 precision loss in cross products of 200 m vectors) and report point2 ~100 m
+	// from point1, failing a downstream sanity assert.
+	TEST_CASE("TestCapsuleVsNeedleTriangle")
+	{
+		Ref<CapsuleShape> capsule = new CapsuleShape(0.5f, 0.3f);
+
+		Vec3 v0(0.252283931f, -172.936920f, -0.093847394f);
+		Vec3 v1(0.242991686f, 27.608593f, -0.127187848f);
+		Vec3 v2(0.228017807f, 27.608591f, -0.140446782f);
+
+		CollideShapeSettings settings;
+		AllHitCollisionCollector<CollideShapeCollector> collector;
+		CollideConvexVsTriangles collider(capsule, Vec3::sOne(), Vec3::sOne(), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeID(), settings, collector);
+		collider.Collide(v0, v1, v2, 0b11, SubShapeID());
+
+		CHECK(collector.mHits.size() == 1);
+
+		// Without the fix, point2 snaps to a far triangle vertex ~100 m from point1,
+		// giving mPenetrationDepth ~ -100 m. With the fix the contact must lie within
+		// the radius of the capsule.
+		const CollideShapeResult &hit = collector.mHits[0];
+		CHECK(hit.mPenetrationDepth > 0.0f);
+		CHECK(hit.mPenetrationDepth < capsule->GetRadius());
+
+		// point2 must be close to point1, not 100 m away.
+		float dist = (hit.mContactPointOn2 - hit.mContactPointOn1).Length();
+		CHECK(dist < capsule->GetRadius());
+
+		// The penetration axis must point from the capsule towards the triangle, i.e.
+		// against the triangle's (v1-v0) x (v2-v0) normal (the capsule center sits on the
+		// positive-normal side of the triangle plane). Guards the contact normal that
+		// feeds collision response from coming out backwards.
+		Vec3 triangle_normal = (v1 - v0).Cross(v2 - v0);
+		CHECK(hit.mPenetrationAxis.Dot(triangle_normal) < 0.0f);
 	}
 }
