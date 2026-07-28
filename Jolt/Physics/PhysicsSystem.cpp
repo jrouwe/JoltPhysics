@@ -1496,15 +1496,11 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			// Convert indices to offsets so that we lose one indirection in the solver. We couldn't do this earlier as we need constraint indices to build islands.
 			mContactManager.ConstraintIdxToConstraintOffset(contacts_begin, contacts_end);
 
-			// Sorting is costly but needed for a deterministic simulation, allow the user to turn this off
-			if (mPhysicsSettings.mDeterministicSimulation)
-			{
-				// Sort constraints to give a deterministic simulation
-				ConstraintManager::sSortConstraints(active_constraints, constraints_begin, constraints_end);
+			// Sort constraints to give a deterministic simulation
+			ConstraintManager::sSortConstraints(active_constraints, constraints_begin, constraints_end);
 
-				// Sort contacts to give a deterministic simulation
-				mContactManager.SortContacts(contacts_begin, contacts_end);
-			}
+			// Sort contacts to give a deterministic simulation
+			mContactManager.SortContacts(contacts_begin, contacts_end);
 
 			// Split up large islands
 		#ifdef JPH_TRACK_SIMULATION_STATS
