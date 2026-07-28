@@ -42,7 +42,6 @@ JPH_NAMESPACE_BEGIN
 	M = mass matrix, a diagonal matrix of the mass and inertia with diagonal [m1, I1, m2, I2].\n
 	\f$K^{-1} = \left( J M^{-1} J^T \right)^{-1}\f$ = effective mass.\n
 	b = velocity bias.\n
-	\f$\beta\f$ = baumgarte constant.
 **/
 class DualAxisConstraintPart
 {
@@ -186,54 +185,6 @@ public:
 		mTotalLambda += lambda;
 
 		return ApplyVelocityStep(ioBody1, ioBody2, inN1, inN2, lambda);
-	}
-
-	/// Iteratively update the position constraint. Makes sure C(...) = 0.
-	/// All input vectors are in world space
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inU, Vec3Arg inN1, Vec3Arg inN2, float inBaumgarte) const
-	{
-		Vec2 c;
-		c[0] = inU.Dot(inN1);
-		c[1] = inU.Dot(inN2);
-		if (!c.IsZero())
-		{
-			// Calculate lagrange multiplier (lambda) for Baumgarte stabilization:
-			//
-			// lambda = -K^-1 * beta / dt * C
-			//
-			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			Vec2 lambda = -inBaumgarte * (mEffectiveMass * c);
-
-			// Directly integrate velocity change for one time step
-			//
-			// Euler velocity integration:
-			// dv = M^-1 P
-			//
-			// Impulse:
-			// P = J^T lambda
-			//
-			// Euler position integration:
-			// x' = x + dv * dt
-			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
-			// integrate + a position integrate and then discard the velocity change.
-			Vec3 impulse = inN1 * lambda[0] + inN2 * lambda[1];
-			if (ioBody1.IsDynamic())
-			{
-				ioBody1.SubPositionStep(ioBody1.GetMotionProperties()->GetInverseMass() * impulse);
-				ioBody1.SubRotationStep(mInvI1_R1PlusUxN1 * lambda[0] + mInvI1_R1PlusUxN2 * lambda[1]);
-			}
-			if (ioBody2.IsDynamic())
-			{
-				ioBody2.AddPositionStep(ioBody2.GetMotionProperties()->GetInverseMass() * impulse);
-				ioBody2.AddRotationStep(mInvI2_R2xN1 * lambda[0] + mInvI2_R2xN2 * lambda[1]);
-			}
-			return true;
-		}
-
-		return false;
 	}
 
 	/// Override total lagrange multiplier, can be used to set the initial value for warm starting

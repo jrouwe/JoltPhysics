@@ -5,7 +5,6 @@
 
 #include <Jolt/Physics/LargeIslandSplitter.h>
 #include <Jolt/Physics/IslandBuilder.h>
-#include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Constraints/Constraint.h>
 #include <Jolt/Physics/Constraints/ContactConstraintManager.h>
 #include <Jolt/Physics/Body/BodyManager.h>
@@ -16,7 +15,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, bool &outFirstIteration)
+LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, int &outSubStep, ESubStepStage &outSubStepStage)
 {
 	{
 		// First check if we can get a new batch (doing a read to avoid hammering an atomic with an atomic subtract)
@@ -29,8 +28,8 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 
 			return EStatus::WaitingForBatch;
 
 		// Next check if all items have been processed. Note that we do this after checking if the job can be started
-		// as mNumIterations is not initialized until the split is started.
-		if (sGetIteration(status) >= mNumIterations)
+		// as mNumSubSteps is not initialized until the split is started.
+		if (sGetSubStep(status) >= mNumSubSteps)
 			return EStatus::AllBatchesDone;
 
 		uint item = sGetItem(status);
@@ -53,9 +52,15 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 
 
 	// Then try to actually get the batch
 	uint64 status = mStatus.fetch_add(cBatchSize, memory_order_acquire);
-	int iteration = sGetIteration(status);
-	if (iteration >= mNumIterations)
+	int sub_step = sGetSubStep(status);
+	if (sub_step >= mNumSubSteps)
 		return EStatus::AllBatchesDone;
+
+	// Store sub step
+	outSubStep = sub_step;
+
+	// Get sub step stage
+	outSubStepStage = sGetSubStepStage(status);
 
 	uint split_index = sGetSplit(status);
 	JPH_ASSERT(split_index < mNumSplits || split_index == cNonParallelSplitIdx);
@@ -70,7 +75,6 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 
 			outConstraintsEnd = split.mConstraintBufferEnd;
 			outContactsBegin = split.mContactBufferBegin;
 			outContactsEnd = split.mContactBufferEnd;
-			outFirstIteration = iteration == 0;
 			return EStatus::BatchRetrieved;
 		}
 		else
@@ -116,22 +120,17 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 
 		outContactsEnd = 0;
 	}
 
-	outFirstIteration = iteration == 0;
 	return EStatus::BatchRetrieved;
 }
 
-void LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed, bool &outLastIteration, bool &outFinalBatch)
+void LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed)
 {
-	// We fetched this batch, nobody should change the split and or iteration until we mark the last batch as processed so we can safely get the current status
+	// We fetched this batch, nobody should change the split and or sub step until we mark the last batch as processed so we can safely get the current status
 	uint64 status = mStatus.load(memory_order_relaxed);
 	uint split_index = sGetSplit(status);
 	JPH_ASSERT(split_index < mNumSplits || split_index == cNonParallelSplitIdx);
 	const Split &split = mSplits[split_index];
 	uint num_items_in_split = split.GetNumItems();
-
-	// Determine if this is the last iteration before possibly incrementing it
-	int iteration = sGetIteration(status);
-	outLastIteration = iteration == mNumIterations - 1;
 
 	// Add the number of items we processed to the total number of items processed
 	// Note: This needs to happen after we read the status as other threads may update the status after we mark items as processed
@@ -143,17 +142,45 @@ void LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed, bool &
 	{
 		JPH_ASSERT(total_items_processed == num_items_in_split); // Should not overflow, that means we're retiring more items than we should process
 
-		// Set items processed back to 0 for the next split/iteration
+		// Set items processed back to 0 for the next split/sub step
 		mItemsProcessed.store(0, memory_order_release);
+
+		// Get sub step
+		int sub_step = sGetSubStep(status);
+
+		// Get stage
+		ESubStepStage sub_step_stage = sGetSubStepStage(status);
 
 		// Determine next split
 		do
 		{
 			if (split_index == cNonParallelSplitIdx)
 			{
-				// At start of next iteration
+				// Start with first split again
 				split_index = 0;
-				++iteration;
+
+				if (sub_step_stage == ESubStepStage::LastStage)
+				{
+					// To the next sub step
+					sub_step_stage = ESubStepStage::FirstStage;
+					++sub_step;
+
+					// Apply gravity doesn't get split up so starts at cNonParallelSplitIdx
+					static_assert(ESubStepStage::FirstStage == ESubStepStage::ApplyGravity);
+					split_index = cNonParallelSplitIdx;
+					break;
+				}
+				else
+				{
+					// To the next stage
+					sub_step_stage = ESubStepStage(int(sub_step_stage) + 1);
+					if (sub_step_stage == ESubStepStage::Integrate)
+					{
+						// Integrate doesn't get split up so starts at cNonParallelSplitIdx
+						split_index = cNonParallelSplitIdx;
+						break;
+					}
+				}
 			}
 			else
 			{
@@ -165,14 +192,12 @@ void LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed, bool &
 			if (split_index >= mNumSplits)
 				split_index = cNonParallelSplitIdx;
 		}
-		while (iteration < mNumIterations
+		while (sub_step < mNumSubSteps
 			&& mSplits[split_index].GetNumItems() == 0); // We don't support processing empty splits, skip to the next split in this case
 
-		mStatus.store((uint64(iteration) << StatusIterationShift) | (uint64(split_index) << StatusSplitShift), memory_order_release);
+		JPH_ASSERT(split_index < mNumSplits || split_index == cNonParallelSplitIdx);
+		mStatus.store((uint64(sub_step) << StatusSubStepShift) | (uint64(sub_step_stage) << StatusSubStepStageShift) | (uint64(split_index) << StatusSplitShift), memory_order_release);
 	}
-
-	// Track if this is the final batch
-	outFinalBatch = iteration >= mNumIterations;
 }
 
 LargeIslandSplitter::~LargeIslandSplitter()
@@ -284,7 +309,7 @@ uint LargeIslandSplitter::AssignToNonParallelSplit(const Body *inBody)
 	return cNonParallelSplitIdx;
 }
 
-bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, CalculateSolverSteps &ioStepsCalculator)
+bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, int inNumSubSteps)
 {
 	// Get the contacts in this island
 	uint32 *contacts_start, *contacts_end;
@@ -331,11 +356,6 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		uint split = AssignSplit(body1, body2);
 		num_contacts_in_split[split]++;
 		*cur_contact_split_idx++ = split;
-
-		if (body1->IsDynamic())
-			ioStepsCalculator(body1->GetMotionPropertiesUnchecked());
-		if (body2->IsDynamic())
-			ioStepsCalculator(body2->GetMotionPropertiesUnchecked());
 	}
 
 	// Assign the constraints to a split
@@ -346,11 +366,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		uint split = constraint->BuildIslandSplits(*this);
 		num_constraints_in_split[split]++;
 		*cur_constraint_split_idx++ = split;
-
-		ioStepsCalculator(constraint);
 	}
-
-	ioStepsCalculator.Finalize();
 
 	// Start with 0 splits
 	uint split_remap_table[cNumSplits];
@@ -359,9 +375,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	Splits &splits = mSplitIslands[new_split_idx];
 	splits.mIslandIndex = inIslandIndex;
 	splits.mNumSplits = 0;
-	splits.mNumIterations = ioStepsCalculator.GetNumVelocitySteps() + 1; // Iteration 0 is used for warm starting
-	splits.mNumVelocitySteps = ioStepsCalculator.GetNumVelocitySteps();
-	splits.mNumPositionSteps = ioStepsCalculator.GetNumPositionSteps();
+	splits.mNumSubSteps = inNumSubSteps;
 	splits.mItemsProcessed.store(0, memory_order_release);
 
 	// Allocate space to store the sorted constraint and contact indices per split
@@ -489,7 +503,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	return true;
 }
 
-LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, bool &outFirstIteration)
+LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, int &outSubStep, ESubStepStage &outSubStepStage)
 {
 	// We can't be done when all islands haven't been submitted yet
 	uint num_splits_created = mNextSplitIsland.load(memory_order_acquire);
@@ -498,7 +512,7 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitI
 	// Loop over all split islands to find work
 	uint32 constraints_begin, constraints_end, contacts_begin, contacts_end;
 	for (Splits *s = mSplitIslands; s < mSplitIslands + num_splits_created; ++s)
-		switch (s->FetchNextBatch(constraints_begin, constraints_end, contacts_begin, contacts_end, outFirstIteration))
+		switch (s->FetchNextBatch(constraints_begin, constraints_end, contacts_begin, contacts_end, outSubStep, outSubStepStage))
 		{
 		case EStatus::AllBatchesDone:
 			break;
@@ -519,25 +533,13 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitI
 	return all_done? EStatus::AllBatchesDone : EStatus::WaitingForBatch;
 }
 
-void LargeIslandSplitter::MarkBatchProcessed(uint inSplitIslandIndex, const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd, bool &outLastIteration, bool &outFinalBatch)
+void LargeIslandSplitter::MarkBatchProcessed(uint inSplitIslandIndex, const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd)
 {
 	uint num_items_processed = uint(inConstraintsEnd - inConstraintsBegin) + uint(inContactsEnd - inContactsBegin);
 
 	JPH_ASSERT(inSplitIslandIndex < mNextSplitIsland.load(memory_order_relaxed));
 	Splits &splits = mSplitIslands[inSplitIslandIndex];
-	splits.MarkBatchProcessed(num_items_processed, outLastIteration, outFinalBatch);
-}
-
-void LargeIslandSplitter::PrepareForSolvePositions()
-{
-	for (Splits *s = mSplitIslands, *s_end = mSplitIslands + mNumSplitIslands; s < s_end; ++s)
-	{
-		// Set the number of iterations to the number of position steps
-		s->mNumIterations = s->mNumPositionSteps;
-
-		// We can start again from the first batch
-		s->StartFirstBatch();
-	}
+	splits.MarkBatchProcessed(num_items_processed);
 }
 
 void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)

@@ -334,50 +334,6 @@ bool PathConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return motor || pos || limit || rot;
 }
 
-bool PathConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	// Update constraint properties (bodies may have moved)
-	CalculateConstraintProperties(inDeltaTime);
-
-	// Solve position constraint along 2 axis
-	bool pos = mPositionConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mU, mPathNormal, mPathBinormal, inBaumgarte);
-
-	// Solve limits along path axis
-	bool limit = false;
-	if (mPositionLimitsConstraintPart.IsActive())
-	{
-		if (mPathFraction <= 0.0f)
-			limit = mPositionLimitsConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mPathTangent, mU.Dot(mPathTangent), inBaumgarte);
-		else
-		{
-			JPH_ASSERT(mPathFraction >= mPath->GetPathMaxFraction());
-			limit = mPositionLimitsConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mPathTangent, mU.Dot(mPathTangent), inBaumgarte);
-		}
-	}
-
-	// Solve rotational constraint
-	bool rot = false;
-	switch (mRotationConstraintType)
-	{
-	case EPathRotationConstraintType::Free:
-		// No rotational limits
-		break;
-
-	case EPathRotationConstraintType::ConstrainAroundTangent:
-	case EPathRotationConstraintType::ConstrainAroundNormal:
-	case EPathRotationConstraintType::ConstrainAroundBinormal:
-		rot = mHingeConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
-		break;
-
-	case EPathRotationConstraintType::ConstrainToPath:
-	case EPathRotationConstraintType::FullyConstrained:
-		rot = mRotationConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mInvInitialOrientation, inBaumgarte);
-		break;
-	}
-
-	return pos || limit || rot;
-}
-
 #ifdef JPH_DEBUG_RENDERER
 void PathConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {

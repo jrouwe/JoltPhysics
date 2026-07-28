@@ -590,46 +590,6 @@ bool VehicleConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return impulse;
 }
 
-bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	bool impulse = false;
-
-	RMat44 body_transform = mBody->GetWorldTransform();
-
-	for (Wheel *w : mWheels)
-		if (w->mContactBody != nullptr)
-		{
-			const WheelSettings *settings = w->mSettings;
-
-			// Check if we reached the 'max up' position now that the body has possibly moved
-			// We do this by calculating the axle position at minimum suspension length and making sure it does not go through the
-			// plane defined by the contact normal and the axle position when the contact happened
-			// TODO: This assumes that only the vehicle moved and not the ground as we kept the axle contact plane in world space
-			Vec3 ws_direction = body_transform.Multiply3x3(settings->mSuspensionDirection);
-			RVec3 ws_position = body_transform * settings->mPosition;
-			RVec3 min_suspension_pos = ws_position + settings->mSuspensionMinLength * ws_direction;
-			float max_up_error = float(RVec3(w->mContactNormal).Dot(min_suspension_pos) - w->mAxlePlaneConstant);
-			if (max_up_error < 0.0f)
-			{
-				Vec3 neg_contact_normal = -w->mContactNormal;
-
-				// Recalculate constraint properties since the body may have moved
-				Vec3 r1_plus_u, r2;
-				CalculateSuspensionForcePoint(*w, r1_plus_u, r2);
-				w->mSuspensionMaxUpPart.CalculateConstraintProperties(*mBody, r1_plus_u, *w->mContactBody, r2, neg_contact_normal);
-
-				impulse |= w->mSuspensionMaxUpPart.SolvePositionConstraint(*mBody, *w->mContactBody, neg_contact_normal, max_up_error, inBaumgarte);
-			}
-		}
-
-	// Apply the pitch / roll constraint to avoid the vehicle from toppling over
-	CalculatePitchRollConstraintProperties(body_transform);
-	if (mPitchRollPart.IsActive())
-		impulse |= mPitchRollPart.SolvePositionConstraint(*mBody, Body::sFixedToWorld, mCosPitchRollAngle - mCosMaxPitchRollAngle, inBaumgarte);
-
-	return impulse;
-}
-
 #ifdef JPH_DEBUG_RENDERER
 
 void VehicleConstraint::DrawConstraint(DebugRenderer *inRenderer) const

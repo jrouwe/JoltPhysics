@@ -81,11 +81,8 @@ public:
 	/// Note that if you want a deterministic simulation and you cannot guarantee the order in which constraints are added/removed, you can make the priority for all constraints unique to get a deterministic ordering.
 	uint32						mConstraintPriority = 0;
 
-	/// Used only when the constraint is active. Override for the number of solver velocity iterations to run, 0 means use the default in PhysicsSettings::mNumVelocitySteps. The number of iterations to use is the max of all contacts and constraints in the island.
-	uint						mNumVelocityStepsOverride = 0;
-
-	/// Used only when the constraint is active. Override for the number of solver position iterations to run, 0 means use the default in PhysicsSettings::mNumPositionSteps. The number of iterations to use is the max of all contacts and constraints in the island.
-	uint						mNumPositionStepsOverride = 0;
+	/// Used only when the constraint is active. Override for the number of solver sub steps, 0 means use the default in PhysicsSettings::mNumSolverSubSteps. The number of sub steps to use is the max of all contacts and constraints in the island.
+	uint						mNumSolverSubStepsOverride = 0;
 
 	/// Size of constraint when drawing it through the debug renderer
 	float						mDrawConstraintSize = 1.0f;
@@ -115,13 +112,11 @@ public:
 		mDrawConstraintSize(inSettings.mDrawConstraintSize),
 #endif // JPH_DEBUG_RENDERER
 		mConstraintPriority(inSettings.mConstraintPriority),
-		mNumVelocityStepsOverride(uint8(inSettings.mNumVelocityStepsOverride)),
-		mNumPositionStepsOverride(uint8(inSettings.mNumPositionStepsOverride)),
+		mNumSolverSubStepsOverride(uint8(inSettings.mNumSolverSubStepsOverride)),
 		mEnabled(inSettings.mEnabled),
 		mUserData(inSettings.mUserData)
 	{
-		JPH_ASSERT(inSettings.mNumVelocityStepsOverride < 256);
-		JPH_ASSERT(inSettings.mNumPositionStepsOverride < 256);
+		JPH_ASSERT(inSettings.mNumSolverSubStepsOverride < 256);
 	}
 
 	/// Virtual destructor
@@ -138,13 +133,9 @@ public:
 	uint32						GetConstraintPriority() const				{ return mConstraintPriority; }
 	void						SetConstraintPriority(uint32 inPriority)	{ mConstraintPriority = inPriority; }
 
-	/// Used only when the constraint is active. Override for the number of solver velocity iterations to run, 0 means use the default in PhysicsSettings::mNumVelocitySteps. The number of iterations to use is the max of all contacts and constraints in the island.
-	void						SetNumVelocityStepsOverride(uint inN)		{ JPH_ASSERT(inN < 256); mNumVelocityStepsOverride = uint8(inN); }
-	uint						GetNumVelocityStepsOverride() const			{ return mNumVelocityStepsOverride; }
-
-	/// Used only when the constraint is active. Override for the number of solver position iterations to run, 0 means use the default in PhysicsSettings::mNumPositionSteps. The number of iterations to use is the max of all contacts and constraints in the island.
-	void						SetNumPositionStepsOverride(uint inN)		{ JPH_ASSERT(inN < 256); mNumPositionStepsOverride = uint8(inN); }
-	uint						GetNumPositionStepsOverride() const			{ return mNumPositionStepsOverride; }
+	/// Used only when the constraint is active. Override for the number of solver sub steps, 0 means use the default in PhysicsSettings::mNumSolverSubSteps. The number of sub steps to use is the max of all contacts and constraints in the island.
+	void						SetNumSolverSubStepsOverride(uint inN)		{ JPH_ASSERT(inN < 256); mNumSolverSubStepsOverride = uint8(inN); }
+	uint						GetNumSolverSubStepsOverride() const		{ return mNumSolverSubStepsOverride; }
 
 	/// Enable / disable this constraint. This can e.g. be used to implement a breakable constraint by detecting that the constraint impulse
 	/// (see e.g. PointConstraint::GetTotalLambdaPosition) went over a certain limit and then disabling the constraint.
@@ -177,7 +168,6 @@ public:
 	virtual void				SetupVelocityConstraint(float inDeltaTime) = 0;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) = 0;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) = 0;
-	virtual bool				SolvePositionConstraint(float inDeltaTime, float inBaumgarte) = 0;
 	///@}
 
 	/// Link bodies that are connected by this constraint in the island builder
@@ -227,11 +217,8 @@ private:
 	/// Priority of the constraint when solving. Higher numbers have are more likely to be solved correctly.
 	uint32						mConstraintPriority = 0;
 
-	/// Used only when the constraint is active. Override for the number of solver velocity iterations to run, 0 means use the default in PhysicsSettings::mNumVelocitySteps. The number of iterations to use is the max of all contacts and constraints in the island.
-	uint8						mNumVelocityStepsOverride = 0;
-
-	/// Used only when the constraint is active. Override for the number of solver position iterations to run, 0 means use the default in PhysicsSettings::mNumPositionSteps. The number of iterations to use is the max of all contacts and constraints in the island.
-	uint8						mNumPositionStepsOverride = 0;
+	/// Used only when the constraint is active. Override for the number of solver sub steps, 0 means use the default in PhysicsSettings::mNumSolverSubSteps. The number of sub steps to use is the max of all contacts and constraints in the island.
+	uint8						mNumSolverSubStepsOverride = 0;
 
 	/// If this constraint is currently enabled
 	bool						mEnabled = true;

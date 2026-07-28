@@ -428,21 +428,6 @@ bool SwingTwistConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return impulse;
 }
 
-bool SwingTwistConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	bool impulse = false;
-
-	// Solve rotation violations
-	Quat q = GetRotationInConstraintSpace();
-	impulse |= mSwingTwistConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, q, mConstraintToBody1, mConstraintToBody2, inBaumgarte);
-
-	// Solve position violations
-	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
-	impulse |= mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
-
-	return impulse;
-}
-
 #ifdef JPH_DEBUG_RENDERER
 void SwingTwistConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {

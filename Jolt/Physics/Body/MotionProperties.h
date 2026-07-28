@@ -11,6 +11,7 @@
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Body/BodyType.h>
 #include <Jolt/Physics/Body/MassProperties.h>
+#include <Jolt/Physics/Body/BodyState.h>
 #include <Jolt/Physics/DeterminismLog.h>
 
 JPH_NAMESPACE_BEGIN
@@ -188,30 +189,24 @@ public:
 		return Vec3::sAnd(inV, Vec3(GetAngularDOFsMask().ReinterpretAsFloat()));
 	}
 
-	/// Used only when this body is dynamic and colliding. Override for the number of solver velocity iterations to run, 0 means use the default in PhysicsSettings::mNumVelocitySteps. The number of iterations to use is the max of all contacts and constraints in the island.
-	void					SetNumVelocityStepsOverride(uint inN)							{ JPH_ASSERT(inN < 256); mNumVelocityStepsOverride = uint8(inN); }
-	uint					GetNumVelocityStepsOverride() const								{ return mNumVelocityStepsOverride; }
-
-	/// Used only when this body is dynamic and colliding. Override for the number of solver position iterations to run, 0 means use the default in PhysicsSettings::mNumPositionSteps. The number of iterations to use is the max of all contacts and constraints in the island.
-	void					SetNumPositionStepsOverride(uint inN)							{ JPH_ASSERT(inN < 256); mNumPositionStepsOverride = uint8(inN); }
-	uint					GetNumPositionStepsOverride() const								{ return mNumPositionStepsOverride; }
+	/// Used only when this body is dynamic and colliding. Override for the number of solver sub steps, 0 means use the default in PhysicsSettings::mNumSolverSubSteps. The number of sub steps to use is the max of all contacts and constraints in the island.
+	void					SetNumSolverSubStepsOverride(uint inN)							{ JPH_ASSERT(inN < 256); mNumSolverSubStepsOverride = uint8(inN); }
+	uint					GetNumSolverSubStepsOverride() const							{ return mNumSolverSubStepsOverride; }
 
 #ifdef JPH_TRACK_SIMULATION_STATS
 	/// Stats for this body. These are average for the simulation island the body was part of.
 	struct SimulationStats
 	{
-		void				Reset()															{ mBroadPhaseTicks = 0; mNarrowPhaseTicks.store(0, memory_order_relaxed); mVelocityConstraintTicks = 0; mPositionConstraintTicks = 0; mUpdateBoundsTicks = 0; mCCDTicks.store(0, memory_order_relaxed); mNumContactConstraints.store(0, memory_order_relaxed); mNumCollisionSteps = 0; mNumVelocitySteps = 0; mNumPositionSteps = 0; mIsLargeIsland = false; }
+		void				Reset()															{ mBroadPhaseTicks = 0; mNarrowPhaseTicks.store(0, memory_order_relaxed); mSolveTicks = 0; mUpdateBoundsTicks = 0; mCCDTicks.store(0, memory_order_relaxed); mNumContactConstraints.store(0, memory_order_relaxed); mNumCollisionSteps = 0; mNumSolverSubSteps = 0; mIsLargeIsland = false; }
 
 		uint64				mBroadPhaseTicks = 0;											///< Number of processor ticks spent doing broad phase collision detection
 		atomic<uint64>		mNarrowPhaseTicks = 0;											///< Number of ticks spent doing narrow phase collision detection
-		uint64				mVelocityConstraintTicks = 0;									///< Number of ticks spent solving velocity constraints
-		uint64				mPositionConstraintTicks = 0;									///< Number of ticks spent solving position constraints
+		uint64				mSolveTicks = 0;												///< Number of ticks spent solving constraints
 		uint64				mUpdateBoundsTicks = 0;											///< Number of ticks spent updating the broadphase and checking if the body should go to sleep
 		atomic<uint64>		mCCDTicks = 0;													///< Number of ticks spent doing CCD
 		atomic<uint32>		mNumContactConstraints = 0;										///< Number of contact constraints created for this body
 		uint8				mNumCollisionSteps = 0;											///< Number of collision steps this body was active (see PhysicsSystem::Update(..., inCollisionSteps, ...)). All other properties are aggregated over multiple steps, so if you want e.g. the number of contact constraints per step you need to divide by this number.
-		uint8				mNumVelocitySteps = 0;											///< Number of velocity iterations performed
-		uint8				mNumPositionSteps = 0;											///< Number of position iterations performed
+		uint8				mNumSolverSubSteps = 0;											///< Number of solver sub steps performed
 		bool				mIsLargeIsland = false;											///< If this body was part of a large island
 	};
 
@@ -248,11 +243,14 @@ public:
 	inline void				SubAngularVelocityStep(Vec3Arg inAngularVelocityChange)			{ ApplyAngularVelocityStep(mAngularVelocity - inAngularVelocityChange); }
 	///@}
 
-	/// Apply the gyroscopic force (aka Dzhanibekov effect, see https://en.wikipedia.org/wiki/Tennis_racket_theorem)
-	inline void				ApplyGyroscopicForceInternal(QuatArg inBodyRotation, float inDeltaTime);
+	/// Apply drag (should only be called by the PhysicsSystem)
+	JPH_INLINE void			ApplyDragInternal(BodyState &ioState, float inDeltaTime) const;
 
-	/// Apply all accumulated forces, torques and drag (should only be called by the PhysicsSystem)
-	inline void				ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, Vec3Arg inGravity, float inDeltaTime);
+	/// Apply the gyroscopic force (aka Dzhanibekov effect, see https://en.wikipedia.org/wiki/Tennis_racket_theorem, should only be called by the PhysicsSystem)
+	inline void				ApplyGyroscopicForceInternal(BodyState &ioState, QuatArg inBodyRotation, float inDeltaTime) const;
+
+	/// Apply all accumulated forces and torques (should only be called by the PhysicsSystem)
+	JPH_INLINE void			ApplyForceTorqueInternal(BodyState &ioState, QuatArg inBodyRotation, Vec3Arg inGravity, float inDeltaTime) const;
 
 	/// Access to the island index
 	uint32					GetIslandIndexInternal() const									{ return mIslandIndex; }
@@ -310,8 +308,7 @@ private:
 	EMotionQuality			mMotionQuality;													///< Motion quality, or how well it detects collisions when it has a high velocity
 	bool					mAllowSleeping;													///< If this body can go to sleep
 	EAllowedDOFs			mAllowedDOFs = EAllowedDOFs::All;								///< Allowed degrees of freedom for this body
-	uint8					mNumVelocityStepsOverride = 0;									///< Used only when this body is dynamic and colliding. Override for the number of solver velocity iterations to run, 0 means use the default in PhysicsSettings::mNumVelocitySteps. The number of iterations to use is the max of all contacts and constraints in the island.
-	uint8					mNumPositionStepsOverride = 0;									///< Used only when this body is dynamic and colliding. Override for the number of solver position iterations to run, 0 means use the default in PhysicsSettings::mNumPositionSteps. The number of iterations to use is the max of all contacts and constraints in the island.
+	uint8					mNumSolverSubStepsOverride = 0;									///< Used only when this body is dynamic and colliding. Override for the number of solver sub steps, 0 means use the default in PhysicsSettings::mNumSolverSubSteps. The number of sub steps to use is the max of all contacts and constraints in the island.
 
 	// 3rd cache line (least frequently used)
 	// 4 byte aligned (or 8 byte if running in double precision)

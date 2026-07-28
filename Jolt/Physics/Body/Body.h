@@ -369,6 +369,7 @@ public:
 	/// Update rotation using an Euler step (used during position integrate & constraint solving)
 	inline void				AddRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime);
 	inline void				SubRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime);
+	inline void				AddRotationStep(Quat inStep);
 
 	/// Function to update body's layer (should only be called internally since it also requires updating the broadphase)
 	inline void				SetObjectLayerInternal(ObjectLayer inLayer, const BroadPhaseLayerInterface &inBPLInterface) { mObjectLayer = inLayer; mBroadPhaseLayer = inBPLInterface.GetBroadPhaseLayer(inLayer); }

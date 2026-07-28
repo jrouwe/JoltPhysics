@@ -270,20 +270,18 @@ private:
 	// Various job entry points
 	void						JobStepListeners(PhysicsUpdateContext::Step *ioStep);
 	void						JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep) const;
-	void						JobApplyGravity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdateContext::Step *ioStep) const;
 	void						JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex);
 	void						JobFinalizeIslands(PhysicsUpdateContext *ioContext);
 	void						JobBodySetIslandIndex();
-	void						JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
-	void						JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
-	void						JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
-	void						JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep) const;
+	void						JobPreSolve(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
+	void						JobSolve(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
+	void						JobPostSolve(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobFindCCDContacts(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobContactRemovedCallbacks(const PhysicsUpdateContext::Step *ioStep);
-	void						JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
+	void						JobSleepAndUpdateBounds(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobSoftBodyPrepare(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobSoftBodyCollide(PhysicsUpdateContext *ioContext) const;
 	void						JobSoftBodySimulate(PhysicsUpdateContext *ioContext, uint inThreadIndex) const;
@@ -302,11 +300,14 @@ private:
 	/// Process narrow phase for a single body pair
 	void						ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair);
 
+	/// Apply gravity to a batch of bodies
+	void						ApplyGravity(BodyState *ioBodyStates, const BodyID *inBodyStart, const BodyID *inBodyEnd, float inSubStepDeltaTime);
+
+	/// Integrate velocity of a batch of bodies
+	void						IntegrateVelocity(BodyState *ioBodyStates, const BodyID *inBodyStart, const BodyID *inBodyEnd, float inSubStepDeltaTime);
+
 	/// This helper batches up bodies that need to put to sleep to avoid contention on the activation mutex
 	class BodiesToSleep;
-
-	/// Called at the end of JobSolveVelocityConstraints to check if bodies need to go to sleep and to update their bounding box in the broadphase
-	void						CheckSleepAndUpdateBounds(uint32 inIslandIndex, const PhysicsUpdateContext *ioContext, const PhysicsUpdateContext::Step *ioStep, BodiesToSleep &ioBodiesToSleep);
 
 	/// Helper function that solves the velocity of a CCD contact
 	template <EMotionType Type2>
@@ -318,14 +319,11 @@ private:
 	/// Number of constraints to process at once in JobSetupVelocityConstraints, we want a low number of threads working on this so we take fairly large batches
 	static constexpr int		cSetupVelocityConstraintsBatchSize = 256;
 
-	/// Number of bodies to process at once in JobApplyGravity
-	static constexpr int		cApplyGravityBatchSize = 64;
-
 	/// Number of active bodies to test for collisions per batch
 	static constexpr int		cActiveBodiesBatchSize = 16;
 
-	/// Number of active bodies to integrate velocities for
-	static constexpr int		cIntegrateVelocityBatchSize = 64;
+	/// Batch size of number of active bodies for the solve job
+	static constexpr int		cSolveBatchSize = 64;
 
 	/// Number of contacts that need to be queued before another narrow phase job is started
 	static constexpr int		cNarrowPhaseBatchSize = 16;

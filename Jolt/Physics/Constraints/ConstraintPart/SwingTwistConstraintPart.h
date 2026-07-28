@@ -484,32 +484,6 @@ public:
 		return impulse;
 	}
 
-	/// Iteratively update the position constraint. Makes sure C(...) = 0.
-	/// @param ioBody1 The first body that this constraint is attached to
-	/// @param ioBody2 The second body that this constraint is attached to
-	/// @param inConstraintRotation The current rotation of the constraint in constraint space
-	/// @param inConstraintToBody1 , inConstraintToBody2 Rotates from constraint space to body 1/2 space
-	/// @param inBaumgarte Baumgarte constant (fraction of the error to correct)
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, QuatArg inConstraintRotation, QuatArg inConstraintToBody1, QuatArg inConstraintToBody2, float inBaumgarte) const
-	{
-		Quat q_swing, q_twist;
-		inConstraintRotation.GetSwingTwist(q_swing, q_twist);
-
-		uint clamped_axis;
-		ClampSwingTwist(q_swing, q_twist, clamped_axis);
-
-		// Solve rotation violations
-		if (clamped_axis != 0)
-		{
-			RotationEulerConstraintPart part;
-			Quat inv_initial_orientation = inConstraintToBody2 * (inConstraintToBody1 * q_swing * q_twist).Conjugated();
-			part.CalculateConstraintProperties(ioBody1, Mat44::sRotation(ioBody1.GetRotation()), ioBody2, Mat44::sRotation(ioBody2.GetRotation()));
-			return part.SolvePositionConstraint(ioBody1, ioBody2, inv_initial_orientation, inBaumgarte);
-		}
-
-		return false;
-	}
-
 	/// Return lagrange multiplier for swing
 	inline float				GetTotalSwingYLambda() const
 	{

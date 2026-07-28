@@ -30,7 +30,6 @@ JPH_NAMESPACE_BEGIN
 /// M = mass matrix, a diagonal matrix of the mass and inertia with diagonal [m1, I1, m2, I2].\n
 /// \f$K^{-1} = \left( J M^{-1} J^T \right)^{-1}\f$ = effective mass.\n
 /// b = velocity bias.\n
-/// \f$\beta\f$ = baumgarte constant.\n
 /// E = identity matrix.\n
 class RotationEulerConstraintPart
 {
@@ -189,70 +188,6 @@ public:
 		Vec3 lambda = mEffectiveMass.Multiply3x3(ioBody1.GetAngularVelocity() - ioBody2.GetAngularVelocity());
 		mTotalLambda += lambda;
 		return ApplyVelocityStep(ioBody1, ioBody2, lambda);
-	}
-
-	/// Iteratively update the position constraint. Makes sure C(...) = 0.
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, QuatArg inInvInitialOrientation, float inBaumgarte) const
-	{
-		// Calculate difference in rotation
-		//
-		// The rotation should be:
-		//
-		// q2 = q1 r0
-		//
-		// But because of drift the actual rotation is
-		//
-		// q2 = diff q1 r0
-		// <=> diff = q2 r0^-1 q1^-1
-		//
-		// Where:
-		// q1 = current rotation of body 1
-		// q2 = current rotation of body 2
-		// diff = error that needs to be reduced to zero
-		Quat diff = ioBody2.GetRotation() * inInvInitialOrientation * ioBody1.GetRotation().Conjugated();
-
-		// A quaternion can be seen as:
-		//
-		// q = [sin(theta / 2) * v, cos(theta/2)]
-		//
-		// Where:
-		// v = rotation vector
-		// theta = rotation angle
-		//
-		// If we assume theta is small (error is small) then sin(x) = x so an approximation of the error angles is:
-		Vec3 error = 2.0f * diff.EnsureWPositive().GetXYZ();
-		if (error != Vec3::sZero())
-		{
-			// Calculate lagrange multiplier (lambda) for Baumgarte stabilization:
-			//
-			// lambda = -K^-1 * beta / dt * C
-			//
-			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			Vec3 lambda = -inBaumgarte * mEffectiveMass * error;
-
-			// Directly integrate velocity change for one time step
-			//
-			// Euler velocity integration:
-			// dv = M^-1 P
-			//
-			// Impulse:
-			// P = J^T lambda
-			//
-			// Euler position integration:
-			// x' = x + dv * dt
-			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
-			// integrate + a position integrate and then discard the velocity change.
-			if (ioBody1.IsDynamic())
-				ioBody1.SubRotationStep(mInvI1.Multiply3x3(lambda));
-			if (ioBody2.IsDynamic())
-				ioBody2.AddRotationStep(mInvI2.Multiply3x3(lambda));
-			return true;
-		}
-
-		return false;
 	}
 
 	/// Return lagrange multiplier

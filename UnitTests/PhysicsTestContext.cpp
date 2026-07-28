@@ -137,7 +137,7 @@ RVec3 PhysicsTestContext::PredictPosition(RVec3Arg inPosition, Vec3Arg inVelocit
 	RVec3 pos = inPosition;
 	Vec3 vel = inVelocity;
 
-	const float delta_time = GetStepDeltaTime();
+	const float delta_time = GetStepDeltaTime() / mSystem->GetPhysicsSettings().mNumSolverSubSteps;
 	const int cNumSteps = int(round(inTotalTime / delta_time));
 	for (int s = 0; s < cNumSteps; ++s)
 	{
@@ -154,7 +154,7 @@ Quat PhysicsTestContext::PredictOrientation(QuatArg inRotation, Vec3Arg inAngula
 	Quat rot = inRotation;
 	Vec3 vel = inAngularVelocity;
 
-	const float delta_time = GetStepDeltaTime();
+	const float delta_time = GetStepDeltaTime() / mSystem->GetPhysicsSettings().mNumSolverSubSteps;
 	const int cNumSteps = int(round(inTotalTime / delta_time));
 	for (int s = 0; s < cNumSteps; ++s)
 	{

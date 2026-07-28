@@ -878,7 +878,7 @@ TEST_SUITE("PhysicsTests")
 		TestPhysicsPenetrationSlop1(c4);
 	}
 
-	// Let box intersect with floor with more than cPenetrationSlop. It should be resolved by SolvePositionConstraint until interpenetration is cPenetrationSlop.
+	// Let box intersect with floor with more than cPenetrationSlop. It should be resolved until interpenetration is cPenetrationSlop.
 	static void TestPhysicsPenetrationSlop2(PhysicsTestContext &ioContext)
 	{
 		const float cPenetrationSlop = ioContext.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
@@ -2471,8 +2471,7 @@ TEST_SUITE("PhysicsTests")
 		bcs.mMaxLinearVelocity = 100.0f;
 		bcs.mMaxAngularVelocity = JPH_PI * 60.0f;
 		bcs.mGravityFactor = 0.5f;
-		bcs.mNumVelocityStepsOverride = 1;
-		bcs.mNumPositionStepsOverride = 3;
+		bcs.mNumSolverSubStepsOverride = 1;
 		bcs.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
 		bcs.mMassPropertiesOverride.mMass = 4.0f;
 		bcs.mMassPropertiesOverride.mInertia = Mat44::sScale(8.0f);

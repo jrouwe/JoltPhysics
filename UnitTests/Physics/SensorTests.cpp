@@ -193,7 +193,7 @@ TEST_SUITE("SensorTests")
 		Body &floor = c.CreateFloor();
 
 		// Dynamic body on floor (make them penetrate)
-		Body &dynamic = c.CreateBox(RVec3(0, 0.5f - c.GetSystem()->GetPhysicsSettings().mMaxPenetrationDistance, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
+		Body &dynamic = c.CreateBox(RVec3(0, 0.3f, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
 
 		// After a single step (because the object is sleeping) there should not be a contact
 		c.SimulateSingleStep();
@@ -248,7 +248,7 @@ TEST_SUITE("SensorTests")
 		Body &floor = c.CreateFloor();
 
 		// Dynamic body on floor (make them penetrate)
-		Body &dynamic = c.CreateBox(RVec3(0, 0.5f - c.GetSystem()->GetPhysicsSettings().mMaxPenetrationDistance, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
+		Body &dynamic = c.CreateBox(RVec3(0, 0.3f, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
 
 		// After a single step, there should be a contact with the sensor only (the sensor is active)
 		c.SimulateSingleStep();

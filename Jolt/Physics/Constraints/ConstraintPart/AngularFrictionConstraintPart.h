@@ -8,131 +8,85 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Decide which members this constraint part needs based on motion type
-template <EMotionType Type1>
-class AngularFrictionConstraintPart1 : public ContactConstraintPart1<EMotionType::Static>
-{
-};
-
-template <>
-class AngularFrictionConstraintPart1<EMotionType::Dynamic> : public AngularFrictionConstraintPart1<EMotionType::Static>
-{
-protected:
-	// Note: Constructor will not be called
-	Float3						mInvI1_Axis;
-};
-
-template <EMotionType Type2>
-class AngularFrictionConstraintPart2
-{
-};
-
-template <>
-class AngularFrictionConstraintPart2<EMotionType::Dynamic> : public AngularFrictionConstraintPart2<EMotionType::Static>
-{
-protected:
-	// Note: Constructor will not be called
-	Float3						mInvI2_Axis;
-};
-
 /// This is a copy of AngleConstraintPart, specialized to handle contact constraints. See the documentation of AngleConstraintPart for more documentation behind the math.
 template <EMotionType Type1, EMotionType Type2>
-class AngularFrictionConstraintPart : public AngularFrictionConstraintPart1<Type1>, public AngularFrictionConstraintPart2<Type2>
+class AngularFrictionConstraintPart
 {
-	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
-	JPH_INLINE bool				ApplyVelocityStep(Vec3 &ioAngularVelocity1, Vec3 &ioAngularVelocity2, float inLambda) const
+public:
+	static inline float	sGetEffectiveMass(Mat44Arg inInvI1, Mat44Arg inInvI2, Vec3Arg inWorldSpaceAxis)
 	{
-		// Apply impulse if delta is not zero
-		if (inLambda != 0.0f)
-		{
-			if constexpr (Type1 == EMotionType::Dynamic)
-				ioAngularVelocity1 -= inLambda * Vec3::sLoadFloat3Unsafe(this->mInvI1_Axis);
-			if constexpr (Type2 == EMotionType::Dynamic)
-				ioAngularVelocity2 += inLambda * Vec3::sLoadFloat3Unsafe(this->mInvI2_Axis);
-			return true;
-		}
+		float inv_effective_mass = 0.0f;
+		if constexpr (Type1 == EMotionType::Dynamic && Type2 == EMotionType::Dynamic)
+			inv_effective_mass = inWorldSpaceAxis.Dot(inInvI1.Multiply3x3(inWorldSpaceAxis) + inInvI2.Multiply3x3(inWorldSpaceAxis));
+		else if constexpr (Type1 == EMotionType::Dynamic)
+			inv_effective_mass = inWorldSpaceAxis.Dot(inInvI1.Multiply3x3(inWorldSpaceAxis));
+		else if constexpr (Type2 == EMotionType::Dynamic)
+			inv_effective_mass = inWorldSpaceAxis.Dot(inInvI2.Multiply3x3(inWorldSpaceAxis));
+		else
+			JPH_ASSERT(false); // Static vs static is nonsensical!
 
-		return false;
+		return 1.0f / (inv_effective_mass + 1.0e-24f);
 	}
 
-public:
-	/// See: AngleConstraintPart::CalculateConstraintProperties
-	inline void					CalculateConstraintProperties(Mat44Arg inInvI1, Mat44Arg inInvI2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
+	inline float		GetInvEffectiveMass(Mat44Arg inInvI1, Mat44Arg inInvI2, Vec3Arg inWorldSpaceAxis)
 	{
-		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-4f));
-
-		// Store bias
-		mBias = inBias;
-
-		Vec3 invi1_axis, invi2_axis;
 		if constexpr (Type1 == EMotionType::Dynamic)
-		{
-			invi1_axis = inInvI1.Multiply3x3(inWorldSpaceAxis);
-			invi1_axis.StoreFloat3(&this->mInvI1_Axis);
-		}
+			mInvI1_Axis = inInvI1.Multiply3x3(inWorldSpaceAxis);
 		if constexpr (Type2 == EMotionType::Dynamic)
-		{
-			invi2_axis = inInvI2.Multiply3x3(inWorldSpaceAxis);
-			invi2_axis.StoreFloat3(&this->mInvI2_Axis);
-		}
+			mInvI2_Axis = inInvI2.Multiply3x3(inWorldSpaceAxis);
 
 		float inv_effective_mass = 0.0f;
 		if constexpr (Type1 == EMotionType::Dynamic && Type2 == EMotionType::Dynamic)
-			inv_effective_mass = inWorldSpaceAxis.Dot(invi1_axis + invi2_axis);
+			inv_effective_mass = inWorldSpaceAxis.Dot(mInvI1_Axis + mInvI2_Axis);
 		else if constexpr (Type1 == EMotionType::Dynamic)
-			inv_effective_mass = inWorldSpaceAxis.Dot(invi1_axis);
+			inv_effective_mass = inWorldSpaceAxis.Dot(mInvI1_Axis);
 		else if constexpr (Type2 == EMotionType::Dynamic)
-			inv_effective_mass = inWorldSpaceAxis.Dot(invi2_axis);
+			inv_effective_mass = inWorldSpaceAxis.Dot(mInvI2_Axis);
 		else
 			JPH_ASSERT(false); // Static vs static is nonsensical!
 
-		if (inv_effective_mass < FLT_MIN)
-			this->Deactivate();
-		else
-			this->mEffectiveMass = 1.0f / inv_effective_mass;
+		return inv_effective_mass + 1.0e-24f; // Prevent having to check for division by zero
 	}
 
-	/// See: AngleConstraintPart::WarmStart
-	inline bool					WarmStart(Vec3 &ioAngularVelocity1, Vec3 &ioAngularVelocity2, float inWarmStartImpulseRatio)
-	{
-		this->mTotalLambda *= inWarmStartImpulseRatio;
-		return ApplyVelocityStep(ioAngularVelocity1, ioAngularVelocity2, this->mTotalLambda);
-	}
-
-	/// See: AngleConstraintPart::SolveVelocityConstraint
-	inline bool					SolveVelocityConstraint(Vec3 &ioAngularVelocity1, Vec3 &ioAngularVelocity2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	static inline float	sGetMinusJV(Vec3Arg inAngularVelocity1, Vec3Arg inAngularVelocity2, Vec3Arg inWorldSpaceAxis)
 	{
 		float jv;
 		if constexpr (Type1 != EMotionType::Static && Type2 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(ioAngularVelocity1 - ioAngularVelocity2);
+			jv = inWorldSpaceAxis.Dot(inAngularVelocity1 - inAngularVelocity2);
 		else if constexpr (Type1 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(ioAngularVelocity1);
+			jv = inWorldSpaceAxis.Dot(inAngularVelocity1);
 		else if constexpr (Type2 != EMotionType::Static)
-			jv = -inWorldSpaceAxis.Dot(ioAngularVelocity2);
+			jv = -inWorldSpaceAxis.Dot(inAngularVelocity2);
 		else
 			JPH_ASSERT(false); // Static vs static is nonsensical!
+		return jv;
+	}
 
-		float lambda = this->mEffectiveMass * (jv - mBias);
-		float new_lambda = Clamp(this->mTotalLambda + lambda, inMinLambda, inMaxLambda); // Clamp impulse
-		lambda = new_lambda - this->mTotalLambda; // Lambda potentially got clamped, calculate the new impulse to apply
-		this->mTotalLambda = new_lambda; // Store accumulated impulse
+	static inline float	sGetMinusJV(const BodyState *inState1, const BodyState *inState2, Vec3Arg inWorldSpaceAxis)
+	{
+		float jv;
+		if constexpr (Type1 != EMotionType::Static && Type2 != EMotionType::Static)
+			jv = inWorldSpaceAxis.Dot(inState1->mAngularVelocity - inState2->mAngularVelocity);
+		else if constexpr (Type1 != EMotionType::Static)
+			jv = inWorldSpaceAxis.Dot(inState1->mAngularVelocity);
+		else if constexpr (Type2 != EMotionType::Static)
+			jv = -inWorldSpaceAxis.Dot(inState2->mAngularVelocity);
+		else
+			JPH_ASSERT(false); // Static vs static is nonsensical!
+		return jv;
+	}
 
-		return ApplyVelocityStep(ioAngularVelocity1, ioAngularVelocity2, lambda);
+	inline void			ApplyImpulse(Vec3 &ioAngularVelocity1, Vec3 &ioAngularVelocity2, float inLambda) const
+	{
+		if constexpr (Type1 == EMotionType::Dynamic)
+			ioAngularVelocity1 -= inLambda * mInvI1_Axis;
+		if constexpr (Type2 == EMotionType::Dynamic)
+			ioAngularVelocity2 += inLambda * mInvI2_Axis;
 	}
 
 private:
-	// Note: Constructor will not be called. This serves as 1 extra float so we can read the previous member using Vec3::sLoadFloat3Unsafe
-	float						mBias;
+	Vec3				mInvI1_Axis;
+	Vec3				mInvI2_Axis;
 };
-
-static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic>) == 3 * sizeof(float) + 2 * sizeof(Float3));
-static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Dynamic, EMotionType::Kinematic>) == 3 * sizeof(float) + sizeof(Float3));
-static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Dynamic, EMotionType::Static>) == 3 * sizeof(float) + sizeof(Float3));
-static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Kinematic, EMotionType::Dynamic>) == 3 * sizeof(float) + sizeof(Float3));
-static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Kinematic, EMotionType::Kinematic>) == 3 * sizeof(float));
-static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Kinematic, EMotionType::Static>) == 3 * sizeof(float));
-static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Static, EMotionType::Dynamic>) == 3 * sizeof(float) + sizeof(Float3));
-static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Static, EMotionType::Kinematic>) == 3 * sizeof(float));
-static_assert(sizeof(AngularFrictionConstraintPart<EMotionType::Static, EMotionType::Static>) == 3 * sizeof(float));
 
 JPH_NAMESPACE_END

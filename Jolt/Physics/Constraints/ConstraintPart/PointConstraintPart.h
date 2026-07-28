@@ -35,7 +35,6 @@ JPH_NAMESPACE_BEGIN
 /// M = mass matrix, a diagonal matrix of the mass and inertia with diagonal [m1, I1, m2, I2].\n
 /// \f$K^{-1} = \left( J M^{-1} J^T \right)^{-1}\f$ = effective mass.\n
 /// b = velocity bias.\n
-/// \f$\beta\f$ = baumgarte constant.\n
 /// E = identity matrix.
 class PointConstraintPart
 {
@@ -159,54 +158,6 @@ public:
 		Vec3 lambda = mEffectiveMass * (ioBody1.GetLinearVelocity() - mR1.Cross(ioBody1.GetAngularVelocity()) - ioBody2.GetLinearVelocity() + mR2.Cross(ioBody2.GetAngularVelocity()));
 		mTotalLambda += lambda; // Store accumulated lambda
 		return ApplyVelocityStep(ioBody1, ioBody2, lambda);
-	}
-
-	/// Iteratively update the position constraint. Makes sure C(...) = 0.
-	/// @param ioBody1 The first body that this constraint is attached to
-	/// @param ioBody2 The second body that this constraint is attached to
-	/// @param inBaumgarte Baumgarte constant (fraction of the error to correct)
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, float inBaumgarte) const
-	{
-		Vec3 separation = (Vec3(ioBody2.GetCenterOfMassPosition() - ioBody1.GetCenterOfMassPosition()) + mR2 - mR1);
-		if (separation != Vec3::sZero())
-		{
-			// Calculate lagrange multiplier (lambda) for Baumgarte stabilization:
-			//
-			// lambda = -K^-1 * beta / dt * C
-			//
-			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			Vec3 lambda = mEffectiveMass * -inBaumgarte * separation;
-
-			// Directly integrate velocity change for one time step
-			//
-			// Euler velocity integration:
-			// dv = M^-1 P
-			//
-			// Impulse:
-			// P = J^T lambda
-			//
-			// Euler position integration:
-			// x' = x + dv * dt
-			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
-			// integrate + a position integrate and then discard the velocity change.
-			if (ioBody1.IsDynamic())
-			{
-				ioBody1.SubPositionStep(ioBody1.GetMotionProperties()->GetInverseMass() * lambda);
-				ioBody1.SubRotationStep(mInvI1_R1X * lambda);
-			}
-			if (ioBody2.IsDynamic())
-			{
-				ioBody2.AddPositionStep(ioBody2.GetMotionProperties()->GetInverseMass() * lambda);
-				ioBody2.AddRotationStep(mInvI2_R2X * lambda);
-			}
-
-			return true;
-		}
-
-		return false;
 	}
 
 	/// Return lagrange multiplier

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Jolt/Physics/Body/BodyPair.h>
+#include <Jolt/Physics/Body/BodyState.h>
 #include <Jolt/Physics/Collision/ContactListener.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 #include <Jolt/Core/StaticArray.h>
@@ -78,9 +79,6 @@ public:
 		atomic<uint32>		mStepListenerReadIdx { 0 };								///< Next step listener to call
 		uint8				mPadding4[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
-		atomic<uint32>		mApplyGravityReadIdx { 0 };								///< Next body to apply gravity to
-		uint8				mPadding5[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
-
 		atomic<uint32>		mActiveBodyReadIdx { 0 };								///< Index of fist active body that has not yet been processed by the broadphase
 		uint8				mPadding6[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
@@ -93,8 +91,11 @@ public:
 		atomic<uint>		mNumBodyPairs { 0 };									///< The number of body pairs found in this step (used to size the contact cache in the next step)
 		atomic<uint>		mNumManifolds { 0 };									///< The number of manifolds found in this step (used to size the contact cache in the next step)
 
-		atomic<uint32>		mSolveVelocityConstraintsNextIsland { 0 };				///< Next island that needs to be processed for the solve velocity constraints step (doesn't need own cache line since position jobs don't run at same time)
-		atomic<uint32>		mSolvePositionConstraintsNextIsland { 0 };				///< Next island that needs to be processed for the solve position constraints step (doesn't need own cache line since velocity jobs don't run at same time)
+		atomic<uint32>		mSolveConstraintsNextIsland { 0 };						///< Next island that needs to be processed for the solve velocity constraints step (doesn't need own cache line since it isn't used at the same time as mSleepAndUpdateBoundsNextIsland)
+		atomic<uint32>		mSleepAndUpdateBoundsNextIsland { 0 };					///< Next island that needs to be processed for the sleep and update bounds step (doesn't need own cache line since it isn't used at the same time as mSolveConstraintsNextIsland)
+
+		BodyState *			mBodyStates = nullptr;									///< Body states for all bodies in the simulation
+		uint32				mBodyStatesCapacity = 0;								///< Capacity of the mBodyStates array
 
 		/// Contains the information needed to cast a body through the scene to do continuous collision detection
 		struct CCDBody
@@ -113,7 +114,6 @@ public:
 			float			mMaxPenetration;										///< Maximum allowed penetration (determined by inner radius of shape)
 			ContactSettings	mContactSettings;										///< The contact settings for this contact
 		};
-		atomic<uint32>		mIntegrateVelocityReadIdx { 0 };						///< Next active body index to take when integrating velocities
 		CCDBody *			mCCDBodies = nullptr;									///< List of bodies that need to do continuous collision detection
 		uint32				mCCDBodiesCapacity = 0;									///< Capacity of the mCCDBodies list
 		atomic<uint32>		mNumCCDBodies = 0;										///< Number of CCD bodies in mCCDBodies
@@ -125,19 +125,17 @@ public:
 		JobHandle			mBroadPhasePrepare;										///< Prepares the new tree in the background
 		JobHandleArray		mStepListeners;											///< Listeners to notify of the beginning of a physics step
 		JobHandleArray		mDetermineActiveConstraints;							///< Determine which constraints will be active during this step
-		JobHandleArray		mApplyGravity;											///< Update velocities of bodies with gravity
 		JobHandleArray		mFindCollisions;										///< Find all collisions between active bodies an the world
 		JobHandle			mUpdateBroadphaseFinalize;								///< Swap the newly built tree with the current tree
 		JobHandleArray		mSetupVelocityConstraints;								///< Calculate properties for all constraints in the constraint manager
 		JobHandle			mBuildIslandsFromConstraints;							///< Go over all constraints and assign the bodies they're attached to to an island
 		JobHandle			mFinalizeIslands;										///< Finalize calculation simulation islands
 		JobHandle			mBodySetIslandIndex;									///< Set the current island index on each body (not used by the simulation, only for drawing purposes)
-		JobHandleArray		mSolveVelocityConstraints;								///< Solve the constraints in the velocity domain
-		JobHandle			mPreIntegrateVelocity;									///< Setup integration of all body positions
-		JobHandleArray		mIntegrateVelocity;										///< Integrate all body positions
-		JobHandle			mPostIntegrateVelocity;									///< Finalize integration of all body positions
+		JobHandle			mPreSolve;												///< Setup solver
+		JobHandleArray		mSolve;													///< Solve all body positions
+		JobHandle			mPostSolve;												///< Determines if CCD jobs need to run and kicks them
 		JobHandle			mResolveCCDContacts;									///< Updates the positions and velocities for all bodies that need continuous collision detection
-		JobHandleArray		mSolvePositionConstraints;								///< Solve all constraints in the position domain
+		JobHandleArray		mSleepAndUpdateBounds;									///< Update bounds and check sleeping for bodies
 		JobHandle			mContactRemovedCallbacks;								///< Calls the contact removed callbacks
 		JobHandle			mSoftBodyPrepare;										///< Prepares updating the soft bodies
 		JobHandleArray		mSoftBodyCollide;										///< Finds all colliding shapes for soft bodies

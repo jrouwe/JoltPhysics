@@ -98,43 +98,6 @@ bool GearConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return mGearConstraintPart.SolveVelocityConstraint(*mBody1, mWorldSpaceHingeAxis1, *mBody2, mWorldSpaceHingeAxis2, mRatio);
 }
 
-bool GearConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	if (mGear1Constraint == nullptr || mGear2Constraint == nullptr)
-		return false;
-
-	float gear1rot;
-	if (mGear1Constraint->GetSubType() == EConstraintSubType::Hinge)
-	{
-		gear1rot = StaticCast<HingeConstraint>(mGear1Constraint)->GetCurrentAngle();
-	}
-	else
-	{
-		JPH_ASSERT(false, "Unsupported");
-		return false;
-	}
-
-	float gear2rot;
-	if (mGear2Constraint->GetSubType() == EConstraintSubType::Hinge)
-	{
-		gear2rot = StaticCast<HingeConstraint>(mGear2Constraint)->GetCurrentAngle();
-	}
-	else
-	{
-		JPH_ASSERT(false, "Unsupported");
-		return false;
-	}
-
-	float error = CenterAngleAroundZero(fmod(gear1rot + mRatio * gear2rot, 2.0f * JPH_PI));
-	if (error == 0.0f)
-		return false;
-
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	CalculateConstraintProperties(rotation1, rotation2);
-	return mGearConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, error, inBaumgarte);
-}
-
 #ifdef JPH_DEBUG_RENDERER
 void GearConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {

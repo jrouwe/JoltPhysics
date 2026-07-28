@@ -18,8 +18,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConstraintSettings)
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mEnabled)
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mDrawConstraintSize)
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mConstraintPriority)
-	JPH_ADD_ATTRIBUTE(ConstraintSettings, mNumVelocityStepsOverride)
-	JPH_ADD_ATTRIBUTE(ConstraintSettings, mNumPositionStepsOverride)
+	JPH_ADD_ATTRIBUTE(ConstraintSettings, mNumSolverSubStepsOverride)
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mUserData)
 }
 
@@ -29,8 +28,7 @@ void ConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mEnabled);
 	inStream.Write(mDrawConstraintSize);
 	inStream.Write(mConstraintPriority);
-	inStream.Write(mNumVelocityStepsOverride);
-	inStream.Write(mNumPositionStepsOverride);
+	inStream.Write(mNumSolverSubStepsOverride);
 }
 
 void ConstraintSettings::RestoreBinaryState(StreamIn &inStream)
@@ -39,8 +37,7 @@ void ConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mEnabled);
 	inStream.Read(mDrawConstraintSize);
 	inStream.Read(mConstraintPriority);
-	inStream.Read(mNumVelocityStepsOverride);
-	inStream.Read(mNumPositionStepsOverride);
+	inStream.Read(mNumSolverSubStepsOverride);
 }
 
 ConstraintSettings::ConstraintResult ConstraintSettings::sRestoreFromBinaryState(StreamIn &inStream)
@@ -62,8 +59,7 @@ void Constraint::ToConstraintSettings(ConstraintSettings &outSettings) const
 {
 	outSettings.mEnabled = mEnabled;
 	outSettings.mConstraintPriority = mConstraintPriority;
-	outSettings.mNumVelocityStepsOverride = mNumVelocityStepsOverride;
-	outSettings.mNumPositionStepsOverride = mNumPositionStepsOverride;
+	outSettings.mNumSolverSubStepsOverride = mNumSolverSubStepsOverride;
 	outSettings.mUserData = mUserData;
 #ifdef JPH_DEBUG_RENDERER
 	outSettings.mDrawConstraintSize = mDrawConstraintSize;
