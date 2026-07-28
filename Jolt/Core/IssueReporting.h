@@ -10,11 +10,6 @@ JPH_NAMESPACE_BEGIN
 using TraceFunction = void (*)(const char *inFMT, ...);
 JPH_EXPORT extern TraceFunction Trace;
 
-// Always turn on asserts in Debug mode
-#if defined(JPH_DEBUG) && !defined(JPH_ENABLE_ASSERTS)
-	#define JPH_ENABLE_ASSERTS
-#endif
-
 #ifdef JPH_ENABLE_ASSERTS
 	/// Function called when an assertion fails. This function should return true if a breakpoint needs to be triggered
 	using AssertFailedFunction = bool(*)(const char *inExpression, const char *inMessage, const char *inFile, uint inLine);
