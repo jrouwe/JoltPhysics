@@ -9,6 +9,16 @@
 #define JPH_VERSION_MINOR 6
 #define JPH_VERSION_PATCH 1
 
+// Determine if we want extra debugging code to be active
+#if !defined(NDEBUG) && !defined(JPH_NO_DEBUG)
+	#define JPH_DEBUG
+#endif
+
+// Always turn on asserts in Debug mode
+#if defined(JPH_DEBUG) && !defined(JPH_ENABLE_ASSERTS)
+	#define JPH_ENABLE_ASSERTS
+#endif
+
 // Determine which features the library was compiled with
 #ifdef JPH_DOUBLE_PRECISION
 	#define JPH_VERSION_FEATURE_BIT_1 1
@@ -557,11 +567,6 @@ static_assert(sizeof(uint8) == 1, "Invalid size of uint8");
 static_assert(sizeof(uint16) == 2, "Invalid size of uint16");
 static_assert(sizeof(uint32) == 4, "Invalid size of uint32");
 static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
-
-// Determine if we want extra debugging code to be active
-#if !defined(NDEBUG) && !defined(JPH_NO_DEBUG)
-	#define JPH_DEBUG
-#endif
 
 // Define inline macro
 #if defined(JPH_NO_FORCE_INLINE)
