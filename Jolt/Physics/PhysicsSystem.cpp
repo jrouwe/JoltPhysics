@@ -1590,12 +1590,6 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 	float delta_time = ioContext->mStepDeltaTime;
 	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe(EBodyType::RigidBody);
 	uint32 num_active_bodies = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
-	uint32 num_active_bodies_after_find_collisions = ioStep->mActiveBodyReadIdx;
-
-	// We can move bodies that are not part of an island. In this case we need to notify the broadphase of the movement.
-	static constexpr int cBodiesBatch = 64;
-	BodyID *bodies_to_update_bounds = (BodyID *)JPH_STACK_ALLOC(cBodiesBatch * sizeof(BodyID));
-	int num_bodies_to_update_bounds = 0;
 
 	for (;;)
 	{
@@ -1681,22 +1675,6 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 				// Move the body now
 				body.AddPositionStep(delta_pos);
 
-				// If the body was activated due to an earlier CCD step it will have an index in the active
-				// body list that it higher than the highest one we processed during FindCollisions
-				// which means it hasn't been assigned an island and will not be updated by an island
-				// this means that we need to update its bounds manually
-				if (mp->GetIndexInActiveBodiesInternal() >= num_active_bodies_after_find_collisions)
-				{
-					body.CalculateWorldSpaceBoundsInternal();
-					bodies_to_update_bounds[num_bodies_to_update_bounds++] = body.GetID();
-					if (num_bodies_to_update_bounds == cBodiesBatch)
-					{
-						// Buffer full, flush now
-						mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
-						num_bodies_to_update_bounds = 0;
-					}
-				}
-
 				// We did not create a CCD body
 				ioStep->mActiveBodyToCCDBody[active_body_idx] = -1;
 			}
@@ -1704,10 +1682,6 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 			active_body_idx++;
 		}
 	}
-
-	// Notify change bounds on requested bodies
-	if (num_bodies_to_update_bounds > 0)
-		mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 }
 
 void PhysicsSystem::JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep) const
@@ -2194,7 +2168,6 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 	BodyManager::GrantActiveBodiesAccess grant_active(true, false);
 #endif
 
-	uint32 num_active_bodies_after_find_collisions = ioStep->mActiveBodyReadIdx;
 	TempAllocator *temp_allocator = ioContext->mTempAllocator;
 
 	// Check if there's anything to do
@@ -2232,10 +2205,6 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 		static constexpr int cBodiesBatch = 64;
 		BodyID *bodies_to_activate = (BodyID *)JPH_STACK_ALLOC(cBodiesBatch * sizeof(BodyID));
 		int num_bodies_to_activate = 0;
-
-		// We can move bodies that are not part of an island. In this case we need to notify the broadphase of the movement.
-		BodyID *bodies_to_update_bounds = (BodyID *)JPH_STACK_ALLOC(cBodiesBatch * sizeof(BodyID));
-		int num_bodies_to_update_bounds = 0;
 
 		for (uint i = 0; i < num_ccd_bodies; ++i)
 		{
@@ -2410,31 +2379,11 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 
 			// Update body position
 			body1.AddPositionStep(ccd_body->mDeltaPosition * ccd_body->mFractionPlusSlop);
-
-			// If the body was activated due to an earlier CCD step it will have an index in the active
-			// body list that it higher than the highest one we processed during FindCollisions
-			// which means it hasn't been assigned an island and will not be updated by an island
-			// this means that we need to update its bounds manually
-			if (body_mp->GetIndexInActiveBodiesInternal() >= num_active_bodies_after_find_collisions)
-			{
-				body1.CalculateWorldSpaceBoundsInternal();
-				bodies_to_update_bounds[num_bodies_to_update_bounds++] = body1.GetID();
-				if (num_bodies_to_update_bounds == cBodiesBatch)
-				{
-					// Buffer full, flush now
-					mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
-					num_bodies_to_update_bounds = 0;
-				}
-			}
 		}
 
 		// Activate the requested bodies
 		if (num_bodies_to_activate > 0)
 			mBodyManager.ActivateBodies(bodies_to_activate, num_bodies_to_activate);
-
-		// Notify change bounds on requested bodies
-		if (num_bodies_to_update_bounds > 0)
-			mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 	}
 
 	// Ensure we free the CCD bodies array now, will not call the destructor!
