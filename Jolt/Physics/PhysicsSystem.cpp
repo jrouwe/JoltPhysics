@@ -2503,7 +2503,7 @@ void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const Physic
 		}
 	}
 
-	// Notify broadphase of changed objects (find ccd contacts can do linear casts in the next step, so we need to do this every step)
+	// Notify broadphase of changed objects
 	// Note: Shuffles the BodyID's around!!!
 	mBroadPhase->NotifyBodiesAABBChanged(bodies_begin, int(bodies_end - bodies_begin), false);
 }
