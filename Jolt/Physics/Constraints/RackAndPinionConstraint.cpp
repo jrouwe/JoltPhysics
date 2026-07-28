@@ -99,43 +99,6 @@ bool RackAndPinionConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return mRackAndPinionConstraintPart.SolveVelocityConstraint(*mBody1, mWorldSpaceHingeAxis, *mBody2, mWorldSpaceSliderAxis, mRatio);
 }
 
-bool RackAndPinionConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	if (mRackConstraint == nullptr || mPinionConstraint == nullptr)
-		return false;
-
-	float rotation;
-	if (mPinionConstraint->GetSubType() == EConstraintSubType::Hinge)
-	{
-		rotation = StaticCast<HingeConstraint>(mPinionConstraint)->GetCurrentAngle();
-	}
-	else
-	{
-		JPH_ASSERT(false, "Unsupported");
-		return false;
-	}
-
-	float translation;
-	if (mRackConstraint->GetSubType() == EConstraintSubType::Slider)
-	{
-		translation = StaticCast<SliderConstraint>(mRackConstraint)->GetCurrentPosition();
-	}
-	else
-	{
-		JPH_ASSERT(false, "Unsupported");
-		return false;
-	}
-
-	float error = CenterAngleAroundZero(fmod(rotation - mRatio * translation, 2.0f * JPH_PI));
-	if (error == 0.0f)
-		return false;
-
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	CalculateConstraintProperties(rotation1, rotation2);
-	return mRackAndPinionConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, error, inBaumgarte);
-}
-
 #ifdef JPH_DEBUG_RENDERER
 void RackAndPinionConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {

@@ -96,7 +96,21 @@ Vec3 MotionProperties::MultiplyWorldSpaceInverseInertiaByVector(QuatArg inBodyRo
 	return Vec3::sAnd(result, angular_dofs_mask);
 }
 
-void MotionProperties::ApplyGyroscopicForceInternal(QuatArg inBodyRotation, float inDeltaTime)
+void MotionProperties::ApplyDragInternal(BodyState &ioState, float inDeltaTime) const
+{
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess(), BodyAccess::EAccess::ReadWrite));
+	JPH_ASSERT(mCachedBodyType == EBodyType::RigidBody);
+	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
+
+	// Linear damping: dv/dt = -c * v
+	// Solution: v(t) = v(0) * e^(-c * t) or v2 = v1 * e^(-c * dt)
+	// Taylor expansion of e^(-c * dt) = 1 - c * dt + ...
+	// Since dt is usually in the order of 1/60 and c is a low number too this approximation is good enough
+	ioState.mLinearVelocity *= max(0.0f, 1.0f - mLinearDamping * inDeltaTime);
+	ioState.mAngularVelocity *= max(0.0f, 1.0f - mAngularDamping * inDeltaTime);
+}
+
+void MotionProperties::ApplyGyroscopicForceInternal(BodyState &ioState, QuatArg inBodyRotation, float inDeltaTime) const
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess(), BodyAccess::EAccess::ReadWrite));
 	JPH_ASSERT(mCachedBodyType == EBodyType::RigidBody);
@@ -110,7 +124,7 @@ void MotionProperties::ApplyGyroscopicForceInternal(QuatArg inBodyRotation, floa
 
 	// Calculate local space angular momentum
 	Quat inertia_space_to_world_space = inBodyRotation * mInertiaRotation;
-	Vec3 local_angular_velocity = inertia_space_to_world_space.InverseRotate(mAngularVelocity);
+	Vec3 local_angular_velocity = inertia_space_to_world_space.InverseRotate(ioState.mAngularVelocity);
 	Vec3 local_momentum = local_inertia * local_angular_velocity;
 
 	// The gyroscopic force applies a torque: T = -w x I w where w is angular velocity and I the inertia tensor
@@ -121,31 +135,20 @@ void MotionProperties::ApplyGyroscopicForceInternal(QuatArg inBodyRotation, floa
 	new_local_momentum = new_local_momentum_len_sq > 0.0f? new_local_momentum * Sqrt(local_momentum.LengthSq() / new_local_momentum_len_sq) : Vec3::sZero();
 
 	// Convert back to world space angular velocity
-	mAngularVelocity = inertia_space_to_world_space * (mInvInertiaDiagonal * new_local_momentum);
+	ioState.mAngularVelocity = inertia_space_to_world_space * (mInvInertiaDiagonal * new_local_momentum);
 }
 
-void MotionProperties::ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, Vec3Arg inGravity, float inDeltaTime)
+void MotionProperties::ApplyForceTorqueInternal(BodyState &ioState, QuatArg inBodyRotation, Vec3Arg inGravity, float inDeltaTime) const
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess(), BodyAccess::EAccess::ReadWrite));
 	JPH_ASSERT(mCachedBodyType == EBodyType::RigidBody);
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
 	// Update linear velocity
-	mLinearVelocity = LockTranslation(mLinearVelocity + inDeltaTime * (mGravityFactor * inGravity + mInvMass * GetAccumulatedForce()));
+	ioState.mLinearVelocity = LockTranslation(ioState.mLinearVelocity + inDeltaTime * (mGravityFactor * inGravity + mInvMass * GetAccumulatedForce()));
 
 	// Update angular velocity
-	mAngularVelocity += inDeltaTime * MultiplyWorldSpaceInverseInertiaByVector(inBodyRotation, GetAccumulatedTorque());
-
-	// Linear damping: dv/dt = -c * v
-	// Solution: v(t) = v(0) * e^(-c * t) or v2 = v1 * e^(-c * dt)
-	// Taylor expansion of e^(-c * dt) = 1 - c * dt + ...
-	// Since dt is usually in the order of 1/60 and c is a low number too this approximation is good enough
-	mLinearVelocity *= max(0.0f, 1.0f - mLinearDamping * inDeltaTime);
-	mAngularVelocity *= max(0.0f, 1.0f - mAngularDamping * inDeltaTime);
-
-	// Clamp velocities
-	ClampLinearVelocity();
-	ClampAngularVelocity();
+	ioState.mAngularVelocity += inDeltaTime * MultiplyWorldSpaceInverseInertiaByVector(inBodyRotation, GetAccumulatedTorque());
 }
 
 void MotionProperties::ResetSleepTestSpheres(const RVec3 *inPoints)

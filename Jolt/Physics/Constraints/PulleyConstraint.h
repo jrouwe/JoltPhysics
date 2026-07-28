@@ -71,7 +71,6 @@ public:
 	virtual void				ResetWarmStart() override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
-	virtual bool				SolvePositionConstraint(float inDeltaTime, float inBaumgarte) override;
 #ifdef JPH_DEBUG_RENDERER
 	virtual void				DrawConstraint(DebugRenderer *inRenderer) const override;
 #endif // JPH_DEBUG_RENDERER

@@ -111,6 +111,15 @@ void Body::SubRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime)
 	}
 }
 
+void Body::AddRotationStep(Quat inStep)
+{
+	JPH_ASSERT(IsRigidBody());
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess(), BodyAccess::EAccess::ReadWrite));
+
+	mRotation = (inStep * mRotation).Normalized();
+	JPH_ASSERT(!mRotation.IsNaN());
+}
+
 Vec3 Body::GetWorldSpaceSurfaceNormal(const SubShapeID &inSubShapeID, RVec3Arg inPosition) const
 {
 	RMat44 inv_com = GetInverseCenterOfMassTransform();

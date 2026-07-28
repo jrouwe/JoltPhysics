@@ -45,12 +45,6 @@ public:
 	{
 		BodyInterface &bi = inPhysicsSystem.GetBodyInterface();
 
-		// Reduce the solver iteration count in the interest of performance
-		PhysicsSettings settings = inPhysicsSystem.GetPhysicsSettings();
-		settings.mNumVelocitySteps = 4;
-		settings.mNumPositionSteps = 1;
-		inPhysicsSystem.SetPhysicsSettings(settings);
-
 		// Create the bodies
 		uint num_bodies = inPhysicsSystem.GetMaxBodies();
 		uint num_constraints = 0;

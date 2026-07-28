@@ -49,7 +49,7 @@ public:
 		// Note that the spring stiffness is k and the spring damping is c
 		mSoftness = 1.0f / (inDeltaTime * (inDamping + inDeltaTime * inStiffness));
 
-		// Calculate bias factor (baumgarte stabilization):
+		// Calculate bias factor:
 		// beta = dt * k / (c + dt * k) = dt * k^2 * softness
 		// b = beta / dt * C = dt * k * softness * C
 		mBias = inBias + inDeltaTime * inStiffness * mSoftness * inC;
@@ -59,7 +59,7 @@ public:
 		// Newton's Law:
 		// M * (v2 - v1) = J^T * lambda
 		//
-		// Velocity constraint with softness and Baumgarte:
+		// Velocity constraint with softness and bias:
 		// J * v2 + softness * lambda + b = 0
 		//
 		// where b = beta * C / dt

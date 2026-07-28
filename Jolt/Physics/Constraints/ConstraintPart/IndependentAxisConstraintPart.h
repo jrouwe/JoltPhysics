@@ -43,7 +43,6 @@ JPH_NAMESPACE_BEGIN
 /// M = mass matrix, a diagonal matrix of the mass and inertia with diagonal [m1, I1, m2, I2].\n
 /// \f$K^{-1} = \left( J M^{-1} J^T \right)^{-1}\f$ = effective mass.\n
 /// b = velocity bias.\n
-/// \f$\beta\f$ = baumgarte constant.
 class IndependentAxisConstraintPart
 {
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
@@ -170,56 +169,6 @@ public:
 	float						GetTotalLambda() const
 	{
 		return mTotalLambda;
-	}
-
-	/// Iteratively update the position constraint. Makes sure C(...) == 0.
-	/// @param ioBody1 The first body that this constraint is attached to
-	/// @param ioBody2 The second body that this constraint is attached to
-	/// @param inN1 The world space normal in which the constraint operates for body 1
-	/// @param inN2 The world space normal in which the constraint operates for body 2
-	/// @param inRatio The ratio how forces are applied between bodies
-	/// @param inC Value of the constraint equation (C)
-	/// @param inBaumgarte Baumgarte constant (fraction of the error to correct)
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, float inRatio, float inC, float inBaumgarte) const
-	{
-		if (inC != 0.0f)
-		{
-			// Calculate lagrange multiplier (lambda) for Baumgarte stabilization:
-			//
-			// lambda = -K^-1 * beta / dt * C
-			//
-			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			float lambda = -mEffectiveMass * inBaumgarte * inC;
-
-			// Directly integrate velocity change for one time step
-			//
-			// Euler velocity integration:
-			// dv = M^-1 P
-			//
-			// Impulse:
-			// P = J^T lambda
-			//
-			// Euler position integration:
-			// x' = x + dv * dt
-			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
-			// integrate + a position integrate and then discard the velocity change.
-			if (ioBody1.IsDynamic())
-			{
-				ioBody1.AddPositionStep((lambda * ioBody1.GetMotionPropertiesUnchecked()->GetInverseMass()) * inN1);
-				ioBody1.AddRotationStep(lambda * mInvI1_R1xN1);
-			}
-			if (ioBody2.IsDynamic())
-			{
-				ioBody2.AddPositionStep((lambda * inRatio * ioBody2.GetMotionPropertiesUnchecked()->GetInverseMass()) * inN2);
-				ioBody2.AddRotationStep(lambda * mInvI2_RatioR2xN2);
-			}
-			return true;
-		}
-
-		return false;
 	}
 
 	/// Save state of this constraint part

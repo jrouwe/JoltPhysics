@@ -50,18 +50,12 @@ public:
 	bool					GetConstraintsInIsland(uint32 inIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd) const;
 	bool					GetContactsInIsland(uint32 inIslandIndex, uint32 *&outContactsBegin, uint32 *&outContactsEnd) const;
 
-	/// The number of position iterations for each island
-	void					SetNumPositionSteps(uint32 inIslandIndex, uint inNumPositionSteps)	{ JPH_ASSERT(inIslandIndex < mNumIslands); JPH_ASSERT(inNumPositionSteps < 256); mNumPositionSteps[inIslandIndex] = uint8(inNumPositionSteps); }
-	uint					GetNumPositionSteps(uint32 inIslandIndex) const						{ JPH_ASSERT(inIslandIndex < mNumIslands); return mNumPositionSteps[inIslandIndex]; }
-
 #ifdef JPH_TRACK_SIMULATION_STATS
 	struct IslandStats
 	{
-		atomic<uint64>		mVelocityConstraintTicks = 0;
-		atomic<uint64>		mPositionConstraintTicks = 0;
+		atomic<uint64>		mSolveTicks = 0;
 		atomic<uint64>		mUpdateBoundsTicks = 0;
-		uint8				mNumVelocitySteps = 0;
-		uint8				mNumPositionSteps = 0;												///< Tracking this a 2nd time since IslandBuilder::mNumPositionSteps is not filled in when there are no constraints or for large islands.
+		uint8				mNumSolverSubSteps = 0;
 		bool				mIsLargeIsland = false;
 	};
 
@@ -113,8 +107,6 @@ private:
 	uint32 *				mContactIslandEnds = nullptr;					///< End index of each contact island
 
 	uint32 *				mIslandsSorted = nullptr;						///< A list of island indices in order of most constraints first
-
-	uint8 *					mNumPositionSteps = nullptr;					///< Number of position steps for each island
 
 #ifdef JPH_TRACK_SIMULATION_STATS
 	IslandStats *			mIslandStats = nullptr;							///< Per island statistics

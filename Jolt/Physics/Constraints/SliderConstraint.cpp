@@ -346,45 +346,6 @@ bool SliderConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return motor || pos || rot || limit;
 }
 
-bool SliderConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	// Motor operates on velocities only, don't call SolvePositionConstraint
-
-	// Solve position constraint along 2 axis
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	CalculateR1R2U(rotation1, rotation2);
-	CalculatePositionConstraintProperties(rotation1, rotation2);
-	bool pos = mPositionConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mU, mN1, mN2, inBaumgarte);
-
-	// Solve rotation constraint
-	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), *mBody2, Mat44::sRotation(mBody2->GetRotation()));
-	bool rot = mRotationConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mInvInitialOrientation, inBaumgarte);
-
-	// Solve limits along slider axis
-	bool limit = false;
-	if (mHasLimits && mLimitsSpringSettings.mFrequency <= 0.0f)
-	{
-		rotation1 = Mat44::sRotation(mBody1->GetRotation());
-		rotation2 = Mat44::sRotation(mBody2->GetRotation());
-		CalculateR1R2U(rotation1, rotation2);
-		CalculateSlidingAxisAndPosition(rotation1);
-		CalculatePositionLimitsConstraintProperties(inDeltaTime);
-		if (mPositionLimitsConstraintPart.IsActive())
-		{
-			if (mD <= mLimitsMin)
-				limit = mPositionLimitsConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceSliderAxis, mD - mLimitsMin, inBaumgarte);
-			else
-			{
-				JPH_ASSERT(mD >= mLimitsMax);
-				limit = mPositionLimitsConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceSliderAxis, mD - mLimitsMax, inBaumgarte);
-			}
-		}
-	}
-
-	return pos || rot || limit;
-}
-
 #ifdef JPH_DEBUG_RENDERER
 void SliderConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {

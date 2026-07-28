@@ -11,10 +11,6 @@ JPH_NAMESPACE_BEGIN
 
 /// Quaternion based constraint that constrains rotation around all axis so that only translation is allowed.
 ///
-/// NOTE: This constraint part is more expensive than the RotationEulerConstraintPart and slightly more correct since
-/// RotationEulerConstraintPart::SolvePositionConstraint contains an approximation. In practice the difference
-/// is small, so the RotationEulerConstraintPart is probably the better choice.
-///
 /// Rotation is fixed between bodies like this:
 ///
 /// q2 = q1 r0
@@ -176,45 +172,6 @@ public:
 		Vec3 lambda = mEffectiveMass_JP.Multiply3x3(ioBody1.GetAngularVelocity() - ioBody2.GetAngularVelocity());
 		mTotalLambda += lambda;
 		return ApplyVelocityStep(ioBody1, ioBody2, lambda);
-	}
-
-	/// Iteratively update the position constraint. Makes sure C(...) = 0.
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, QuatArg inInvInitialOrientation, float inBaumgarte) const
-	{
-		// Calculate constraint equation
-		Vec3 c = (ioBody1.GetRotation().Conjugated() * ioBody2.GetRotation() * inInvInitialOrientation).GetXYZ();
-		if (c != Vec3::sZero())
-		{
-			// Calculate lagrange multiplier (lambda) for Baumgarte stabilization:
-			//
-			// lambda = -K^-1 * beta / dt * C
-			//
-			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			Vec3 lambda = -inBaumgarte * mEffectiveMass * c;
-
-			// Directly integrate velocity change for one time step
-			//
-			// Euler velocity integration:
-			// dv = M^-1 P
-			//
-			// Impulse:
-			// P = J^T lambda
-			//
-			// Euler position integration:
-			// x' = x + dv * dt
-			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
-			// integrate + a position integrate and then discard the velocity change.
-			if (ioBody1.IsDynamic())
-				ioBody1.SubRotationStep(mInvI1_JPT.Multiply3x3(lambda));
-			if (ioBody2.IsDynamic())
-				ioBody2.AddRotationStep(mInvI2_JPT.Multiply3x3(lambda));
-			return true;
-		}
-
-		return false;
 	}
 
 	/// Return lagrange multiplier

@@ -59,14 +59,10 @@ public:
 	static void				sSetupVelocityConstraints(Constraint **inActiveConstraints, uint32 inNumActiveConstraints, float inDeltaTime);
 
 	/// Apply last frame's impulses, must be called prior to SolveVelocityConstraints
-	template <class ConstraintCallback>
-	static void				sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, ConstraintCallback &ioCallback);
+	static void				sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio);
 
 	/// This function is called multiple times to iteratively come to a solution that meets all velocity constraints
 	static bool				sSolveVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime);
-
-	/// This function is called multiple times to iteratively come to a solution that meets all position constraints
-	static bool				sSolvePositionConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime, float inBaumgarte);
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw all constraints

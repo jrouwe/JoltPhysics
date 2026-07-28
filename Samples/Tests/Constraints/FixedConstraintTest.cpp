@@ -128,8 +128,7 @@ void FixedConstraintTest::Initialize()
 				{
 					FixedConstraintSettings constraint;
 					constraint.mAutoDetectPoint = true;
-					constraint.mNumVelocityStepsOverride = 64; // This structure needs more solver steps to be stable
-					constraint.mNumPositionStepsOverride = JPH_IF_NOT_DEBUG(64) JPH_IF_DEBUG(8); // In debug mode use less steps to preserve framerate (at the cost of stability)
+					constraint.mNumSolverSubStepsOverride = 64; // This structure needs more solver sub steps to be stable
 					mPhysicsSystem->AddConstraint(constraint.Create(*pillars[(i + j) % 4], *cross));
 				}
 
@@ -138,8 +137,7 @@ void FixedConstraintTest::Initialize()
 				{
 					FixedConstraintSettings constraint;
 					constraint.mAutoDetectPoint = true;
-					constraint.mNumVelocityStepsOverride = 64;
-					constraint.mNumPositionStepsOverride = JPH_IF_NOT_DEBUG(64) JPH_IF_DEBUG(8);
+					constraint.mNumSolverSubStepsOverride = 64;
 					mPhysicsSystem->AddConstraint(constraint.Create(*prev_pillars[i], *pillars[i]));
 				}
 

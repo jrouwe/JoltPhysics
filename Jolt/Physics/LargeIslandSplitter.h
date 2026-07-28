@@ -15,7 +15,6 @@ class TempAllocator;
 class Constraint;
 class BodyManager;
 class ContactConstraintManager;
-class CalculateSolverSteps;
 
 /// Assigns bodies in large islands to multiple groups that can run in parallel
 ///
@@ -39,6 +38,18 @@ public:
 		WaitingForBatch,														///< Work is expected to be available later
 		BatchRetrieved,															///< Work is being returned
 		AllBatchesDone,															///< No further work is expected from this
+	};
+
+	/// Determines what needs to be executed on this batch
+	enum class ESubStepStage
+	{
+		FirstStage,
+		ApplyGravity = FirstStage,
+		WarmStart,
+		SolveConstraints,
+		Integrate,
+		Relaxation,
+		LastStage = Relaxation,
 	};
 
 	/// Describes a split of constraints and contacts
@@ -87,28 +98,36 @@ public:
 		/// Make the first batch available to other threads
 		inline void			StartFirstBatch()
 		{
-			uint split_index = mNumSplits > 0? 0 : cNonParallelSplitIdx;
-			mStatus.store(uint64(split_index) << StatusSplitShift, memory_order_release);
+			// Apply gravity doesn't get split up so starts at cNonParallelSplitIdx
+			static_assert(ESubStepStage::FirstStage == ESubStepStage::ApplyGravity);
+			mStatus.store(uint64(cNonParallelSplitIdx) << StatusSplitShift, memory_order_release);
 		}
 
 		/// Fetch the next batch to process
-		EStatus				FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, bool &outFirstIteration);
+		EStatus				FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, int &outSubStep, ESubStepStage &outSubStepStage);
 
 		/// Mark a batch as processed
-		void				MarkBatchProcessed(uint inNumProcessed, bool &outLastIteration, bool &outFinalBatch);
+		void				MarkBatchProcessed(uint inNumProcessed);
 
 		enum EIterationStatus : uint64
 		{
-			StatusIterationMask		= 0xffff000000000000,
-			StatusIterationShift	= 48,
+			StatusSubStepMask		= 0xfff0000000000000,
+			StatusSubStepShift		= 52,
+			StatusSubStepStageMask	= 0x000f000000000000,
+			StatusSubStepStageShift	= 48,
 			StatusSplitMask			= 0x0000ffff00000000,
 			StatusSplitShift		= 32,
 			StatusItemMask			= 0x00000000ffffffff,
 		};
 
-		static inline int	sGetIteration(uint64 inStatus)
+		static inline int	sGetSubStep(uint64 inStatus)
 		{
-			return int((inStatus & StatusIterationMask) >> StatusIterationShift);
+			return int((inStatus & StatusSubStepMask) >> StatusSubStepShift);
+		}
+
+		static inline ESubStepStage	sGetSubStepStage(uint64 inStatus)
+		{
+			return ESubStepStage((inStatus & StatusSubStepStageMask) >> StatusSubStepStageShift);
 		}
 
 		static inline uint	sGetSplit(uint64 inStatus)
@@ -124,9 +143,7 @@ public:
 		Split				mSplits[cNumSplits];								///< Data per split
 		uint32				mIslandIndex;										///< Index of the island that was split
 		uint				mNumSplits;											///< Number of splits that were created (excluding the non-parallel split)
-		int					mNumIterations;										///< Number of iterations to do
-		int					mNumVelocitySteps;									///< Number of velocity steps to do (cached for 2nd sub step)
-		int					mNumPositionSteps;									///< Number of position steps to do
+		int					mNumSubSteps;										///< Number of sub-steps to do
 		atomic<uint64>		mStatus;											///< Status of the split, see EIterationStatus
 		atomic<uint>		mItemsProcessed;									///< Number of items that have been marked as processed
 	};
@@ -145,13 +162,13 @@ public:
 	uint					AssignToNonParallelSplit(const Body *inBody);
 
 	/// Splits up an island, the created splits will be added to the list of batches and can be fetched with FetchNextBatch. Returns false if the island did not need splitting.
-	bool					SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, CalculateSolverSteps &ioStepsCalculator);
+	bool					SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, int inNumSubSteps);
 
 	/// Fetch the next batch to process, returns a handle in outSplitIslandIndex that must be provided to MarkBatchProcessed when complete
-	EStatus					FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, bool &outFirstIteration);
+	EStatus					FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, int &outSubStep, ESubStepStage &outSubStepStage);
 
 	/// Mark a batch as processed
-	void					MarkBatchProcessed(uint inSplitIslandIndex, const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd, bool &outLastIteration, bool &outFinalBatch);
+	void					MarkBatchProcessed(uint inSplitIslandIndex, const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd);
 
 	/// Get the island index of the island that was split for a particular split island index
 	inline uint32			GetIslandIndex(uint inSplitIslandIndex) const
@@ -160,8 +177,12 @@ public:
 		return mSplitIslands[inSplitIslandIndex].mIslandIndex;
 	}
 
-	/// Prepare the island splitter for iterating over the split islands again for position solving. Marks all batches as startable.
-	void					PrepareForSolvePositions();
+	/// Get the number of sub steps for a particular split island index
+	inline int				GetNumSubSteps(uint inSplitIslandIndex) const
+	{
+		JPH_ASSERT(inSplitIslandIndex < mNumSplitIslands);
+		return mSplitIslands[inSplitIslandIndex].mNumSubSteps;
+	}
 
 	/// Reset the island splitter
 	void					Reset(TempAllocator *inTempAllocator);

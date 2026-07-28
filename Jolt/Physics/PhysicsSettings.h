@@ -41,13 +41,19 @@ struct PhysicsSettings
 	/// How many step listener batches are needed before spawning another job (set to INT_MAX if no parallelism is desired)
 	int			mStepListenerBatchesPerJob = 1;
 
-	/// Baumgarte stabilization factor (how much of the position error to 'fix' in 1 update) (unit: dimensionless, 0 = nothing, 1 = 100%)
-	float		mBaumgarte = 0.2f;
-
 	/// Radius around objects inside which speculative contact points will be detected. Note that if this is too big
 	/// you will get ghost collisions as speculative contacts are based on the closest points during the collision detection
 	/// step which may not be the actual closest points by the time the two objects hit (unit: meters)
 	float		mSpeculativeContactDistance = 0.02f;
+
+	/// Contact violations are resolved through a soft spring constraint. This specifies the frequency of that spring (unit: Hz)
+	float 		mContactFrequency = 30.0f;
+
+	/// Contact violations are resolved through a soft spring constraint. This specifies the damping ratio of that spring.
+	float		mContactDamping = 10.0f;
+
+	/// Contact violations are resolved through a soft spring constraint. This specifies the maximum velocity that the spring can achieve. Limiting this prevents the system from exploding while resolving penetrations. (unit: m/s)
+	float		mContactResolutionMaxVelocity = 5.0f;
 
 	/// How much bodies are allowed to sink into each other (unit: meters)
 	float		mPenetrationSlop = 0.02f;
@@ -60,9 +66,6 @@ struct PhysicsSettings
 
 	/// Max distance to use to determine if two points are on the same plane for determining the contact manifold between two shape faces (unit: meter)
 	float		mManifoldTolerance = 1.0e-3f;
-
-	/// Maximum distance to correct in a single iteration when solving position constraints (unit: meters)
-	float		mMaxPenetrationDistance = 0.2f;
 
 	/// Maximum relative delta position for body pairs to be able to reuse collision results from last frame (units: meter^2)
 	float		mBodyPairCacheMaxDeltaPositionSq = Square(0.001f); ///< 1 mm
@@ -79,12 +82,8 @@ struct PhysicsSettings
 	/// Max squared distance to consider a vertex to be the same as another vertex, used by the internal edge removal algorithm to determine if two edges are shared. (unit: meter^2)
 	float		mInternalEdgeRemovalVertexToleranceSq = cDefaultInternalEdgeRemovalVertexToleranceSq;
 
-	/// Number of solver velocity iterations to run
-	/// Note that this needs to be >= 2 in order for friction to work (friction is applied using the non-penetration impulse from the previous iteration)
-	uint		mNumVelocitySteps = 10;
-
-	/// Number of solver position iterations to run
-	uint		mNumPositionSteps = 2;
+	/// Number of solver sub steps to run. Each collision step is subdivided in this many sub steps. Each sub step will be delta_time / mNumSolverSubSteps seconds long where delta_time is the value passed to inDeltaTime in PhysicsSystem::Update.
+	uint		mNumSolverSubSteps = 4;
 
 	/// Minimal velocity needed before a collision can be elastic. If the relative velocity between colliding objects
 	/// in the direction of the contact normal is lower than this, the restitution will be zero regardless of the configured

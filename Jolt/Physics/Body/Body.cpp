@@ -357,8 +357,7 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mMaxLinearVelocity = mMotionProperties != nullptr? mMotionProperties->GetMaxLinearVelocity() : 0.0f;
 	result.mMaxAngularVelocity = mMotionProperties != nullptr? mMotionProperties->GetMaxAngularVelocity() : 0.0f;
 	result.mGravityFactor = mMotionProperties != nullptr? mMotionProperties->GetGravityFactor() : 1.0f;
-	result.mNumVelocityStepsOverride = mMotionProperties != nullptr? mMotionProperties->GetNumVelocityStepsOverride() : 0;
-	result.mNumPositionStepsOverride = mMotionProperties != nullptr? mMotionProperties->GetNumPositionStepsOverride() : 0;
+	result.mNumSolverSubStepsOverride = mMotionProperties != nullptr? mMotionProperties->GetNumSolverSubStepsOverride() : 0;
 	result.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
 
 	// Invert inertia and mass
@@ -424,8 +423,7 @@ void Body::ApplyBodyCreationSettings(const BodyCreationSettings &inBodyCreationS
 		mp->SetLinearVelocity(inBodyCreationSettings.mLinearVelocity); // Needs to happen after setting the max linear/angular velocity and setting allowed DOFs
 		mp->SetAngularVelocity(inBodyCreationSettings.mAngularVelocity);
 		mp->SetGravityFactor(inBodyCreationSettings.mGravityFactor);
-		mp->SetNumVelocityStepsOverride(inBodyCreationSettings.mNumVelocityStepsOverride);
-		mp->SetNumPositionStepsOverride(inBodyCreationSettings.mNumPositionStepsOverride);
+		mp->SetNumSolverSubStepsOverride(inBodyCreationSettings.mNumSolverSubStepsOverride);
 		mp->mMotionQuality = inBodyCreationSettings.mMotionQuality;
 		mp->mAllowSleeping = inBodyCreationSettings.mAllowSleeping;
 		JPH_IF_ENABLE_ASSERTS(mp->mCachedBodyType = mBodyType;)

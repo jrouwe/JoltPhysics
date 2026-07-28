@@ -113,14 +113,6 @@ bool PointConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return mPointConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2);
 }
 
-bool PointConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	// Update constraint properties (bodies may have moved)
-	CalculateConstraintProperties();
-
-	return mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
-}
-
 #ifdef JPH_DEBUG_RENDERER
 void PointConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {

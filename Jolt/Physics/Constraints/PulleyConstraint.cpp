@@ -174,28 +174,6 @@ bool PulleyConstraint::SolveVelocityConstraint(float inDeltaTime)
 		return false;
 }
 
-bool PulleyConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	// Calculate new length (bodies may have changed)
-	float current_length = CalculatePositionsNormalsAndLength();
-
-	float position_error = 0.0f;
-	if (current_length < mMinLength)
-		position_error = current_length - mMinLength;
-	else if (current_length > mMaxLength)
-		position_error = current_length - mMaxLength;
-
-	if (position_error != 0.0f)
-	{
-		// Update constraint properties (bodies may have moved)
-		CalculateConstraintProperties();
-
-		return mIndependentAxisConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, mRatio, position_error, inBaumgarte);
-	}
-
-	return false;
-}
-
 #ifdef JPH_DEBUG_RENDERER
 void PulleyConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {

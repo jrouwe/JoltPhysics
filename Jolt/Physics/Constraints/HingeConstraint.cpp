@@ -331,33 +331,6 @@ bool HingeConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return motor || pos || rot || limit;
 }
 
-bool HingeConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	// Motor operates on velocities only, don't call SolvePositionConstraint
-
-	// Solve point constraint
-	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
-	bool pos = mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
-
-	// Solve rotation constraint
-	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation()); // Note that previous call to GetRotation() is out of date since the rotation has changed
-	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
-	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, rotation1.Multiply3x3(mLocalSpaceHingeAxis1), *mBody2, rotation2, rotation2.Multiply3x3(mLocalSpaceHingeAxis2));
-	bool rot = mRotationConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
-
-	// Solve rotation limits
-	bool limit = false;
-	if (mHasLimits && mLimitsSpringSettings.mFrequency <= 0.0f)
-	{
-		CalculateA1AndTheta();
-		CalculateRotationLimitsConstraintProperties(inDeltaTime);
-		if (mRotationLimitsConstraintPart.IsActive())
-			limit = mRotationLimitsConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, GetSmallestAngleToLimit(), inBaumgarte);
-	}
-
-	return pos || rot || limit;
-}
-
 #ifdef JPH_DEBUG_RENDERER
 void HingeConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {

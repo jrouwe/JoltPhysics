@@ -49,10 +49,8 @@ protected:
 ///
 /// There are a couple of ways to improve this:
 ///
-/// 1. You can increase the number of velocity steps (global settings PhysicsSettings::mNumVelocitySteps or if you only want to increase it on
-/// the vehicle you can use VehicleConstraintSettings::mNumVelocityStepsOverride). E.g. going from 10 to 30 steps in the HeavyOnLightTest sample makes the penetration a lot less.
-/// The number of position steps can also be increased (the first prevents the body from going down, the second corrects it if the problem did
-/// occur which inevitably happens due to numerical drift). This solution costs CPU cycles.
+/// 1. You can increase the number of solver sub steps (global settings PhysicsSettings::mNumSolverSubSteps or if you only want to increase it on
+/// the vehicle you can use VehicleConstraintSettings::mNumSolverSubStepsOverride). This solution costs CPU cycles.
 ///
 /// 2. You can reduce the mass difference between the vehicle body and the rubble on the floor (by making the rubble heavier or the car lighter).
 ///
@@ -189,7 +187,6 @@ public:
 	virtual void				ResetWarmStart() override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
-	virtual bool				SolvePositionConstraint(float inDeltaTime, float inBaumgarte) override;
 	virtual void				BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) override;
 	virtual uint				BuildIslandSplits(LargeIslandSplitter &ioSplitter) const override;
 #ifdef JPH_DEBUG_RENDERER

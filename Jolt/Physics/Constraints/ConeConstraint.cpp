@@ -153,19 +153,6 @@ bool ConeConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return pos || rot;
 }
 
-bool ConeConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
-{
-	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
-	bool pos = mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
-
-	bool rot = false;
-	CalculateRotationConstraintProperties(Mat44::sRotation(mBody1->GetRotation()), Mat44::sRotation(mBody2->GetRotation()));
-	if (mAngleConstraintPart.IsActive())
-		rot = mAngleConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mCosTheta - mCosHalfConeAngle, inBaumgarte);
-
-	return pos || rot;
-}
-
 #ifdef JPH_DEBUG_RENDERER
 void ConeConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {

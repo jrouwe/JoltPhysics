@@ -178,6 +178,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyManager.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyManager.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyPair.h
+	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyState.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyType.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/MassProperties.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/MassProperties.h

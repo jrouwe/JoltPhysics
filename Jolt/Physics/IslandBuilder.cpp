@@ -382,8 +382,6 @@ void IslandBuilder::Finalize(const BodyID *inActiveBodies, uint32 inNumActiveBod
 	BuildConstraintIslands(mContactLinks, mNumContacts, mContactIslands, mContactIslandEnds, inTempAllocator);
 	SortIslands(inTempAllocator);
 
-	mNumPositionSteps = (uint8 *)inTempAllocator->Allocate(mNumIslands * sizeof(uint8));
-
 #ifdef JPH_TRACK_SIMULATION_STATS
 	mIslandStats = (IslandStats *)inTempAllocator->Allocate(mNumIslands * sizeof(IslandStats));
 	for (uint32 i = 0; i < mNumIslands; ++i)
@@ -443,9 +441,6 @@ void IslandBuilder::ResetIslands(TempAllocator *inTempAllocator)
 	inTempAllocator->Free(mIslandStats, mNumIslands * sizeof(IslandStats));
 	mIslandStats = nullptr;
 #endif
-
-	inTempAllocator->Free(mNumPositionSteps, mNumIslands * sizeof(uint8));
-	mNumPositionSteps = nullptr;
 
 	if (mIslandsSorted != nullptr)
 	{
