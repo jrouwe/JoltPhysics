@@ -381,7 +381,7 @@ void PlaneShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &
 	static_assert(sizeof(PSGetTrianglesContext) <= sizeof(GetTrianglesContext), "GetTrianglesContext too small");
 	JPH_ASSERT(IsAligned(&ioContext, alignof(PSGetTrianglesContext)));
 
-	PSGetTrianglesContext *context = new (&ioContext) PSGetTrianglesContext();
+	PSGetTrianglesContext *context = new (&ioContext) PSGetTrianglesContext;
 
 	// Get the vertices of the plane
 	Vec3 vertices[4];

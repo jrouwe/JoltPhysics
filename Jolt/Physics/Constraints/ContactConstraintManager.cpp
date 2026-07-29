@@ -818,7 +818,7 @@ JPH_INLINE ContactConstraintManager::ContactConstraint<Type1, Type2> *ContactCon
 	// Construct constraint
 	ContactConstraint<Type1, Type2> *constraint = reinterpret_cast<ContactConstraint<Type1, Type2> *>(mConstraints + constraint_offset);
 	JPH_ASSERT(IsAligned(constraint, alignof(ContactConstraint<Type1, Type2>)));
-	new (constraint) ContactConstraint<Type1, Type2>();
+	new (constraint) ContactConstraint<Type1, Type2>;
 	constraint->mBody1 = &inBody1;
 	constraint->mBody2 = &inBody2;
 	constraint->mSortKey = inSortKey;
