@@ -8,6 +8,7 @@
 * [Death Stranding 2: On the Beach](https://www.playstation.com/en-us/games/death-stranding-2-on-the-beach/) - A third person action adventure game set in a post-apocalyptic world ravaged by otherworldly creatures.
 * [ezEngine](https://github.com/ezEngine/ezEngine) - An open source C++ game engine.
 * [GDevelop](https://gdevelop.io/) - An open-source, no-code game engine. See [this](https://blog.blips.fm/articles/gdevelop-55-released-with-enhanced-3d-support) announcement.
+* [Geekbench 7](https://www.geekbench.com/) - A cross-platform benchmark that measures system performance. See [this](https://www.geekbench.com/blog/2026/07/geekbench-7/) announcement.
 * [Godot](https://github.com/godotengine/godot) - Godot Engine – Multi-platform 2D and 3D game engine. See [this](https://godotengine.org/releases/4.4/#jolt-physics-module) announcement.
 * [Horizon Forbidden West](https://www.playstation.com/en-us/games/horizon-forbidden-west/) - An open world action RPG adventure.
 * [HypeHype](https://www.hypehype.com/) - A mobile app to create, remix and play games. See [this](https://twitter.com/SebAaltonen/status/1726871354228482237) X post.
