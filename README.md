@@ -154,13 +154,14 @@ If you're interested in how Jolt scales with multiple CPUs and compares to other
 
 ## Bindings for other languages
 
-* C [here](https://github.com/amerkoleci/joltc), [here](https://github.com/zig-gamedev/zphysics/tree/main/libs/JoltC) and [here](https://github.com/SecondHalfGames/JoltC/)
+* C [here](https://github.com/amerkoleci/joltc), [here](https://github.com/zig-gamedev/zphysics/tree/main/libs/JoltC), [here](https://github.com/SecondHalfGames/JoltC/) and [here](https://github.com/ostef/JoltC/)
 * [C#](https://github.com/amerkoleci/JoltPhysicsSharp)
 * Java or Kotlin [here](https://stephengold.github.io/jolt-jni-docs) and [here](https://github.com/Morgoth398/JoltPhysics-JavaFFM)
 * [JavaScript](https://github.com/jrouwe/JoltPhysics.js)
 * [Rust](https://github.com/SecondHalfGames/jolt-rust)
 * [Python](https://github.com/Evilpasture/Culverin)
 * [Zig](https://github.com/zig-gamedev/zphysics)
+* [Jai](https://github.com/ostef/Jolt-Jai), based on this [bindings generator](https://github.com/ostef/JoltC-BindGen)
 
 ## Integrations in other engines
 
