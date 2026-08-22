@@ -139,7 +139,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 			<ul>
 				<li>Install clang (apt-get install clang)</li>
 				<li>Install cmake (apt-get install cmake)</li>
-				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html">Vulkan SDK</a></li>
+				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu24_install_vulkan_sdk.sh</code> in this folder.</li>
 				<li>Run: ./cmake_linux_clang_gcc.sh</li>
 				<li>Go to the Linux_Debug folder</li>
 				<li>Run: make -j$(nproc) && ./UnitTests</li>
@@ -152,7 +152,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 				<li>Install clang (apt-get install clang)</li>
 				<li>Install cmake (apt-get install cmake)</li>
 				<li>Install ninja (apt-get install ninja-build)</li>
-				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html">Vulkan SDK</a></li>
+				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu24_install_vulkan_sdk.sh</code> in this folder.</li>
 				<li>Run: ./cmake_ninja.sh</li>
 				<li>Go to the Ninja_MultiConfig folder</li>
 				<li>Run: cmake --build . --config Debug && ./UnitTests</li>
@@ -176,7 +176,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 	<summary>macOS</summary>
 	<ul>
 		<li>Install XCode</li>
-		<li>Install the Vulkan SDK or the dxc and spirv-cross tools (required to cross compile hlsl shaders to Metal)</li>
+		<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#mac">Vulkan SDK</a> or the dxc and spirv-cross tools (required to cross compile hlsl shaders to Metal)</li>
 		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
 		<li>Run: ./cmake_xcode_macos.sh</li>
 		<li>This will open XCode with a newly generated project</li>
@@ -189,7 +189,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 	<summary>iOS</summary>
 	<ul>
 		<li>Install XCode</li>
-		<li>Install the Vulkan SDK or the dxc and spirv-cross tools (required to cross compile hlsl shaders to Metal)</li>
+		<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#mac">Vulkan SDK</a> or the dxc and spirv-cross tools (required to cross compile hlsl shaders to Metal)</li>
 		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
 		<li>Run: ./cmake_xcode.ios.sh</li>
 		<li>This will open XCode with a newly generated project</li>
