@@ -2,6 +2,18 @@
 
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
+## Unreleased changes
+
+### Bug fixes
+
+* Avoiding overflow to INF if inverse effective mass is denormal. When restricting the rotation of an object using `EAllowedDOFs`, a tiny rotation in a restricted axis can cause the effective mass of the angular friction component to overflow to INF and cause a FP exception.
+* When colliding with very long and thin triangles, GJK could fail to find the closest point to the triangle because it used a fixed epsilon to determine if the triangle was too thin. Changed this epsilon so that it is dependent on the length of the edges of the triangle so that we fall back to closest point to edge in those cases.
+* MinGW32 defines `__STDCPP_DEFAULT_NEW_ALIGNMENT__` as 16 but its allocations are actually 8 byte aligned. This caused unaligned read access violations in `TriangleSplitterBinning::mBins`.
+
+### Removed functionality
+
+* Removed `PhysicsSettings::mDeterministicSimulation`. Turning this off has negative impact on stacking. The simulation is now always deterministic.
+
 ## v5.6.0
 
 ### New functionality
