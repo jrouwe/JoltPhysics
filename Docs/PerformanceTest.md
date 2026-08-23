@@ -13,7 +13,7 @@ The performance test application contains a couple of simple scenes to test perf
 - -i=[iterations]: Number of physics steps before the test finishes.
 - -q=[quality]: This limits the motion quality types that the test will run on. By default it will test both. [quality] can be:
     - Discrete: Discrete collision detection
-    - LinearCast: Linear cast continous collision detection
+    - LinearCast: Linear cast continuous collision detection
 - -t=[num]: This sets the amount of threads the test will run on. By default it will test 1 .. number of virtual processors. Can be 'max' to run on as many thread as the CPU has.
 - -no_sleep: Disable sleeping.
 - -p: Outputs a profile snapshot every 100 iterations
