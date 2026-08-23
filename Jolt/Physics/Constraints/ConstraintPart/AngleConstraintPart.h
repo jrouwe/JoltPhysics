@@ -82,7 +82,7 @@ public:
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inBody2, inWorldSpaceAxis);
 
-		if (inv_effective_mass == 0.0f)
+		if (inv_effective_mass < FLT_MIN)
 			Deactivate();
 		else
 		{
@@ -104,7 +104,7 @@ public:
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inBody2, inWorldSpaceAxis);
 
-		if (inv_effective_mass == 0.0f)
+		if (inv_effective_mass < FLT_MIN)
 			Deactivate();
 		else if (inFrequency > 0.0f)
 			mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
@@ -128,7 +128,7 @@ public:
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inBody2, inWorldSpaceAxis);
 
-		if (inv_effective_mass == 0.0f)
+		if (inv_effective_mass < FLT_MIN)
 			Deactivate();
 		else if (inStiffness > 0.0f || inDamping > 0.0f)
 			mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inStiffness, inDamping, mEffectiveMass);
@@ -145,7 +145,7 @@ public:
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inBody2, inWorldSpaceAxis);
 
-		if (inv_effective_mass == 0.0f)
+		if (inv_effective_mass < FLT_MIN)
 			Deactivate();
 		else if (!inSpringSettings.HasStiffness())
 		{
@@ -164,7 +164,7 @@ public:
 
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inBody2, inWorldSpaceAxis);
 
-		if (inv_effective_mass == 0.0f)
+		if (inv_effective_mass < FLT_MIN)
 			Deactivate();
 		else
 			mSpringPart.CalculateSpringPropertiesWithSettings(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings, mEffectiveMass);

@@ -80,7 +80,7 @@ public:
 
 		// K^-1 = 1 / (J M^-1 J^T) = 1 / (a^T I1^-1 a + 1/m2 * r^2 * b . b)
 		float inv_effective_mass = (inWorldSpaceHingeAxis.Dot(mInvI1_A) + inv_m2 * Square(inRatio));
-		if (inv_effective_mass == 0.0f)
+		if (inv_effective_mass < FLT_MIN)
 			Deactivate();
 		else
 			mEffectiveMass = 1.0f / inv_effective_mass;
