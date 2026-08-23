@@ -1907,6 +1907,31 @@ TEST_SUITE("PhysicsTests")
 		CHECK(body->GetPosition() == initial_position);
 	}
 
+	TEST_CASE("TestAllowedDOFsVsSmallRotation")
+	{
+		PhysicsTestContext c;
+		Body &floor = c.CreateFloor();
+		floor.SetFriction(1.0f);
+
+		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
+		const RVec3 cInitialPos(0, 0.5_r - cPenetrationSlop, 0);
+
+		// Introduce a slight rotation around the X axis (which has been frozen by EAllowedDOFs).
+		// This creates a very tiny (denormalized float) effective mass for the angular friction component.
+		// Inverting this effective mass will make it INF and cause a FP exception if not handled properly.
+		BodyCreationSettings bcs(new BoxShape(Vec3::sReplicate(0.5f)), cInitialPos, Quat(1.0e-20f, 0, 0, 1.0f), EMotionType::Dynamic, Layers::MOVING);
+		bcs.mAllowedDOFs = EAllowedDOFs::Plane2D;
+		bcs.mLinearVelocity = Vec3(0, -1, 0);
+		bcs.mFriction = 1.0f;
+		BodyID id = c.GetBodyInterface().CreateAndAddBody(bcs, EActivation::Activate);
+
+		c.SimulateSingleStep();
+
+		// Check not moved
+		CHECK_APPROX_EQUAL(c.GetBodyInterface().GetPosition(id), cInitialPos, 1.0e-5f);
+		CHECK_APPROX_EQUAL(c.GetBodyInterface().GetLinearVelocity(id), Vec3::sZero(), 1.0e-3f);
+	}
+
 	TEST_CASE("TestSelectiveStateSaveAndRestore")
 	{
 		class MyFilter : public StateRecorderFilter

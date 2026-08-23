@@ -151,7 +151,7 @@ public:
 			}
 		}
 
-		if (inv_effective_mass == 0.0f)
+		if (inv_effective_mass < FLT_MIN)
 			this->Deactivate();
 		else
 			this->mEffectiveMass = 1.0f / inv_effective_mass;
