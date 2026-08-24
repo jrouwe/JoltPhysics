@@ -5,7 +5,7 @@ This document describes the demos in the [Samples](https://github.com/jrouwe/Jol
 * Select Test - This allows you to select between the different types of physics tests
 * Test Settings - Some tests will allow extra configuration, if not this setting will be greyed out
 * Restart Test (R) - When selecting this, the test will go back to its initial state
-* Run All Tests - This will run every tests for 10 seconds before proceeding to the next. This is a good way of visually inspecting the simulation before commiting a code change.
+* Run All Tests - This will run every test for 10 seconds before proceeding to the next. This is a good way of visually inspecting the simulation before committing a code change.
 * Next Test (N) - When running all tests, this option can be used to quickly skip to the next test.
 * Physics Settings - This menu contains all physics configuration.
 * Drawing Options - This menu shows all the options for drawing the internal state of the physics simulation.
