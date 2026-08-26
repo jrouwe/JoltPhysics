@@ -799,7 +799,12 @@ public:
 				// Only allow 1 restart, if we still can't get a closest point
 				// we're so close that we return this as a hit
 				if (!allow_restart)
+				{
+					// The last support point did not produce a closer simplex, remove it so that
+					// the contact points are calculated from the previous valid simplex.
+					--mNumPoints;
 					break;
+				}
 
 				// If we fail to converge, we start again with the last point as simplex
 #ifdef JPH_GJK_DEBUG

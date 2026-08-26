@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
@@ -193,6 +194,28 @@ TEST_SUITE("CastShapeTests")
 			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(0, 11, 0), 1.0e-3f);
 			CHECK(!result.mIsBackFaceHit);
 		}
+	}
+
+	// Tests casting a cylinder that is touching a capsule. The expectation is that it finds an intersection at fraction 0 and with very little penetration.
+	TEST_CASE("TestCastShapeCylinderVsCapsule")
+	{
+		PhysicsTestContext c;
+		CapsuleShapeSettings capsule_shape_settings(2.03114343f, 7.19732189f);
+		capsule_shape_settings.SetEmbedded();
+		c.CreateBody(&capsule_shape_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+		ShapeCastSettings settings;
+		settings.mUseShrunkenShapeAndConvexRadius = true;
+
+		Ref<Shape> cylinder_shape = new CylinderShape(0.3f, 0.4975f);
+		RShapeCast shape_cast { cylinder_shape, Vec3::sOne(), RMat44::sTranslation(RVec3(-0.951660156f, -2.09155273f, -7.63574218f)), Vec3(0.00244140625f, -0.0068359375f, 0.0029296875f) };
+
+		AllHitCollisionCollector<CastShapeCollector> collector;
+		c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
+		CHECK(collector.mHits.size() == 1);
+		const ShapeCastResult &result = collector.mHits.front();
+		CHECK(result.mFraction == 0.0f);
+		CHECK(result.mPenetrationDepth < 1.0e-4f);
 	}
 
 	// Test CastShape ordering according to penetration depth
