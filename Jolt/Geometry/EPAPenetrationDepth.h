@@ -532,9 +532,28 @@ public:
 		// When our contact normal is too small, we don't have an accurate result
 		bool contact_normal_invalid = outContactNormal.IsNearZero(Square(inCollisionTolerance));
 
-		if (inReturnDeepestPoint
-			&& ioLambda == 0.0f // Only when lambda = 0 we can have the bodies overlap
-			&& (inConvexRadiusA + inConvexRadiusB == 0.0f // When no convex radius was provided we can never trust contact points at lambda = 0
+		// When lambda = 0 and the contact normal magnitude equals the sum of convex radii, the inner shapes
+		// are at the exact tolerance boundary and barely touching. In this case the convex radius correction
+		// in GJK is unreliable because the contact points are derived from a degenerate simplex. Detect this
+		// by checking if the contact normal magnitude is close to the sum of convex radii.
+		// Only apply when we don't need the deepest point, since the character controller needs the correct
+		// contact normal direction for ground detection.
+		float sum_convex_radius = inConvexRadiusA + inConvexRadiusB;
+		if (!contact_normal_invalid
+			&& !inReturnDeepestPoint
+			&& ioLambda == 0.0f
+			&& sum_convex_radius > 0.0f
+			&& abs(outContactNormal.Length() - sum_convex_radius) < inCollisionTolerance)
+		{
+			// Shapes barely touch: keep the contact normal (which correctly points from A to B)
+			// but reset the contact points to be equal so the penetration depth is zero.
+			outPointA = outPointB;
+			return true;
+		}
+
+		if (inReturnDeepestPoint // When we need the deepest point, always run EPA when bodies overlap
+			&& ioLambda == 0.0f
+			&& (inConvexRadiusA + inConvexRadiusB == 0.0f
 				|| contact_normal_invalid))
 		{
 			// If we're initially intersecting, we need to run the EPA algorithm in order to find the deepest contact point
@@ -548,6 +567,12 @@ public:
 		{
 			// If we weren't able to calculate a contact normal, use the cast direction instead
 			outContactNormal = inDirection;
+
+			// The GJK contact points are unreliable when the contact normal is degenerate (near-zero).
+			// The convex radius correction was applied in the wrong direction because the separating
+			// axis from GJK is meaningless. Reset both contact points to be equal so the penetration
+			// depth is zero, which is correct for barely-touching shapes at lambda=0.
+			outPointA = outPointB;
 		}
 
 		return true;
