@@ -85,7 +85,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 ## Building
 
 <details>
-	<summary>Windows 10+</summary>
+	<summary>Windows</summary>
 	<ul style="list-style: none"><li>
 		<details>
 			<summary>MSVC CL (default compiler)</summary>
@@ -209,11 +209,12 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 	</ul>
 </details>
 
-## Other Build Tools
+## Other Build Tools / Packages
 
 * A vcpkg package is available [here](https://github.com/microsoft/vcpkg/tree/master/ports/joltphysics).
 * A xmake package is available [here](https://github.com/xmake-io/xmake-repo/tree/dev/packages/j/joltphysics).
-* A conan package is available [here](https://conan.io/center/recipes/joltphysics)
+* A conan package is available [here](https://conan.io/center/recipes/joltphysics).
+* A RHEL RPM package is available [here](https://github.com/alkontek/pkgspecs/tree/master/rpm/JoltPhysics).
 
 ## Errors
 
