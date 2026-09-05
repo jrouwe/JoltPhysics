@@ -7,20 +7,6 @@
 #include <Jolt/Core/STLAllocator.h>
 #include <Jolt/Core/HashCombine.h>
 
-#ifdef JPH_USE_STD_VECTOR
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <vector>
-JPH_SUPPRESS_WARNINGS_STD_END
-
-JPH_NAMESPACE_BEGIN
-
-template <class T, class Allocator = STLAllocator<T>> using Array = std::vector<T, Allocator>;
-
-JPH_NAMESPACE_END
-
-#else
-
 JPH_NAMESPACE_BEGIN
 
 /// Simple replacement for std::vector
@@ -709,5 +695,3 @@ namespace std
 }
 
 JPH_SUPPRESS_WARNING_POP
-
-#endif // JPH_USE_STD_VECTOR
