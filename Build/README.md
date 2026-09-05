@@ -42,7 +42,6 @@ There are a number of user configurable C++ defines that turn on/off certain fea
 		<li>JPH_TRACK_BROADPHASE_STATS - Enables PhysicsSystem::ReportBroadphaseStats, which outputs stats to the TTY about the broad phase.</li>
 		<li>JPH_TRACK_NARROWPHASE_STATS - Enables NarrowPhaseStat::sReportStats(), which outputs stats to the TTY about the narrow phase.</li>
 		<li>JPH_TRACK_SIMULATION_STATS - Keeps track of how much time each body costs to simulate. Can be output to the TTY using PhysicsSystem::ReportSimulationStats but can also be accessed through MotionProperties::GetSimulationStats.</li>
-		<li>JPH_USE_STD_VECTOR - Use std::vector instead of Jolt's own Array class.</li>
 	</ul>
 </details>
 

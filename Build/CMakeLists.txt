@@ -103,9 +103,6 @@ option(JPH_USE_EXTERNAL_PROFILE "Use external profiler when profiling is enabled
 # Setting this option will force the library to use malloc/free instead of allowing the user to override the memory allocator
 option(DISABLE_CUSTOM_ALLOCATOR "Disable support for a custom memory allocator" OFF)
 
-# Setting this option will force the library to use the STL vector instead of the custom Array class
-option(USE_STD_VECTOR "Use std::vector instead of own Array class" OFF)
-
 # Setting this option will compile the ObjectStream class and RTTI attribute information
 option(ENABLE_OBJECT_STREAM "Compile the ObjectStream class and RTTI attribute information" ON)
 

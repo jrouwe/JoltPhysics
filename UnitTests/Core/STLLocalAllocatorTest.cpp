@@ -15,16 +15,7 @@ TEST_SUITE("STLLocalAllocatorTest")
 	template <class ArrayType>
 	static bool sIsLocal(ArrayType &inArray)
 	{
-	#ifdef JPH_USE_STD_VECTOR
-		// Check that the data pointer is within the array.
-		// Note that when using std::vector we cannot use get_allocator as that makes a copy of the allocator internally
-		// and we've disabled the copy constructor since our allocator cannot be copied.
-		const uint8 *data = reinterpret_cast<const uint8 *>(inArray.data());
-		const uint8 *array = reinterpret_cast<const uint8 *>(&inArray);
-		return data >= array && data < array + sizeof(inArray);
-	#else
 		return inArray.get_allocator().is_local(inArray.data());
-	#endif
 	}
 #endif
 
@@ -39,7 +30,7 @@ TEST_SUITE("STLLocalAllocatorTest")
 		for (int i = 0; i < 64; ++i)
 		{
 			CHECK(arr[i] == i);
-		#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
+		#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 			// We only have to move elements once we run out of the local buffer, this happens as we resize
 			// from 16 to 32 elements, we'll reallocate again at 32 and 64
 			if constexpr (NonTrivial)
@@ -69,10 +60,8 @@ TEST_SUITE("STLLocalAllocatorTest")
 		arr.clear();
 		arr.shrink_to_fit();
 		CHECK(arr.size() == 0);
-	#ifndef JPH_USE_STD_VECTOR // Some implementations of std::vector ignore shrink_to_fit
 		CHECK(arr.capacity() == 0);
 		CHECK(arr.data() == nullptr);
-	#endif
 
 		// Allocate so we stay within the local buffer
 		for (int i = 0; i < 10; ++i)
@@ -81,14 +70,14 @@ TEST_SUITE("STLLocalAllocatorTest")
 		for (int i = 0; i < 10; ++i)
 		{
 			CHECK(arr[i] == i);
-		#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
+		#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 			// We never need to move elements as they stay within the local buffer
 			if constexpr (NonTrivial)
 				CHECK(arr[i].GetNonTriv() == 1);
 		#endif
 		}
 		CHECK(IsAligned(arr.data(), alignof(typename ArrayType::value_type)));
-	#if !defined(JPH_USE_STD_VECTOR) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR) // Doesn't work with std::vector since it doesn't use the reallocate function and runs out of space
+	#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 		CHECK(sIsLocal(arr));
 	#endif
 
