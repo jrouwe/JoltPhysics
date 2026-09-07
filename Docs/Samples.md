@@ -31,7 +31,7 @@ Note that you can watch all movies below in [a single YouTube playlist](https://
 
 ### Vehicles
 
-This categories shows vehicles created through the VehicleConstraint. These vehicles use ray- or shape casts to detect collision with the ground and simulate a vehicle with an engine, gearbox, differentials and suspension.
+This category shows vehicles created through the VehicleConstraint. These vehicles use ray- or shape casts to detect collision with the ground and simulate a vehicle with an engine, gearbox, differentials and suspension.
 
 |[![Vehicle Demo](https://img.youtube.com/vi/A_gvLH4KKDA/hqdefault.jpg)](https://www.youtube.com/watch?v=A_gvLH4KKDA)|
 |:-|
@@ -63,7 +63,7 @@ This category demonstrates how ragdolls can be made and controlled using keyfram
 
 |[![Skeleton Mapper](https://img.youtube.com/vi/hrnmgNN-m-U/hqdefault.jpg)](https://www.youtube.com/watch?v=hrnmgNN-m-U)|
 |:-|
-|*An animation is played back on a high detail skeleton ('Animation') and then mapped onto a low detail ragdoll skeleton ('Reversed Mapped'). This animation is used to drive the motors of the ragdoll. The resulting pose is mapped back to the high detail skeleton ('Mapped'). Note that the skeletons are drawn offset to make them clearer..*|
+|*An animation is played back on a high detail skeleton ('Animation') and then mapped onto a low detail ragdoll skeleton ('Reversed Mapped'). This animation is used to drive the motors of the ragdoll. The resulting pose is mapped back to the high detail skeleton ('Mapped'). Note that the skeletons are drawn offset to make them clearer.*|
 
 |[![160 Ragdolls in a Pile](https://img.youtube.com/vi/pwyCW0yNKMA/hqdefault.jpg)](https://www.youtube.com/watch?v=pwyCW0yNKMA)|
 |:-|
@@ -85,7 +85,7 @@ This category demonstrates how ragdolls can be made and controlled using keyfram
 
 |[![Soft Body Contact Listener Demo](https://img.youtube.com/vi/DmS_8d2bdOw/hqdefault.jpg)](https://www.youtube.com/watch?v=DmS_8d2bdOw)|
 |:-|
-|*Demonstrates the use of soft body contact listeners. You can use these to affect the collision response between a soft body and a rigid body by e.g. artificially making the mass of one of the two higher so that the other is less affected by the collision. Finally you can also turn a contact into a sensor contact which means you get the contact points but there will not be any collision response..*|
+|*Demonstrates the use of soft body contact listeners. You can use these to affect the collision response between a soft body and a rigid body by e.g. artificially making the mass of one of the two higher so that the other is less affected by the collision. Finally you can also turn a contact into a sensor contact which means you get the contact points but there will not be any collision response.*|
 
 |[![Soft Body Bend Constraints Demo](https://img.youtube.com/vi/A1iswelnGH4/hqdefault.jpg)](https://www.youtube.com/watch?v=A1iswelnGH4)|
 |:-|
