@@ -7,6 +7,10 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
 
 TEST_SUITE("HeightFieldShapeTests")
@@ -319,6 +323,67 @@ TEST_SUITE("HeightFieldShapeTests")
 				else
 					CHECK(verify_heights[idx] == original_heights[idx]); // We didn't modify this and it is outside of the affected range
 			}
+	}
+
+	TEST_CASE("TestSetHeightsNonPowerOf2BlockCount")
+	{
+		// 20 x 20 samples with a block size of 2 gives 10 blocks per side, which is not a power of 2.
+		// The coarser levels of the range block hierarchy are stored at stride 1 << level, only the most
+		// detailed level is stored at stride (num_blocks + 1) / 2. SetHeights must update them at the same
+		// strides, otherwise the updated ranges land on unrelated nodes and the cells below those nodes
+		// stop colliding until something big enough overlaps the wrong range.
+		const uint cSampleCount = 20;
+
+		HeightFieldShapeSettings settings;
+		settings.mSampleCount = cSampleCount;
+		settings.mBlockSize = 2;
+		settings.mMinHeightValue = 0.0f;
+		settings.mMaxHeightValue = 200.0f;
+		settings.mHeightSamples.resize(Square(cSampleCount), 0.0f);
+
+		Ref<Shape> shape = settings.Create().Get();
+		HeightFieldShape *height_field = StaticCast<HeightFieldShape>(shape);
+
+		// Raise a block aligned rectangle in one corner of the height field
+		const uint sx = 0, sy = 16, cx = 6, cy = 4;
+		const float cRaisedHeight = 100.0f;
+		Array<float> raised_heights(cx * cy, cRaisedHeight);
+		TempAllocatorMalloc temp_allocator;
+		height_field->SetHeights(sx, sy, cx, cy, raised_heights.data(), cx, temp_allocator);
+
+		// Heights as the shape quantized them, so the sphere below can be placed on the actual surface
+		Array<float> heights(Square(cSampleCount));
+		height_field->GetHeights(0, 0, cSampleCount, cSampleCount, heights.data(), cSampleCount);
+
+		// A sphere that dips 0.25 below the highest corner of a cell must collide with that cell.
+		// Its bounding box is 1 high, so it only overlaps the range of the node it is really under.
+		const float cSphereRadius = 0.5f;
+		Ref<Shape> sphere = new SphereShape(cSphereRadius);
+		CollideShapeSettings collide_settings;
+		auto test_cell = [&](uint inX, uint inY)
+		{
+			float top = max(max(heights[inY * cSampleCount + inX], heights[inY * cSampleCount + inX + 1]), max(heights[(inY + 1) * cSampleCount + inX], heights[(inY + 1) * cSampleCount + inX + 1]));
+			Vec3 sphere_position(float(inX) + 0.5f, top + cSphereRadius - 0.25f, float(inY) + 0.5f);
+			AllHitCollisionCollector<CollideShapeCollector> collector;
+			CollisionDispatch::sCollideShapeVsShape(sphere, shape, Vec3::sOne(), Vec3::sOne(), Mat44::sTranslation(sphere_position), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
+			return collector.HadHit();
+		};
+
+		// Every cell that was not raised must still collide
+		for (uint y = 0; y + 1 < cSampleCount; ++y)
+			for (uint x = 0; x + 1 < cSampleCount; ++x)
+			{
+				// Skip the raised rectangle and the cells that connect to it
+				if (x < sx + cx && y + 1 >= sy)
+					continue;
+
+				CAPTURE(x);
+				CAPTURE(y);
+				CHECK(test_cell(x, y));
+			}
+
+		// And the raised part must collide at its new height
+		CHECK(test_cell(sx + 1, sy + 1));
 	}
 
 	TEST_CASE("TestSetMaterials")
