@@ -227,6 +227,10 @@ If you receive the following error when linking:
 
 Then you have not enabled interprocedural optimizations (link time optimizations) for your own application. See the INTERPROCEDURAL_OPTIMIZATION option in CMakeLists.txt.
 
+Bitcode is deprecated on Apple platforms, but the `-flto=thin` flag (which is what `INTERPROCEDURAL_OPTIMIZATION` enables when using AppleClang) still embeds LLVM bitcode into the object files. When you consume Jolt as a static library, your own application must therefore be built with interprocedural optimizations enabled as well (via `SET_INTERPROCEDURAL_OPTIMIZATION()` or by setting `CMAKE_INTERPROCEDURAL_OPTIMIZATION ON` for your project).
+
+If you are bundling the Jolt static library into an XCFramework instead of linking it into your application, the embedded bitcode can cause errors such as `Unknown header: 0xb17c0de`. In that case disable interprocedural optimizations when building Jolt by turning the `INTERPROCEDURAL_OPTIMIZATION` cmake option off (for example with `cmake -B build -DINTERPROCEDURAL_OPTIMIZATION=OFF`). This is safe to do when the static library is distributed separately from the code that consumes it, since the Jolt static library is then recompiled as part of your own application.
+
 ### Link Error: Unresolved External Symbol
 
 If you receive a link error that looks like:
