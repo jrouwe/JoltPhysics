@@ -11,6 +11,8 @@
 
 #ifdef JPH_PLATFORM_LINUX
 	#include <sys/prctl.h>
+#elif defined(JPH_PLATFORM_MACOS)
+	#include <pthread.h>
 #endif
 
 JPH_NAMESPACE_BEGIN
@@ -25,6 +27,13 @@ void JobSystemThreadPool::Init(uint inMaxJobs, uint inMaxBarriers, int inNumThre
 	// Init queue
 	for (atomic<Job *> &j : mQueue)
 		j = nullptr;
+
+#ifdef JPH_PLATFORM_MACOS
+	// The GCD semaphore used to wake up the worker threads is associated with the default QoS class. Since the main thread
+	// usually runs at the user interactive QoS class, the Thread Performance Checker reports a priority inversion when the main
+	// thread waits for the worker threads. Lower the QoS of the calling thread to the default class to prevent this warning.
+	pthread_set_qos_class_self_np(QOS_CLASS_DEFAULT, 0);
+#endif
 
 	// Start the worker threads
 	StartThreads(inNumThreads);
