@@ -74,6 +74,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> contact_constraints[ContactPoints::Capacity];
 	Vec3 contact_points[ContactPoints::Capacity];
 	Vec3 friction_point = Vec3::sZero();
+	Vec3 friction_point1 = Vec3::sZero(), friction_point2 = Vec3::sZero();
 	for (uint c = 0; c < num_points; ++c)
 	{
 		// Calculate contact points relative to body 1 and 2
@@ -82,6 +83,12 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		// Calculate friction point
 		contact_points[c] = p;
 		friction_point += p;
+
+		// Calculate friction lever arm points per body so that the friction lever arm is not perturbed
+		// by the normal-direction separation of a speculative contact (the non-penetration constraint
+		// above is unaffected by this separation and keeps using the midpoint p)
+		friction_point1 += inManifold.mRelativeContactPointsOn1[c];
+		friction_point2 += inManifold.mRelativeContactPointsOn2[c];
 
 		// Calculate contact point relative to com
 		Vec3 r1 = p - com1;
@@ -109,6 +116,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	// Calculate distance to friction center for each point
 	float num_points_f = float(num_points);
 	friction_point /= num_points_f;
+	friction_point1 /= num_points_f;
+	friction_point2 /= num_points_f;
 	float distance_to_friction_center[ContactPoints::Capacity];
 	for (uint c = 0; c < num_points; ++c)
 	{
@@ -125,8 +134,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	friction2.SetTotalLambda(0.0f);
 	if (inCombinedFriction > 0.0f)
 	{
-		Vec3 r1 = friction_point - com1;
-		Vec3 r2 = friction_point - com2;
+		Vec3 r1 = friction_point1 - com1;
+		Vec3 r2 = friction_point2 - com2;
 
 		friction1.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, outResult.mTangent1);
 		friction2.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, outResult.mTangent2);

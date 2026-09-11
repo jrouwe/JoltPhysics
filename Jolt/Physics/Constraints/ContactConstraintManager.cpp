@@ -138,16 +138,28 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint<Type1, Type2>::Calcu
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <EMotionType Type1, EMotionType Type2>
-void ContactConstraintManager::ContactConstraint<Type1, Type2>::CalculateFrictionConstraintProperties(const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, const RVec3 *inWorldSpaceContacts, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings)
+void ContactConstraintManager::ContactConstraint<Type1, Type2>::CalculateFrictionConstraintProperties(const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, const RVec3 *inWorldSpaceContacts1, const RVec3 *inWorldSpaceContacts2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings)
 {
 	// Calculate friction part
 	if (inSettings.mCombinedFriction > 0.0f)
 	{
-		// Calculate point where the friction applies by averaging the contact points
-		RVec3 friction_point = RVec3::sZero();
+		// Calculate the point where the friction applies for each body separately by averaging that
+		// body's own contact points. For a speculative contact the two bodies' contact points are still
+		// separated along the normal, so using their shared midpoint as the friction application point
+		// (as the non-penetration constraint does) would give both friction lever arms an error term along
+		// the normal. That term is fine for the non-penetration axis, but not for the friction axes, see below.
+		RVec3 friction_point1 = RVec3::sZero(), friction_point2 = RVec3::sZero();
 		for (uint32 i = 0; i < mNumContactPoints; ++i)
-			friction_point += inWorldSpaceContacts[i];
-		friction_point /= Real(mNumContactPoints);
+		{
+			friction_point1 += inWorldSpaceContacts1[i];
+			friction_point2 += inWorldSpaceContacts2[i];
+		}
+		friction_point1 /= Real(mNumContactPoints);
+		friction_point2 /= Real(mNumContactPoints);
+
+		// Midpoint is only used for logging and for measuring the contact spread in the normal plane below,
+		// both of which are invariant to how far apart friction_point1 and friction_point2 are along the normal
+		RVec3 friction_point = 0.5_r * (friction_point1 + friction_point2);
 
 		JPH_DET_LOG("CalculateFrictionConstraintProperties: point: " << friction_point
 			<< " friction: " << inSettings.mCombinedFriction
@@ -156,13 +168,14 @@ void ContactConstraintManager::ContactConstraint<Type1, Type2>::CalculateFrictio
 		// Calculate distance of contact points to friction center in the normal plane
 		for (uint32 i = 0; i < mNumContactPoints; ++i)
 		{
-			Vec3 delta = Vec3(inWorldSpaceContacts[i] - friction_point);
+			Vec3 delta = Vec3(0.5_r * (inWorldSpaceContacts1[i] + inWorldSpaceContacts2[i]) - friction_point);
 			mContactPoints[i].mDistanceToFrictionCenter = (delta - delta.Dot(inWorldSpaceNormal) * inWorldSpaceNormal).Length();
 		}
 
-		// Calculate relative friction points
-		Vec3 r1 = Vec3(friction_point - inBody1.GetCenterOfMassPosition());
-		Vec3 r2 = Vec3(friction_point - inBody2.GetCenterOfMassPosition());
+		// Calculate relative friction points, one per body, so that the friction lever arm is not
+		// perturbed by the separation of a speculative contact along the normal
+		Vec3 r1 = Vec3(friction_point1 - inBody1.GetCenterOfMassPosition());
+		Vec3 r2 = Vec3(friction_point2 - inBody2.GetCenterOfMassPosition());
 
 		// Get surface velocity relative to tangents
 		Vec3 ws_surface_velocity = inSettings.mRelativeLinearSurfaceVelocity + inSettings.mRelativeAngularSurfaceVelocity.Cross(r1);
@@ -955,7 +968,8 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 			}
 
 			// Setup non-penetration constraints
-			RVec3 ws_contacts[MaxContactPoints];
+			RVec3 ws_contacts1[MaxContactPoints];
+			RVec3 ws_contacts2[MaxContactPoints];
 			for (uint32 i = 0; i < constraint->mNumContactPoints; ++i)
 			{
 				const CachedContactPoint &ccp = output_cm->mContactPoints[i];
@@ -964,8 +978,10 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 				RVec3 p1_ws = transform_body1 * Vec3::sLoadFloat3Unsafe(ccp.mPosition1);
 				RVec3 p2_ws = transform_body2 * Vec3::sLoadFloat3Unsafe(ccp.mPosition2);
 
-				// Remember where to apply friction
-				ws_contacts[i] = 0.5_r * (p1_ws + p2_ws);
+				// Remember where to apply friction, one contact point per body so that the friction
+				// lever arm is not perturbed by the normal-direction separation of a speculative contact
+				ws_contacts1[i] = p1_ws;
+				ws_contacts2[i] = p2_ws;
 
 				wcp.mNonPenetrationConstraint.SetTotalLambda(ccp.mNonPenetrationLambda);
 				wcp.CalculateNonPenetrationConstraintProperties(delta_time, gravity, inBody1, inBody2, constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, p1_ws, p2_ws, world_space_normal, settings, mPhysicsSettings.mMinVelocityForRestitution);
@@ -979,7 +995,7 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 			constraint->mFrictionConstraint1.SetTotalLambda(output_cm->mFrictionLambda[0]);
 			constraint->mFrictionConstraint2.SetTotalLambda(output_cm->mFrictionLambda[1]);
 			constraint->mAngularFrictionConstraint.SetTotalLambda(output_cm->mAngularFrictionLambda);
-			constraint->CalculateFrictionConstraintProperties(inBody1, inBody2, constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, ws_contacts, world_space_normal, t1, t2, settings);
+			constraint->CalculateFrictionConstraintProperties(inBody1, inBody2, constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, ws_contacts1, ws_contacts2, world_space_normal, t1, t2, settings);
 
 		#ifdef JPH_DEBUG_RENDERER
 			// Draw the manifold
@@ -1241,7 +1257,8 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			inv_i2 = Mat44::sZero();
 		}
 
-		RVec3 ws_contacts[MaxContactPoints];
+		RVec3 ws_contacts1[MaxContactPoints];
+		RVec3 ws_contacts2[MaxContactPoints];
 		for (int i = 0; i < num_contact_points; ++i)
 		{
 			// Convert to world space and set positions
@@ -1249,8 +1266,10 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			RVec3 p1_ws = inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn1[i];
 			RVec3 p2_ws = inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn2[i];
 
-			// Remember where to apply friction
-			ws_contacts[i] = 0.5_r * (p1_ws + p2_ws);
+			// Remember where to apply friction, one contact point per body so that the friction
+			// lever arm is not perturbed by the normal-direction separation of a speculative contact
+			ws_contacts1[i] = p1_ws;
+			ws_contacts2[i] = p2_ws;
 
 			// Convert to local space to the body
 			Vec3 p1_ls = Vec3(inverse_transform_body1 * p1_ws);
@@ -1294,7 +1313,7 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			constraint->mFrictionConstraint2.SetTotalLambda(0.0f);
 			constraint->mAngularFrictionConstraint.SetTotalLambda(0.0f);
 		}
-		constraint->CalculateFrictionConstraintProperties(inBody1, inBody2, constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, ws_contacts, inManifold.mWorldSpaceNormal, t1, t2, settings);
+		constraint->CalculateFrictionConstraintProperties(inBody1, inBody2, constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, ws_contacts1, ws_contacts2, inManifold.mWorldSpaceNormal, t1, t2, settings);
 
 #ifdef JPH_DEBUG_RENDERER
 		// Draw the manifold
