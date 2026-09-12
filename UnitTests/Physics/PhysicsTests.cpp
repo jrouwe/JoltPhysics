@@ -1810,6 +1810,55 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), angular_velocity, 5.0e-3f);
 	}
 
+	// This test checks friction vs speculative contact points. A ball bouncing on the floor will have speculative contact points.
+	// These speculative contact points should not be applied to a point outside the shape.
+	TEST_CASE("TestFrictionVsSpeculativeContactPoint")
+	{
+		PhysicsTestContext c;
+		BodyInterface &bi = c.GetBodyInterface();
+
+		// Create floor
+		Body &floor = c.CreateFloor();
+		floor.SetRestitution(0.8f);
+		floor.SetFriction(0.5f);
+
+		// Create a sphere rolling over the floor
+		const float radius = 0.1f;
+		const float v0 = 2.0f;
+		BodyCreationSettings bcs(new SphereShape(radius), RVec3(0, radius, 1), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		bcs.mRestitution = 0.8f;
+		bcs.mFriction = 0.5f;
+		bcs.mLinearVelocity = Vec3(v0, 0, 0);
+		bcs.mLinearDamping = 0.0f;
+		bcs.mAngularDamping = 0.0f;
+		BodyID id1 = bi.CreateAndAddBody(bcs, EActivation::Activate);
+
+		// Create a sphere initially bouncing on the floor and eventually rolling over the floor
+		bcs.mPosition = RVec3(0, 1.35f, -1.0f);
+		BodyID id2 = bi.CreateAndAddBody(bcs, EActivation::Activate);
+
+		c.Simulate(5.0f);
+
+		// Assuming the sphere will eventually roll without slipping so that w1 = v1 / r
+		// and that the impulse at the friction point will lead to this through I * w1 = m * r * (v0 - v1)
+		// with I = 2 / 5 * m * r^2 (inertia of a solid sphere) this leads to
+		// 2 / 5 * m * r^2 * w1 = m * r * (v0 - v1)
+		// 2 / 5 * r * w1 = v0 - v1
+		// 2 / 5 * v1 = v0 - v1
+		// v1 = 5 / 7 * v0
+		float expected_v1 = (5.0f / 7.0f) * v0;
+		float expected_w1 = expected_v1 / radius;
+
+		// Test that both spheres have reached this velocity after some time
+		Vec3 v1, w1, v2, w2;
+		bi.GetLinearAndAngularVelocity(id1, v1, w1);
+		bi.GetLinearAndAngularVelocity(id2, v2, w2);
+		CHECK_APPROX_EQUAL(v1, Vec3(expected_v1, 0, 0), 1.0e-4f);
+		CHECK_APPROX_EQUAL(w1, Vec3(0, 0, -expected_w1), 1.0e-3f);
+		CHECK_APPROX_EQUAL(v2, Vec3(expected_v1, 0, 0), 1.0e-4f);
+		CHECK_APPROX_EQUAL(w2, Vec3(0, 0, -expected_w1), 1.0e-3f);
+	}
+
 	TEST_CASE("TestAllowedDOFs")
 	{
 		for (uint allowed_dofs = 1; allowed_dofs <= 0b111111; ++allowed_dofs)
