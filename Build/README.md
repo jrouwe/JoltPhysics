@@ -54,7 +54,7 @@ There are a number of user configurable C++ defines that turn on/off certain fea
 		<li>JPH_USE_F16C - Enable half float CPU instructions (default: on, x86/x64 only)</li>
 		<li>JPH_USE_FMADD - Enable fused multiply add CPU instructions (default: on, x86/x64 only)</li>
 		<li>JPH_USE_LZCNT - Enable the lzcnt CPU instruction (default: on, x86/x64 only)</li>
-		<li>JPH_USE_NEON - Enable NEON on ARM (default: on for 64-bit ARM)</li> 
+		<li>JPH_USE_NEON - Enable NEON on ARM (default: on for 64-bit ARM)</li>
 		<li>JPH_USE_RVV - Enable RVV on RISC-V (default: off)</li>
 		<li>JPH_USE_SSE - Use SSE2 instructions (enabled on x86/x64)</li>
 		<li>JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (default: on, x86/x64 only)</li>
@@ -226,6 +226,20 @@ If you receive the following error when linking:
 ```
 
 Then you have not enabled interprocedural optimizations (link time optimizations) for your own application. See the INTERPROCEDURAL_OPTIMIZATION option in CMakeLists.txt.
+
+### Unknown Header Error on Apple Platforms
+
+Apple's application bitcode workflow is deprecated, but the `-flto=thin` flag (which is what the `INTERPROCEDURAL_OPTIMIZATION` cmake flag enables in non-debug builds) still produces object files with LLVM bitcode.
+If you package Jolt's static library into an XCFramework, the embedded bitcode can cause errors such as:
+
+```
+Unknown header: 0xb17c0de
+```
+
+If you receive this error, disable interprocedural optimizations by turning the `INTERPROCEDURAL_OPTIMIZATION` cmake option `OFF`.
+This removes LLVM bitcode and produces regular object files instead. Disabling this option disables link-time and cross-translation-unit optimizations so may reduce performance.
+
+When directly linking Jolt's static library into your application, this error should not occur and you can leave the `INTERPROCEDURAL_OPTIMIZATION` option `ON`.
 
 ### Link Error: Unresolved External Symbol
 
