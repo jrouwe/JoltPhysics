@@ -10,6 +10,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * If `GJKClosestPoint::CastShape` failed to converge, it was accidentally using the rejected support point to calculate the contact point. In some cases this could lead to returning the wrong contact point.
 * When colliding with very long and thin triangles, GJK could fail to find the closest point to the triangle because it used a fixed epsilon to determine if the triangle was too thin. Changed this epsilon so that it is dependent on the length of the edges of the triangle so that we fall back to closest point to edge in those cases.
 * MinGW32 defines `__STDCPP_DEFAULT_NEW_ALIGNMENT__` as 16 but its allocations are actually 8 byte aligned. This caused unaligned read access violations in `TriangleSplitterBinning::mBins`.
+* `HeightFieldShape::SetHeights` corrupted the bounding volume tree when the number of blocks (`GetNumBlocks`) was not a power of 2. This resulted in collision queries possibly failing to report the correct collision.
 
 ### Removed functionality
 
