@@ -1166,7 +1166,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	{
 		// Get offset and stride for destination blocks. Only the most detailed level is stored with a stride of
 		// (num_blocks + 1) / 2, all coarser levels are stored with a stride of 1 << level (see the constructor and
-		// WalkHeightField), so the stride cannot be derived from the halved block count.
+		// WalkHeightField)
 		uint dst_range_block_offset = sGridOffsets[max_level - 2];
 		uint dst_range_block_stride = 1u << (max_level - 2);
 
