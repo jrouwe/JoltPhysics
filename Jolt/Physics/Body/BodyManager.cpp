@@ -335,6 +335,10 @@ bool BodyManager::AddBodyWithCustomID(Body *ioBody, const BodyID &inBodyID)
 
 		// Update cached number of bodies
 		mNumBodies++;
+
+		// A custom ID establishes the current sequence number for this slot.
+		// Keep normal allocation from immediately reissuing the same ID after this body is destroyed.
+		mBodySequenceNumbers[idx] = inBodyID.GetSequenceNumber();
 	}
 
 	// Assign the ID

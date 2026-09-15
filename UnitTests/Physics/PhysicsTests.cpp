@@ -250,6 +250,20 @@ TEST_SUITE("PhysicsTests")
 		b2 = bi.CreateBodyWithID(BodyID(0, 2), bc);
 		CHECK(b2 == nullptr);
 
+		// Destroy the first body
+		bi.DestroyBody(b1->GetID());
+
+		// Create a body with a custom ID and a high sequence number
+		b1 = bi.CreateBodyWithID(BodyID(0, 10), bc);
+		CHECK(b1->GetID() == BodyID(0, 10));
+
+		// Destroy it again
+		bi.DestroyBody(b1->GetID());
+
+		// Create another body in the normal way and check that we reuse the body index but that its sequence number got updated
+		b1 = bi.CreateBody(bc);
+		CHECK(b1->GetID() == BodyID(0, 11));
+
 		// Create body with different ID (leave 1 open slot)
 		b2 = bi.CreateBodyWithoutID(bc); // Using syntax that allows separation of allocation and assigning an ID
 		CHECK(b2 != nullptr);
