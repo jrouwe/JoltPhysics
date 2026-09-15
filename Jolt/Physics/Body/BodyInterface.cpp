@@ -308,12 +308,12 @@ void BodyInterface::SetShape(const BodyID &inBodyID, const Shape *inShape, bool 
 			// Update the shape
 			body.SetShapeInternal(inShape, inUpdateMassProperties);
 
+			// Flag collision cache invalid for this body
+			mBodyManager->InvalidateContactCacheForBody(body);
+
 			// Notify broadphase of change
 			if (body.IsInBroadPhase())
 			{
-				// Flag collision cache invalid for this body
-				mBodyManager->InvalidateContactCacheForBody(body);
-
 				BodyID id = body.GetID();
 				mBroadPhase->NotifyBodiesAABBChanged(&id, 1);
 
@@ -338,12 +338,12 @@ void BodyInterface::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inPreviou
 		// Recalculate bounding box
 		body.CalculateWorldSpaceBoundsInternal();
 
+		// Flag collision cache invalid for this body
+		mBodyManager->InvalidateContactCacheForBody(body);
+
 		// Notify broadphase of change
 		if (body.IsInBroadPhase())
 		{
-			// Flag collision cache invalid for this body
-			mBodyManager->InvalidateContactCacheForBody(body);
-
 			BodyID id = body.GetID();
 			mBroadPhase->NotifyBodiesAABBChanged(&id, 1);
 
@@ -1008,8 +1008,7 @@ void BodyInterface::SetUseManifoldReduction(const BodyID &inBodyID, bool inUseRe
 			body.SetUseManifoldReduction(inUseReduction);
 
 			// Flag collision cache invalid for this body
-			if (body.IsInBroadPhase())
-				mBodyManager->InvalidateContactCacheForBody(body);
+			mBodyManager->InvalidateContactCacheForBody(body);
 		}
 	}
 }
@@ -1092,7 +1091,7 @@ const PhysicsMaterial *BodyInterface::GetMaterial(const BodyID &inBodyID, const 
 void BodyInterface::InvalidateContactCache(const BodyID &inBodyID)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
-	if (lock.SucceededAndIsInBroadPhase())
+	if (lock.Succeeded())
 		mBodyManager->InvalidateContactCacheForBody(lock.GetBody());
 }
 
