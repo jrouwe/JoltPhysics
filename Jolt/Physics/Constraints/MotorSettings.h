@@ -28,7 +28,7 @@ constexpr bool				IsPositionMotor(EMotorState inMotorState)	{ return (int(inMoto
 static_assert(!IsVelocityMotor(EMotorState::Off));
 static_assert(IsVelocityMotor(EMotorState::Velocity));
 static_assert(!IsVelocityMotor(EMotorState::Position));
-static_assert(IsPositionMotor(EMotorState::PositionAndVelocity));
+static_assert(IsVelocityMotor(EMotorState::PositionAndVelocity));
 static_assert(!IsPositionMotor(EMotorState::Off));
 static_assert(!IsPositionMotor(EMotorState::Velocity));
 static_assert(IsPositionMotor(EMotorState::Position));
