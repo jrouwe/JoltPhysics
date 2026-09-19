@@ -16,6 +16,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/BroadPhase/BroadPhaseTest.h
 	${SAMPLES_ROOT}/Tests/Character/CharacterBaseTest.cpp
 	${SAMPLES_ROOT}/Tests/Character/CharacterBaseTest.h
+	${SAMPLES_ROOT}/Tests/Character/CharacterGatheringTest.cpp
+	${SAMPLES_ROOT}/Tests/Character/CharacterGatheringTest.h
 	${SAMPLES_ROOT}/Tests/Character/CharacterPlanetTest.cpp
 	${SAMPLES_ROOT}/Tests/Character/CharacterPlanetTest.h
 	${SAMPLES_ROOT}/Tests/Character/CharacterTest.cpp

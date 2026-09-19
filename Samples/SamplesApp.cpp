@@ -318,6 +318,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CharacterTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CharacterVirtualTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CharacterSpaceShipTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CharacterPlanetTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CharacterGatheringTest)
 
 static TestNameAndRTTI sCharacterTests[] =
 {
@@ -325,6 +326,7 @@ static TestNameAndRTTI sCharacterTests[] =
 	{ "Character Virtual",					JPH_RTTI(CharacterVirtualTest) },
 	{ "Character Virtual vs Space Ship",	JPH_RTTI(CharacterSpaceShipTest) },
 	{ "Character Virtual vs Planet",		JPH_RTTI(CharacterPlanetTest) },
+	{ "Character Gathering",				JPH_RTTI(CharacterGatheringTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, WaterShapeTest)
