@@ -5,6 +5,8 @@ This document lists all breaking API changes by date and by release tag. Note th
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See [Saving Shapes](https://jrouwe.github.io/JoltPhysics/#saving-shapes) for further information.
 
 ## Changes between v5.6.0 and latest
+
+* 20260919 - Removed `JPH_NO_DEBUG` and its dependency on `NDEBUG`, define `JPH_DEBUG` instead in the debug build. CMake files have been updated, so this is only relevant if you compile with your own build system. (6f2ed8c679eb8878d6cff4cb4c210a63d9e20028)
 * 20260905 - Removed support for using `std::vector` instead of `JPH::Array` (define `JPH_USE_STD_VECTOR`). This is a pretty obscure build option and not worth the continous testing needed to support it. (d52033ace5a33341985634d7bec5f7b1c4dec3ad)
 * 20260728 - Removed `PhysicsSettings::mDeterministicSimulation`. Turning this off has negative impact on stacking. The simulation is now always deterministic. (a5d1034b0760ba68f58fd80872635272e544b898)
 
