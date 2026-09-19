@@ -9,11 +9,6 @@
 #define JPH_VERSION_MINOR 6
 #define JPH_VERSION_PATCH 1
 
-// Determine if we want extra debugging code to be active
-#if !defined(NDEBUG) && !defined(JPH_NO_DEBUG)
-	#define JPH_DEBUG
-#endif
-
 // Always turn on asserts in Debug mode
 #if defined(JPH_DEBUG) && !defined(JPH_ENABLE_ASSERTS)
 	#define JPH_ENABLE_ASSERTS
