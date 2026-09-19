@@ -252,6 +252,7 @@ else()
 		# Cross compiler flags
 		if (CROSS_COMPILE_ARM AND NOT ("${CROSS_COMPILE_ARM_TARGET}" STREQUAL ""))
 			add_compile_options(--target=${CROSS_COMPILE_ARM_TARGET})
+			add_link_options(--target=${CROSS_COMPILE_ARM_TARGET})
 		endif()
 	endif()
 
