@@ -211,9 +211,16 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	mBodyManager.ResetSimulationStats();
 #endif
 
-	// Calculate ratio between current and previous frame delta time to scale initial constraint forces
+	// Calculate ratio between current and previous frame delta time to scale initial constraint forces.
+	// Note that scaling of the impulses works perfectly for a system in equilibrium. When a body is falling on another body, it will receive
+	// a large impulse to stop the body. In the next step, a much smaller impulse needs to be applied to counter gravity.
+	// This means that warm starting will initially give the body on top a much higher impulse that it needs.
+	// If you scale that impulse up because the delta time ratio >> 1 then the body will get such a large velocity that the solver
+	// cannot correct it anymore. We therefore clamp the ratio to ensure that the solver can still correct the excess velocity.
+	// Note that this will make a stack in equilibrium less stable when there are large delta time differences between steps.
+	// See: https://github.com/jrouwe/JoltPhysics/discussions/2129#discussioncomment-18525044
 	float step_delta_time = inDeltaTime / inCollisionSteps;
-	float warm_start_impulse_ratio = mPreviousStepDeltaTime > 0.0f? step_delta_time / mPreviousStepDeltaTime : 0.0f;
+	float warm_start_impulse_ratio = mPreviousStepDeltaTime > 0.0f? min(step_delta_time / mPreviousStepDeltaTime, 4.0f) : 0.0f;
 	mPreviousStepDeltaTime = step_delta_time;
 
 	// Create the context used for passing information between jobs
