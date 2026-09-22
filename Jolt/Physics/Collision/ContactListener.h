@@ -69,7 +69,6 @@ enum class ValidateResult
 /// Note that contact listener callbacks are called from multiple threads at the same time when all bodies are locked, this means you cannot
 /// use PhysicsSystem::GetBodyInterface / PhysicsSystem::GetBodyLockInterface but must use PhysicsSystem::GetBodyInterfaceNoLock / PhysicsSystem::GetBodyLockInterfaceNoLock instead.
 /// If you use a locking interface, the simulation will deadlock. You're only allowed to read from the bodies and you can't change physics state.
-/// During OnContactRemoved you cannot access the bodies at all, see the comments at that function.
 ///
 /// While a callback can come from multiple threads, all callbacks relating to a single body pair are serialized.
 /// For EMotionQuality::Discrete bodies, during every 'collision step' in a PhysicsSystem::Update, you will receive at most one OnContactAdded/Persisted/Removed call per body/sub shape pair.
@@ -124,12 +123,17 @@ public:
 
 	/// Called whenever a contact was detected last update but is not detected anymore.
 	///
-	/// You cannot access the bodies at the time of this callback because:
-	/// - All bodies are locked at the time of this callback.
-	/// - Some properties of the bodies are being modified from another thread at the same time.
-	/// - The body may have been removed and destroyed (you'll receive an OnContactRemoved callback in the PhysicsSystem::Update after the body has been removed).
+	/// Note that this callback is called when all bodies are locked, so don't use any locking functions! See detailed class description of ContactListener.
 	///
-	/// Cache what you need in the OnContactAdded and OnContactPersisted callbacks and store it in a separate structure to use during this callback.
+	/// Beware when trying to access the bodies at the time of callback:
+	/// - Some properties of the bodies are being modified from another thread at the same time.
+	/// Things that the simulation doesn't modify are safe to read (e.g. user data, if sensor, if added to system etc.).
+	/// Things that the simulation does modify (e.g. position, rotation, velocity, bounding box) are not safe to read.
+	/// Checking Body::IsActive may return that the body is active but another thread can be in the process of making it go to sleep.
+	/// Writing to the bodies is not allowed.
+	/// - The body may have been removed and destroyed (you'll receive an OnContactRemoved callback in the PhysicsSystem::Update after the body has been removed). Check that the body still exists.
+	///
+	/// If you need the properties that are being written, cache what you need in the OnContactAdded and OnContactPersisted callbacks and store it in a separate structure to use during this callback.
 	/// Alternatively, you could just record that the contact was removed and process it after PhysicsSystem::Update.
 	///
 	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic.
