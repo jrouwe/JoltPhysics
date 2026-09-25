@@ -23,6 +23,53 @@ JPH_NAMESPACE_BEGIN
 
 using namespace literals;
 
+// Approximate reciprocal square roots are not bit identical between architectures,
+// so the fast paths are only used when cross platform determinism is not required.
+static JPH_INLINE float sCalculateFrictionScale(float inMaxLambdaF, float inTotalLambdaSq)
+{
+#ifndef JPH_CROSS_PLATFORM_DETERMINISTIC
+	#if defined(JPH_USE_SSE) && !defined(JPH_PLATFORM_WASM)
+		if (inTotalLambdaSq > numeric_limits<float>::min())
+		{
+			__m128 len_sq = _mm_set_ss(inTotalLambdaSq);
+			__m128 inv_len = _mm_rsqrt_ss(len_sq);
+			__m128 half_len_sq = _mm_mul_ss(_mm_set_ss(0.5f), len_sq);
+			__m128 inv_len_sq = _mm_mul_ss(inv_len, inv_len);
+			inv_len = _mm_mul_ss(inv_len, _mm_sub_ss(_mm_set_ss(1.5f), _mm_mul_ss(half_len_sq, inv_len_sq)));
+			return inMaxLambdaF * _mm_cvtss_f32(inv_len);
+		}
+	#elif defined(JPH_USE_NEON)
+		if (inTotalLambdaSq > numeric_limits<float>::min())
+		{
+			// vrsqrts_f32 accuracy is less so two Newton-Raphson steps are needed
+			float32x2_t len_sq = vdup_n_f32(inTotalLambdaSq);
+			float32x2_t inv_len = vrsqrte_f32(len_sq);
+			inv_len = vmul_f32(inv_len, vrsqrts_f32(len_sq, vmul_f32(inv_len, inv_len)));
+			inv_len = vmul_f32(inv_len, vrsqrts_f32(len_sq, vmul_f32(inv_len, inv_len)));
+			return inMaxLambdaF * vget_lane_f32(inv_len, 0);
+		}
+	#elif defined(JPH_USE_RVV)
+		if (inTotalLambdaSq > numeric_limits<float>::min())
+		{
+			// vfrsqrt7 also needs two Newton-Raphson iterations
+			vfloat32m1_t len_sq = __riscv_vfmv_v_f_f32m1(inTotalLambdaSq, 1);
+			vfloat32m1_t half_len_sq = __riscv_vfmul_vf_f32m1(len_sq, 0.5f, 1);
+			vfloat32m1_t inv_len = __riscv_vfrsqrt7_v_f32m1(len_sq, 1);
+			for (int i = 0; i < 2; ++i)
+			{
+				vfloat32m1_t t = __riscv_vfmul_vv_f32m1(inv_len, inv_len, 1);
+				t = __riscv_vfmul_vv_f32m1(half_len_sq, t, 1);
+				t = __riscv_vfrsub_vf_f32m1(t, 1.5f, 1);
+				inv_len = __riscv_vfmul_vv_f32m1(inv_len, t, 1);
+			}
+			return inMaxLambdaF * __riscv_vfmv_f_s_f32m1_f32(inv_len);
+		}
+	#endif
+#endif // JPH_CROSS_PLATFORM_DETERMINISTIC
+
+	return inMaxLambdaF / Sqrt(inTotalLambdaSq);
+}
+
 #ifdef JPH_DEBUG_RENDERER
 bool ContactConstraintManager::sDrawContactPoint = false;
 bool ContactConstraintManager::sDrawSupportingFaces = false;
@@ -823,6 +870,9 @@ JPH_INLINE ContactConstraintManager::ContactConstraint<Type1, Type2> *ContactCon
 	constraint->mBody2 = &inBody2;
 	constraint->mSortKey = inSortKey;
 	inWorldSpaceNormal.StoreFloat3(&constraint->mWorldSpaceNormal);
+	Vec3 tangent1 = inWorldSpaceNormal.GetNormalizedPerpendicular();
+	tangent1.StoreFloat3(&constraint->mWorldSpaceTangent1);
+	inWorldSpaceNormal.Cross(tangent1).StoreFloat3(&constraint->mWorldSpaceTangent2);
 	constraint->mCombinedFriction = inSettings.mCombinedFriction;
 	constraint->mInvInertiaScale1 = inSettings.mInvInertiaScale1;
 	constraint->mInvInertiaScale2 = inSettings.mInvInertiaScale2;
@@ -1726,7 +1776,7 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraintBase &i
 		float total_lambda_sq = Square(lambda1) + Square(lambda2);
 		if (total_lambda_sq > Square(max_linear_lambda))
 		{
-			float scale = max_linear_lambda / Sqrt(total_lambda_sq);
+			float scale = sCalculateFrictionScale(max_linear_lambda, total_lambda_sq);
 			lambda1 *= scale;
 			lambda2 *= scale;
 		}
