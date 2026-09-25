@@ -8,7 +8,9 @@ JPH_NAMESPACE_BEGIN
 
 static void DummyTrace([[maybe_unused]] const char *inFMT, ...)
 {
-	JPH_ASSERT(false);
+	// Please override the 'Trace' function pointer with your own implementation so you can see the output of the physics system.
+	// Triggering a breakpoint to make it obvious that this needs to be done.
+	JPH_ASSERT(false, "Please override Trace");
 };
 
 TraceFunction Trace = DummyTrace;
