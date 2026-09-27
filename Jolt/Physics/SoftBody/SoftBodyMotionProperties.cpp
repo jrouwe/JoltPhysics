@@ -413,7 +413,7 @@ void SoftBodyMotionProperties::ApplyDihedralBendConstraints(const SoftBodyUpdate
 		// Calculate constraint equation
 		// As per "Strain Based Dynamics" Appendix A we need to negate the gradients when (n1 x n2) . e > 0, instead we make sure that the sign of the constraint equation is correct
 		float sign = Sign(n2.Cross(n1).Dot(e));
-		float d = n1.Dot(n2) / Sqrt(n1_len_sq_n2_len_sq);
+		float d = MulRSqrtApproximate(n1.Dot(n2), n1_len_sq_n2_len_sq);
 		float c = sign * ACosApproximate(d) - b->mInitialAngle;
 
 		// Ensure the range is -PI to PI
@@ -693,7 +693,7 @@ void SoftBodyMotionProperties::ApplyLRAConstraints(uint inStartIndex, uint inEnd
 		Vec3 delta = vertex1.mPosition - x0;
 		float delta_len_sq = delta.LengthSq();
 		if (delta_len_sq > Square(lra->mMaxDistance))
-			vertex1.mPosition = x0 + delta * lra->mMaxDistance / Sqrt(delta_len_sq);
+			vertex1.mPosition = x0 + delta * MulRSqrtApproximate(lra->mMaxDistance, delta_len_sq);
 	}
 }
 

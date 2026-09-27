@@ -148,4 +148,14 @@ TEST_SUITE("Mat44Tests")
 	}
 
 	JPH_SUPPRESS_WARNING_POP
+
+	TEST_CASE("TestMulRSqrtApproximate")
+	{
+		for (float y = FLT_MIN; y < 1.0e10f; y *= 1.5f)
+		{
+			float result = MulRSqrtApproximate(5.0f, y);
+			float expected = (5.0f / Sqrt(y));
+			CHECK_APPROX_EQUAL(expected, result, expected * 3.0e-7f); // about 22 bits of precision
+		}
+	}
 }

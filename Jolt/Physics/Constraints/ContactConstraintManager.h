@@ -459,15 +459,16 @@ private:
 		/// Get the tangents for this contact constraint
 		JPH_INLINE void			GetTangents(Vec3 &outTangent1, Vec3 &outTangent2) const
 		{
-			Vec3 ws_normal = GetWorldSpaceNormal();
-			outTangent1 = ws_normal.GetNormalizedPerpendicular();
-			outTangent2 = ws_normal.Cross(outTangent1);
+			outTangent1 = Vec3::sLoadFloat3Unsafe(mWorldSpaceTangent1);
+			outTangent2 = Vec3::sLoadFloat3Unsafe(mWorldSpaceTangent2);
 		}
 
 		Body *					mBody1;
 		Body *					mBody2;
 		uint64					mSortKey;
 		Float3					mWorldSpaceNormal;
+		Float3					mWorldSpaceTangent1;
+		Float3					mWorldSpaceTangent2;
 		float					mCombinedFriction;
 		float					mInvMass1;
 		float					mInvInertiaScale1;

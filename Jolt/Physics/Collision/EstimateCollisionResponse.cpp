@@ -161,9 +161,9 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 
 			// If the total lambda that we will apply is too large, scale it back
 			float total_lambda_sq = Square(lambda1) + Square(lambda2);
-			if (total_lambda_sq > Square(max_linear_lambda))
+			if (total_lambda_sq > Square(max_linear_lambda) + FLT_MIN) // ensure total_lambda_sq > FLT_MIN to avoid division by zero in MulRSqrtApproximate
 			{
-				float scale = max_linear_lambda / Sqrt(total_lambda_sq);
+				float scale = MulRSqrtApproximate(max_linear_lambda, total_lambda_sq);
 				lambda1 *= scale;
 				lambda2 *= scale;
 			}

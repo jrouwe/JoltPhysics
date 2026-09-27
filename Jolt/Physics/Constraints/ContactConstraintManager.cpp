@@ -823,6 +823,9 @@ JPH_INLINE ContactConstraintManager::ContactConstraint<Type1, Type2> *ContactCon
 	constraint->mBody2 = &inBody2;
 	constraint->mSortKey = inSortKey;
 	inWorldSpaceNormal.StoreFloat3(&constraint->mWorldSpaceNormal);
+	Vec3 tangent1 = inWorldSpaceNormal.GetNormalizedPerpendicular();
+	tangent1.StoreFloat3(&constraint->mWorldSpaceTangent1);
+	inWorldSpaceNormal.Cross(tangent1).StoreFloat3(&constraint->mWorldSpaceTangent2);
 	constraint->mCombinedFriction = inSettings.mCombinedFriction;
 	constraint->mInvInertiaScale1 = inSettings.mInvInertiaScale1;
 	constraint->mInvInertiaScale2 = inSettings.mInvInertiaScale2;
@@ -1724,9 +1727,9 @@ bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraintBase &i
 
 		// If the total lambda that we will apply is too large, scale it back
 		float total_lambda_sq = Square(lambda1) + Square(lambda2);
-		if (total_lambda_sq > Square(max_linear_lambda))
+		if (total_lambda_sq > Square(max_linear_lambda) + FLT_MIN) // ensure total_lambda_sq > FLT_MIN to avoid division by zero in MulRSqrtApproximate
 		{
-			float scale = max_linear_lambda / Sqrt(total_lambda_sq);
+			float scale = MulRSqrtApproximate(max_linear_lambda, total_lambda_sq);
 			lambda1 *= scale;
 			lambda2 *= scale;
 		}
