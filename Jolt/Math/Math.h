@@ -111,6 +111,44 @@ JPH_INLINE constexpr T Cubed(T inV)
 	return inV * inV * inV;
 }
 
+/// Calculates approximate inA / Sqrt(inB).
+/// Approximate reciprocal square roots are not bit identical between architectures,
+/// so the fast paths are only used when cross platform determinism is not required.
+/// Note that inB must be bigger or equal than FLT_MIN, otherwise the result can be Inf.
+JPH_INLINE float MulRSqrtApproximate(float inA, float inB)
+{
+	JPH_ASSERT(inB >= FLT_MIN);
+
+#ifndef JPH_CROSS_PLATFORM_DETERMINISTIC
+	#if defined(JPH_USE_SSE) && !defined(JPH_PLATFORM_WASM)
+		// One Newton-Raphson step: y' = y * (1.5 - 0.5 * x * y^2)
+		__m128 b = _mm_set_ss(inB);
+		__m128 rsqrtb = _mm_rsqrt_ss(b);
+		rsqrtb = _mm_mul_ss(rsqrtb, _mm_sub_ss(_mm_set_ss(1.5f), _mm_mul_ss(_mm_mul_ss(_mm_set_ss(0.5f), b), _mm_mul_ss(rsqrtb, rsqrtb))));
+		return inA * _mm_cvtss_f32(rsqrtb);
+	#elif defined(JPH_USE_NEON)
+		// vrsqrts_f32 accuracy is less so two Newton-Raphson steps are needed
+		float32x2_t b = vdup_n_f32(inB);
+		float32x2_t rsqrtb = vrsqrte_f32(b);
+		rsqrtb = vmul_f32(rsqrtb, vrsqrts_f32(b, vmul_f32(rsqrtb, rsqrtb)));
+		rsqrtb = vmul_f32(rsqrtb, vrsqrts_f32(b, vmul_f32(rsqrtb, rsqrtb)));
+		return inA * vget_lane_f32(rsqrtb, 0);
+	#elif defined(JPH_USE_RVV)
+		// vfrsqrt7 also needs two Newton-Raphson iterations
+		vfloat32m1_t b = __riscv_vfmv_v_f_f32m1(inB, 1);
+		vfloat32m1_t half_b = __riscv_vfmul_vf_f32m1(b, 0.5f, 1);
+		vfloat32m1_t rsqrtb = __riscv_vfrsqrt7_v_f32m1(b, 1);
+		rsqrtb = __riscv_vfmul_vv_f32m1(rsqrtb, __riscv_vfrsub_vf_f32m1(__riscv_vfmul_vv_f32m1(half_b, __riscv_vfmul_vv_f32m1(rsqrtb, rsqrtb, 1), 1), 1.5f, 1), 1);
+		rsqrtb = __riscv_vfmul_vv_f32m1(rsqrtb, __riscv_vfrsub_vf_f32m1(__riscv_vfmul_vv_f32m1(half_b, __riscv_vfmul_vv_f32m1(rsqrtb, rsqrtb, 1), 1), 1.5f, 1), 1);
+		return inA * __riscv_vfmv_f_s_f32m1_f32(rsqrtb);
+	#else
+		return inA / Sqrt(inB);
+	#endif
+#else
+	return inA / Sqrt(inB);
+#endif // JPH_CROSS_PLATFORM_DETERMINISTIC	
+}
+
 /// Get the sign of a value
 template <typename T>
 JPH_INLINE constexpr T Sign(T inV)
