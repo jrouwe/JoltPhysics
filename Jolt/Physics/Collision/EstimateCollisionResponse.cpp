@@ -17,8 +17,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	JPH_ASSERT(num_points == inManifold.mRelativeContactPointsOn2.size());
 
 	// Calculate friction directions
-	outResult.mTangent1 = inManifold.mWorldSpaceNormal.GetNormalizedPerpendicular();
-	outResult.mTangent2 = inManifold.mWorldSpaceNormal.Cross(outResult.mTangent1);
+	Vec3 tangent1 = inManifold.mWorldSpaceNormal.GetNormalizedPerpendicular();
+	Vec3 tangent2 = inManifold.mWorldSpaceNormal.Cross(tangent1);
 
 	// Get body velocities
 	EMotionType motion_type1 = inBody1.GetMotionType();
@@ -128,8 +128,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		Vec3 r1 = friction_point - com1;
 		Vec3 r2 = friction_point - com2;
 
-		friction1.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, outResult.mTangent1);
-		friction2.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, outResult.mTangent2);
+		friction1.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, tangent1);
+		friction2.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, tangent2);
 
 		if (num_points > 1)
 			angular_friction.CalculateConstraintProperties(inv_i1, inv_i2, inManifold.mWorldSpaceNormal);
@@ -156,8 +156,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 			max_angular_lambda *= inCombinedFriction;
 
 			// Calculate impulse to stop motion in tangential direction
-			float lambda1 = friction1.SolveVelocityConstraintGetTotalLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, outResult.mTangent1);
-			float lambda2 = friction2.SolveVelocityConstraintGetTotalLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, outResult.mTangent2);
+			float lambda1 = friction1.SolveVelocityConstraintGetTotalLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, tangent1);
+			float lambda2 = friction2.SolveVelocityConstraintGetTotalLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, tangent2);
 
 			// If the total lambda that we will apply is too large, scale it back
 			float total_lambda_sq = Square(lambda1) + Square(lambda2);
@@ -169,8 +169,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 			}
 
 			// Apply the friction impulse
-			friction1.SolveVelocityConstraintApplyLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, inv_m1, inv_m2, outResult.mTangent1, lambda1);
-			friction2.SolveVelocityConstraintApplyLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, inv_m1, inv_m2, outResult.mTangent2, lambda2);
+			friction1.SolveVelocityConstraintApplyLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, inv_m1, inv_m2, tangent1, lambda1);
+			friction2.SolveVelocityConstraintApplyLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, inv_m1, inv_m2, tangent2, lambda2);
 
 			// Apply angular friction
 			if (num_points > 1)
@@ -186,8 +186,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	outResult.mContactImpulse.resize(num_points);
 	for (uint c = 0; c < num_points; ++c)
 		outResult.mContactImpulse[c] = contact_constraints[c].GetTotalLambda();
-	outResult.mFrictionImpulse1 = friction1.GetTotalLambda();
-	outResult.mFrictionImpulse2 = friction2.GetTotalLambda();
+	outResult.mFrictionImpulse = friction1.GetTotalLambda() * tangent1 + friction2.GetTotalLambda() * tangent2;
 	outResult.mAngularFrictionImpulse = angular_friction.GetTotalLambda();
 }
 
