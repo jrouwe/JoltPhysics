@@ -28,7 +28,8 @@ public:
 	/// Virtual destructor
 	virtual							~VehicleCollisionTester() = default;
 
-	/// Object layer to use for collision detection, this is used when the filters are not overridden
+	/// The object layer the wheel belongs to. This is used to determine which objects the wheel can collide with. Works as BodyCreationSettings::mObjectLayer.
+	/// Used only when the ObjectLayerFilter is not overridden.
 	ObjectLayer						GetObjectLayer() const												{ return mObjectLayer; }
 	void							SetObjectLayer(ObjectLayer inObjectLayer)							{ mObjectLayer = inObjectLayer; }
 
@@ -87,7 +88,7 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor
-	/// @param inObjectLayer Object layer to test collision with
+	/// @param inObjectLayer The object layer the wheel belongs to. This is used to determine which objects the wheel can collide with. Works as BodyCreationSettings::mObjectLayer.
 	/// @param inUp World space up vector, used to avoid colliding with vertical walls.
 	/// @param inMaxSlopeAngle Max angle (rad) that is considered for colliding wheels. This is to avoid colliding with vertical walls.
 	explicit						VehicleCollisionTesterRay(ObjectLayer inObjectLayer, Vec3Arg inUp = Vec3::sAxisY(), float inMaxSlopeAngle = DegreesToRadians(80.0f)) : VehicleCollisionTester(inObjectLayer), mUp(inUp), mCosMaxSlopeAngle(Cos(inMaxSlopeAngle)) { }
@@ -108,7 +109,7 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor
-	/// @param inObjectLayer Object layer to test collision with
+	/// @param inObjectLayer The object layer the wheel belongs to. This is used to determine which objects the wheel can collide with. Works as BodyCreationSettings::mObjectLayer.
 	/// @param inUp World space up vector, used to avoid colliding with vertical walls.
 	/// @param inRadius Radius of sphere
 	/// @param inMaxSlopeAngle Max angle (rad) that is considered for colliding wheels. This is to avoid colliding with vertical walls.
@@ -131,7 +132,7 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor
-	/// @param inObjectLayer Object layer to test collision with
+	/// @param inObjectLayer The object layer the wheel belongs to. This is used to determine which objects the wheel can collide with. Works as BodyCreationSettings::mObjectLayer.
 	/// @param inConvexRadiusFraction Fraction of half the wheel width (or wheel radius if it is smaller) that is used as the convex radius
 	explicit						VehicleCollisionTesterCastCylinder(ObjectLayer inObjectLayer, float inConvexRadiusFraction = 0.1f) : VehicleCollisionTester(inObjectLayer), mConvexRadiusFraction(inConvexRadiusFraction) { JPH_ASSERT(mConvexRadiusFraction >= 0.0f && mConvexRadiusFraction <= 1.0f); }
 
