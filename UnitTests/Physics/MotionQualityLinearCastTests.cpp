@@ -376,4 +376,44 @@ TEST_SUITE("MotionQualityLinearCastTests")
 		CHECK_APPROX_EQUAL(box2.GetLinearVelocity(), new_velocity);
 		CHECK_APPROX_EQUAL(box2.GetAngularVelocity(), Vec3::sZero());
 	}
+
+	// Many linear cast boxes hitting inactive boxes, so that these are activated in more than one batch while the CCD contacts are resolved, then one of them is hit again
+	TEST_CASE("TestLinearCastBoxesVsManyInactiveDiscreteBoxes")
+	{
+		PhysicsTestContext c(1.0f / cFrequency, 1);
+		c.ZeroGravity();
+
+		// Register listener
+		LoggingContactListener listener;
+		c.GetSystem()->SetContactListener(&listener);
+
+		// More inactive boxes than are activated in one batch (64), each hit halfway through the step
+		constexpr int cNumBoxes = 65;
+		Array<Body *> inactive;
+		for (int i = 0; i < cNumBoxes; ++i)
+		{
+			Vec3 offset(0, 0, 2.0f * i);
+
+			Body &box1 = c.CreateBox(cPos1 + offset, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::LinearCast, Layers::MOVING, Vec3::sReplicate(cBoxExtent));
+			box1.SetLinearVelocity(cVelocity);
+
+			Body &box2 = c.CreateBox(cPos2 + offset, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(cBoxExtent), EActivation::DontActivate);
+			CHECK(!box2.IsActive());
+			inactive.push_back(&box2);
+		}
+
+		// A linear cast box that hits the first of them from the other side later in the step, when it has already been activated
+		Body &box3 = c.CreateBox(cPos2 + Vec3(2.5f, 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::LinearCast, Layers::MOVING, Vec3::sReplicate(cBoxExtent));
+		box3.SetLinearVelocity(-cVelocity);
+
+		c.SimulateSingleStep();
+
+		// All boxes have been activated and the last one hit the first box, which has no CCD body
+		for (const Body *box2 : inactive)
+			CHECK(box2->IsActive());
+		CHECK(listener.Contains(LoggingContactListener::EType::Add, box3.GetID(), inactive[0]->GetID()));
+		Vec3 new_velocity = -0.25f * cVelocity;
+		CHECK_APPROX_EQUAL(box3.GetLinearVelocity(), new_velocity);
+		CHECK_APPROX_EQUAL(inactive[0]->GetLinearVelocity(), new_velocity);
+	}
 }
