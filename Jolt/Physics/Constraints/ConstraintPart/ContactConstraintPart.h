@@ -168,22 +168,23 @@ public:
 	/// Part 1 of AxisConstraint::SolveVelocityConstraint: get the total lambda
 	JPH_INLINE float			SolveVelocityConstraintGetTotalLambda(Vec3Arg inLinearVelocity1, Vec3Arg inAngularVelocity1, Vec3Arg inLinearVelocity2, Vec3Arg inAngularVelocity2, Vec3Arg inWorldSpaceAxis) const
 	{
-		// Calculate jacobian multiplied by linear velocity
-		float jv;
+		// Fuse the three per-axis jacobian dot products into one horizontal reduction.
+		Vec3 acc;
 		if constexpr (Type1 != EMotionType::Static && Type2 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(inLinearVelocity1 - inLinearVelocity2);
+			acc = inWorldSpaceAxis * (inLinearVelocity1 - inLinearVelocity2);
 		else if constexpr (Type1 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(inLinearVelocity1);
+			acc = inWorldSpaceAxis * inLinearVelocity1;
 		else if constexpr (Type2 != EMotionType::Static)
-			jv = inWorldSpaceAxis.Dot(-inLinearVelocity2);
+			acc = inWorldSpaceAxis * (-inLinearVelocity2);
 		else
 			JPH_ASSERT(false); // Static vs static is nonsensical!
 
-		// Calculate jacobian multiplied by angular velocity
 		if constexpr (Type1 != EMotionType::Static)
-			jv += Vec3::sLoadFloat3Unsafe(this->mR1PlusUxAxis).Dot(inAngularVelocity1);
+			acc += Vec3::sLoadFloat3Unsafe(this->mR1PlusUxAxis) * inAngularVelocity1;
 		if constexpr (Type2 != EMotionType::Static)
-			jv -= Vec3::sLoadFloat3Unsafe(this->mR2xAxis).Dot(inAngularVelocity2);
+			acc -= Vec3::sLoadFloat3Unsafe(this->mR2xAxis) * inAngularVelocity2;
+
+		float jv = acc.ReduceSum();
 
 		// Lagrange multiplier is:
 		//
