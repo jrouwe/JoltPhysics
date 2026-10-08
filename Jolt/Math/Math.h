@@ -192,9 +192,7 @@ inline uint CountTrailingZeros(uint32 inValue)
 		_BitScanForward(&result, inValue);
 		return result;
 	#else
-		if (inValue == 0)
-			return 32;
-		return __builtin_ctz(inValue);
+		return inValue? __builtin_ctz(inValue) : 32;
 	#endif
 #elif defined(JPH_CPU_ARM)
 	#if defined(JPH_COMPILER_MSVC)
@@ -204,12 +202,10 @@ inline uint CountTrailingZeros(uint32 inValue)
 		_BitScanForward(&result, inValue);
 		return result;
 	#else
-		if (inValue == 0)
-			return 32;
-		return __builtin_ctz(inValue);
+		return inValue? __builtin_ctz(inValue) : 32;
 	#endif
 #elif defined(JPH_CPU_E2K) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_PPC) || defined(JPH_CPU_LOONGARCH)
-	return inValue ? __builtin_ctz(inValue) : 32;
+	return inValue? __builtin_ctz(inValue) : 32;
 #else
 	#error Undefined
 #endif
@@ -228,18 +224,16 @@ inline uint CountLeadingZeros(uint32 inValue)
 		_BitScanReverse(&result, inValue);
 		return 31 - result;
 	#else
-		if (inValue == 0)
-			return 32;
-		return __builtin_clz(inValue);
+		return inValue? __builtin_clz(inValue) : 32;
 	#endif
 #elif defined(JPH_CPU_ARM)
 	#if defined(JPH_COMPILER_MSVC)
 		return _CountLeadingZeros(inValue);
 	#else
-		return __builtin_clz(inValue);
+		return inValue? __builtin_clz(inValue) : 32;
 	#endif
 #elif defined(JPH_CPU_E2K) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_PPC) || defined(JPH_CPU_LOONGARCH)
-	return inValue ? __builtin_clz(inValue) : 32;
+	return inValue? __builtin_clz(inValue) : 32;
 #else
 	#error Undefined
 #endif
