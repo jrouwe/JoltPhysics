@@ -37,11 +37,11 @@ public:
 	id<MTLRenderCommandEncoder>		GetRenderEncoder() const										{ return mRenderEncoder; }
 
 private:
-	MTKView *						mView;
-	MTLRenderPassDescriptor *		mShadowRenderPass;
+	MTKView *						mView = nullptr;
+	MTLRenderPassDescriptor *		mShadowRenderPass = nullptr;
 	Ref<TextureMTL>					mShadowMap;
-	id<MTLLibrary>					mShaderLibrary;
-	id<MTLCommandQueue>				mCommandQueue;
-	id<MTLCommandBuffer> 			mCommandBuffer;
-	id<MTLRenderCommandEncoder>		mRenderEncoder;
+	id<MTLLibrary>					mShaderLibrary = nil;
+	id<MTLCommandQueue>				mCommandQueue = nil;
+	id<MTLCommandBuffer> 			mCommandBuffer = nil;
+	id<MTLRenderCommandEncoder>		mRenderEncoder = nil;
 };

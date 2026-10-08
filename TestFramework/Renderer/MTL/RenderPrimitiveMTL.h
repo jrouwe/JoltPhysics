@@ -35,6 +35,6 @@ private:
 
 	RendererMTL *			mRenderer;
 	MTLPrimitiveType		mPrimitiveType;
-	id<MTLBuffer>			mVertexBuffer;
-	id<MTLBuffer>			mIndexBuffer;
+	id<MTLBuffer>			mVertexBuffer = nil;
+	id<MTLBuffer>			mIndexBuffer = nil;
 };

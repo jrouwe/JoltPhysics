@@ -30,7 +30,7 @@ public:
 
 private:
 	RendererMTL *			mRenderer;
-	id<MTLBuffer>			mBuffer;
-	NSUInteger				mBufferSize;
-	NSUInteger				mInstanceSize;
+	id<MTLBuffer>			mBuffer = nil;
+	NSUInteger				mBufferSize = 0;
+	NSUInteger				mInstanceSize = 0;
 };

@@ -31,7 +31,7 @@ private:
 	virtual void					UnmapInternal() override;
 
 	ComputeSystemMTL *				mComputeSystem;
-	id<MTLBuffer>					mBuffer;
+	id<MTLBuffer>					mBuffer = nil;
 };
 
 JPH_NAMESPACE_END

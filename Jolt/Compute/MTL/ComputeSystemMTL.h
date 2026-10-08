@@ -32,7 +32,7 @@ public:
 
 private:
 	id<MTLDevice>					mDevice;
-	id<MTLLibrary>					mShaderLibrary;
+	id<MTLLibrary>					mShaderLibrary = nil;
 };
 
 JPH_NAMESPACE_END

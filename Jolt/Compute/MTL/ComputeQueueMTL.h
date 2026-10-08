@@ -38,8 +38,8 @@ private:
 	void								BeginCommandBuffer();
 
 	id<MTLCommandQueue>					mCommandQueue;
-	id<MTLCommandBuffer> 				mCommandBuffer;
-	id<MTLComputeCommandEncoder>		mComputeEncoder;
+	id<MTLCommandBuffer> 				mCommandBuffer = nil;
+	id<MTLComputeCommandEncoder>		mComputeEncoder = nil;
 	RefConst<ComputeShaderMTL>			mShader;
 	bool								mIsExecuting = false;
 };

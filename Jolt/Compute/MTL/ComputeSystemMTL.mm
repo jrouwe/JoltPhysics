@@ -55,7 +55,7 @@ ComputeShaderResult ComputeSystemMTL::CreateComputeShader(const char *inName, ui
 		mShaderLibrary = [mDevice newLibraryWithData: data_dispatch error: &ns_error];
 		if (ns_error != nil)
 		{
-			result.SetError("Failed to laod shader library");
+			result.SetError("Failed to load shader library");
 			return result;
 		}
 	}
