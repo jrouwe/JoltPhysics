@@ -168,7 +168,7 @@ public:
 	/// Part 1 of AxisConstraint::SolveVelocityConstraint: get the total lambda
 	JPH_INLINE float			SolveVelocityConstraintGetTotalLambda(Vec3Arg inLinearVelocity1, Vec3Arg inAngularVelocity1, Vec3Arg inLinearVelocity2, Vec3Arg inAngularVelocity2, Vec3Arg inWorldSpaceAxis) const
 	{
-		// Fuse the three per-axis jacobian dot products into one horizontal reduction.
+		// Calculate jacobian multiplied by linear velocity
 		Vec3 acc;
 		if constexpr (Type1 != EMotionType::Static && Type2 != EMotionType::Static)
 			acc = inWorldSpaceAxis * (inLinearVelocity1 - inLinearVelocity2);
