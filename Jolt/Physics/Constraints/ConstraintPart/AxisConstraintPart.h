@@ -53,16 +53,17 @@ class AxisConstraintPart
 			//
 			// Euler velocity integration:
 			// v' = v + M^-1 P
+			Vec3 impulse = inLambda * inWorldSpaceAxis;
 			if (ioBody1.IsDynamic())
 			{
 				MotionProperties *mp1 = ioBody1.GetMotionPropertiesUnchecked();
-				mp1->SubLinearVelocityStep((inLambda * mp1->GetInverseMass()) * inWorldSpaceAxis);
+				mp1->SubLinearVelocityStep(mp1->GetInverseMass() * impulse);
 				mp1->SubAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
 			}
 			if (ioBody2.IsDynamic())
 			{
 				MotionProperties *mp2 = ioBody2.GetMotionPropertiesUnchecked();
-				mp2->AddLinearVelocityStep((inLambda * mp2->GetInverseMass()) * inWorldSpaceAxis);
+				mp2->AddLinearVelocityStep(mp2->GetInverseMass() * impulse);
 				mp2->AddAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
 			}
 			return true;
@@ -271,29 +272,32 @@ public:
 	/// @param inMaxLambda Maximum value of constraint impulse to apply (N s)
 	inline bool					SolveVelocityConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
 	{
-		const MotionProperties *mp1 = ioBody1.GetMotionPropertiesUnchecked();
-		const MotionProperties *mp2 = ioBody2.GetMotionPropertiesUnchecked();
-
 		// Calculate jacobian multiplied by linear velocity
-		float jv;
+		Vec3 acc;
 		if (!ioBody1.IsStatic())
 		{
+			const MotionProperties *mp1 = ioBody1.GetMotionPropertiesUnchecked();
+
 			if (!ioBody2.IsStatic())
-				jv = inWorldSpaceAxis.Dot(mp1->GetLinearVelocity() - mp2->GetLinearVelocity());
+			{
+				const MotionProperties *mp2 = ioBody2.GetMotionPropertiesUnchecked();
+				acc = inWorldSpaceAxis * (mp1->GetLinearVelocity() - mp2->GetLinearVelocity());
+				acc -= Vec3::sLoadFloat3Unsafe(mR2xAxis) * mp2->GetAngularVelocity();
+			}
 			else
-				jv = inWorldSpaceAxis.Dot(mp1->GetLinearVelocity());
+				acc = inWorldSpaceAxis * mp1->GetLinearVelocity();
+
+			acc += Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis) * mp1->GetAngularVelocity();
 		}
 		else
 		{
 			JPH_ASSERT(!ioBody2.IsStatic());
-			jv = inWorldSpaceAxis.Dot(-mp2->GetLinearVelocity());
+			const MotionProperties *mp2 = ioBody2.GetMotionPropertiesUnchecked();
+			acc = inWorldSpaceAxis * (-mp2->GetLinearVelocity());
+			acc -= Vec3::sLoadFloat3Unsafe(mR2xAxis) * mp2->GetAngularVelocity();
 		}
 
-		// Calculate jacobian multiplied by angular velocity
-		if (!ioBody1.IsStatic())
-			jv += Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(mp1->GetAngularVelocity());
-		if (!ioBody2.IsStatic())
-			jv -= Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(mp2->GetAngularVelocity());
+		float jv = acc.ReduceSum();
 
 		// Lagrange multiplier is:
 		//
@@ -345,14 +349,15 @@ public:
 			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
 			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
+			Vec3 impulse = lambda * inWorldSpaceAxis;
 			if (ioBody1.IsDynamic())
 			{
-				ioBody1.SubPositionStep((lambda * ioBody1.GetMotionProperties()->GetInverseMass()) * inWorldSpaceAxis);
+				ioBody1.SubPositionStep(ioBody1.GetMotionPropertiesUnchecked()->GetInverseMass() * impulse);
 				ioBody1.SubRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
 			}
 			if (ioBody2.IsDynamic())
 			{
-				ioBody2.AddPositionStep((lambda * ioBody2.GetMotionProperties()->GetInverseMass()) * inWorldSpaceAxis);
+				ioBody2.AddPositionStep(ioBody2.GetMotionPropertiesUnchecked()->GetInverseMass() * impulse);
 				ioBody2.AddRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
 			}
 			return true;
