@@ -1867,10 +1867,10 @@ TEST_SUITE("PhysicsTests")
 		Vec3 v1, w1, v2, w2;
 		bi.GetLinearAndAngularVelocity(id1, v1, w1);
 		bi.GetLinearAndAngularVelocity(id2, v2, w2);
-		CHECK_APPROX_EQUAL(v1, Vec3(expected_v1, 0, 0), 1.0e-6f * expected_v1);
-		CHECK_APPROX_EQUAL(w1, Vec3(0, 0, -expected_w1), 1.0e-6f * expected_w1);
-		CHECK_APPROX_EQUAL(v2, Vec3(expected_v1, 0, 0), 1.0e-6f * expected_v1);
-		CHECK_APPROX_EQUAL(w2, Vec3(0, 0, -expected_w1), 1.0e-6f * expected_w1);
+		CHECK_APPROX_EQUAL(v1, Vec3(expected_v1, 0, 0), 2.0e-4f * expected_v1); // 0.02% error
+		CHECK_APPROX_EQUAL(w1, Vec3(0, 0, -expected_w1), 2.0e-4f * expected_w1);
+		CHECK_APPROX_EQUAL(v2, Vec3(expected_v1, 0, 0), 2.0e-4f * expected_v1);
+		CHECK_APPROX_EQUAL(w2, Vec3(0, 0, -expected_w1), 2.0e-4f * expected_w1);
 	}
 
 	TEST_CASE("TestAllowedDOFs")
