@@ -72,27 +72,20 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 
 	// Initialize the constraint properties
 	ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> contact_constraints[ContactPoints::Capacity];
-	Vec3 contact_points[ContactPoints::Capacity];
-	Vec3 friction_point = Vec3::sZero();
 	Vec3 friction_point1 = Vec3::sZero(), friction_point2 = Vec3::sZero();
 	for (uint c = 0; c < num_points; ++c)
 	{
-		// Calculate contact points relative to body 1 and 2
-		Vec3 p = 0.5f * (inManifold.mRelativeContactPointsOn1[c] + inManifold.mRelativeContactPointsOn2[c]);
-
-		// Calculate friction point
-		contact_points[c] = p;
-		friction_point += p;
+		Vec3 p1 = inManifold.mRelativeContactPointsOn1[c];
+		Vec3 p2 = inManifold.mRelativeContactPointsOn2[c];
 
 		// Calculate friction lever arm points per body so that the friction lever arm is not perturbed
-		// by the normal-direction separation of a speculative contact (the non-penetration constraint
-		// above is unaffected by this separation and keeps using the midpoint p)
-		friction_point1 += inManifold.mRelativeContactPointsOn1[c];
-		friction_point2 += inManifold.mRelativeContactPointsOn2[c];
+		// by the normal-direction separation of a speculative contact
+		friction_point1 += p1;
+		friction_point2 += p2;
 
 		// Calculate contact point relative to com
-		Vec3 r1 = p - com1;
-		Vec3 r2 = p - com2;
+		Vec3 r1 = p1 - com1;
+		Vec3 r2 = p2 - com2;
 
 		// Handle elastic collisions
 		float bias = 0.0f;
@@ -115,16 +108,15 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 
 	// Calculate distance to friction center for each point
 	float num_points_f = float(num_points);
-	friction_point /= num_points_f;
 	friction_point1 /= num_points_f;
 	friction_point2 /= num_points_f;
 	float distance_to_friction_center[ContactPoints::Capacity];
 	for (uint c = 0; c < num_points; ++c)
 	{
-		Vec3 delta = contact_points[c] - friction_point;
+		Vec3 delta = inManifold.mRelativeContactPointsOn1[c] - friction_point1;
 		distance_to_friction_center[c] = (delta - delta.Dot(inManifold.mWorldSpaceNormal) * inManifold.mWorldSpaceNormal).Length();
 	}
-	outResult.mFrictionPoint = friction_point;
+	outResult.mFrictionPoint = 0.5f * (friction_point1 + friction_point2);
 
 	// Initialize friction constraints
 	ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> friction1, friction2;
