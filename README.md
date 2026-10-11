@@ -162,6 +162,7 @@ If you're interested in how Jolt scales with multiple CPUs and compares to other
 * [Python](https://github.com/Evilpasture/Culverin)
 * [Zig](https://github.com/zig-gamedev/zphysics)
 * [Jai](https://github.com/ostef/Jolt-Jai), based on this [bindings generator](https://github.com/ostef/JoltC-BindGen)
+* [Nim](https://github.com/puffball1567/jolt-nim)
 
 ## Integrations in other engines
 
