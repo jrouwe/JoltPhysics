@@ -130,7 +130,7 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint<Type1, Type2>::Calcu
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <EMotionType Type1, EMotionType Type2>
-void ContactConstraintManager::ContactConstraint<Type1, Type2>::CalculateFrictionConstraintProperties(const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, const Vec3 *inR1, const Vec3 *inR2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings)
+void ContactConstraintManager::ContactConstraint<Type1, Type2>::CalculateFrictionConstraintProperties(float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, const Vec3 *inR1, const Vec3 *inR2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings)
 {
 	// Calculate friction part
 	if (inSettings.mCombinedFriction > 0.0f)
@@ -982,7 +982,7 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 			constraint->mFrictionConstraint1.SetTotalLambda(output_cm->mFrictionLambda[0]);
 			constraint->mFrictionConstraint2.SetTotalLambda(output_cm->mFrictionLambda[1]);
 			constraint->mAngularFrictionConstraint.SetTotalLambda(output_cm->mAngularFrictionLambda);
-			constraint->CalculateFrictionConstraintProperties(inBody1, inBody2, constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, r1, r2, world_space_normal, t1, t2, settings);
+			constraint->CalculateFrictionConstraintProperties(constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, r1, r2, world_space_normal, t1, t2, settings);
 
 		#ifdef JPH_DEBUG_RENDERER
 			// Draw the manifold
@@ -1306,7 +1306,7 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			constraint->mFrictionConstraint2.SetTotalLambda(0.0f);
 			constraint->mAngularFrictionConstraint.SetTotalLambda(0.0f);
 		}
-		constraint->CalculateFrictionConstraintProperties(inBody1, inBody2, constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, r1, r2, inManifold.mWorldSpaceNormal, t1, t2, settings);
+		constraint->CalculateFrictionConstraintProperties(constraint->mInvMass1, constraint->mInvMass2, inv_i1, inv_i2, r1, r2, inManifold.mWorldSpaceNormal, t1, t2, settings);
 
 #ifdef JPH_DEBUG_RENDERER
 		// Draw the manifold
