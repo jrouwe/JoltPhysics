@@ -5,6 +5,11 @@
 #include "UnitTestFramework.h"
 #include <Jolt/Core/JobSystemThreadPool.h>
 
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 TEST_SUITE("JobSystemTest")
 {
 	TEST_CASE("TestJobSystemRunJobs")
@@ -87,5 +92,65 @@ TEST_SUITE("JobSystemTest")
 		// Test jobs were executed in reverse order
 		for (int i = cMaxJobs - 1; i >= 0; --i)
 			CHECK(values[i] == cMaxJobs - i);
+	}
+
+	TEST_CASE("TestJobSystemQueueDoesNotBlockOnIdleWorker")
+	{
+		const int cMaxJobs = 4096;
+		const int cMaxBarriers = 16;
+		const int cMaxThreads = 4;
+		std::mutex mutex;
+		std::condition_variable condition;
+		bool release_worker = false;
+		bool worker_ready = false;
+		bool watchdog_timed_out = false;
+
+		JobSystemThreadPool system;
+		system.SetThreadInitFunction([&](int inThreadIndex) {
+			if (inThreadIndex == cMaxThreads - 1)
+			{
+				std::unique_lock<std::mutex> lock(mutex);
+				worker_ready = true;
+				condition.notify_all();
+				condition.wait(lock, [&] { return release_worker; });
+			}
+		});
+		system.Init(cMaxJobs, cMaxBarriers, cMaxThreads);
+
+		{
+			std::unique_lock<std::mutex> lock(mutex);
+			condition.wait(lock, [&] { return worker_ready; });
+		}
+
+		std::thread watchdog([&] {
+			std::unique_lock<std::mutex> lock(mutex);
+			if (!condition.wait_for(lock, std::chrono::seconds(5), [&] { return release_worker; }))
+			{
+				watchdog_timed_out = true;
+				release_worker = true;
+				lock.unlock();
+				condition.notify_all();
+			}
+		});
+
+		atomic<uint32> completed = 0;
+		for (int queued = 0; queued < 2048; queued += 256)
+		{
+			JobSystem::Barrier *barrier = system.CreateBarrier();
+			for (int i = 0; i < 256; ++i)
+				barrier->AddJob(system.CreateJob("QueueTest", Color::sGreen, [&] { completed++; }));
+			system.WaitForJobs(barrier);
+			system.DestroyBarrier(barrier);
+		}
+
+		{
+			std::lock_guard<std::mutex> lock(mutex);
+			release_worker = true;
+		}
+		condition.notify_all();
+		watchdog.join();
+
+		CHECK(!watchdog_timed_out);
+		CHECK(completed == 2048);
 	}
 }

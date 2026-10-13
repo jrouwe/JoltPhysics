@@ -145,6 +145,21 @@ uint JobSystemThreadPool::GetHead() const
 	return head;
 }
 
+void JobSystemThreadPool::AdvanceIdleHeads()
+{
+	// A worker that has not run since the others emptied the slots ahead of its head keeps those
+	// slots counted as occupied by GetHead(); walk every head over slots that already read nullptr.
+	uint tail = mTail;
+	for (size_t i = 0; i < mThreads.size(); ++i)
+	{
+		atomic<uint> &head = mHeads[i];
+		uint h = head.load();
+		while (h != tail && mQueue[h & (cQueueLength - 1)].load() == nullptr)
+			if (head.compare_exchange_weak(h, h + 1))
+				++h;
+	}
+}
+
 void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 {
 	// Add reference to job because we're adding the job to the queue
@@ -166,6 +181,15 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 			old_value = mTail;
 
 			// Second check if there's space in the queue
+			if (old_value - head >= cQueueLength)
+			{
+				// Skip queue entries that have already been consumed but still appear in a lagging thread's head.
+				AdvanceIdleHeads();
+				head = GetHead();
+				old_value = mTail;
+			}
+
+			// Third check if there's space in the queue
 			if (old_value - head >= cQueueLength)
 			{
 				// Wake up all threads in order to ensure that they can clear any nullptrs they may not have processed yet
@@ -323,10 +347,14 @@ void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 			JPH_PROFILE("Executing Jobs");
 
 			// Loop over the queue
-			while (head != mTail)
+			for (;;)
 			{
+				uint h = head.load();
+				if (h == mTail)
+					break;
+
 				// Exchange any job pointer we find with a nullptr
-				atomic<Job *> &job = mQueue[head & (cQueueLength - 1)];
+				atomic<Job *> &job = mQueue[h & (cQueueLength - 1)];
 				if (job.load() != nullptr)
 				{
 					Job *job_ptr = job.exchange(nullptr);
@@ -337,7 +365,8 @@ void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 						job_ptr->Release();
 					}
 				}
-				head++;
+				// Step past this slot unless a producer moved our head over empty slots meanwhile
+				head.compare_exchange_strong(h, h + 1);
 			}
 		}
 	}

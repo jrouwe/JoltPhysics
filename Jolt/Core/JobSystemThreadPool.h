@@ -68,6 +68,9 @@ private:
 	/// Get the head of the thread that has processed the least amount of jobs
 	inline uint				GetHead() const;
 
+	/// Move every thread's head forward over queue slots that are already empty
+	void					AdvanceIdleHeads();
+
 	/// Internal helper function to queue a job
 	inline void				QueueJobInternal(Job *inJob);
 
