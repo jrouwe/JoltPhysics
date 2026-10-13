@@ -649,6 +649,9 @@ BodyManager::MutexMask BodyManager::GetMutexMask(const BodyID *inBodies, int inN
 	}
 }
 
+JPH_SUPPRESS_WARNING_PUSH
+JPH_CLANG_SUPPRESS_WARNING("-Wthread-safety-analysis")
+
 void BodyManager::LockRead(MutexMask inMutexMask) const
 {
 	JPH_IF_ENABLE_ASSERTS(PhysicsLock::sCheckLock(this, EPhysicsLockTypes::PerBody));
@@ -688,6 +691,8 @@ void BodyManager::UnlockWrite(MutexMask inMutexMask) const
 		if (mask & 1)
 			mBodyMutexes.GetMutexByIndex(index).unlock();
 }
+
+JPH_SUPPRESS_WARNING_POP
 
 void BodyManager::LockAllBodies() const
 {

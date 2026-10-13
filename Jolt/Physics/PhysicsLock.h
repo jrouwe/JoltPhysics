@@ -50,6 +50,9 @@ public:
 	}
 #endif // !JPH_ENABLE_ASSERTS
 
+	JPH_SUPPRESS_WARNING_PUSH
+	JPH_CLANG_SUPPRESS_WARNING("-Wthread-safety-analysis")
+
 	template <class LockType>
 	static inline void			sLock(LockType &inMutex JPH_IF_ENABLE_ASSERTS(, PhysicsLockContext inContext, EPhysicsLockTypes inType))
 	{
@@ -77,6 +80,8 @@ public:
 		JPH_IF_ENABLE_ASSERTS(sCheckUnlock(inContext, inType);)
 		inMutex.unlock_shared();
 	}
+
+	JPH_SUPPRESS_WARNING_POP
 
 #ifdef JPH_ENABLE_ASSERTS
 private:

@@ -116,6 +116,9 @@ using SharedMutexBase = shared_mutex;
 
 #if defined(JPH_ENABLE_ASSERTS) || defined(JPH_PROFILE_ENABLED) || defined(JPH_EXTERNAL_PROFILE)
 
+JPH_SUPPRESS_WARNING_PUSH
+JPH_CLANG_SUPPRESS_WARNING("-Wthread-safety-analysis")
+
 /// Very simple wrapper around MutexBase which tracks lock contention in the profiler
 /// and asserts that locks/unlocks take place on the same thread
 class Mutex : public MutexBase
@@ -212,6 +215,8 @@ public:
 private:
 	JPH_IF_ENABLE_ASSERTS(thread::id mLockedThreadID;)
 };
+
+JPH_SUPPRESS_WARNING_POP
 
 #else
 

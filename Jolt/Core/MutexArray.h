@@ -61,6 +61,9 @@ public:
 		return mMutexStorage[inMutexIndex].mMutex;
 	}
 
+	JPH_SUPPRESS_WARNING_PUSH
+	JPH_CLANG_SUPPRESS_WARNING("-Wthread-safety-analysis")
+
 	/// Lock all mutexes
 	void					LockAll()
 	{
@@ -80,6 +83,8 @@ public:
 		for (MutexStorage *m = mMutexStorage; m < end; ++m)
 			m->mMutex.unlock();
 	}
+
+	JPH_SUPPRESS_WARNING_POP
 
 private:
 	/// Align the mutex to a cache line to ensure there is no false sharing (this is platform dependent, we do this to be safe)
