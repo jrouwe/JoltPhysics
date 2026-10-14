@@ -18,6 +18,10 @@ JPH_NAMESPACE_BEGIN
 template <class MemberType>
 inline void AddSerializableAttributeEnum(RTTI &inRTTI, uint inOffset, const char *inName)
 {
+	static_assert(sizeof(MemberType) <= sizeof(uint64));
+	using SerializationType = std::conditional_t<sizeof(MemberType) <= sizeof(uint32), uint32, uint64>;
+	static constexpr EOSDataType serialization_data_type = sizeof(MemberType) <= sizeof(uint32)? EOSDataType::T_uint32 : EOSDataType::T_uint64;
+
 	inRTTI.AddAttribute(SerializableAttribute(inName, inOffset,
 		[]() -> const RTTI *
 		{
@@ -25,11 +29,11 @@ inline void AddSerializableAttributeEnum(RTTI &inRTTI, uint inOffset, const char
 		},
 		[](int inArrayDepth, EOSDataType inDataType, [[maybe_unused]] const char *inClassName)
 		{
-			return inArrayDepth == 0 && inDataType == EOSDataType::T_uint32;
+			return inArrayDepth == 0 && inDataType == serialization_data_type;
 		},
 		[](IObjectStreamIn &ioStream, void *inObject)
 		{
-			uint32 temporary;
+			SerializationType temporary;
 			if (OSReadData(ioStream, temporary))
 			{
 				*reinterpret_cast<MemberType *>(inObject) = static_cast<MemberType>(temporary);
@@ -39,13 +43,12 @@ inline void AddSerializableAttributeEnum(RTTI &inRTTI, uint inOffset, const char
 		},
 		[](IObjectStreamOut &ioStream, const void *inObject)
 		{
-			static_assert(sizeof(MemberType) <= sizeof(uint32));
-			uint32 temporary = uint32(*reinterpret_cast<const MemberType *>(inObject));
+			SerializationType temporary = SerializationType(*reinterpret_cast<const MemberType *>(inObject));
 			OSWriteData(ioStream, temporary);
 		},
 		[](IObjectStreamOut &ioStream)
 		{
-			ioStream.WriteDataType(EOSDataType::T_uint32);
+			ioStream.WriteDataType(serialization_data_type);
 		}));
 }
 

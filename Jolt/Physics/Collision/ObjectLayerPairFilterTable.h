@@ -14,7 +14,7 @@ class ObjectLayerPairFilterTable : public ObjectLayerPairFilter
 {
 private:
 	/// Get which bit corresponds to the pair (inLayer1, inLayer2)
-	uint					GetBit(ObjectLayer inLayer1, ObjectLayer inLayer2) const
+	size_t					GetBit(ObjectLayer inLayer1, ObjectLayer inLayer2) const
 	{
 		// We store the lower left half only, so swap the inputs when trying to access the top right half
 		if (inLayer1 > inLayer2)
@@ -25,7 +25,9 @@ private:
 		// Calculate at which bit the entry for this pair resides
 		// We use the fact that a row always starts at inLayer2 * (inLayer2 + 1) / 2
 		// (this is the amount of bits needed to store a table of inLayer2 entries)
-		return (inLayer2 * (inLayer2 + 1)) / 2 + inLayer1;
+		size_t layer1(inLayer1);
+		size_t layer2(inLayer2);
+		return (layer2 * (layer2 + 1)) / 2 + layer1;
 	}
 
 public:
@@ -51,14 +53,14 @@ public:
 	/// Disable collision between two object layers
 	void					DisableCollision(ObjectLayer inLayer1, ObjectLayer inLayer2)
 	{
-		uint bit = GetBit(inLayer1, inLayer2);
+		size_t bit = GetBit(inLayer1, inLayer2);
 		mTable[bit >> 3] &= (0xff ^ (1 << (bit & 0b111)));
 	}
 
 	/// Enable collision between two object layers
 	void					EnableCollision(ObjectLayer inLayer1, ObjectLayer inLayer2)
 	{
-		uint bit = GetBit(inLayer1, inLayer2);
+		size_t bit = GetBit(inLayer1, inLayer2);
 		mTable[bit >> 3] |= 1 << (bit & 0b111);
 	}
 
@@ -66,7 +68,7 @@ public:
 	virtual bool			ShouldCollide(ObjectLayer inObject1, ObjectLayer inObject2) const override
 	{
 		// Test if the bit is set for this group pair
-		uint bit = GetBit(inObject1, inObject2);
+		size_t bit = GetBit(inObject1, inObject2);
 		return (mTable[bit >> 3] & (1 << (bit & 0b111))) != 0;
 	}
 
