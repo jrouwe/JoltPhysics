@@ -411,6 +411,7 @@
 	JPH_CLANG_SUPPRESS_WARNING("-Wdocumentation-unknown-command")								\
 	JPH_CLANG_SUPPRESS_WARNING("-Wctad-maybe-unsupported")										\
 	JPH_CLANG_SUPPRESS_WARNING("-Wswitch-default")												\
+	JPH_CLANG_SUPPRESS_WARNING("-Wthread-safety-analysis")										\
 	JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WARNING													\
 	JPH_CLANG_SUPPRESS_DEPRECATED_COPY_WITH_DTOR_WARNING										\
 	JPH_CLANG_SUPPRESS_UNSAFE_BUFFER_USAGE_WARNING												\
