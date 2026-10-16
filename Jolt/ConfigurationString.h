@@ -89,10 +89,14 @@ inline const char *GetConfigurationString()
 #ifdef JPH_EXTERNAL_PROFILE
 		"(External Profile) "
 #endif
-#if defined(JPH_OBJECT_LAYER_BITS) && JPH_OBJECT_LAYER_BITS == 32
-		"(32-bit ObjectLayer) "
-#else
+#if JPH_OBJECT_LAYER_BITS == 16
 		"(16-bit ObjectLayer) "
+#elif JPH_OBJECT_LAYER_BITS == 32
+		"(32-bit ObjectLayer) "
+#elif JPH_OBJECT_LAYER_BITS == 64
+		"(64-bit ObjectLayer) "
+#else
+	#error Invalid value for JPH_OBJECT_LAYER_BITS. Must be 16, 32 or 64.
 #endif
 #ifdef JPH_ENABLE_ASSERTS
 		"(Assertions) "

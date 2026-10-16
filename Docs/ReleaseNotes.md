@@ -4,6 +4,10 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ## Unreleased changes
 
+### New functionality
+
+* Added support for 64-bit ObjectLayer. This e.g. allows for more groups in case you're using ObjectLayerPairFilterMask.
+
 ### Bug fixes
 
 * Avoiding overflow to INF if inverse effective mass is denormal. When restricting the rotation of an object using `EAllowedDOFs`, a tiny rotation in a restricted axis can cause the effective mass of the angular friction component to overflow to INF and cause a FP exception.

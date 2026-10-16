@@ -18,10 +18,10 @@ TEST_SUITE("ObjectLayerPairFilterMaskTests")
 	TEST_CASE("ObjectLayerPairFilterMaskTest")
 	{
 		// Some example layers
-		constexpr uint32 FilterDefault = 1;
+		constexpr uint32 FilterDefault = 1; // Test the lowest bit
 		constexpr uint32 FilterStatic = 2;
-		constexpr uint32 FilterDebris = 4;
-		constexpr uint32 FilterSensor = 8;
+		constexpr uint32 FilterDebris = uint32(1) << (JPH_OBJECT_LAYER_BITS / 2 - 1); // Test the highest bit
+		constexpr uint32 FilterSensor = uint32(1) << (JPH_OBJECT_LAYER_BITS / 2 - 2);
 		constexpr uint32 FilterAll = FilterDefault | FilterStatic | FilterDebris | FilterSensor;
 
 		ObjectLayerPairFilterMask pair_filter;
