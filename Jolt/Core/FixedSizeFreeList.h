@@ -115,6 +115,9 @@ public:
 
 	/// Access an object by index.
 	inline const Object &	Get(uint32 inObjectIndex) const			{ return GetStorage(inObjectIndex).mObject; }
+
+	/// Get the index of an object that was created by this free list
+	inline uint32			GetObjectIndex(const Object *inObject) const;
 };
 
 JPH_NAMESPACE_END

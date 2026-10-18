@@ -10,10 +10,10 @@ TEST_SUITE("JobSystemTest")
 	TEST_CASE("TestJobSystemRunJobs")
 	{
 		// Create job system
-		const int cMaxJobs = 128;
+		const int cMaxJobs = 127;
 		const int cMaxBarriers = 10;
 		const int cMaxThreads = 10;
-		JobSystemThreadPool system(cMaxJobs, cMaxBarriers, cMaxThreads);
+		JobSystemThreadPool system(cMaxJobs + 1 /* Job system reserves 1 job, see documentation */, cMaxBarriers, cMaxThreads);
 
 		// Create array of zeros
 		atomic<uint32> values[cMaxJobs];
@@ -44,9 +44,9 @@ TEST_SUITE("JobSystemTest")
 	TEST_CASE("TestJobSystemRunChain")
 	{
 		// Create job system
-		const int cMaxJobs = 128;
+		const int cMaxJobs = 127;
 		const int cMaxBarriers = 10;
-		JobSystemThreadPool system(cMaxJobs, cMaxBarriers);
+		JobSystemThreadPool system(cMaxJobs + 1 /* Job system reserves 1 job, see documentation */, cMaxBarriers);
 
 		// Create a barrier
 		JobSystem::Barrier *barrier = system.CreateBarrier();

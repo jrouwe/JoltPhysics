@@ -188,10 +188,10 @@ protected:
 		inline JobSystem *	GetJobSystem()								{ return mJobSystem; }
 
 		/// Add or release a reference to this object
-		inline void			AddRef()
+		inline void			AddRef(uint32 inCount = 1)
 		{
 			// Adding a reference can use relaxed memory ordering
-			mReferenceCount.fetch_add(1, memory_order_relaxed);
+			mReferenceCount.fetch_add(inCount, memory_order_relaxed);
 		}
 		inline void			Release()
 		{
