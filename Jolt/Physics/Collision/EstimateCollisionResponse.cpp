@@ -11,7 +11,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, CollisionEstimationResult &outResult, float inCombinedFriction, float inCombinedRestitution, float inMinVelocityForRestitution, uint inNumIterations)
+void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, CollisionEstimationResult &outResult, const ContactSettings &inContactSettings, float inMinVelocityForRestitution, uint inNumIterations)
 {
 	ContactPoints::size_type num_points = inManifold.mRelativeContactPointsOn1.size();
 	JPH_ASSERT(num_points == inManifold.mRelativeContactPointsOn2.size());
@@ -41,13 +41,25 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	else
 		outResult.mLinearVelocity2 = outResult.mAngularVelocity2 = Vec3::sZero();
 
+	if (inContactSettings.mIsSensor)
+	{
+		// Sensors don't have a collision response
+		outResult.mFrictionPoint = Vec3::sZero();
+		outResult.mFrictionImpulse = Vec3::sZero();
+		outResult.mAngularFrictionImpulse = 0.0f;
+		outResult.mContactImpulse.resize(num_points);
+		for (uint c = 0; c < num_points; ++c)
+			outResult.mContactImpulse[c] = 0.0f;
+		return;
+	}
+
 	// Get inverse mass and inertia
 	float inv_m1, inv_m2;
 	Mat44 inv_i1, inv_i2;
 	if (motion_type1 == EMotionType::Dynamic)
 	{
-		inv_m1 = motion_properties1->GetInverseMass();
-		inv_i1 = inBody1.GetInverseInertia();
+		inv_m1 = inContactSettings.mInvMassScale1 * motion_properties1->GetInverseMass();
+		inv_i1 = inContactSettings.mInvInertiaScale1 * inBody1.GetInverseInertia();
 	}
 	else
 	{
@@ -57,8 +69,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 
 	if (motion_type2 == EMotionType::Dynamic)
 	{
-		inv_m2 = motion_properties2->GetInverseMass();
-		inv_i2 = inBody2.GetInverseInertia();
+		inv_m2 = inContactSettings.mInvMassScale2 * motion_properties2->GetInverseMass();
+		inv_i2 = inContactSettings.mInvInertiaScale2 * inBody2.GetInverseInertia();
 	}
 	else
 	{
@@ -89,7 +101,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 
 		// Handle elastic collisions
 		float bias = 0.0f;
-		if (inCombinedRestitution > 0.0f)
+		if (inContactSettings.mCombinedRestitution > 0.0f)
 		{
 			// Calculate velocity of contact point
 			Vec3 relative_velocity = outResult.mLinearVelocity2 + outResult.mAngularVelocity2.Cross(r2) - outResult.mLinearVelocity1 - outResult.mAngularVelocity1.Cross(r1);
@@ -97,7 +109,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 
 			// If it is big enough, apply restitution
 			if (normal_velocity < -inMinVelocityForRestitution)
-				bias = inCombinedRestitution * normal_velocity;
+				bias = inContactSettings.mCombinedRestitution * normal_velocity;
 		}
 
 		// Initialize contact constraint
@@ -124,26 +136,31 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	angular_friction.SetTotalLambda(0.0f);
 	friction1.SetTotalLambda(0.0f);
 	friction2.SetTotalLambda(0.0f);
-	if (inCombinedFriction > 0.0f)
+	if (inContactSettings.mCombinedFriction > 0.0f)
 	{
 		Vec3 r1 = friction_point1 - com1;
 		Vec3 r2 = friction_point2 - com2;
 
-		friction1.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, tangent1);
-		friction2.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, tangent2);
+		// Get surface velocity relative to tangents
+		Vec3 ws_surface_velocity = inContactSettings.mRelativeLinearSurfaceVelocity + inContactSettings.mRelativeAngularSurfaceVelocity.Cross(friction_point1);
+		float surface_velocity1 = tangent1.Dot(ws_surface_velocity);
+		float surface_velocity2 = tangent2.Dot(ws_surface_velocity);
+
+		friction1.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, tangent1, surface_velocity1);
+		friction2.CalculateConstraintProperties(inv_m1, inv_i1, r1, inv_m2, inv_i2, r2, tangent2, surface_velocity2);
 
 		if (num_points > 1)
-			angular_friction.CalculateConstraintProperties(inv_i1, inv_i2, inManifold.mWorldSpaceNormal);
+			angular_friction.CalculateConstraintProperties(inv_i1, inv_i2, inManifold.mWorldSpaceNormal, inContactSettings.mRelativeAngularSurfaceVelocity.Dot(inManifold.mWorldSpaceNormal));
 	}
 
 	// If there's only 1 contact point, we only need 1 iteration
-	int num_iterations = inCombinedFriction <= 0.0f && num_points == 1? 1 : inNumIterations;
+	int num_iterations = inContactSettings.mCombinedFriction <= 0.0f && num_points == 1? 1 : inNumIterations;
 
 	// Solve iteratively
 	for (int iteration = 0; iteration < num_iterations; ++iteration)
 	{
 		// Solve friction constraints first
-		if (inCombinedFriction > 0.0f)
+		if (inContactSettings.mCombinedFriction > 0.0f)
 		{
 			// Calculate max impulse that can be applied
 			float max_linear_lambda = 0.0f, max_angular_lambda = 0.0f;
@@ -153,8 +170,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 				max_linear_lambda += lambda;
 				max_angular_lambda += distance_to_friction_center[c] * lambda;
 			}
-			max_linear_lambda *= inCombinedFriction;
-			max_angular_lambda *= inCombinedFriction;
+			max_linear_lambda *= inContactSettings.mCombinedFriction;
+			max_angular_lambda *= inContactSettings.mCombinedFriction;
 
 			// Calculate impulse to stop motion in tangential direction
 			float lambda1 = friction1.SolveVelocityConstraintGetTotalLambda(outResult.mLinearVelocity1, outResult.mAngularVelocity1, outResult.mLinearVelocity2, outResult.mAngularVelocity2, tangent1);

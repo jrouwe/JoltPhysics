@@ -26,52 +26,66 @@ TEST_SUITE("EstimateCollisionResponseTests")
 					for (float y : { 0.0f, 0.5f, cBox2HalfExtents.GetY() })
 						for (float z : { 0.0f, 0.5f, cBox2HalfExtents.GetZ() })
 							for (float w : { 0.0f, -1.0f, 1.0f })
-							{
-								// Install a listener that predicts the collision response
-								class MyListener : public ContactListener
-								{
-								public:
-									virtual void	OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
-									{
-										EstimateCollisionResponse(inBody1, inBody2, inManifold, mResult, ioSettings.mCombinedFriction, ioSettings.mCombinedRestitution);
-									}
+								for (float inv_m1 : { 1.0f, 2.0f })
+									for (Vec3 linear_surface_velocity : { Vec3::sZero(), Vec3(2, 3, 4) })
+										for (Vec3 angular_surface_velocity : { Vec3::sZero(), Vec3(3, 4, 5) })
+										{
+											// Install a listener that predicts the collision response
+											class MyListener : public ContactListener
+											{
+											public:
+												virtual void	OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+												{
+													ioSettings.mRelativeLinearSurfaceVelocity = mLinearSurfaceVelocity;
+													ioSettings.mRelativeAngularSurfaceVelocity = mAngularSurfaceVelocity;
+													ioSettings.mInvMassScale1 = mInvMassScale1;
+													ioSettings.mInvInertiaScale1 = mInvMassScale1;
 
-									CollisionEstimationResult mResult;
-								};
+													EstimateCollisionResponse(inBody1, inBody2, inManifold, mResult, ioSettings);
+												}
 
-								MyListener listener;
-								c.GetSystem()->SetContactListener(&listener);
+												float						mInvMassScale1;
+												Vec3						mLinearSurfaceVelocity;
+												Vec3						mAngularSurfaceVelocity;
+												CollisionEstimationResult	mResult;
+											};
 
-								const RVec3 cBaseOffset(1, 2, 3);
-								const Real cEpsilon = 0.0001_r;
+											MyListener listener;
+											listener.mInvMassScale1 = inv_m1;
+											listener.mLinearSurfaceVelocity = linear_surface_velocity;
+											listener.mAngularSurfaceVelocity = angular_surface_velocity;
+											c.GetSystem()->SetContactListener(&listener);
 
-								Body &box1 = c.CreateBox(cBaseOffset, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, cBox1HalfExtents);
-								box1.SetFriction(friction);
-								box1.SetRestitution(restitution);
-								box1.SetLinearVelocity(Vec3(1, 1, 0));
-								box1.SetAngularVelocity(Vec3(0, w, 0));
+											const RVec3 cBaseOffset(1, 2, 3);
+											const Real cEpsilon = 0.0001_r;
 
-								Body &box2 = c.CreateBox(cBaseOffset + RVec3(cBox1HalfExtents.GetX() + cBox2HalfExtents.GetX() - cEpsilon, y, z), Quat::sIdentity(), mt, EMotionQuality::Discrete, mt == EMotionType::Static? Layers::NON_MOVING : Layers::MOVING, cBox2HalfExtents);
-								box2.SetFriction(friction);
-								box2.SetRestitution(restitution);
-								if (mt != EMotionType::Static)
-									box2.SetLinearVelocity(Vec3(-1, 0, 0));
+											Body &box1 = c.CreateBox(cBaseOffset, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, cBox1HalfExtents);
+											box1.SetFriction(friction);
+											box1.SetRestitution(restitution);
+											box1.SetLinearVelocity(Vec3(1, 1, 0));
+											box1.SetAngularVelocity(Vec3(0, w, 0));
 
-								// Step the simulation
-								c.SimulateSingleStep();
+											Body &box2 = c.CreateBox(cBaseOffset + RVec3(cBox1HalfExtents.GetX() + cBox2HalfExtents.GetX() - cEpsilon, y, z), Quat::sIdentity(), mt, EMotionQuality::Discrete, mt == EMotionType::Static? Layers::NON_MOVING : Layers::MOVING, cBox2HalfExtents);
+											box2.SetFriction(friction);
+											box2.SetRestitution(restitution);
+											if (mt != EMotionType::Static)
+												box2.SetLinearVelocity(Vec3(-1, 0, 0));
 
-								// Check that the predicted velocities are correct
-								CHECK_APPROX_EQUAL(listener.mResult.mLinearVelocity1, box1.GetLinearVelocity());
-								CHECK_APPROX_EQUAL(listener.mResult.mAngularVelocity1, box1.GetAngularVelocity());
-								CHECK_APPROX_EQUAL(listener.mResult.mLinearVelocity2, box2.GetLinearVelocity());
-								CHECK_APPROX_EQUAL(listener.mResult.mAngularVelocity2, box2.GetAngularVelocity());
+											// Step the simulation
+											c.SimulateSingleStep();
 
-								// Remove the bodies in reverse order
-								BodyInterface &bi = c.GetBodyInterface();
-								bi.RemoveBody(box2.GetID());
-								bi.RemoveBody(box1.GetID());
-								bi.DestroyBody(box2.GetID());
-								bi.DestroyBody(box1.GetID());
-							}
+											// Check that the predicted velocities are correct
+											CHECK_APPROX_EQUAL(listener.mResult.mLinearVelocity1, box1.GetLinearVelocity());
+											CHECK_APPROX_EQUAL(listener.mResult.mAngularVelocity1, box1.GetAngularVelocity());
+											CHECK_APPROX_EQUAL(listener.mResult.mLinearVelocity2, box2.GetLinearVelocity());
+											CHECK_APPROX_EQUAL(listener.mResult.mAngularVelocity2, box2.GetAngularVelocity());
+
+											// Remove the bodies in reverse order
+											BodyInterface &bi = c.GetBodyInterface();
+											bi.RemoveBody(box2.GetID());
+											bi.RemoveBody(box1.GetID());
+											bi.DestroyBody(box2.GetID());
+											bi.DestroyBody(box1.GetID());
+										}
 	}
 }
