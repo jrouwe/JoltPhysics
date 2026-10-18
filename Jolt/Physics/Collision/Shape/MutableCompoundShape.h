@@ -98,6 +98,18 @@ public:
 	/// @param inRotationStride The orientation stride (the number of bytes between the first and second element)
 	void							ModifyShapes(uint inStartIndex, uint inNumber, const Vec3 *inPositions, const Quat *inRotations, uint inPositionStride = sizeof(Vec3), uint inRotationStride = sizeof(Quat));
 
+	/// @brief Batch set positions / orientations / shapes, this avoids duplicate work due to bounding box calculation.
+	/// Beware this can create a race condition if you're running collision queries in parallel. See class documentation for more information.
+	/// @param inStartIndex Index of first shape to update
+	/// @param inNumber Number of shapes to update
+	/// @param inPositions A list of positions with arbitrary stride
+	/// @param inRotations A list of orientations with arbitrary stride
+	/// @param inShapes A list of shapes with arbitrary stride
+	/// @param inPositionStride The position stride (the number of bytes between the first and second element)
+	/// @param inRotationStride The orientation stride (the number of bytes between the first and second element)
+	/// @param inShapeStride The shape stride (the number of bytes between the first and second element)
+	void							ModifyShapes(uint inStartIndex, uint inNumber, const Vec3 *inPositions, const Quat *inRotations, const Shape * const *inShapes, uint inPositionStride = sizeof(Vec3), uint inRotationStride = sizeof(Quat), uint inShapeStride = sizeof(const Shape *));
+
 	/// Recalculate the center of mass and shift all objects so they're centered around it
 	/// (this needs to be done of dynamic bodies and if the center of mass changes significantly due to adding / removing / repositioning sub shapes or else the simulation will look unnatural)
 	/// Note that after adjusting the center of mass of an object you need to call BodyInterface::NotifyShapeChanged and Constraint::NotifyShapeChanged on the relevant bodies / constraints.
