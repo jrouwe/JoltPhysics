@@ -27,8 +27,8 @@ TEST_SUITE("EstimateCollisionResponseTests")
 						for (float z : { 0.0f, 0.5f, cBox2HalfExtents.GetZ() })
 							for (float w : { 0.0f, -1.0f, 1.0f })
 								for (float inv_m1 : { 1.0f, 2.0f })
-									for (Vec3 linear_surface_velocity : { Vec3::sZero(), Vec3(2, 3, 4) })
-										for (Vec3 angular_surface_velocity : { Vec3::sZero(), Vec3(3, 4, 5) })
+									for (Vec3 linear_surface_velocity : { Vec3::sZero(), Vec3(2, 2.5f, 3) })
+										for (Vec3 angular_surface_velocity : { Vec3::sZero(), Vec3(2.5f, 3, 3.5f) })
 										{
 											// Install a listener that predicts the collision response
 											class MyListener : public ContactListener
