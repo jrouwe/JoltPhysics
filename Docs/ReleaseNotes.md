@@ -6,7 +6,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### New functionality
 
-* Added support for 64-bit ObjectLayer. This e.g. allows for more groups in case you're using ObjectLayerPairFilterMask.
+* Added support for 64-bit ObjectLayer. This e.g. allows for more groups in case you're using `ObjectLayerPairFilterMask`.
+* `EstimateCollisionResponse` now takes surface velocities into account.
 
 ### Bug fixes
 
@@ -16,6 +17,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * MinGW32 defines `__STDCPP_DEFAULT_NEW_ALIGNMENT__` as 16 but its allocations are actually 8 byte aligned. This caused unaligned read access violations in `TriangleSplitterBinning::mBins`.
 * `HeightFieldShape::SetHeights` corrupted the bounding volume tree when the number of blocks (`GetNumBlocks`) was not a power of 2. This resulted in collision queries possibly failing to report the correct collision.
 * Clamping warm start impulse ratio to avoid the simulation from exploding when updating the physics system with wildly different delta times. Note that this is not a perfect solution, so it is still recommended to step physics at a fixed time step.
+* Suppressing clang thread safety analysis warnings which appeared under XCode 27.
 * `VehicleEngineSettings::mInertia` and `mAngularDamping` were not serialized: they were missing from the RTTI (so they could not be set through an `ObjectStream`) and from `SaveBinaryState`/`RestoreBinaryState`.
 
 ### Removed functionality
