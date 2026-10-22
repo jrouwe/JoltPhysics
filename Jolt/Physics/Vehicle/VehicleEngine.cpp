@@ -18,6 +18,8 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(VehicleEngineSettings)
 	JPH_ADD_ATTRIBUTE(VehicleEngineSettings, mMinRPM)
 	JPH_ADD_ATTRIBUTE(VehicleEngineSettings, mMaxRPM)
 	JPH_ADD_ATTRIBUTE(VehicleEngineSettings, mNormalizedTorque)
+	JPH_ADD_ATTRIBUTE(VehicleEngineSettings, mInertia)
+	JPH_ADD_ATTRIBUTE(VehicleEngineSettings, mAngularDamping)
 }
 
 VehicleEngineSettings::VehicleEngineSettings()
@@ -34,6 +36,8 @@ void VehicleEngineSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mMinRPM);
 	inStream.Write(mMaxRPM);
 	mNormalizedTorque.SaveBinaryState(inStream);
+	inStream.Write(mInertia);
+	inStream.Write(mAngularDamping);
 }
 
 void VehicleEngineSettings::RestoreBinaryState(StreamIn &inStream)
@@ -42,6 +46,8 @@ void VehicleEngineSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mMinRPM);
 	inStream.Read(mMaxRPM);
 	mNormalizedTorque.RestoreBinaryState(inStream);
+	inStream.Read(mInertia);
+	inStream.Read(mAngularDamping);
 }
 
 void VehicleEngine::ApplyTorque(float inTorque, float inDeltaTime)
