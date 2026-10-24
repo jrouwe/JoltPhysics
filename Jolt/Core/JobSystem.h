@@ -156,6 +156,10 @@ public:
 	/// RemoveDependency causes the dependency counter to reach 0.
 	virtual JobHandle		CreateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies = 0) = 0;
 
+	/// Create a number of similar jobs, the jobs are started immediately if inNumDependencies == 0 otherwise they start when
+	/// RemoveDependency causes the dependency counter to reach 0.
+	virtual void			CreateJobs(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, JobHandle *outJobs, uint32 inNumJobs, uint32 inNumDependencies = 0) = 0;
+
 	/// Create a new barrier, used to wait on jobs
 	virtual Barrier *		CreateBarrier() = 0;
 
@@ -174,12 +178,12 @@ protected:
 
 		/// Constructor
 							Job([[maybe_unused]] const char *inJobName, [[maybe_unused]] ColorArg inColor, JobSystem *inJobSystem, const JobFunction &inJobFunction, uint32 inNumDependencies) :
+			mJobFunction(inJobFunction),
 		#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 			mJobName(inJobName),
 			mColor(inColor),
 		#endif // defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 			mJobSystem(inJobSystem),
-			mJobFunction(inJobFunction),
 			mNumDependencies(inNumDependencies)
 		{
 		}
@@ -283,13 +287,13 @@ protected:
 		static constexpr intptr_t cBarrierDoneState = ~intptr_t(0);		///< Value to use when the barrier has been triggered
 
 private:
+		JobFunction			mJobFunction;								///< Main job function (first member because it fills an entire cache line)
 	#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 		const char *		mJobName;									///< Name of the job
 		Color				mColor;										///< Color of the job in the profiler
 	#endif // defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 		JobSystem *			mJobSystem;									///< The job system we belong to
 		atomic<intptr_t>	mBarrier = 0;								///< Barrier that this job is associated with (is a Barrier pointer)
-		JobFunction			mJobFunction;								///< Main job function
 		atomic<uint32>		mReferenceCount = 0;						///< Amount of JobHandles pointing to this job
 		atomic<uint32>		mNumDependencies;							///< Amount of jobs that need to complete before this job can run
 	};

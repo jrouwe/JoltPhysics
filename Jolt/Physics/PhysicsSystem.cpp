@@ -353,23 +353,25 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 			// This job applies gravity to all active bodies
 			step.mApplyGravity.resize(num_apply_gravity_jobs);
-			for (int i = 0; i < num_apply_gravity_jobs; ++i)
-				step.mApplyGravity[i] = inJobSystem->CreateJob("ApplyGravity", cColorApplyGravity, [&context, &step]()
-					{
-						context.mPhysicsSystem->JobApplyGravity(&context, &step);
+			inJobSystem->CreateJobs("ApplyGravity", cColorApplyGravity, [&context, &step]()
+				{
+					context.mPhysicsSystem->JobApplyGravity(&context, &step);
 
-						JobHandle::sRemoveDependencies(step.mFindCollisions);
-					}, num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
+					JobHandle::sRemoveDependencies(step.mFindCollisions);
+				},
+				step.mApplyGravity.data(), num_apply_gravity_jobs,
+				num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
 
 			// This job will setup velocity constraints for non-collision constraints
 			step.mSetupVelocityConstraints.resize(num_setup_velocity_constraints_jobs);
-			for (int i = 0; i < num_setup_velocity_constraints_jobs; ++i)
-				step.mSetupVelocityConstraints[i] = inJobSystem->CreateJob("SetupVelocityConstraints", cColorSetupVelocityConstraints, [&context, &step]()
-					{
-						context.mPhysicsSystem->JobSetupVelocityConstraints(context.mStepDeltaTime, &step);
+			inJobSystem->CreateJobs("SetupVelocityConstraints", cColorSetupVelocityConstraints, [&context, &step]()
+				{
+					context.mPhysicsSystem->JobSetupVelocityConstraints(context.mStepDeltaTime, &step);
 
-						JobHandle::sRemoveDependencies(step.mSolveVelocityConstraints);
-					}, num_determine_active_constraints_jobs + 1); // depends on: determine active constraints, finish building jobs
+					JobHandle::sRemoveDependencies(step.mSolveVelocityConstraints);
+				},
+				step.mSetupVelocityConstraints.data(), num_setup_velocity_constraints_jobs,
+				num_determine_active_constraints_jobs + 1); // depends on: determine active constraints, finish building jobs
 
 			// This job will build islands from constraints
 			step.mBuildIslandsFromConstraints = inJobSystem->CreateJob("BuildIslandsFromConstraints", cColorBuildIslandsFromConstraints, [&context, &step]()
@@ -382,30 +384,32 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 			// This job determines active constraints
 			step.mDetermineActiveConstraints.resize(num_determine_active_constraints_jobs);
-			for (int i = 0; i < num_determine_active_constraints_jobs; ++i)
-				step.mDetermineActiveConstraints[i] = inJobSystem->CreateJob("DetermineActiveConstraints", cColorDetermineActiveConstraints, [&context, &step]()
-					{
-						context.mPhysicsSystem->JobDetermineActiveConstraints(&step);
+			inJobSystem->CreateJobs("DetermineActiveConstraints", cColorDetermineActiveConstraints, [&context, &step]()
+				{
+					context.mPhysicsSystem->JobDetermineActiveConstraints(&step);
 
-						step.mBuildIslandsFromConstraints.RemoveDependency();
+					step.mBuildIslandsFromConstraints.RemoveDependency();
 
-						// Kick these jobs last as they will use up all CPU cores leaving no space for the previous job, we prefer setup velocity constraints to finish first so we kick it first
-						JobHandle::sRemoveDependencies(step.mSetupVelocityConstraints);
-						JobHandle::sRemoveDependencies(step.mFindCollisions);
-					}, num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
+					// Kick these jobs last as they will use up all CPU cores leaving no space for the previous job, we prefer setup velocity constraints to finish first so we kick it first
+					JobHandle::sRemoveDependencies(step.mSetupVelocityConstraints);
+					JobHandle::sRemoveDependencies(step.mFindCollisions);
+				},
+				step.mDetermineActiveConstraints.data(), num_determine_active_constraints_jobs,
+				num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
 
 			// This job calls the step listeners
 			step.mStepListeners.resize(num_step_listener_jobs);
-			for (int i = 0; i < num_step_listener_jobs; ++i)
-				step.mStepListeners[i] = inJobSystem->CreateJob("StepListeners", cColorStepListeners, [&context, &step]()
-					{
-						// Call the step listeners
-						context.mPhysicsSystem->JobStepListeners(&step);
+			inJobSystem->CreateJobs("StepListeners", cColorStepListeners, [&context, &step]()
+				{
+					// Call the step listeners
+					context.mPhysicsSystem->JobStepListeners(&step);
 
-						// Kick apply gravity and determine active constraint jobs
-						JobHandle::sRemoveDependencies(step.mApplyGravity);
-						JobHandle::sRemoveDependencies(step.mDetermineActiveConstraints);
-					}, previous_step_dependency_count);
+					// Kick apply gravity and determine active constraint jobs
+					JobHandle::sRemoveDependencies(step.mApplyGravity);
+					JobHandle::sRemoveDependencies(step.mDetermineActiveConstraints);
+				},
+				step.mStepListeners.data(), num_step_listener_jobs,
+				previous_step_dependency_count);
 
 			// Unblock the previous step
 			if (!is_first_step)
@@ -495,13 +499,14 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 			// This job will solve the velocity constraints
 			step.mSolveVelocityConstraints.resize(max_concurrency);
-			for (int i = 0; i < max_concurrency; ++i)
-				step.mSolveVelocityConstraints[i] = inJobSystem->CreateJob("SolveVelocityConstraints", cColorSolveVelocityConstraints, [&context, &step]()
-					{
-						context.mPhysicsSystem->JobSolveVelocityConstraints(&context, &step);
+			inJobSystem->CreateJobs("SolveVelocityConstraints", cColorSolveVelocityConstraints, [&context, &step]()
+				{
+					context.mPhysicsSystem->JobSolveVelocityConstraints(&context, &step);
 
-						step.mPreIntegrateVelocity.RemoveDependency();
-					}, num_setup_velocity_constraints_jobs + 2); // depends on: finalize islands, setup velocity constraints, finish building jobs.
+					step.mPreIntegrateVelocity.RemoveDependency();
+				},
+				step.mSolveVelocityConstraints.data(), max_concurrency,
+				num_setup_velocity_constraints_jobs + 2); // depends on: finalize islands, setup velocity constraints, finish building jobs.
 
 			// We prefer setup velocity constraints to finish first so we kick it first
 			JobHandle::sRemoveDependencies(step.mSetupVelocityConstraints);
@@ -524,13 +529,14 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 			// This job will update the positions of all active bodies
 			step.mIntegrateVelocity.resize(num_integrate_velocity_jobs);
-			for (int i = 0; i < num_integrate_velocity_jobs; ++i)
-				step.mIntegrateVelocity[i] = inJobSystem->CreateJob("IntegrateVelocity", cColorIntegrateVelocity, [&context, &step]()
-					{
-						context.mPhysicsSystem->JobIntegrateVelocity(&context, &step);
+			inJobSystem->CreateJobs("IntegrateVelocity", cColorIntegrateVelocity, [&context, &step]()
+				{
+					context.mPhysicsSystem->JobIntegrateVelocity(&context, &step);
 
-						step.mPostIntegrateVelocity.RemoveDependency();
-					}, 2); // depends on: pre integrate velocity, finish building jobs.
+					step.mPostIntegrateVelocity.RemoveDependency();
+				},
+				step.mIntegrateVelocity.data(), num_integrate_velocity_jobs,
+				2); // depends on: pre integrate velocity, finish building jobs.
 
 			// Unblock previous job
 			step.mPreIntegrateVelocity.RemoveDependency();
@@ -559,15 +565,16 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 			// Fixes up drift in positions and updates the broadphase with new body positions
 			step.mSolvePositionConstraints.resize(max_concurrency);
-			for (int i = 0; i < max_concurrency; ++i)
-				step.mSolvePositionConstraints[i] = inJobSystem->CreateJob("SolvePositionConstraints", cColorSolvePositionConstraints, [&context, &step]()
-					{
-						context.mPhysicsSystem->JobSolvePositionConstraints(&context, &step);
+			inJobSystem->CreateJobs("SolvePositionConstraints", cColorSolvePositionConstraints, [&context, &step]()
+				{
+					context.mPhysicsSystem->JobSolvePositionConstraints(&context, &step);
 
-						// Kick the next step
-						if (step.mSoftBodyPrepare.IsValid())
-							step.mSoftBodyPrepare.RemoveDependency();
-					}, 3); // depends on: resolve ccd contacts, body set island index, finish building jobs.
+					// Kick the next step
+					if (step.mSoftBodyPrepare.IsValid())
+						step.mSoftBodyPrepare.RemoveDependency();
+				},
+				step.mSolvePositionConstraints.data(), max_concurrency,
+				3); // depends on: resolve ccd contacts, body set island index, finish building jobs.
 
 			// Unblock previous jobs.
 			step.mResolveCCDContacts.RemoveDependency();
