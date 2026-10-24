@@ -48,7 +48,7 @@ void RenderPrimitiveMTL::CreateIndexBuffer(int inNumIdx, const uint32 *inData)
 
 	NSUInteger size = NSUInteger(inNumIdx) * sizeof(uint32);
 	if (inData != nullptr)
-		mIndexBuffer = [mRenderer->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeManaged | MTLResourceHazardTrackingModeTracked];
+		mIndexBuffer = [mRenderer->GetDevice() newBufferWithBytes: inData length: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
 	else
 		mIndexBuffer = [mRenderer->GetDevice() newBufferWithLength: size options: MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared | MTLResourceHazardTrackingModeTracked];
 }
