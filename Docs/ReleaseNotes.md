@@ -18,8 +18,10 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * `HeightFieldShape::SetHeights` corrupted the bounding volume tree when the number of blocks (`GetNumBlocks`) was not a power of 2. This resulted in collision queries possibly failing to report the correct collision.
 * Clamping warm start impulse ratio to avoid the simulation from exploding when updating the physics system with wildly different delta times. Note that this is not a perfect solution, so it is still recommended to step physics at a fixed time step.
 * Suppressing clang thread safety analysis warnings which appeared under XCode 27.
-* `VehicleEngineSettings::mInertia` and `mAngularDamping` were not serialized: they were missing from the RTTI (so they could not be set through an `ObjectStream`) and from `SaveBinaryState`/`RestoreBinaryState`.
+* `VehicleEngineSettings::mInertia` and `mAngularDamping` were not serialized in an `ObjectStream` or from `SaveBinaryState`/`RestoreBinaryState`.
 * Fixed an issue where a body with motion quality `LinearCast` could pass through another body if its center of mass was offset.
+* Changed the queue in `JobSystemThreadPool` so that a worker thread that doesn't wake up cannot prevent new jobs from being added to the queue.
+* Fixed an issue where `GearConstraint` would apply the wrong torque to body 2.
 
 ### Removed functionality
 
