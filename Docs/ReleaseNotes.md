@@ -19,6 +19,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Clamping warm start impulse ratio to avoid the simulation from exploding when updating the physics system with wildly different delta times. Note that this is not a perfect solution, so it is still recommended to step physics at a fixed time step.
 * Suppressing clang thread safety analysis warnings which appeared under XCode 27.
 * `VehicleEngineSettings::mInertia` and `mAngularDamping` were not serialized: they were missing from the RTTI (so they could not be set through an `ObjectStream`) and from `SaveBinaryState`/`RestoreBinaryState`.
+* Fixed an issue where a body with motion quality `LinearCast` could pass through another body if its center of mass was offset.
 
 ### Removed functionality
 

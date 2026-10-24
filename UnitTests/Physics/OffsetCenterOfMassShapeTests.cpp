@@ -151,4 +151,31 @@ TEST_SUITE("OffsetCenterOfMassShapeTests")
 		CHECK_APPROX_EQUAL(body.GetLinearVelocity(), Vec3::sZero());
 		CHECK_APPROX_EQUAL(body.GetAngularVelocity(), Vec3(0, delta_v, 0));
 	}
+
+	TEST_CASE("TestMotionQualityLinearCastVsOffsetCOM")
+	{
+		for (Vec3 com_offset : { Vec3::sZero(), Vec3(0, 3, 0) })
+		{
+			PhysicsTestContext c;
+			c.ZeroGravity();
+
+			// Static floor: 0.1 m thick, top at y = 0.05
+			static constexpr float cHalfFloorHeight = 0.05f;
+			c.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(50, cHalfFloorHeight, 50)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+			// Dynamic panel: 0.1 m thick, center of mass moved inCOMOffset away from the box center
+			static constexpr float cHalfPanelHeight = 0.05f;
+			BodyCreationSettings s(new OffsetCenterOfMassShapeSettings(com_offset, new BoxShape(Vec3(2, cHalfPanelHeight, 2))), RVec3(0, 0.5f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			s.mMotionQuality = EMotionQuality::LinearCast;
+			s.mLinearVelocity = Vec3(0, -60, 0); // 1 m per step
+			BodyID panel_id = c.GetBodyInterface().CreateAndAddBody(s, EActivation::Activate);
+
+			c.SimulateSingleStep();
+
+			// Check that the panel is resting on the floor and not below it (which would indicate that CCD failed)
+			RVec3 position = c.GetBodyInterface().GetPosition(panel_id);
+			RVec3 expected_position = RVec3(0, cHalfFloorHeight + cHalfPanelHeight * (1.0f - c.GetSystem()->GetPhysicsSettings().mLinearCastMaxPenetration), 0);
+			CHECK_APPROX_EQUAL(position, expected_position);
+		}
+	}
 }
