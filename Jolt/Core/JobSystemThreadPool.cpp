@@ -92,21 +92,26 @@ void JobSystemThreadPool::StopThreads()
 	mJobs.DestructObject(sGetIndex(dummy));
 }
 
-JobHandle JobSystemThreadPool::CreateJob(const char *inJobName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies)
+JobSystemThreadPool::Job *JobSystemThreadPool::AllocateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies)
 {
-	JPH_PROFILE_FUNCTION();
-
 	// Loop until we can get a job from the free list
 	uint32 index;
 	for (;;)
 	{
-		index = mJobs.ConstructObject(inJobName, inColor, this, inJobFunction, inNumDependencies);
+		index = mJobs.ConstructObject(inName, inColor, this, inJobFunction, inNumDependencies);
 		if (index != AvailableJobs::cInvalidObjectIndex)
 			break;
 		JPH_ASSERT(false, "No jobs available!");
 		std::this_thread::sleep_for(std::chrono::microseconds(100));
 	}
-	Job *job = &mJobs.Get(index);
+	return &mJobs.Get(index);
+}
+
+JobHandle JobSystemThreadPool::CreateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies)
+{
+	JPH_PROFILE_FUNCTION();
+
+	Job *job = AllocateJob(inName, inColor, inJobFunction, inNumDependencies);
 
 	// Construct handle to keep a reference, the job is queued below and may immediately complete
 	JobHandle handle(job);
@@ -117,6 +122,24 @@ JobHandle JobSystemThreadPool::CreateJob(const char *inJobName, ColorArg inColor
 
 	// Return the handle
 	return handle;
+}
+
+void JobSystemThreadPool::CreateJobs(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, JobHandle *outJobs, uint32 inNumJobs, uint32 inNumDependencies)
+{
+	JPH_PROFILE_FUNCTION();
+
+	for (uint32 i = 0; i < inNumJobs; ++i)
+	{
+		Job *job = AllocateJob(inName, inColor, inJobFunction, inNumDependencies);
+		outJobs[i] = JobHandle(job);
+	}
+
+	// If there are no dependencies, queue the jobs now
+	if (inNumDependencies == 0)
+	{
+		static_assert(sizeof(JobHandle) == sizeof(Job *));
+		QueueJobs(reinterpret_cast<Job **>(outJobs), inNumJobs);
+	}
 }
 
 void JobSystemThreadPool::FreeJob(Job *inJob)
@@ -210,6 +233,10 @@ void JobSystemThreadPool::QueueJob(Job *inJob)
 
 void JobSystemThreadPool::QueueJobs(Job **inJobs, uint inNumJobs)
 {
+	// If no jobs are scheduled, do nothing
+	if (inNumJobs == 0)
+		return;
+
 	JPH_PROFILE_FUNCTION();
 
 	// If we have no worker threads, we can't queue the job either. We assume in this case that the job will be added to a barrier and that the barrier will execute the job when it's Wait() function is called.

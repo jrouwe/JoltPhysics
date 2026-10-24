@@ -26,6 +26,7 @@ public:
 	// See JobSystem
 	virtual int				GetMaxConcurrency() const override				{ return 1; }
 	virtual JobHandle		CreateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies = 0) override;
+	virtual void			CreateJobs(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, JobHandle *outJobs, uint32 inNumJobs, uint32 inNumDependencies = 0) override;
 	virtual Barrier *		CreateBarrier() override;
 	virtual void			DestroyBarrier(Barrier *inBarrier) override;
 	virtual void			WaitForJobs(Barrier *inBarrier) override;

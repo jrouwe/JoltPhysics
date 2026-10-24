@@ -47,6 +47,7 @@ public:
 	// See JobSystem
 	virtual int				GetMaxConcurrency() const override				{ return int(mThreads.size()) + 1; }
 	virtual JobHandle		CreateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies = 0) override;
+	virtual void			CreateJobs(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, JobHandle *outJobs, uint32 inNumJobs, uint32 inNumDependencies = 0) override;
 
 	/// Change the max concurrency after initialization
 	void					SetNumThreads(int inNumThreads)					{ StopThreads(); StartThreads(inNumThreads); }
@@ -78,6 +79,9 @@ private:
 	static uint64			sMakePointer(uint32 inIndex, uint32 inCount)	{ return (uint64(inCount) << 32) | inIndex; }
 	static uint32			sGetIndex(uint64 inPointer)						{ return uint32(inPointer); }
 	static uint32			sGetCount(uint64 inPointer)						{ return uint32(inPointer >> 32); }
+
+	/// Allocate a job
+	Job *					AllocateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies);
 
 	/// Add a job to the queue
 	void					Enqueue(Job *inJob);
