@@ -1374,10 +1374,15 @@ Vec3 CharacterVirtual::CancelVelocityTowardsSteepSlopes(Vec3Arg inDesiredVelocit
 			// Remove normal vertical component
 			normal -= normal.Dot(mUp) * mUp;
 
-			// Cancel horizontal movement in opposite direction
-			float dot = normal.Dot(desired_velocity);
-			if (dot < 0.0f)
-				desired_velocity -= (dot * normal) / normal.LengthSq();
+			// Check if there is a horizontal component in the normal
+			float normal_len_sq = normal.LengthSq();
+			if (normal_len_sq > 1.0e-12f)
+			{
+				// Cancel horizontal movement in opposite direction
+				float dot = normal.Dot(desired_velocity);
+				if (dot < 0.0f)
+					desired_velocity -= (dot * normal) / normal_len_sq;
+			}
 		}
 	return desired_velocity;
 }

@@ -14,10 +14,10 @@ class ObjectVsBroadPhaseLayerFilterTable : public ObjectVsBroadPhaseLayerFilter
 {
 private:
 	/// Get which bit corresponds to the pair (inLayer1, inLayer2)
-	uint					GetBit(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const
+	size_t					GetBit(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const
 	{
 		// Calculate at which bit the entry for this pair resides
-		return inLayer1 * mNumBroadPhaseLayers + (BroadPhaseLayer::Type)inLayer2;
+		return size_t(inLayer1) * mNumBroadPhaseLayers + (BroadPhaseLayer::Type)inLayer2;
 	}
 
 public:
@@ -45,7 +45,7 @@ public:
 				// If the object layers collide then so should the object and broadphase layer
 				if (inObjectLayerPairFilter.ShouldCollide(o1, o2))
 				{
-					uint bit = GetBit(o1, b2);
+					size_t bit = GetBit(o1, b2);
 					mTable[bit >> 3] |= 1 << (bit & 0b111);
 				}
 			}
@@ -54,7 +54,7 @@ public:
 	/// Returns true if an object layer should collide with a broadphase layer
 	virtual bool			ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const override
 	{
-		uint bit = GetBit(inLayer1, inLayer2);
+		size_t bit = GetBit(inLayer1, inLayer2);
 		return (mTable[bit >> 3] & (1 << (bit & 0b111))) != 0;
 	}
 

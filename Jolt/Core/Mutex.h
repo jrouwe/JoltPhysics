@@ -8,6 +8,7 @@
 #include <Jolt/Core/NonCopyable.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <atomic>
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
@@ -16,6 +17,7 @@ JPH_SUPPRESS_WARNINGS_STD_END
 JPH_NAMESPACE_BEGIN
 
 // Things we're using from STL
+using std::atomic;
 using std::mutex;
 using std::shared_mutex;
 using std::thread;
@@ -123,10 +125,10 @@ class Mutex : public MutexBase
 public:
 	inline bool		try_lock()
 	{
-		JPH_ASSERT(mLockedThreadID != std::this_thread::get_id());
+		JPH_ASSERT(mLockedThreadID.load(std::memory_order_relaxed) != std::this_thread::get_id());
 		if (MutexBase::try_lock())
 		{
-			JPH_IF_ENABLE_ASSERTS(mLockedThreadID = std::this_thread::get_id();)
+			JPH_IF_ENABLE_ASSERTS(mLockedThreadID.store(std::this_thread::get_id(), std::memory_order_relaxed);)
 			return true;
 		}
 		return false;
@@ -138,26 +140,26 @@ public:
 		{
 			JPH_PROFILE("Lock", 0xff00ffff);
 			MutexBase::lock();
-			JPH_IF_ENABLE_ASSERTS(mLockedThreadID = std::this_thread::get_id();)
+			JPH_IF_ENABLE_ASSERTS(mLockedThreadID.store(std::this_thread::get_id(), std::memory_order_relaxed);)
 		}
 	}
 
 	inline void		unlock()
 	{
-		JPH_ASSERT(mLockedThreadID == std::this_thread::get_id());
-		JPH_IF_ENABLE_ASSERTS(mLockedThreadID = thread::id();)
+		JPH_ASSERT(mLockedThreadID.load(std::memory_order_relaxed) == std::this_thread::get_id());
+		JPH_IF_ENABLE_ASSERTS(mLockedThreadID.store(thread::id(), std::memory_order_relaxed);)
 		MutexBase::unlock();
 	}
 
 #ifdef JPH_ENABLE_ASSERTS
 	inline bool		is_locked()
 	{
-		return mLockedThreadID != thread::id();
+		return mLockedThreadID.load(std::memory_order_relaxed) != thread::id();
 	}
 #endif // JPH_ENABLE_ASSERTS
 
 private:
-	JPH_IF_ENABLE_ASSERTS(thread::id mLockedThreadID;)
+	JPH_IF_ENABLE_ASSERTS(atomic<thread::id> mLockedThreadID { };)
 };
 
 /// Very simple wrapper around SharedMutexBase which tracks lock contention in the profiler
@@ -167,10 +169,10 @@ class SharedMutex : public SharedMutexBase
 public:
 	inline bool		try_lock()
 	{
-		JPH_ASSERT(mLockedThreadID != std::this_thread::get_id());
+		JPH_ASSERT(mLockedThreadID.load(std::memory_order_relaxed) != std::this_thread::get_id());
 		if (SharedMutexBase::try_lock())
 		{
-			JPH_IF_ENABLE_ASSERTS(mLockedThreadID = std::this_thread::get_id();)
+			JPH_IF_ENABLE_ASSERTS(mLockedThreadID.store(std::this_thread::get_id(), std::memory_order_relaxed);)
 			return true;
 		}
 		return false;
@@ -182,21 +184,21 @@ public:
 		{
 			JPH_PROFILE("WLock", 0xff00ffff);
 			SharedMutexBase::lock();
-			JPH_IF_ENABLE_ASSERTS(mLockedThreadID = std::this_thread::get_id();)
+			JPH_IF_ENABLE_ASSERTS(mLockedThreadID.store(std::this_thread::get_id(), std::memory_order_relaxed);)
 		}
 	}
 
 	inline void		unlock()
 	{
-		JPH_ASSERT(mLockedThreadID == std::this_thread::get_id());
-		JPH_IF_ENABLE_ASSERTS(mLockedThreadID = thread::id();)
+		JPH_ASSERT(mLockedThreadID.load(std::memory_order_relaxed) == std::this_thread::get_id());
+		JPH_IF_ENABLE_ASSERTS(mLockedThreadID.store(thread::id(), std::memory_order_relaxed);)
 		SharedMutexBase::unlock();
 	}
 
 #ifdef JPH_ENABLE_ASSERTS
 	inline bool		is_locked()
 	{
-		return mLockedThreadID != thread::id();
+		return mLockedThreadID.load(std::memory_order_relaxed) != thread::id();
 	}
 #endif // JPH_ENABLE_ASSERTS
 
@@ -210,7 +212,7 @@ public:
 	}
 
 private:
-	JPH_IF_ENABLE_ASSERTS(thread::id mLockedThreadID;)
+	JPH_IF_ENABLE_ASSERTS(atomic<thread::id> mLockedThreadID { };)
 };
 
 #else

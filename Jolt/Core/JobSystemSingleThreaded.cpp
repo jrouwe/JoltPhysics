@@ -31,6 +31,12 @@ JobHandle JobSystemSingleThreaded::CreateJob(const char *inJobName, ColorArg inC
 	return handle;
 }
 
+void JobSystemSingleThreaded::CreateJobs(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, JobHandle *outJobs, uint32 inNumJobs, uint32 inNumDependencies)
+{
+	for (uint32 i = 0; i < inNumJobs; ++i)
+		outJobs[i] = CreateJob(inName, inColor, inJobFunction, inNumDependencies);
+}
+
 void JobSystemSingleThreaded::FreeJob(Job *inJob)
 {
 	mJobs.DestructObject(inJob);

@@ -252,7 +252,7 @@ Note that after you call Create, the shape is cached and ShapeSettings keeps a r
 There are two ways of serializing data:
 
 * The uncooked data can be serialized using the [ObjectStream](@ref ObjectStream) system (either in [binary](@ref ObjectStreamBinaryOut) or in [text](@ref ObjectStreamTextOut) format), data stored in this way is likely to be compatible with future versions of the library (although there is no 100% guarantee of this).
-* The cooked data can be serialized using the [SaveBinaryState](@ref Shape::SaveBinaryState) interface that various objects provide. Data stored in this way is optimized for simulation performance and loading speed but is very likely to change between versions of the library, so this should never be your primary data format.
+* The cooked data can be serialized using the [SaveBinaryState](@ref Shape::SaveBinaryState) interface that various objects provide. Data stored in this way is optimized for simulation performance and loading speed but is very likely to change between versions of the library, so this should never be your primary data format. Check for [API changes marked with SBS](APIChanges.md) to see if library versions are compatible. The serialization format also depends on the `JPH_DOUBLE_PRECISION` and `JPH_OBJECT_LAYER_BITS` defines.
 
 An example of saving a shape in binary format:
 
@@ -305,6 +305,8 @@ A possible pattern for serializing binary data in your own engine could be:
   * At cooking time create a StaticCompoundShape.
   * Before writing the shape to the binary blob with Shape::SaveWithChildren it inserts all leaf shapes (the Shape associated with the child EngineShape) in the Shape::ShapeToIDMap so they won't be included in the binary blob.
   * Before loading the binary blob with Shape::sRestoreWithChildren prepopulate the Shape::IDToShapeMap with the pointers to the restored Shape's from the child EngineShapes (this again assumes that your own serialization system is capable of restoring the pointers between EngineCompoundShape and the child EntityShapes).
+  
+Please use the serialization functions on trusted data only. ObjectStreamIn verifies the structure of the input stream, but doesn't validate individual members. E.g. maniplulate the data so an array has `UINT_MAX` entries and the library will most likely crash while trying to allocate a very large data block. The RestoreBinaryState function doesn't even validate the structure (for performance reasons) and will crash on any corrupted data or data stored by an incompatible version of the library. If the data cannot be trusted, use a checksum or a digital signature to verify the integrity of the data before passing it to the library.
 
 ### Convex Radius {#convex-radius}
 

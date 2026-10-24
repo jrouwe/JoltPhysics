@@ -39,7 +39,7 @@ public:
 	void					SetThreadExitFunction(const InitExitFunction &inExitFunction)	{ mThreadExitFunction = inExitFunction; }
 
 	/// Initialize the thread pool
-	/// @param inMaxJobs Max number of jobs that can be allocated at any time
+	/// @param inMaxJobs Max number of jobs that can be allocated at any time (note that the actual number of jobs that can be queued is inMaxJobs - 1 because the queue always contains a dummy node)
 	/// @param inMaxBarriers Max number of barriers that can be allocated at any time
 	/// @param inNumThreads Number of threads to start (the number of concurrent jobs is 1 more because the main thread will also run jobs while waiting for a barrier to complete). Use -1 to auto detect the amount of CPU's.
 	void					Init(uint inMaxJobs, uint inMaxBarriers, int inNumThreads = -1);
@@ -47,6 +47,7 @@ public:
 	// See JobSystem
 	virtual int				GetMaxConcurrency() const override				{ return int(mThreads.size()) + 1; }
 	virtual JobHandle		CreateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies = 0) override;
+	virtual void			CreateJobs(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, JobHandle *outJobs, uint32 inNumJobs, uint32 inNumDependencies = 0) override;
 
 	/// Change the max concurrency after initialization
 	void					SetNumThreads(int inNumThreads)					{ StopThreads(); StartThreads(inNumThreads); }
@@ -58,6 +59,36 @@ protected:
 	virtual void			FreeJob(Job *inJob) override;
 
 private:
+	/// A job that is also a node of the queue. The queue is a Michael-Scott multi producer multi consumer queue.
+	/// See 'Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue Algorithms'.
+	/// Pointers are stored as an index in mJobs combined with a modification count (to prevent the ABA problem) packed in a uint64.
+	class Node : public Job
+	{
+	public:
+							Node(const char *inJobName, ColorArg inColor, JobSystem *inJobSystem, const JobFunction &inJobFunction, uint32 inNumDependencies)
+			: Job(inJobName, inColor, inJobSystem, inJobFunction, inNumDependencies)
+		{
+			// Work around TSAN false positive. We can read mNext from a freed and then recyled node. So instead of constructing, we atomically intialize mNext to 0
+			mNext.store(0, std::memory_order_relaxed);
+		}
+
+		atomic<uint64>		mNext;											///< Index to the next node in the queue and counter
+	};
+
+	static constexpr uint32	cNullIndex = 0xffffffff;
+	static uint64			sMakePointer(uint32 inIndex, uint32 inCount)	{ return (uint64(inCount) << 32) | inIndex; }
+	static uint32			sGetIndex(uint64 inPointer)						{ return uint32(inPointer); }
+	static uint32			sGetCount(uint64 inPointer)						{ return uint32(inPointer >> 32); }
+
+	/// Allocate a job
+	Job *					AllocateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies);
+
+	/// Add a job to the queue
+	void					Enqueue(Job *inJob);
+
+	/// Take a job from the queue, returns nullptr when the queue is empty. The caller must Release() the returned job after executing it.
+	Job *					Dequeue();
+
 	/// Start/stop the worker threads
 	void					StartThreads(int inNumThreads);
 	void					StopThreads();
@@ -65,31 +96,23 @@ private:
 	/// Entry point for a thread
 	void					ThreadMain(int inThreadIndex);
 
-	/// Get the head of the thread that has processed the least amount of jobs
-	inline uint				GetHead() const;
-
-	/// Internal helper function to queue a job
-	inline void				QueueJobInternal(Job *inJob);
+	/// Execute all jobs in the queue
+	void					ExecuteJobs();
 
 	/// Functions to call when initializing or exiting a thread
 	InitExitFunction		mThreadInitFunction = [](int) { };
 	InitExitFunction		mThreadExitFunction = [](int) { };
 
 	/// Array of jobs (fixed size)
-	using AvailableJobs = FixedSizeFreeList<Job>;
+	using AvailableJobs = FixedSizeFreeList<Node>;
 	AvailableJobs			mJobs;
 
 	/// Threads running jobs
 	Array<thread>			mThreads;
 
-	// The job queue
-	static constexpr uint32 cQueueLength = 1024;
-	static_assert(IsPowerOf2(cQueueLength));								// We do bit operations and require queue length to be a power of 2
-	atomic<Job *>			mQueue[cQueueLength];
-
-	// Head and tail of the queue, do this value modulo cQueueLength - 1 to get the element in the mQueue array
-	atomic<uint> *			mHeads = nullptr;								///< Per executing thread the head of the current queue
-	alignas(JPH_CACHE_LINE_SIZE) atomic<uint> mTail = 0;					///< Tail (write end) of the queue
+	// Head and tail of the queue, these are index + counters (see sMakePointer)
+	alignas(JPH_CACHE_LINE_SIZE) atomic<uint64> mHead;
+	alignas(JPH_CACHE_LINE_SIZE) atomic<uint64> mTail;
 
 	// Semaphore used to signal worker threads that there is new work
 	Semaphore				mSemaphore;

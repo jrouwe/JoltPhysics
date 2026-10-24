@@ -146,7 +146,7 @@ JPH_INLINE float MulRSqrtApproximate(float inA, float inB)
 	#endif
 #else
 	return inA / Sqrt(inB);
-#endif // JPH_CROSS_PLATFORM_DETERMINISTIC	
+#endif // JPH_CROSS_PLATFORM_DETERMINISTIC
 }
 
 /// Get the sign of a value

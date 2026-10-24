@@ -21,6 +21,7 @@
 * [Nazara Engine](https://github.com/NazaraEngine/NazaraEngine) - A cross-platform framework aimed at real-time applications (such as video games) requiring Audio, 2D/3D rendering and physics, network and more.
 * [NeoAxis Engine](https://www.neoaxis.com/) - A 3D game engine. See [this](https://www.neoaxis.com/news/neoaxis_engine_2023_1_released) announcement.
 * [OTR 2](https://www.dogbytegames.com/off_the_road_2.html) - A sandbox driving game. It features a huge game world to explore, land, air, sea vehicles to drive, online multiplayer.
+* [Project Car Crash](https://stellarica.io/carcrash) - A driving game built on a fully simulated soft-body car.
 * [Qt Quick 3D Jolt Physics](https://github.com/glazunov999/qtquick3djoltphysics) - An alternative high-level API for physics simulation in Qt Quick 3D.
 * [Sceneri](https://www.sceneri.com/) - A mobile app for creating and sharing 3D games and experiences. See [this](https://www.sceneri.com/blog/2023-07-27-jolt-physics-bringing-sceneris-worlds-to-life) blog post.
 * [Substrata](https://substrata.info/) - A metaverse platform.

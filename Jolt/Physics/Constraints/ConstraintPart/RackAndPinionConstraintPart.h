@@ -74,11 +74,11 @@ public:
 		mInvI1_A = inBody1.GetMotionProperties()->MultiplyWorldSpaceInverseInertiaByVector(inBody1.GetRotation(), inWorldSpaceHingeAxis);
 
 		// Calculate: r/m2 b
-		float inv_m2 = inBody2.GetMotionProperties()->GetInverseMass();
-		mRatio_InvM2_B = inRatio * inv_m2 * inWorldSpaceSliderAxis;
+		float ratio_inv_m2 = inRatio * inBody2.GetMotionProperties()->GetInverseMass();
+		mRatio_InvM2_B = ratio_inv_m2 * inWorldSpaceSliderAxis;
 
 		// K^-1 = 1 / (J M^-1 J^T) = 1 / (a^T I1^-1 a + 1/m2 * r^2 * b . b)
-		float inv_effective_mass = (inWorldSpaceHingeAxis.Dot(mInvI1_A) + inv_m2 * Square(inRatio));
+		float inv_effective_mass = inWorldSpaceHingeAxis.Dot(mInvI1_A) + ratio_inv_m2 * inRatio;
 		if (inv_effective_mass < FLT_MIN)
 			Deactivate();
 		else

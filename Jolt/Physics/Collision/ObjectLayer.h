@@ -9,15 +9,14 @@
 JPH_NAMESPACE_BEGIN
 
 /// Layer that objects can be in, determines which other objects it can collide with
-#ifndef JPH_OBJECT_LAYER_BITS
-	#define JPH_OBJECT_LAYER_BITS 16
-#endif // JPH_OBJECT_LAYER_BITS
 #if JPH_OBJECT_LAYER_BITS == 16
 	using ObjectLayer = uint16;
 #elif JPH_OBJECT_LAYER_BITS == 32
 	using ObjectLayer = uint32;
+#elif JPH_OBJECT_LAYER_BITS == 64
+	using ObjectLayer = uint64;
 #else
-	#error "JPH_OBJECT_LAYER_BITS must be 16 or 32"
+	#error Invalid value for JPH_OBJECT_LAYER_BITS. Must be 16, 32 or 64.
 #endif
 
 /// Constant value used to indicate an invalid object layer

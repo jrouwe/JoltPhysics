@@ -35,11 +35,19 @@ inline void CHECK_APPROX_EQUAL(double inLHS, double inRHS, double inTolerance = 
 
 inline void CHECK_APPROX_EQUAL(Vec3Arg inLHS, Vec3Arg inRHS, float inTolerance = 1.0e-6f)
 {
+	CAPTURE(inLHS);
+	CAPTURE(inRHS);
+	CAPTURE((inLHS - inRHS).Length());
+	CAPTURE(inTolerance);
 	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
 }
 
 inline void CHECK_APPROX_EQUAL(Vec4Arg inLHS, Vec4Arg inRHS, float inTolerance = 1.0e-6f)
 {
+	CAPTURE(inLHS);
+	CAPTURE(inRHS);
+	CAPTURE((inLHS - inRHS).Length());
+	CAPTURE(inTolerance);
 	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
 }
 

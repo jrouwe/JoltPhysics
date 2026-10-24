@@ -53,7 +53,7 @@ TextureMTL::TextureMTL(RendererMTL *inRenderer, const Surface *inSurface) :
 	descriptor.pixelFormat = mt_format;
 	descriptor.width = mWidth;
 	descriptor.height = mHeight;
-	descriptor.storageMode = MTLStorageModeManaged;
+	descriptor.storageMode = MTLStorageModeShared;
 
 	MTLRegion region =
 	{

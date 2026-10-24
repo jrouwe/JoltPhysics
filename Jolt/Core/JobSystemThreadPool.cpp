@@ -22,10 +22,6 @@ void JobSystemThreadPool::Init(uint inMaxJobs, uint inMaxBarriers, int inNumThre
 	// Init freelist of jobs
 	mJobs.Init(inMaxJobs, inMaxJobs);
 
-	// Init queue
-	for (atomic<Job *> &j : mQueue)
-		j = nullptr;
-
 	// Start the worker threads
 	StartThreads(inNumThreads);
 }
@@ -47,12 +43,15 @@ void JobSystemThreadPool::StartThreads([[maybe_unused]] int inNumThreads)
 		return;
 
 	// Don't quit the threads
-	mQuit = false;
+	mQuit.store(false, std::memory_order_relaxed);
 
-	// Allocate heads
-	mHeads = reinterpret_cast<atomic<uint> *>(Allocate(sizeof(atomic<uint>) * inNumThreads));
-	for (int i = 0; i < inNumThreads; ++i)
-		mHeads[i] = 0;
+	// Reset the queue: create the dummy node that is the only node in the queue, the queue holds a reference to it
+	Node *dummy = &mJobs.Get(mJobs.ConstructObject("Dummy", Color::sBlack, this, JobFunction(), 0));
+	dummy->AddRef();
+	dummy->mNext.store(sMakePointer(cNullIndex, 0), std::memory_order_relaxed);
+	uint64 dummy_pointer = sMakePointer(mJobs.GetObjectIndex(dummy), 0);
+	mHead.store(dummy_pointer, std::memory_order_relaxed);
+	mTail.store(dummy_pointer, std::memory_order_relaxed);
 
 	// Start running threads
 	JPH_ASSERT(mThreads.empty());
@@ -74,7 +73,7 @@ void JobSystemThreadPool::StopThreads()
 		return;
 
 	// Signal threads that we want to stop and wake them up
-	mQuit = true;
+	mQuit.store(true, std::memory_order_relaxed);
 	mSemaphore.Release((uint)mThreads.size());
 
 	// Wait for all threads to finish
@@ -86,39 +85,33 @@ void JobSystemThreadPool::StopThreads()
 	mThreads.clear();
 
 	// Ensure that there are no lingering jobs in the queue
-	for (uint head = 0; head != mTail; ++head)
-	{
-		// Fetch job
-		Job *job_ptr = mQueue[head & (cQueueLength - 1)].exchange(nullptr);
-		if (job_ptr != nullptr)
-		{
-			// And execute it
-			job_ptr->Execute();
-			job_ptr->Release();
-		}
-	}
+	ExecuteJobs();
 
-	// Destroy heads and reset tail
-	Free(mHeads);
-	mHeads = nullptr;
-	mTail = 0;
+	// Destruct the dummy job
+	uint64 dummy = mTail.load(std::memory_order_relaxed);
+	mJobs.DestructObject(sGetIndex(dummy));
 }
 
-JobHandle JobSystemThreadPool::CreateJob(const char *inJobName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies)
+JobSystemThreadPool::Job *JobSystemThreadPool::AllocateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies)
 {
-	JPH_PROFILE_FUNCTION();
-
 	// Loop until we can get a job from the free list
 	uint32 index;
 	for (;;)
 	{
-		index = mJobs.ConstructObject(inJobName, inColor, this, inJobFunction, inNumDependencies);
+		index = mJobs.ConstructObject(inName, inColor, this, inJobFunction, inNumDependencies);
 		if (index != AvailableJobs::cInvalidObjectIndex)
 			break;
 		JPH_ASSERT(false, "No jobs available!");
 		std::this_thread::sleep_for(std::chrono::microseconds(100));
 	}
-	Job *job = &mJobs.Get(index);
+	return &mJobs.Get(index);
+}
+
+JobHandle JobSystemThreadPool::CreateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies)
+{
+	JPH_PROFILE_FUNCTION();
+
+	Job *job = AllocateJob(inName, inColor, inJobFunction, inNumDependencies);
 
 	// Construct handle to keep a reference, the job is queued below and may immediately complete
 	JobHandle handle(job);
@@ -131,63 +124,96 @@ JobHandle JobSystemThreadPool::CreateJob(const char *inJobName, ColorArg inColor
 	return handle;
 }
 
+void JobSystemThreadPool::CreateJobs(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, JobHandle *outJobs, uint32 inNumJobs, uint32 inNumDependencies)
+{
+	JPH_PROFILE_FUNCTION();
+
+	for (uint32 i = 0; i < inNumJobs; ++i)
+	{
+		Job *job = AllocateJob(inName, inColor, inJobFunction, inNumDependencies);
+		outJobs[i] = JobHandle(job);
+	}
+
+	// If there are no dependencies, queue the jobs now
+	if (inNumDependencies == 0)
+	{
+		static_assert(sizeof(JobHandle) == sizeof(Job *));
+		QueueJobs(reinterpret_cast<Job **>(outJobs), inNumJobs);
+	}
+}
+
 void JobSystemThreadPool::FreeJob(Job *inJob)
 {
-	mJobs.DestructObject(inJob);
+	mJobs.DestructObject(static_cast<Node *>(inJob));
 }
 
-uint JobSystemThreadPool::GetHead() const
+void JobSystemThreadPool::Enqueue(Job *inJob)
 {
-	// Find the minimal value across all threads
-	uint head = mTail;
-	for (size_t i = 0; i < mThreads.size(); ++i)
-		head = min(head, mHeads[i].load());
-	return head;
-}
+	Node *node = static_cast<Node *>(inJob);
+	uint32 node_index = mJobs.GetObjectIndex(node);
 
-void JobSystemThreadPool::QueueJobInternal(Job *inJob)
-{
-	// Add reference to job because we're adding the job to the queue
-	inJob->AddRef();
+	// Add references to the job: one for the queue (held until the node is no longer the dummy node) and one for the thread that will execute it
+	node->AddRef(2);
 
-	// Need to read head first because otherwise the tail can already have passed the head
-	// We read the head outside of the loop since it involves iterating over all threads and we only need to update
-	// it if there's not enough space in the queue.
-	uint head = GetHead();
+	// Set the next pointer to null, the count must be different from any previous use of this node
+	node->mNext.store(sMakePointer(cNullIndex, sGetCount(mTail.load(std::memory_order_relaxed))), std::memory_order_relaxed);
 
 	for (;;)
 	{
-		// Check if there's space in the queue
-		uint old_value = mTail;
-		if (old_value - head >= cQueueLength)
+		uint64 tail = mTail.load(std::memory_order_acquire);
+		Node &tail_node = mJobs.Get(sGetIndex(tail));
+		uint64 next = tail_node.mNext.load(std::memory_order_acquire); // Node could be deleted but since we used a fixed freelist, the memory is still accessible
+		if (tail == mTail.load(std::memory_order_relaxed)) // Are tail and next consistent?
 		{
-			// We calculated the head outside of the loop, update head (and we also need to update tail to prevent it from passing head)
-			head = GetHead();
-			old_value = mTail;
-
-			// Second check if there's space in the queue
-			if (old_value - head >= cQueueLength)
+			if (sGetIndex(next) == cNullIndex) // Was tail pointing to the last node?
 			{
-				// Wake up all threads in order to ensure that they can clear any nullptrs they may not have processed yet
-				mSemaphore.Release((uint)mThreads.size());
-
-				// Sleep a little (we have to wait for other threads to update their head pointer in order for us to be able to continue)
-				std::this_thread::sleep_for(std::chrono::microseconds(100));
-				continue;
+				// Try to link the node at the end of the list
+				if (tail_node.mNext.compare_exchange_weak(next, sMakePointer(node_index, sGetCount(next) + 1), std::memory_order_release, std::memory_order_relaxed))
+				{
+					// Enqueue is done, try to swing tail to the inserted node
+					mTail.compare_exchange_strong(tail, sMakePointer(node_index, sGetCount(tail) + 1), std::memory_order_release, std::memory_order_relaxed);
+					return;
+				}
+			}
+			else
+			{
+				// Tail was not pointing to the last node, try to swing it to the next node
+				mTail.compare_exchange_weak(tail, sMakePointer(sGetIndex(next), sGetCount(tail) + 1), std::memory_order_release, std::memory_order_relaxed);
 			}
 		}
+	}
+}
 
-		// Write the job pointer if the slot is empty
-		Job *expected_job = nullptr;
-		bool success = mQueue[old_value & (cQueueLength - 1)].compare_exchange_strong(expected_job, inJob);
+JobSystem::Job *JobSystemThreadPool::Dequeue()
+{
+	for (;;)
+	{
+		uint64 head = mHead.load(std::memory_order_acquire);
+		uint64 tail = mTail.load(std::memory_order_acquire);
+		uint64 next = mJobs.Get(sGetIndex(head)).mNext.load(std::memory_order_acquire); // Node could be deleted but since we used a fixed freelist, the memory is still accessible
+		if (head == mHead.load(std::memory_order_relaxed)) // Are head, tail and next consistent?
+		{
+			if (sGetIndex(head) == sGetIndex(tail)) // Is queue empty or tail falling behind?
+			{
+				if (sGetIndex(next) == cNullIndex)
+					return nullptr; // Queue is empty
 
-		// Regardless of who wrote the slot, we will update the tail (if the successful thread got scheduled out
-		// after writing the pointer we still want to be able to continue)
-		mTail.compare_exchange_strong(old_value, old_value + 1);
+				// Tail is falling behind, try to advance it
+				mTail.compare_exchange_weak(tail, sMakePointer(sGetIndex(next), sGetCount(tail) + 1), std::memory_order_release, std::memory_order_relaxed);
+			}
+			else
+			{
+				// Try to swing head to the next node, this makes it the new dummy node
+				if (mHead.compare_exchange_weak(head, sMakePointer(sGetIndex(next), sGetCount(head) + 1), std::memory_order_release, std::memory_order_relaxed))
+				{
+					// This node is no longer in the queue so we can release the queue's reference to it
+					mJobs.Get(sGetIndex(head)).Release();
 
-		// If we successfully added our job we're done
-		if (success)
-			break;
+					// The caller owns the other reference to the job that was taken in Enqueue
+					return &mJobs.Get(sGetIndex(next));
+				}
+			}
+		}
 	}
 }
 
@@ -199,8 +225,7 @@ void JobSystemThreadPool::QueueJob(Job *inJob)
 	if (mThreads.empty())
 		return;
 
-	// Queue the job
-	QueueJobInternal(inJob);
+	Enqueue(inJob);
 
 	// Wake up thread
 	mSemaphore.Release();
@@ -208,20 +233,33 @@ void JobSystemThreadPool::QueueJob(Job *inJob)
 
 void JobSystemThreadPool::QueueJobs(Job **inJobs, uint inNumJobs)
 {
-	JPH_PROFILE_FUNCTION();
+	// If no jobs are scheduled, do nothing
+	if (inNumJobs == 0)
+		return;
 
-	JPH_ASSERT(inNumJobs > 0);
+	JPH_PROFILE_FUNCTION();
 
 	// If we have no worker threads, we can't queue the job either. We assume in this case that the job will be added to a barrier and that the barrier will execute the job when it's Wait() function is called.
 	if (mThreads.empty())
 		return;
 
-	// Queue all jobs
 	for (Job **job = inJobs, **job_end = inJobs + inNumJobs; job < job_end; ++job)
-		QueueJobInternal(*job);
+		Enqueue(*job);
 
 	// Wake up threads
 	mSemaphore.Release(min(inNumJobs, (uint)mThreads.size()));
+}
+
+void JobSystemThreadPool::ExecuteJobs()
+{
+	JPH_PROFILE("Executing Jobs");
+
+	while (Job *job = Dequeue())
+	{
+		// Execute the associated job
+		job->Execute();
+		job->Release();
+	}
 }
 
 #if defined(JPH_PLATFORM_WINDOWS)
@@ -312,34 +350,12 @@ void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 	// Call the thread init function
 	mThreadInitFunction(inThreadIndex);
 
-	atomic<uint> &head = mHeads[inThreadIndex];
-
-	while (!mQuit)
+	while (!mQuit.load(std::memory_order_relaxed))
 	{
 		// Wait for jobs
 		mSemaphore.Acquire();
 
-		{
-			JPH_PROFILE("Executing Jobs");
-
-			// Loop over the queue
-			while (head != mTail)
-			{
-				// Exchange any job pointer we find with a nullptr
-				atomic<Job *> &job = mQueue[head & (cQueueLength - 1)];
-				if (job.load() != nullptr)
-				{
-					Job *job_ptr = job.exchange(nullptr);
-					if (job_ptr != nullptr)
-					{
-						// And execute it
-						job_ptr->Execute();
-						job_ptr->Release();
-					}
-				}
-				head++;
-			}
-		}
+		ExecuteJobs();
 	}
 
 	// Call the thread exit function

@@ -2567,7 +2567,8 @@ PREDEFINED             = _WIN32 \
                          JPH_PROFILE_ENABLED \
                          JPH_DEBUG_RENDERER \
                          JPH_OBJECT_STREAM \
-                         JPH_PLATFORM_DOXYGEN
+                         JPH_PLATFORM_DOXYGEN \
+						 JPH_OBJECT_LAYER_BITS=16
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

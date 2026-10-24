@@ -125,7 +125,7 @@ void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody
 
 	// Estimate the contact impulses.
 	CollisionEstimationResult result;
-	EstimateCollisionResponse(inBody1, inBody2, inManifold, result, ioSettings.mCombinedFriction, ioSettings.mCombinedRestitution);
+	EstimateCollisionResponse(inBody1, inBody2, inManifold, result, ioSettings);
 
 	// Trace the result
 	String impulses_str;

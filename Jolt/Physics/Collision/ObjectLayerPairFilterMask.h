@@ -19,14 +19,14 @@ public:
 
 	/// Number of bits for the group and mask bits
 	static constexpr uint32 cNumBits = JPH_OBJECT_LAYER_BITS / 2;
-	static constexpr uint32	cMask = (1 << cNumBits) - 1;
+	static constexpr uint32	cMask = uint32((uint64(1) << cNumBits) - 1);
 
 	/// Construct an ObjectLayer from a group and mask bits
 	static ObjectLayer		sGetObjectLayer(uint32 inGroup, uint32 inMask = cMask)
 	{
 		JPH_ASSERT((inGroup & ~cMask) == 0);
 		JPH_ASSERT((inMask & ~cMask) == 0);
-		return ObjectLayer((inGroup & cMask) | (inMask << cNumBits));
+		return ObjectLayer(inGroup & cMask) | ObjectLayer(ObjectLayer(inMask) << cNumBits);
 	}
 
 	/// Get the group bits from an ObjectLayer
@@ -38,7 +38,7 @@ public:
 	/// Get the mask bits from an ObjectLayer
 	static inline uint32	sGetMask(ObjectLayer inObjectLayer)
 	{
-		return uint32(inObjectLayer) >> cNumBits;
+		return uint32(inObjectLayer >> cNumBits);
 	}
 
 	/// Returns true if two layers can collide

@@ -205,9 +205,15 @@ void FixedSizeFreeList<Object>::DestructObject(uint32 inObjectIndex)
 }
 
 template<typename Object>
+inline uint32 FixedSizeFreeList<Object>::GetObjectIndex(const Object *inObject) const
+{
+	return reinterpret_cast<const ObjectStorage *>(inObject)->mNextFreeObject.load(memory_order_relaxed);
+}
+
+template<typename Object>
 inline void FixedSizeFreeList<Object>::DestructObject(Object *inObject)
 {
-	uint32 index = reinterpret_cast<ObjectStorage *>(inObject)->mNextFreeObject.load(memory_order_relaxed);
+	uint32 index = GetObjectIndex(inObject);
 	JPH_ASSERT(index < mNumObjectsAllocated);
 	DestructObject(index);
 }
