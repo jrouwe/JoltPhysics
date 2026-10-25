@@ -142,7 +142,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		Vec3 r2 = friction_point2 - com2;
 
 		// Get surface velocity relative to tangents
-		Vec3 ws_surface_velocity = inContactSettings.mRelativeLinearSurfaceVelocity + inContactSettings.mRelativeAngularSurfaceVelocity.Cross(friction_point1);
+		Vec3 ws_surface_velocity = inContactSettings.mRelativeLinearSurfaceVelocity + inContactSettings.mRelativeAngularSurfaceVelocity.Cross(r1);
 		float surface_velocity1 = tangent1.Dot(ws_surface_velocity);
 		float surface_velocity2 = tangent2.Dot(ws_surface_velocity);
 
