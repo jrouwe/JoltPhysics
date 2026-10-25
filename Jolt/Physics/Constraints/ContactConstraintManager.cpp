@@ -1549,9 +1549,9 @@ void ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint &ioCon
 
 	Vec3 delta_pos = Vec3(ioConstraint.mBody2->GetCenterOfMassPosition() - ioConstraint.mBody1->GetCenterOfMassPosition());
 	if constexpr (Type1 != EMotionType::Static)
-		delta_pos += state1->mDeltaPosition;
+		delta_pos -= state1->mDeltaPosition;
 	if constexpr (Type2 != EMotionType::Static)
-		delta_pos -= state2->mDeltaPosition;
+		delta_pos += state2->mDeltaPosition;
 
 	Mat44 inv_i1 = ioConstraint.mInvInertia1.ToMat44();
 	Mat44 inv_i2 = ioConstraint.mInvInertia2.ToMat44();

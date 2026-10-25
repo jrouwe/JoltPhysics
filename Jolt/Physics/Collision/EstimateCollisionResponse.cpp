@@ -86,8 +86,6 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	struct Contact
 	{
 		ContactConstraintPart<EMotionType::Dynamic, EMotionType::Dynamic> mPart;
-		Vec3		mR1;
-		Vec3		mR2;
 		float		mEffectiveMass;
 		float		mBias;
 		float		mDistanceToFrictionCenter;
@@ -111,8 +109,6 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		// Calculate contact point relative to com
 		Vec3 r1 = p1 - com1;
 		Vec3 r2 = p2 - com2;
-		contact.mR1 = r1;
-		contact.mR2 = r2;
 
 		// Handle elastic collisions
 		contact.mBias = 0.0f;
@@ -135,11 +131,11 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	float num_points_f = float(num_points);
 	friction_point1 /= num_points_f;
 	friction_point2 /= num_points_f;
-	float distance_to_friction_center[ContactPoints::Capacity];
 	for (uint c = 0; c < num_points; ++c)
 	{
+		Contact &contact = contact_constraints[c];
 		Vec3 delta = inManifold.mRelativeContactPointsOn1[c] - friction_point1;
-		distance_to_friction_center[c] = (delta - delta.Dot(inManifold.mWorldSpaceNormal) * inManifold.mWorldSpaceNormal).Length();
+		contact.mDistanceToFrictionCenter = (delta - delta.Dot(inManifold.mWorldSpaceNormal) * inManifold.mWorldSpaceNormal).Length();
 	}
 	outResult.mFrictionPoint = 0.5f * (friction_point1 + friction_point2);
 
