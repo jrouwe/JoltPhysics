@@ -58,6 +58,12 @@ public:
 		return (mTable[bit >> 3] & (1 << (bit & 0b111))) != 0;
 	}
 
+	/// Get the total number of broadphase layers
+	inline uint				GetNumBroadPhaseLayers() const
+	{
+		return mNumBroadPhaseLayers;
+	}
+
 private:
 	uint					mNumBroadPhaseLayers;						///< The total number of broadphase layers
 	Array<uint8>			mTable;										///< The table of bits that indicates which layers collide
