@@ -720,9 +720,10 @@ JPH_INLINE ContactConstraintManager::ContactConstraint *ContactConstraintManager
 template <EMotionType Type1, EMotionType Type2>
 void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, const CachedBodyPair &inCachedBodyPair, CachedBodyPair &outCachedBodyPair)
 {
-	// Get body transforms
-	RMat44 transform_body1 = inBody1.GetCenterOfMassTransform();
-	RMat44 transform_body2 = inBody2.GetCenterOfMassTransform();
+	// Get body rotations
+	Mat44 rotation1 = Mat44::sRotation(inBody1.GetRotation());
+	Mat44 rotation2 = Mat44::sRotation(inBody2.GetRotation());
+	Vec3 delta_com = Vec3(inBody1.GetCenterOfMassPosition() - inBody2.GetCenterOfMassPosition());
 
 	// Copy manifolds
 	uint32 output_handle = ManifoldMap::cInvalidHandle;
@@ -757,7 +758,7 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 		settings.mIsSensor = inBody1.IsSensor() || inBody2.IsSensor();
 
 		// Calculate world space contact normal
-		Vec3 world_space_normal = transform_body2.Multiply3x3(Vec3::sLoadFloat3Unsafe(output_cm->mContactNormal)).Normalized();
+		Vec3 world_space_normal = rotation2.Multiply3x3(Vec3::sLoadFloat3Unsafe(output_cm->mContactNormal)).Normalized();
 
 		// Call contact listener to update settings
 		if (mContactListener != nullptr)
@@ -767,16 +768,15 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 			manifold.mWorldSpaceNormal = world_space_normal;
 			manifold.mSubShapeID1 = input_key.GetSubShapeID1();
 			manifold.mSubShapeID2 = input_key.GetSubShapeID2();
-			manifold.mBaseOffset = transform_body1.GetTranslation();
+			manifold.mBaseOffset = inBody1.GetCenterOfMassPosition();
 			manifold.mRelativeContactPointsOn1.resize(output_cm->mNumContactPoints);
 			manifold.mRelativeContactPointsOn2.resize(output_cm->mNumContactPoints);
-			Mat44 local_transform_body2 = transform_body2.PostTranslated(-manifold.mBaseOffset).ToMat44();
 			float penetration_depth = -FLT_MAX;
 			for (uint32 i = 0; i < output_cm->mNumContactPoints; ++i)
 			{
 				const CachedContactPoint &ccp = output_cm->mContactPoints[i];
-				manifold.mRelativeContactPointsOn1[i] = transform_body1.Multiply3x3(Vec3::sLoadFloat3Unsafe(ccp.mPosition1));
-				manifold.mRelativeContactPointsOn2[i] = local_transform_body2 * Vec3::sLoadFloat3Unsafe(ccp.mPosition2);
+				manifold.mRelativeContactPointsOn1[i] = rotation1.Multiply3x3(Vec3::sLoadFloat3Unsafe(ccp.mPosition1));
+				manifold.mRelativeContactPointsOn2[i] = rotation2.Multiply3x3(Vec3::sLoadFloat3Unsafe(ccp.mPosition2)) - delta_com;
 				penetration_depth = max(penetration_depth, (manifold.mRelativeContactPointsOn1[i] - manifold.mRelativeContactPointsOn2[i]).Dot(world_space_normal));
 			}
 			manifold.mPenetrationDepth = penetration_depth; // We don't have the penetration depth anymore, estimate it
@@ -805,8 +805,8 @@ void ContactConstraintManager::TemplatedGetContactsFromCache(ContactAllocator &i
 			{
 				const CachedContactPoint &ccp = output_cm->mContactPoints[i];
 				WorldContactPoint &wcp = constraint->mContactPoints[i];
-				Vec3 r1_ws = transform_body1.Multiply3x3(Vec3::sLoadFloat3Unsafe(ccp.mPosition1));
-				Vec3 r2_ws = transform_body2.Multiply3x3(Vec3::sLoadFloat3Unsafe(ccp.mPosition2));
+				Vec3 r1_ws = rotation1.Multiply3x3(Vec3::sLoadFloat3Unsafe(ccp.mPosition1));
+				Vec3 r2_ws = rotation2.Multiply3x3(Vec3::sLoadFloat3Unsafe(ccp.mPosition2));
 				r1_ws.StoreFloat3(&wcp.mPosition1WS);
 				r2_ws.StoreFloat3(&wcp.mPosition2WS);
 				wcp.mPenetrationDepth = ccp.mPenetrationDepth;
@@ -1092,13 +1092,13 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 					break;
 				}
 
-			// World space relative to the center of mass positions
-			Vec3 r1_ws = p1 - body1_com_minus_base;
-			Vec3 r2_ws = p2 - body2_com_minus_base;
+			// Make relative to body center of mass in world space
+			p1 -= body1_com_minus_base;
+			p2 -= body2_com_minus_base;
 
 			// Store contact points
-			r1_ws.StoreFloat3(&wcp.mPosition1WS);
-			r2_ws.StoreFloat3(&wcp.mPosition2WS);
+			p1.StoreFloat3(&wcp.mPosition1WS);
+			p2.StoreFloat3(&wcp.mPosition2WS);
 			wcp.mPenetrationDepth = penetration;
 		}
 
