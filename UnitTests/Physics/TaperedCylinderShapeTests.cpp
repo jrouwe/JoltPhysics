@@ -3,13 +3,42 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include "PhysicsTestContext.h"
 #include <Jolt/Physics/Collision/Shape/TaperedCylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 
 TEST_SUITE("TaperedCylinderShapeTests")
 {
+	TEST_CASE("TestConstruction")
+	{
+		{
+			// Regular tapered cylinder
+			TaperedCylinderShapeSettings tapered_settings(2.0f, 1.0f, 3.0f, 0.01f);
+			ShapeSettings::ShapeResult result = tapered_settings.Create();
+			CHECK(result.IsValid());
+			RefConst<Shape> shape = result.Get();
+			CHECK(shape->GetSubType() == EShapeSubType::TaperedCylinder);
+			const TaperedCylinderShape *tapered = StaticCast<TaperedCylinderShape>(shape);
+			CHECK(tapered->GetTopRadius() == 1.0f);
+			CHECK(tapered->GetBottomRadius() == 3.0f);
+			CHECK(tapered->GetHalfHeight() == 2.0f);
+			CHECK(tapered->GetConvexRadius() == 0.01f);
+		}
+
+		{
+			// Equal radii turns into a cylinder
+			TaperedCylinderShapeSettings cylinder_settings(2.0f, 1.0f, 1.0f, 0.01f);
+			ShapeSettings::ShapeResult result = cylinder_settings.Create();
+			CHECK(result.IsValid());
+			CHECK(result.Get()->GetSubType() == EShapeSubType::Cylinder);
+			const CylinderShape *cylinder = StaticCast<CylinderShape>(result.Get());
+			CHECK(cylinder->GetRadius() == 1.0f);
+			CHECK(cylinder->GetHalfHeight() == 2.0f);
+			CHECK(cylinder->GetConvexRadius() == 0.01f);
+		}
+	}
+
 	TEST_CASE("TestMassAndInertia")
 	{
 		const float cDensity = 3.0f;
