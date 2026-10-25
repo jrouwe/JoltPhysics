@@ -5,6 +5,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
@@ -31,7 +32,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TaperedCapsuleShapeSettings)
 
 bool TaperedCapsuleShapeSettings::IsSphere() const
 {
-	return max(mTopRadius, mBottomRadius) >= 2.0f * mHalfHeightOfTaperedCylinder + min(mTopRadius, mBottomRadius);
+	return abs(mTopRadius - mBottomRadius) >= 2.0f * mHalfHeightOfTaperedCylinder;
 }
 
 ShapeSettings::ShapeResult TaperedCapsuleShapeSettings::Create() const
@@ -65,6 +66,12 @@ ShapeSettings::ShapeResult TaperedCapsuleShapeSettings::Create() const
 			}
 			else
 				mCachedResult.Set(shape);
+		}
+		else if (mTopRadius == mBottomRadius)
+		{
+			// Create capsule
+			CapsuleShapeSettings settings(mHalfHeightOfTaperedCylinder, mTopRadius, mMaterial);
+			shape = new CapsuleShape(settings, mCachedResult);
 		}
 		else
 		{
