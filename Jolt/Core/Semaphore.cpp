@@ -101,7 +101,8 @@ void Semaphore::Acquire(uint inNumber)
 			WaitForSingleObject(mSemaphore, INFINITE);
 	#elif defined(JPH_USE_PTHREADS)
 		for (int i = 0; i < num_to_acquire; ++i)
-			sem_wait(&mSemaphore);
+			while (sem_wait(&mSemaphore) != 0 && errno == EINTR)
+				continue;
 	#elif defined(JPH_USE_GRAND_CENTRAL_DISPATCH)
 		for (int i = 0; i < num_to_acquire; ++i)
 			dispatch_semaphore_wait(mSemaphore, DISPATCH_TIME_FOREVER);
