@@ -1,0 +1,34 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/JoltTargets.cmake")
+
+check_required_components(Jolt)
+
+file(GLOB libTargets_files "${CMAKE_CURRENT_LIST_DIR}/JoltTargets-*.cmake")
+list(LENGTH libTargets_files num_files)
+
+if(num_files EQUAL 1)
+	list(GET libTargets_files 0 target_file)
+	get_filename_component(filename "${target_file}" NAME)
+
+	if(filename STREQUAL "JoltTargets-debug.cmake")
+		set_property(TARGET Jolt::Jolt APPEND PROPERTY
+			INTERFACE_COMPILE_DEFINITIONS "JPH_DEBUG")
+	endif()
+elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/JoltTargets-debug.cmake")
+	set_property(TARGET Jolt::Jolt APPEND PROPERTY
+		INTERFACE_COMPILE_DEFINITIONS
+		"$<$<CONFIG:Debug>:JPH_DEBUG>"
+	)
+else()
+	get_target_property(_jolt_configs Jolt::Jolt IMPORTED_CONFIGURATIONS)
+	if(_jolt_configs STREQUAL "DEBUG" OR _jolt_configs STREQUAL "Debug")
+		set_property(TARGET Jolt::Jolt APPEND PROPERTY
+			INTERFACE_COMPILE_DEFINITIONS "JPH_DEBUG")
+	elseif("DEBUG" IN_LIST _jolt_configs OR "Debug" IN_LIST _jolt_configs)
+		set_property(TARGET Jolt::Jolt APPEND PROPERTY
+			INTERFACE_COMPILE_DEFINITIONS
+			"$<$<CONFIG:Debug>:JPH_DEBUG>"
+		)
+	endif()
+endif()

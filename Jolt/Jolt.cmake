@@ -831,7 +831,7 @@ else()
 endif()
 
 # Set the JPH_DEBUG define for debug builds
-target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:JPH_DEBUG>")
+target_compile_definitions(Jolt PUBLIC "$<BUILD_INTERFACE:$<$<CONFIG:Debug>:JPH_DEBUG>>")
 
 # ASAN and TSAN should use the default allocators
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseASAN,ReleaseTSAN>:JPH_DISABLE_TEMP_ALLOCATOR;JPH_DISABLE_CUSTOM_ALLOCATOR>")
