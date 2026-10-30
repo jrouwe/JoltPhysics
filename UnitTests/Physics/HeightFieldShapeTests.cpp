@@ -526,4 +526,241 @@ TEST_SUITE("HeightFieldShapeTests")
 			for (uint x = 0; x < cSampleCount - 1; ++x)
 				CHECK(height_field->GetMaterial(x, y) == current_state[y * (cSampleCount - 1) + x]);
 	}
+
+	// Smooth height field with a hole, used to test queries against triangles where the expected result can be calculated analytically
+	class SinCosHeightField
+	{
+	public:
+		static constexpr uint	cHoleX = 10;
+		static constexpr uint	cHoleY = 13;
+
+		explicit				SinCosHeightField(uint inSampleCount)
+		{
+			mSettings.mOffset = Vec3(-20.0f, 3.0f, -15.0f);
+			mSettings.mScale = Vec3(1.5f, 2.0f, 1.25f);
+			mSettings.mSampleCount = inSampleCount;
+			mSettings.mBlockSize = 2;
+			mSettings.mBitsPerSample = HeightFieldShapeConstants::cMaxBitsPerSample; // Minimize quantization error so we can compare with the analytic surface
+			mSettings.mHeightSamples.resize(Square(inSampleCount));
+			for (uint y = 0; y < inSampleCount; ++y)
+				for (uint x = 0; x < inSampleCount; ++x)
+					mSettings.mHeightSamples[y * inSampleCount + x] = IsHole(x, y)? HeightFieldShapeConstants::cNoCollisionValue : sHeight(x, y);
+
+			mShape = StaticCast<HeightFieldShape>(mSettings.Create().Get());
+		}
+
+		// Analytic height function
+		static float			sHeight(uint inX, uint inY)
+		{
+			return Sin(0.3f * float(inX)) * Cos(0.25f * float(inY));
+		}
+
+		// Check if a sample is the hole
+		static bool				IsHole(uint inX, uint inY)
+		{
+			return inX == cHoleX && inY == cHoleY;
+		}
+
+		// Get the position of a sample in the local space of the height field
+		Vec3					GetPosition(uint inX, uint inY) const
+		{
+			return mSettings.mOffset + mSettings.mScale * Vec3(float(inX), sHeight(inX, inY), float(inY));
+		}
+
+		// Get the vertices of a triangle, triangle 0 is (x, y), (x, y + 1), (x + 1, y + 1) and triangle 1 is (x, y), (x + 1, y + 1), (x + 1, y)
+		// @return False if the triangle has no collision because it touches the hole
+		bool					GetTriangle(uint inX, uint inY, uint inTriangle, Vec3 &outV0, Vec3 &outV1, Vec3 &outV2) const
+		{
+			uint x2 = inTriangle == 0? inX : inX + 1;
+			uint y2 = inTriangle == 0? inY + 1 : inY;
+			outV0 = GetPosition(inX, inY);
+			outV1 = GetPosition(x2, y2);
+			outV2 = GetPosition(inX + 1, inY + 1);
+			if (inTriangle == 1)
+				std::swap(outV1, outV2); // Triangle 1 is (x, y), (x + 1, y + 1), (x + 1, y) to keep the normal pointing up
+			return !IsHole(inX, inY) && !IsHole(x2, y2) && !IsHole(inX + 1, inY + 1);
+		}
+
+		// Iterate all triangles and call inFunction(x, y, triangle, has_collision, centroid, normal)
+		template <class F>
+		void					ForEachTriangle(const F &inFunction) const
+		{
+			for (uint y = 0; y < mSettings.mSampleCount - 1; ++y)
+				for (uint x = 0; x < mSettings.mSampleCount - 1; ++x)
+					for (uint t = 0; t < 2; ++t)
+					{
+						Vec3 v0, v1, v2;
+						bool has_collision = GetTriangle(x, y, t, v0, v1, v2);
+						Vec3 centroid = (v0 + v1 + v2) / 3.0f;
+						Vec3 normal = (v1 - v0).Cross(v2 - v0).Normalized();
+						CHECK(normal.GetY() > 0.0f); // Normal should point up
+						inFunction(x, y, t, has_collision, centroid, normal);
+					}
+		}
+
+		// Check that a sub shape ID refers to the expected triangle
+		void					CheckSubShapeID(const SubShapeID &inSubShapeID, uint inX, uint inY, uint inTriangle) const
+		{
+			uint x, y, t;
+			mShape->GetSubShapeCoordinates(inSubShapeID, x, y, t);
+			CHECK(x == inX);
+			CHECK(y == inY);
+			CHECK(t == inTriangle);
+		}
+
+		HeightFieldShapeSettings mSettings;
+		Ref<HeightFieldShape>	mShape;
+	};
+
+	TEST_CASE("TestHeightFieldCastSphere")
+	{
+		constexpr float cRadius = 0.1f; // Small enough so that the sphere fits inside a triangle and doesn't touch neighboring triangles
+		constexpr float cDistance = 0.5f;
+
+		Ref<Shape> sphere = new SphereShape(cRadius);
+
+		for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+		{
+			SinCosHeightField height_field(sample_count);
+
+			uint num_hits = 0, num_misses = 0;
+			height_field.ForEachTriangle([&](uint inX, uint inY, uint inTriangle, bool inHasCollision, Vec3Arg inCentroid, Vec3Arg inNormal) {
+				// Cast the sphere along the normal towards the centroid of the triangle, it should touch the triangle halfway
+				Vec3 start = inCentroid + (cRadius + cDistance) * inNormal;
+				Vec3 direction = -2.0f * cDistance * inNormal;
+				ShapeCast shape_cast = ShapeCast::sFromWorldTransform(sphere, Vec3::sOne(), Mat44::sTranslation(start), direction);
+				ShapeCastSettings settings;
+				ClosestHitCollisionCollector<CastShapeCollector> collector;
+				CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, settings, height_field.mShape, Vec3::sOne(), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
+
+				if (inHasCollision)
+				{
+					++num_hits;
+					CHECK(collector.HadHit());
+					const ShapeCastResult &hit = collector.mHit;
+					CHECK_APPROX_EQUAL(hit.mFraction, 0.5f, 1.0e-5f);
+					CHECK_APPROX_EQUAL(hit.mContactPointOn1, inCentroid, 1.0e-5f);
+					CHECK_APPROX_EQUAL(hit.mContactPointOn2, inCentroid, 1.0e-5f);
+					CHECK_APPROX_EQUAL(-hit.mPenetrationAxis.Normalized(), inNormal, 1.0e-4f);
+					CHECK(hit.mPenetrationDepth == 0.0f);
+					height_field.CheckSubShapeID(hit.mSubShapeID2, inX, inY, inTriangle);
+					CHECK(!hit.mIsBackFaceHit);
+				}
+				else
+				{
+					// Sphere passes through the hole
+					++num_misses;
+					CHECK(!collector.HadHit());
+				}
+			});
+
+			// The hole removes 6 triangles
+			CHECK(num_misses == 6);
+			CHECK(num_hits == 2 * Square(sample_count - 1) - 6);
+		}
+	}
+
+	TEST_CASE("TestHeightFieldCastRay")
+	{
+		for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+		{
+			SinCosHeightField height_field(sample_count);
+
+			uint num_hits = 0, num_misses = 0;
+			height_field.ForEachTriangle([&](uint inX, uint inY, uint inTriangle, bool inHasCollision, Vec3Arg inCentroid, Vec3Arg inNormal) {
+				// Cast a ray along the normal towards the centroid of the triangle, it should hit halfway
+				RayCast ray { inCentroid + inNormal, -2.0f * inNormal };
+
+				// Cast ray without collector
+				RayCastResult hit;
+				bool had_hit = height_field.mShape->CastRay(ray, SubShapeIDCreator(), hit);
+				CHECK(had_hit == inHasCollision);
+				if (inHasCollision)
+					CHECK_APPROX_EQUAL(hit.mFraction, 0.5f, 1.0e-5f);
+				else
+					CHECK(hit.mFraction > 1.0f);
+
+				// Cast ray with collector
+				AllHitCollisionCollector<CastRayCollector> collector;
+				height_field.mShape->CastRay(ray, RayCastSettings(), SubShapeIDCreator(), collector);
+				if (inHasCollision)
+				{
+					++num_hits;
+
+					// Check result without collector
+					CHECK_APPROX_EQUAL(hit.mFraction, 0.5f, 1.0e-5f);
+					height_field.CheckSubShapeID(hit.mSubShapeID2, inX, inY, inTriangle);
+					Vec3 hit_pos = ray.GetPointOnRay(hit.mFraction);
+					CHECK_APPROX_EQUAL(hit_pos, inCentroid, 1.0e-5f);
+					CHECK_APPROX_EQUAL(height_field.mShape->GetSurfaceNormal(hit.mSubShapeID2, hit_pos), inNormal, 1.0e-4f);
+
+					// Check result with collector, back faces are ignored by default so we should only hit the front face
+					CHECK(collector.mHits.size() == 1);
+					if (collector.mHits.size() == 1)
+					{
+						const RayCastResult &collector_hit = collector.mHits.front();
+						CHECK_APPROX_EQUAL(collector_hit.mFraction, 0.5f, 1.0e-5f);
+						height_field.CheckSubShapeID(collector_hit.mSubShapeID2, inX, inY, inTriangle);
+						Vec3 collector_hit_pos = ray.GetPointOnRay(collector_hit.mFraction);
+						CHECK_APPROX_EQUAL(collector_hit_pos, inCentroid, 1.0e-5f);
+						CHECK_APPROX_EQUAL(height_field.mShape->GetSurfaceNormal(collector_hit.mSubShapeID2, collector_hit_pos), inNormal, 1.0e-4f);
+					}
+				}
+				else
+				{
+					// Ray passes through the hole
+					++num_misses;
+					CHECK(collector.mHits.empty());
+				}
+			});
+
+			// The hole removes 6 triangles
+			CHECK(num_misses == 6);
+			CHECK(num_hits == 2 * Square(sample_count - 1) - 6);
+		}
+	}
+
+	TEST_CASE("TestHeightFieldProjectOntoSurface")
+	{
+		for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+		{
+			SinCosHeightField height_field(sample_count);
+
+			uint num_hits = 0, num_misses = 0;
+			height_field.ForEachTriangle([&](uint inX, uint inY, uint inTriangle, bool inHasCollision, Vec3Arg inCentroid, [[maybe_unused]] Vec3Arg inNormal) {
+				// Project a point above the centroid onto the surface, it should land on the centroid
+				Vec3 surface_pos;
+				SubShapeID sub_shape_id;
+				bool had_hit = height_field.mShape->ProjectOntoSurface(inCentroid + Vec3(0, 10, 0), surface_pos, sub_shape_id);
+				CHECK(had_hit == inHasCollision);
+
+				if (inHasCollision)
+				{
+					++num_hits;
+					CHECK_APPROX_EQUAL(surface_pos, inCentroid, 1.0e-5f);
+					height_field.CheckSubShapeID(sub_shape_id, inX, inY, inTriangle);
+				}
+				else
+				{
+					// Point is above the hole
+					++num_misses;
+				}
+			});
+
+			// The hole removes 6 triangles
+			CHECK(num_misses == 6);
+			CHECK(num_hits == 2 * Square(sample_count - 1) - 6);
+
+			// Points outside of the height field should not project
+			const HeightFieldShapeSettings &settings = height_field.mSettings;
+			Vec3 surface_pos;
+			SubShapeID sub_shape_id;
+			float max_coord = float(sample_count - 1) + 0.5f; // Note that for 33 samples, this tests the padding that is added internally to round up to a multiple of the block size
+			constexpr float cInsideCoord = 5.5f; // Inside the height field and away from the hole
+			CHECK(!height_field.mShape->ProjectOntoSurface(settings.mOffset + settings.mScale * Vec3(-0.5f, 0, cInsideCoord), surface_pos, sub_shape_id));
+			CHECK(!height_field.mShape->ProjectOntoSurface(settings.mOffset + settings.mScale * Vec3(cInsideCoord, 0, -0.5f), surface_pos, sub_shape_id));
+			CHECK(!height_field.mShape->ProjectOntoSurface(settings.mOffset + settings.mScale * Vec3(max_coord, 0, cInsideCoord), surface_pos, sub_shape_id));
+			CHECK(!height_field.mShape->ProjectOntoSurface(settings.mOffset + settings.mScale * Vec3(cInsideCoord, 0, max_coord), surface_pos, sub_shape_id));
+		}
+	}
 }
