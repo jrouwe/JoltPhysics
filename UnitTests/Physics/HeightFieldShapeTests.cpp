@@ -59,7 +59,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		{
 			HeightFieldShapeSettings settings = make_settings();
 			settings.mSampleCount = settings.mBlockSize * ((1 << HeightFieldShapeConstants::cNumBitsXY) + 1);
-			settings.mHeightSamples.resize(Square(settings.mSampleCount));
+			// Samples are not actually read before error and allocating them causes WASM to go out of memory
 			CHECK(settings.Create().HasError());
 		}
 
