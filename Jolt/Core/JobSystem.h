@@ -249,6 +249,10 @@ protected:
 				mJobFunction();
 			}
 
+			// Clear the job function. It is a lambda with captured state that we want to destruct in a controlled fashion.
+			// If we release it after notifying the barrier then that state might access deleted data.
+			mJobFunction = {};
+
 			// Fetch the barrier pointer and exchange it for the done state, so we're sure that no barrier gets set after we want to call the callback
 			intptr_t barrier = mBarrier.load(memory_order_relaxed);
 			for (;;)
