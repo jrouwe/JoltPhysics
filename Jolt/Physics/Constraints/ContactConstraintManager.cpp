@@ -1617,7 +1617,7 @@ void ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint &ioCon
 		float jv = ContactConstraintPart<Type1, Type2>::sGetMinusJV(state1, state2, r1, r2, ws_normal);
 
 		// Lagrange multiplier
-		float lambda = wcp.mNonPenetrationEffectiveMass * (mass_scale * jv - normal_velocity_bias) + lambda_scale * wcp.mNonPenetrationLambda;
+		float lambda = wcp.mNonPenetrationEffectiveMass * (mass_scale * jv - normal_velocity_bias) - lambda_scale * wcp.mNonPenetrationLambda;
 
 		// Contact constraints can only push and not pull
 		lambda = max(lambda, -wcp.mNonPenetrationLambda);
