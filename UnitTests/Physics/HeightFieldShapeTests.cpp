@@ -12,9 +12,91 @@
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVertexIterator.h>
 
 TEST_SUITE("HeightFieldShapeTests")
 {
+	TEST_CASE("TestHeightFieldCreateErrors")
+	{
+		// Creates valid settings that can be modified to trigger an error
+		auto make_settings = []() {
+			HeightFieldShapeSettings settings;
+			settings.mSampleCount = 32;
+			settings.mBlockSize = 2;
+			settings.mBitsPerSample = 8;
+			settings.mHeightSamples.resize(Square(settings.mSampleCount), 0.0f);
+			return settings;
+		};
+
+		// Sanity check that the unmodified settings are valid
+		CHECK(!make_settings().Create().HasError());
+
+		// Block size out of range
+		for (uint32 block_size : { 1u, 9u })
+		{
+			HeightFieldShapeSettings settings = make_settings();
+			settings.mBlockSize = block_size;
+			CHECK(settings.Create().HasError());
+		}
+
+		// Bits per sample out of range
+		for (uint32 bits_per_sample : { 0u, HeightFieldShapeConstants::cMaxBitsPerSample + 1 })
+		{
+			HeightFieldShapeSettings settings = make_settings();
+			settings.mBitsPerSample = bits_per_sample;
+			CHECK(settings.Create().HasError());
+		}
+
+		// Sample count too low, we need at least 2 blocks
+		{
+			HeightFieldShapeSettings settings = make_settings();
+			settings.mSampleCount = 2;
+			settings.mHeightSamples.resize(Square(settings.mSampleCount));
+			CHECK(settings.Create().HasError());
+		}
+
+		// Sample count too high, the number of blocks doesn't fit in the properties of a range block.
+		{
+			HeightFieldShapeSettings settings = make_settings();
+			settings.mSampleCount = settings.mBlockSize * ((1 << HeightFieldShapeConstants::cNumBitsXY) + 1);
+			settings.mHeightSamples.resize(Square(settings.mSampleCount));
+			CHECK(settings.Create().HasError());
+		}
+
+		// Sample count too high to fit the X and Y coordinates in a sub shape ID.
+		// With a block size of 8, the number of blocks is still small enough to fit in the range block properties.
+		{
+			HeightFieldShapeSettings settings = make_settings();
+			settings.mBlockSize = 8;
+			settings.mSampleCount = (1 << ((SubShapeID::MaxBits - 1) / 2)) + settings.mBlockSize; // 1 bit for triangle, equal amount of bits for X and Y
+			CHECK(settings.Create().HasError());
+		}
+
+		// Too many materials
+		{
+			HeightFieldShapeSettings settings = make_settings();
+			for (uint i = 0; i < 257; ++i)
+				settings.mMaterials.push_back(new PhysicsMaterialSimple("Material " + ConvertToString(i), Color::sGetDistinctColor(i)));
+			CHECK(settings.Create().HasError());
+		}
+
+		// Material index beyond the material list
+		{
+			HeightFieldShapeSettings settings = make_settings();
+			settings.mMaterials.push_back(new PhysicsMaterialSimple("Material 0", Color::sGetDistinctColor(0)));
+			settings.mMaterialIndices.resize(Square(settings.mSampleCount - 1), 0);
+			settings.mMaterialIndices[10] = 1;
+			CHECK(settings.Create().HasError());
+		}
+
+		// Material indices without materials
+		{
+			HeightFieldShapeSettings settings = make_settings();
+			settings.mMaterialIndices.resize(Square(settings.mSampleCount - 1), 0);
+			CHECK(settings.Create().HasError());
+		}
+	}
+
 	static void sRandomizeMaterials(HeightFieldShapeSettings &ioSettings, uint inMaxMaterials)
 	{
 		// Create materials
@@ -761,6 +843,180 @@ TEST_SUITE("HeightFieldShapeTests")
 			CHECK(!height_field.mShape->ProjectOntoSurface(settings.mOffset + settings.mScale * Vec3(cInsideCoord, 0, -0.5f), surface_pos, sub_shape_id));
 			CHECK(!height_field.mShape->ProjectOntoSurface(settings.mOffset + settings.mScale * Vec3(max_coord, 0, cInsideCoord), surface_pos, sub_shape_id));
 			CHECK(!height_field.mShape->ProjectOntoSurface(settings.mOffset + settings.mScale * Vec3(cInsideCoord, 0, max_coord), surface_pos, sub_shape_id));
+		}
+	}
+
+	TEST_CASE("TestHeightFieldCollideSoftBodyVertices")
+	{
+		constexpr float cDistance = 0.05f; // Small enough that the closest point is inside the triangle below the vertex
+		constexpr int cCollidingShapeIndex = 3;
+
+		for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+		{
+			SinCosHeightField height_field(sample_count);
+
+			// Create a vertex slightly above the centroid of every triangle
+			struct Expected
+			{
+				bool			mHasCollision;
+				Vec3			mCentroid;
+				Vec3			mNormal;
+			};
+			Array<Expected> expected;
+			Array<SoftBodyVertex> vertices;
+			height_field.ForEachTriangle([&](uint, uint, uint, bool inHasCollision, Vec3Arg inCentroid, Vec3Arg inNormal) {
+				expected.push_back({ inHasCollision, inCentroid, inNormal });
+
+				SoftBodyVertex v;
+				v.mPreviousPosition = v.mPosition = inCentroid + cDistance * inNormal;
+				v.mVelocity = Vec3::sZero();
+				v.mInvMass = 1.0f;
+				v.ResetCollision();
+				vertices.push_back(v);
+			});
+
+			height_field.mShape->CollideSoftBodyVertices(Mat44::sIdentity(), Vec3::sOne(), CollideSoftBodyVertexIterator(vertices.data()), uint(vertices.size()), cCollidingShapeIndex);
+
+			for (size_t i = 0; i < vertices.size(); ++i)
+			{
+				const SoftBodyVertex &v = vertices[i];
+				const Expected &e = expected[i];
+
+				// The vertex is always above the surface, so we should find a collision with a negative penetration
+				CHECK(v.mCollidingShapeIndex == cCollidingShapeIndex);
+				CHECK(v.mLargestPenetration < 0.0f);
+				CHECK(v.mCollisionPlane.SignedDistance(v.mPosition) > 0.0f);
+
+				if (e.mHasCollision)
+				{
+					// The vertex should collide with the plane of the triangle below it
+					CHECK_APPROX_EQUAL(v.mCollisionPlane.GetNormal(), e.mNormal, 1.0e-4f);
+					CHECK_APPROX_EQUAL(v.mCollisionPlane.SignedDistance(e.mCentroid), 0.0f, 1.0e-4f);
+					CHECK_APPROX_EQUAL(v.mLargestPenetration, -cDistance, 1.0e-4f);
+				}
+			}
+		}
+	}
+
+	TEST_CASE("TestHeightFieldGetSupportingFace")
+	{
+		for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+		{
+			SinCosHeightField height_field(sample_count);
+
+			height_field.ForEachTriangle([&](uint inX, uint inY, uint inTriangle, bool inHasCollision, Vec3Arg inCentroid, [[maybe_unused]] Vec3Arg inNormal) {
+				if (!inHasCollision)
+					return;
+
+				// Get the sub shape ID of this triangle
+				Vec3 surface_pos;
+				SubShapeID sub_shape_id;
+				CHECK(height_field.mShape->ProjectOntoSurface(inCentroid + Vec3(0, 10, 0), surface_pos, sub_shape_id));
+				height_field.CheckSubShapeID(sub_shape_id, inX, inY, inTriangle);
+
+				Vec3 v0, v1, v2;
+				height_field.GetTriangle(inX, inY, inTriangle, v0, v1, v2);
+
+				// Get the supporting face in local space
+				Shape::SupportingFace face;
+				height_field.mShape->GetSupportingFace(sub_shape_id, Vec3::sAxisY(), Vec3::sOne(), Mat44::sIdentity(), face);
+				CHECK(face.size() == 3);
+				if (face.size() == 3)
+				{
+					CHECK_APPROX_EQUAL(face[0], v0, 1.0e-5f);
+					CHECK_APPROX_EQUAL(face[1], v1, 1.0e-5f);
+					CHECK_APPROX_EQUAL(face[2], v2, 1.0e-5f);
+				}
+
+				// Get the supporting face with a transform and an inside out scale, the winding order should be reversed
+				Vec3 scale(-1.0f, 2.0f, 3.0f);
+				Mat44 transform = Mat44::sRotationTranslation(Quat::sRotation(Vec3::sAxisY(), 0.3f), Vec3(1, 2, 3));
+				Mat44 scaled_transform = transform.PreScaled(scale);
+				height_field.mShape->GetSupportingFace(sub_shape_id, Vec3::sAxisY(), scale, transform, face);
+				CHECK(face.size() == 3);
+				if (face.size() == 3)
+				{
+					CHECK_APPROX_EQUAL(face[0], scaled_transform * v0, 1.0e-4f);
+					CHECK_APPROX_EQUAL(face[1], scaled_transform * v2, 1.0e-4f);
+					CHECK_APPROX_EQUAL(face[2], scaled_transform * v1, 1.0e-4f);
+				}
+			});
+		}
+	}
+
+	TEST_CASE("TestHeightFieldClone")
+	{
+		for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+		{
+			SinCosHeightField height_field(sample_count);
+			const HeightFieldShape *original = height_field.mShape;
+
+			Ref<HeightFieldShape> clone = original->Clone();
+			CHECK(clone != original);
+			CHECK(clone->GetSampleCount() == original->GetSampleCount());
+			CHECK(clone->GetBlockSize() == original->GetBlockSize());
+
+			// Check that all positions and holes match (also the padding for the non-power of 2 sample count)
+			for (uint y = 0; y < original->GetSampleCount(); ++y)
+				for (uint x = 0; x < original->GetSampleCount(); ++x)
+				{
+					bool no_collision = original->IsNoCollision(x, y);
+					CHECK(clone->IsNoCollision(x, y) == no_collision);
+					if (!no_collision)
+						CHECK(clone->GetPosition(x, y) == original->GetPosition(x, y));
+				}
+		}
+	}
+
+	TEST_CASE("TestHeightFieldGetTriangles")
+	{
+		constexpr float cHalfExtent = 0.01f; // Small enough that the box only overlaps with the quad that contains the centroid
+
+		for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+		{
+			SinCosHeightField height_field(sample_count);
+
+			height_field.ForEachTriangle([&](uint inX, uint inY, uint inTriangle, bool inHasCollision, Vec3Arg inCentroid, [[maybe_unused]] Vec3Arg inNormal) {
+				// Get the triangles of the quad that contains the centroid.
+				// Note that the height field culls at the level of a quad, so we can get both triangles of the quad.
+				Vec3 quad_vertices[2][3];
+				bool quad_has_collision[2];
+				for (uint t = 0; t < 2; ++t)
+					quad_has_collision[t] = height_field.GetTriangle(inX, inY, t, quad_vertices[t][0], quad_vertices[t][1], quad_vertices[t][2]);
+
+				// Collect triangles in a small box around the centroid
+				Shape::GetTrianglesContext context;
+				height_field.mShape->GetTrianglesStart(context, AABox::sFromTwoPoints(inCentroid - Vec3::sReplicate(cHalfExtent), inCentroid + Vec3::sReplicate(cHalfExtent)), Vec3::sZero(), Quat::sIdentity(), Vec3::sOne());
+				Float3 vertices[3 * Shape::cGetTrianglesMinTrianglesRequested];
+				int num_triangles = height_field.mShape->GetTrianglesNext(context, Shape::cGetTrianglesMinTrianglesRequested, vertices);
+				CHECK(height_field.mShape->GetTrianglesNext(context, Shape::cGetTrianglesMinTrianglesRequested, vertices + 3 * num_triangles) == 0);
+
+				// Check that all returned triangles are in this quad
+				bool found[2] = { false, false };
+				for (int i = 0; i < num_triangles; ++i)
+				{
+					Vec3 v0(vertices[3 * i]), v1(vertices[3 * i + 1]), v2(vertices[3 * i + 2]);
+					int match = -1;
+					for (uint t = 0; t < 2; ++t)
+						if (quad_has_collision[t] && v0.IsClose(quad_vertices[t][0], 1.0e-8f) && v1.IsClose(quad_vertices[t][1], 1.0e-8f) && v2.IsClose(quad_vertices[t][2], 1.0e-8f))
+							match = t;
+					CHECK(match != -1);
+					if (match != -1)
+					{
+						CHECK(!found[match]); // Each triangle should be returned only once
+						found[match] = true;
+					}
+				}
+
+				// When the triangle has collision, it should be returned together with the other triangle in the quad (if it has collision)
+				if (inHasCollision)
+				{
+					CHECK(found[inTriangle]);
+					CHECK(num_triangles == int(quad_has_collision[0]) + int(quad_has_collision[1]));
+				}
+				else
+					CHECK(!found[inTriangle]);
+			});
 		}
 	}
 }
