@@ -50,11 +50,7 @@ ShapeSettings::ShapeResult TaperedCylinderShapeSettings::Create() const
 		if (mTopRadius == mBottomRadius)
 		{
 			// Convert to regular cylinder
-			CylinderShapeSettings settings;
-			settings.mHalfHeight = mHalfHeight;
-			settings.mRadius = mTopRadius;
-			settings.mMaterial = mMaterial;
-			settings.mConvexRadius = mConvexRadius;
+			CylinderShapeSettings settings(mHalfHeight, mTopRadius, mConvexRadius, mMaterial);
 			shape = new CylinderShape(settings, mCachedResult);
 		}
 		else

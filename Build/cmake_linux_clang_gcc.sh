@@ -29,6 +29,10 @@ while [ $# -gt 0 ]; do
       EXTRA_ARGS="$EXTRA_ARGS -DDOUBLE_PRECISION=ON"
       shift
       ;;
+    --install-prefix=*)
+      EXTRA_ARGS="$EXTRA_ARGS -DCMAKE_INSTALL_PREFIX=${1#*=}"
+      shift
+      ;;
     *)
       if [ -z "$BUILD_TYPE" ]; then
         BUILD_TYPE="$1"
@@ -52,7 +56,7 @@ if [ -z "$COMPILER" ]; then
 fi
 
 echo ""
-echo "Usage: ./cmake_linux_clang_gcc.sh [BUILD_TYPE] [COMPILER] [--shared] [--deterministic] [--double] [--postfix-debug] [--env-script=...]"
+echo "Usage: ./cmake_linux_clang_gcc.sh [BUILD_TYPE] [COMPILER] [--shared] [--deterministic] [--double] [--postfix-debug] [--env-script=...] [--install-prefix=...]"
 echo "Build type options: Debug, Release, Distribution, ReleaseUBSAN, ReleaseASAN, ReleaseTSAN, ReleaseCoverage"
 echo "Compiler options: clang++, clang++-XX, g++, g++-XX where XX is the version"
 echo ""
