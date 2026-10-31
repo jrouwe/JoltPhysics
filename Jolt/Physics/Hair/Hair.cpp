@@ -140,6 +140,10 @@ void Hair::InitializeContext(UpdateContext &outCtx, float inDeltaTime, const Phy
 
 							virtual void		AddHit(const TransformedShape &inResult) override
 							{
+								// Only convex hulls are supported
+								if (inResult.mShape->GetSubType() != EShapeSubType::ConvexHull)
+									return;
+
 								mHits.emplace_back(Mat44::sRotationTranslation(inResult.mShapeRotation, Vec3(inResult.mShapePositionCOM)),
 									inResult.GetShapeScale(),
 									mHeadTransform.Multiply3x3Transposed(mBody.GetPointVelocity(mHeadTransform * inResult.mShapePositionCOM)), // Calculate velocity of shape at its center of mass position
@@ -208,24 +212,24 @@ void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJoin
 		uint max_vertices_per_face = 0;
 		uint max_points = 0;
 		for (const LeafShape &shape : ctx.mShapes)
-			if (shape.mShape->GetSubType() == EShapeSubType::ConvexHull)
+		{
+			JPH_ASSERT(shape.mShape->GetSubType() == EShapeSubType::ConvexHull); // Only convex hulls are collected
+			const ConvexHullShape *ch = static_cast<const ConvexHullShape *>(shape.mShape.GetPtr());
+			++num_shapes;
+			++num_header; // Write number of vertices
+			uint np = ch->GetNumPoints();
+			max_points = max(max_points, np);
+			num_vertices += np;
+			uint nf = ch->GetNumFaces();
+			num_faces += nf;
+			for (uint f = 0; f < nf; ++f)
 			{
-				const ConvexHullShape *ch = static_cast<const ConvexHullShape *>(shape.mShape.GetPtr());
-				++num_shapes;
-				++num_header; // Write number of vertices
-				uint np = ch->GetNumPoints();
-				max_points = max(max_points, np);
-				num_vertices += np;
-				uint nf = ch->GetNumFaces();
-				num_faces += nf;
-				for (uint f = 0; f < nf; ++f)
-				{
-					num_header += 2; // Write indices start + end
-					uint num_vertices_in_face = ch->GetNumVerticesInFace(f);
-					num_indices += num_vertices_in_face;
-					max_vertices_per_face = max(max_vertices_per_face, num_vertices_in_face);
-				}
+				num_header += 2; // Write indices start + end
+				uint num_vertices_in_face = ch->GetNumVerticesInFace(f);
+				num_indices += num_vertices_in_face;
+				max_vertices_per_face = max(max_vertices_per_face, num_vertices_in_face);
 			}
+		}
 		++num_header; // Terminator
 		num_indices += num_header;
 
@@ -265,72 +269,71 @@ void Hair::Update(float inDeltaTime, Mat44Arg inJointToHair, const Mat44 *inJoin
 		JPH_HairCollisionShape *cs = collision_shapes;
 		uint32 *si = shape_indices + num_header;
 		for (const LeafShape &shape : ctx.mShapes)
-			if (shape.mShape->GetSubType() == EShapeSubType::ConvexHull)
+		{
+			const ConvexHullShape *ch = static_cast<const ConvexHullShape *>(shape.mShape.GetPtr());
+
+			// Store collision shape
+			shape.mTransform.GetTranslation().StoreFloat3(&cs->mCenterOfMass);
+			shape.mLinearVelocity.StoreFloat3(&cs->mLinearVelocity);
+			shape.mAngularVelocity.StoreFloat3(&cs->mAngularVelocity);
+			++cs;
+
+			// Store points transformed to hair space
+			Mat44 shape_transform = shape.mTransform.PreScaled(shape.mScale);
+			uint first_vertex_index = uint(sv - shape_vertices);
+			for (uint p = 0, np = ch->GetNumPoints(); p < np; ++p)
 			{
-				const ConvexHullShape *ch = static_cast<const ConvexHullShape *>(shape.mShape.GetPtr());
+				Vec3 v = shape_transform * ch->GetPoint(p);
+				points[p] = v; // Store points in a temporary buffer so we avoid reading from GPU memory
+				v.StoreFloat3(sv);
+				++sv;
+			}
 
-				// Store collision shape
-				shape.mTransform.GetTranslation().StoreFloat3(&cs->mCenterOfMass);
-				shape.mLinearVelocity.StoreFloat3(&cs->mLinearVelocity);
-				shape.mAngularVelocity.StoreFloat3(&cs->mAngularVelocity);
-				++cs;
+			// Store number of faces
+			uint nf = ch->GetNumFaces();
+			*sh = nf;
+			++sh;
 
-				// Store points transformed to hair space
-				Mat44 shape_transform = shape.mTransform.PreScaled(shape.mScale);
-				uint first_vertex_index = uint(sv - shape_vertices);
-				for (uint p = 0, np = ch->GetNumPoints(); p < np; ++p)
+			// Store the indices
+			if (ScaleHelpers::IsInsideOut(shape.mScale))
+			{
+				// Reverse winding order
+				for (uint f = 0; f < nf; ++f)
 				{
-					Vec3 v = shape_transform * ch->GetPoint(p);
-					points[p] = v; // Store points in a temporary buffer so we avoid reading from GPU memory
-					v.StoreFloat3(sv);
-					++sv;
-				}
+					// Store indices
+					uint nv = ch->GetFaceVertices(f, max_vertices_per_face, face_indices);
+					uint32 indices_start = uint32(si - shape_indices);
+					*sh = indices_start;
+					++sh;
+					*sh = indices_start + nv;
+					++sh;
+					for (int v = int(nv) - 1; v >= 0; --v, ++si)
+						*si = face_indices[v] + first_vertex_index;
 
-				// Store number of faces
-				uint nf = ch->GetNumFaces();
-				*sh = nf;
-				++sh;
-
-				// Store the indices
-				if (ScaleHelpers::IsInsideOut(shape.mScale))
-				{
-					// Reverse winding order
-					for (uint f = 0; f < nf; ++f)
-					{
-						// Store indices
-						uint nv = ch->GetFaceVertices(f, max_vertices_per_face, face_indices);
-						uint32 indices_start = uint32(si - shape_indices);
-						*sh = indices_start;
-						++sh;
-						*sh = indices_start + nv;
-						++sh;
-						for (int v = int(nv) - 1; v >= 0; --v, ++si)
-							*si = face_indices[v] + first_vertex_index;
-
-						// Calculate plane (avoids reading from GPU memory)
-						Plane::sFromPointsCCW(points[face_indices[2]], points[face_indices[1]], points[face_indices[0]]).StoreFloat4(sp);
-						++sp;
-					}
-				}
-				else
-				{
-					// Keep winding order
-					for (uint f = 0; f < nf; ++f)
-					{
-						// Store indices
-						uint nv = ch->GetFaceVertices(f, max_vertices_per_face, face_indices);
-						uint32 indices_start = uint32(si - shape_indices);
-						*sh++ = indices_start;
-						*sh++ = indices_start + nv;
-						for (uint v = 0; v < nv; ++v)
-							*si++ = face_indices[v] + first_vertex_index;
-
-						// Calculate plane (avoids reading from GPU memory)
-						Plane::sFromPointsCCW(points[face_indices[0]], points[face_indices[1]], points[face_indices[2]]).StoreFloat4(sp);
-						++sp;
-					}
+					// Calculate plane (avoids reading from GPU memory)
+					Plane::sFromPointsCCW(points[face_indices[2]], points[face_indices[1]], points[face_indices[0]]).StoreFloat4(sp);
+					++sp;
 				}
 			}
+			else
+			{
+				// Keep winding order
+				for (uint f = 0; f < nf; ++f)
+				{
+					// Store indices
+					uint nv = ch->GetFaceVertices(f, max_vertices_per_face, face_indices);
+					uint32 indices_start = uint32(si - shape_indices);
+					*sh++ = indices_start;
+					*sh++ = indices_start + nv;
+					for (uint v = 0; v < nv; ++v)
+						*si++ = face_indices[v] + first_vertex_index;
+
+					// Calculate plane (avoids reading from GPU memory)
+					Plane::sFromPointsCCW(points[face_indices[0]], points[face_indices[1]], points[face_indices[2]]).StoreFloat4(sp);
+					++sp;
+				}
+			}
+		}
 		*sh = 0; // Terminator
 		++sh;
 		JPH_ASSERT(uint(cs - collision_shapes) == num_shapes);

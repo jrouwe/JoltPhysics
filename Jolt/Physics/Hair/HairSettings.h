@@ -112,6 +112,7 @@ public:
 
 	public:
 						Gradient() = default;
+		explicit		Gradient(float inValue) : mMin(inValue), mMax(inValue), mMinFraction(0.0f), mMaxFraction(1.0f) { }
 						Gradient(float inMin, float inMax, float inMinFraction = 0.0f, float inMaxFraction = 1.0f) : mMin(inMin), mMax(inMax), mMinFraction(inMinFraction), mMaxFraction(inMaxFraction) { }
 
 		/// We drive a value to its target with fixed time steps using:
