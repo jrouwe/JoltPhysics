@@ -695,6 +695,45 @@ void ConvexHullShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg 
 		}
 	}
 
+	// For a pointy hull the most aligned face can be far away from the deepest point (e.g. when the deepest point is at the end of a sharp edge).
+	// A contact manifold built from that face doesn't contain the deepest point, so the shapes keep penetrating there.
+	// Find the vertex that is furthest along the face normal and check if the face contains it.
+	Vec3 support_direction = -inScale * inDirection;
+	uint support_vtx = 0;
+	float support_dist = mPoints[0].mPosition.Dot(support_direction);
+	for (Array<Point>::size_type i = 1; i < mPoints.size(); ++i)
+	{
+		float dist = mPoints[i].mPosition.Dot(support_direction);
+		if (dist > support_dist)
+		{
+			support_dist = dist;
+			support_vtx = uint(i);
+		}
+	}
+	auto face_has_vertex = [this](const Face &inFace, uint inVertex)
+	{
+		for (const uint8 *v = mVertexIdx.data() + inFace.mFirstVertex, *v_end = v + inFace.mNumVertices; v < v_end; ++v)
+			if (*v == inVertex)
+				return true;
+		return false;
+	};
+	if (!face_has_vertex(mFaces[best_face_idx], support_vtx))
+	{
+		// Select the most aligned face that contains the deepest vertex
+		best_dot = FLT_MAX;
+		for (Array<Face>::size_type i = 0; i < mFaces.size(); ++i)
+			if (face_has_vertex(mFaces[i], support_vtx))
+			{
+				Vec3 plane_normal = inv_scale * mPlanes[i].GetNormal();
+				float dot = plane_normal.Dot(inDirection) / plane_normal.Length();
+				if (dot < best_dot)
+				{
+					best_dot = dot;
+					best_face_idx = (int)i;
+				}
+			}
+	}
+
 	// Get vertices
 	const Face &best_face = mFaces[best_face_idx];
 	const uint8 *first_vtx = mVertexIdx.data() + best_face.mFirstVertex;
