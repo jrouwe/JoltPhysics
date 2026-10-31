@@ -61,7 +61,9 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	if (epa.CastShape(mShapeCast.mCenterOfMassStart, mShapeCast.mDirection, mShapeCastSettings.mCollisionTolerance, mShapeCastSettings.mPenetrationTolerance, *mSupport, triangle, mSupport->GetConvexRadius() + mShapeCastSettings.mExtraConvexRadius, 0.0f, mShapeCastSettings.mReturnDeepestPoint, fraction, contact_point_a, contact_point_b, contact_normal))
 	{
 		// Check if we have enabled active edge detection
-		if (mShapeCastSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive && inActiveEdges != 0b111 && !triangle_normal.IsNearZero())
+		if (mShapeCastSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive
+			&& inActiveEdges != 0b111
+			&& !triangle_normal.IsNearZero()) // Shouldn't take triangle normal if it's degenerate
 		{
 			// Convert the active edge velocity hint to local space
 			Vec3 active_edge_movement_direction = mCenterOfMassTransform2.Multiply3x3Transposed(mShapeCastSettings.mActiveEdgeMovementDirection);
