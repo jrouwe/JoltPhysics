@@ -56,7 +56,9 @@ void CastSphereVsTriangles::AddHitWithActiveEdgeDetection(Vec3Arg inV0, Vec3Arg 
 {
 	// Check if we have enabled active edge detection
 	Vec3 contact_normal = inContactNormal;
-	if (mShapeCastSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive && inActiveEdges != 0b111)
+	if (mShapeCastSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive
+		&& inActiveEdges != 0b111
+		&& !inTriangleNormal.IsNearZero()) // Shouldn't take triangle normal if it's degenerate
 	{
 		// Convert the active edge velocity hint to local space
 		Vec3 active_edge_movement_direction = mCenterOfMassTransform2.Multiply3x3Transposed(mShapeCastSettings.mActiveEdgeMovementDirection);
@@ -125,9 +127,9 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	// Calculate triangle normal
 	Vec3 triangle_normal = mScaleSign * (v1 - v0).Cross(v2 - v0);
 	float triangle_normal_len = triangle_normal.Length();
-	if (triangle_normal_len == 0.0f)
-		return; // Degenerate triangle
-	triangle_normal /= triangle_normal_len;
+	bool triangle_degenerate = triangle_normal_len < 1.0e-6f;
+	if (!triangle_degenerate)
+		triangle_normal /= triangle_normal_len;
 
 	// Backface check
 	float normal_dot_direction = triangle_normal.Dot(mDirection);
@@ -135,8 +137,9 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	if (mShapeCastSettings.mBackFaceModeTriangles == EBackFaceMode::IgnoreBackFaces && back_facing)
 		return;
 
-	// Test if distance between the sphere and plane of triangle is smaller or equal than the radius
-	if (abs(v0.Dot(triangle_normal)) <= mRadius)
+	// Test if distance between the sphere and plane of triangle is smaller or equal than the radius.
+	// For a degenerate triangle, we cannot test a hit against the triangle plane, so we check only if there is an initial collision
+	if (abs(v0.Dot(triangle_normal)) <= mRadius || triangle_degenerate)
 	{
 		// Check if the sphere intersects at the start of the cast
 		uint32 closest_feature;
@@ -213,8 +216,9 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 		uint32 closest_feature;
 		Vec3 q = ClosestPoint::GetClosestPointOnTriangle(v0 - p, v1 - p, v2 - p, closest_feature);
 		// The distance between p and the triangle should be mRadius, but for very long casts,
-		// floating point accuracy can become low enough so that p is on the plane and q is zero
-		Vec3 contact_normal = q.NormalizedOr(back_facing? triangle_normal : -triangle_normal);
+		// floating point accuracy can become low enough so that p is on the plane and q is zero.
+		// For a degenerate triangle we don't have a triangle normal, so we fall back to the cast direction
+		Vec3 contact_normal = q.NormalizedOr(triangle_degenerate? mDirection : (back_facing? triangle_normal : -triangle_normal));
 		Vec3 contact_point_ab = p + q;
 		AddHitWithActiveEdgeDetection(v0, v1, v2, back_facing, triangle_normal, inActiveEdges, inSubShapeID2, fraction, contact_point_ab, contact_point_ab, contact_normal);
 	}

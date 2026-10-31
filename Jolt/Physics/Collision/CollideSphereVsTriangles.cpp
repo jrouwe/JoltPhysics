@@ -82,7 +82,8 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	JPH_ASSERT(closest_feature != 0);
 	if (mCollideShapeSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive
 		&& closest_feature != 0b111 // For an interior hit we should already have the right normal
-		&& (inActiveEdges & sClosestFeatureToActiveEdgesMask[closest_feature]) == 0) // If we didn't hit an active edge we should take the triangle normal
+		&& (inActiveEdges & sClosestFeatureToActiveEdgesMask[closest_feature]) == 0 // If we didn't hit an active edge we should take the triangle normal
+		&& !triangle_normal.IsNearZero()) // Shouldn't take triangle normal if it's degenerate
 	{
 		// Convert the active edge velocity hint to local space
 		Vec3 active_edge_movement_direction = mTransform2.Multiply3x3Transposed(mCollideShapeSettings.mActiveEdgeMovementDirection);
