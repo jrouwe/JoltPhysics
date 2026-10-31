@@ -421,6 +421,42 @@ TEST_SUITE("CastShapeTests")
 		CHECK_APPROX_EQUAL(hit.mPenetrationAxis.Normalized(), -Vec3::sAxisX());
 	}
 
+	// Test casting a sphere against a degenerate triangle (a line)
+	TEST_CASE("TestCastSphereVsLineTriangle")
+	{
+		AllHitCollisionCollector<CastShapeCollector> collector;
+		SphereShape sphere(1.0f);
+		ShapeCast cast(&sphere, Vec3::sOne(), Mat44::sTranslation(Vec3(-2, 0, 0)), Vec3(2, 0, 0));
+		ShapeCastSettings settings;
+		CastSphereVsTriangles caster(cast, settings, Vec3::sOne(), Mat44::sIdentity(), { }, collector);
+		caster.Cast(Vec3(0, 0, 0), Vec3(1, 0, 0), Vec3(2, 0, 0), 0, SubShapeID());
+		CHECK(collector.HadHit());
+		const ShapeCastResult &hit = collector.mHits.front();
+		CHECK_APPROX_EQUAL(hit.mFraction, 0.5f);
+		CHECK_APPROX_EQUAL(hit.mContactPointOn1, Vec3(0, 0, 0));
+		CHECK_APPROX_EQUAL(hit.mContactPointOn2, Vec3(0, 0, 0));
+		CHECK_APPROX_EQUAL(hit.mPenetrationDepth, 0);
+		CHECK_APPROX_EQUAL(hit.mPenetrationAxis.Normalized(), Vec3::sAxisX());
+	}
+
+	// Test casting a sphere against a degenerate triangle (a point)
+	TEST_CASE("TestCastSphereVsPointTriangle")
+	{
+		AllHitCollisionCollector<CastShapeCollector> collector;
+		SphereShape sphere(1.0f);
+		ShapeCast cast(&sphere, Vec3::sOne(), Mat44::sTranslation(Vec3(3, 0, 0)), Vec3(-2, 0, 0));
+		ShapeCastSettings settings;
+		CastSphereVsTriangles caster(cast, settings, Vec3::sOne(), Mat44::sIdentity(), { }, collector);
+		caster.Cast(Vec3(1, 0, 0), Vec3(1, 0, 0), Vec3(1, 0, 0), 0, SubShapeID());
+		CHECK(collector.HadHit());
+		const ShapeCastResult &hit = collector.mHits.front();
+		CHECK_APPROX_EQUAL(hit.mFraction, 0.5f);
+		CHECK_APPROX_EQUAL(hit.mContactPointOn1, Vec3(1, 0, 0));
+		CHECK_APPROX_EQUAL(hit.mContactPointOn2, Vec3(1, 0, 0));
+		CHECK_APPROX_EQUAL(hit.mPenetrationDepth, 0);
+		CHECK_APPROX_EQUAL(hit.mPenetrationAxis.Normalized(), -Vec3::sAxisX());
+	}
+
 	// Test ClosestHitPerBodyCollisionCollector
 	TEST_CASE("TestClosestHitPerBodyCollisionCollector")
 	{
