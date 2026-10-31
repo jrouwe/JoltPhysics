@@ -18,6 +18,7 @@
 #include <Jolt/Physics/Collision/ShapeFilter.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/CastSphereVsTriangles.h>
+#include <Jolt/Physics/Collision/CastConvexVsTriangles.h>
 #include "PhysicsTestContext.h"
 #include "Layers.h"
 
@@ -382,6 +383,42 @@ TEST_SUITE("CastShapeTests")
 		CastSphereVsTriangles caster(cast, settings, Vec3::sOne(), Mat44::sIdentity(), { }, collector);
 		caster.Cast(Vec3(14.5536213f, 10.5973721f, -0.00600051880f), Vec3(14.5536213f, 10.5969315f, -3.18638134f), Vec3(14.5536213f, 10.5969315f, -5.18637228f), 0b111, SubShapeID());
 		CHECK(!collector.HadHit());
+	}
+
+	// Test casting a box against a degenerate triangle (a line)
+	TEST_CASE("TestCastBoxVsLineTriangle")
+	{
+		AllHitCollisionCollector<CastShapeCollector> collector;
+		BoxShape box(Vec3::sReplicate(1.0f));
+		ShapeCast cast(&box, Vec3::sOne(), Mat44::sTranslation(Vec3(-2, 0, 0)), Vec3(2, 0, 0));
+		ShapeCastSettings settings;
+		CastConvexVsTriangles caster(cast, settings, Vec3::sOne(), Mat44::sIdentity(), { }, collector);
+		caster.Cast(Vec3(0, 0, 0), Vec3(1, 0, 0), Vec3(2, 0, 0), 0, SubShapeID());
+		CHECK(collector.HadHit());
+		const ShapeCastResult &hit = collector.mHits.front();
+		CHECK_APPROX_EQUAL(hit.mFraction, 0.5f);
+		CHECK_APPROX_EQUAL(hit.mContactPointOn1, Vec3(0, 0, 0));
+		CHECK_APPROX_EQUAL(hit.mContactPointOn2, Vec3(0, 0, 0));
+		CHECK_APPROX_EQUAL(hit.mPenetrationDepth, 0);
+		CHECK_APPROX_EQUAL(hit.mPenetrationAxis.Normalized(), Vec3::sAxisX());
+	}
+
+	// Test casting a box against a degenerate triangle (a point)
+	TEST_CASE("TestCastBoxVsPointTriangle")
+	{
+		AllHitCollisionCollector<CastShapeCollector> collector;
+		BoxShape box(Vec3::sReplicate(1.0f));
+		ShapeCast cast(&box, Vec3::sOne(), Mat44::sTranslation(Vec3(3, 0, 0)), Vec3(-2, 0, 0));
+		ShapeCastSettings settings;
+		CastConvexVsTriangles caster(cast, settings, Vec3::sOne(), Mat44::sIdentity(), { }, collector);
+		caster.Cast(Vec3(1, 0, 0), Vec3(1, 0, 0), Vec3(1, 0, 0), 0, SubShapeID());
+		CHECK(collector.HadHit());
+		const ShapeCastResult &hit = collector.mHits.front();
+		CHECK_APPROX_EQUAL(hit.mFraction, 0.5f);
+		CHECK_APPROX_EQUAL(hit.mContactPointOn1, Vec3(1, 0, 0));
+		CHECK_APPROX_EQUAL(hit.mContactPointOn2, Vec3(1, 0, 0));
+		CHECK_APPROX_EQUAL(hit.mPenetrationDepth, 0);
+		CHECK_APPROX_EQUAL(hit.mPenetrationAxis.Normalized(), -Vec3::sAxisX());
 	}
 
 	// Test ClosestHitPerBodyCollisionCollector
