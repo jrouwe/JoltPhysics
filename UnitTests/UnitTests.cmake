@@ -51,6 +51,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/CollidePointTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/CollisionGroupTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ContactListenerTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/ConvexHullShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ConvexVsTrianglesTest.cpp
 	${UNIT_TESTS_ROOT}/Physics/DistanceConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/EstimateCollisionResponseTest.cpp
@@ -65,6 +66,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/PhysicsDeterminismTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/PhysicsStepListenerTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/PhysicsTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/RagdollTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/RayShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SensorTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ShapeFilterTests.cpp
