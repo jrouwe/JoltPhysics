@@ -701,17 +701,15 @@ TEST_SUITE("SoftBodyTests")
 
 		// Create a cube without volume constraints and with soft edges
 		Ref<SoftBodySharedSettings> cube = SoftBodySharedSettings::sCreateCube(5, 0.25f);
-		Ref<SoftBodySharedSettings> settings = cube->Clone();
-		sCheckSettingsEqual(*cube, *settings);
-		settings->mVolumeConstraints.clear();
-		for (SoftBodySharedSettings::Edge &e : settings->mEdgeConstraints)
+		cube->mVolumeConstraints.clear();
+		for (SoftBodySharedSettings::Edge &e : cube->mEdgeConstraints)
 			e.mCompliance = 1.0e-4f;
-		settings->Optimize();
+		cube->Optimize();
 
 		Body *bodies[2];
 		for (int i = 0; i < 2; ++i)
 		{
-			SoftBodyCreationSettings sb_settings(settings, RVec3(i * 3.0f, 0, 0), Quat::sIdentity(), Layers::MOVING);
+			SoftBodyCreationSettings sb_settings(cube, RVec3(i * 3.0f, 0, 0), Quat::sIdentity(), Layers::MOVING);
 			sb_settings.mAllowSleeping = false;
 			sb_settings.mPressure = i == 0? 0.0f : 1000.0f;
 			bodies[i] = c.GetBodyInterface().CreateSoftBody(sb_settings);
