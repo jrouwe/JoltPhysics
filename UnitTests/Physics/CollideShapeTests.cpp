@@ -16,6 +16,7 @@
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
+#include <Jolt/Physics/Collision/CollideSphereVsTriangles.h>
 #include <Jolt/Geometry/EPAPenetrationDepth.h>
 #include "Layers.h"
 
@@ -429,6 +430,90 @@ TEST_SUITE("CollideShapeTests")
 		CHECK(collector.HadHit());
 		CHECK(collector.mHit.mPenetrationDepth < 1.0e-4f);
 		CHECK(collector.mHit.mPenetrationAxis.Normalized().IsClose(Vec3::sAxisZ()));
+	}
+
+	// Test case of a degenerate triangle (a line) overlapping with a box
+	TEST_CASE("TestCollideBoxVsLineTriangle")
+	{
+		BoxShape box(Vec3::sReplicate(1.0f));
+		box.SetEmbedded();
+		Mat44 box_transform = Mat44::sTranslation(Vec3(2.5f, 0, 0));
+		CollideShapeSettings settings;
+		ClosestHitCollisionCollector<CollideShapeCollector> collector;
+		CollideConvexVsTriangles c(&box, Vec3::sOne(), Vec3::sOne(), box_transform, Mat44::sIdentity(), SubShapeID(), settings, collector);
+
+		// A triangle that forms a line
+		c.Collide(Vec3(0, 0, 0), Vec3(1, 0, 0), Vec3(2, 0, 0), 0, SubShapeID());
+
+		// Check there was a hit
+		CHECK(collector.HadHit());
+		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, 0.5f);
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(1.5f, 0, 0));
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(1.5f, 0, 0));
+		CHECK(collector.mHit.mPenetrationAxis.Normalized().IsClose(-Vec3::sAxisX()));
+	}
+
+	// Test case of a degenerate triangle (a point) overlapping with a box
+	TEST_CASE("TestCollideBoxVsPointTriangle")
+	{
+		BoxShape box(Vec3::sReplicate(1.0f));
+		box.SetEmbedded();
+		Mat44 box_transform = Mat44::sTranslation(Vec3(2.5f, 0, 0));
+		CollideShapeSettings settings;
+		ClosestHitCollisionCollector<CollideShapeCollector> collector;
+		CollideConvexVsTriangles c(&box, Vec3::sOne(), Vec3::sOne(), box_transform, Mat44::sIdentity(), SubShapeID(), settings, collector);
+
+		// A triangle that forms a point
+		c.Collide(Vec3(3, 0, 0), Vec3(3, 0, 0), Vec3(3, 0, 0), 0, SubShapeID());
+
+		// Check there was a hit
+		CHECK(collector.HadHit());
+		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, 0.5f);
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(3.5f, 0, 0));
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(3.5f, 0, 0));
+		CHECK(collector.mHit.mPenetrationAxis.Normalized().IsClose(Vec3::sAxisX()));
+	}
+
+	// Test case of a degenerate triangle (a line) overlapping with a sphere
+	TEST_CASE("TestCollideSphereVsLineTriangle")
+	{
+		SphereShape sphere(1.0f);
+		sphere.SetEmbedded();
+		Mat44 sphere_transform = Mat44::sTranslation(Vec3(2.5f, 0, 0));
+		CollideShapeSettings settings;
+		ClosestHitCollisionCollector<CollideShapeCollector> collector;
+		CollideSphereVsTriangles c(&sphere, Vec3::sOne(), Vec3::sOne(), sphere_transform, Mat44::sIdentity(), SubShapeID(), settings, collector);
+
+		// A triangle that forms a line
+		c.Collide(Vec3(0, 0, 0), Vec3(1, 0, 0), Vec3(2, 0, 0), 0, SubShapeID());
+
+		// Check there was a hit
+		CHECK(collector.HadHit());
+		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, 0.5f);
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(1.5f, 0, 0));
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(1.5f, 0, 0));
+		CHECK(collector.mHit.mPenetrationAxis.Normalized().IsClose(-Vec3::sAxisX()));
+	}
+
+	// Test case of a degenerate triangle (a point) overlapping with a sphere
+	TEST_CASE("TestCollideSphereVsPointTriangle")
+	{
+		SphereShape sphere(1.0f);
+		sphere.SetEmbedded();
+		Mat44 sphere_transform = Mat44::sTranslation(Vec3(2.5f, 0, 0));
+		CollideShapeSettings settings;
+		ClosestHitCollisionCollector<CollideShapeCollector> collector;
+		CollideSphereVsTriangles c(&sphere, Vec3::sOne(), Vec3::sOne(), sphere_transform, Mat44::sIdentity(), SubShapeID(), settings, collector);
+
+		// A triangle that forms a point
+		c.Collide(Vec3(3, 0, 0), Vec3(3, 0, 0), Vec3(3, 0, 0), 0, SubShapeID());
+
+		// Check there was a hit
+		CHECK(collector.HadHit());
+		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, 0.5f);
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(3.5f, 0, 0));
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(3.5f, 0, 0));
+		CHECK(collector.mHit.mPenetrationAxis.Normalized().IsClose(Vec3::sAxisX()));
 	}
 
 	// A test case of a box and a convex hull that are nearly touching and that should return a contact with correct normal because the collision settings specify a max separation distance. This was producing the wrong normal.

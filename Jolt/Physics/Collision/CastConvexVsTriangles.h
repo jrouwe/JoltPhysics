@@ -32,7 +32,7 @@ public:
 protected:
 	const ShapeCast &				mShapeCast;
 	const ShapeCastSettings &		mShapeCastSettings;
-	const Mat44 &					mCenterOfMassTransform2;
+	Mat44							mCenterOfMassTransform2;
 	Vec3							mScale;
 	SubShapeIDCreator				mSubShapeIDCreator1;
 	CastShapeCollector &			mCollector;

@@ -33,7 +33,7 @@ protected:
 	Vec3							mDirection;							///< Direction and length of movement of sphere
 	float							mRadius;							///< Scaled radius of sphere
 	const ShapeCastSettings &		mShapeCastSettings;
-	const Mat44 &					mCenterOfMassTransform2;
+	Mat44							mCenterOfMassTransform2;
 	Vec3							mScale;
 	SubShapeIDCreator				mSubShapeIDCreator1;
 	CastShapeCollector &			mCollector;
