@@ -455,7 +455,7 @@ TEST_SUITE("SoftBodyTests")
 			for (const SoftBodySharedSettings::LRA &lra : inSettings->mLRAConstraints)
 			{
 				float distance = float((sGetVertexPosition(body, lra.mVertex[1]) - sGetVertexPosition(body, lra.mVertex[0])).Length());
-				CHECK(distance <= lra.mMaxDistance * 1.001f + 1.0e-4f);
+				CHECK(distance <= lra.mMaxDistance * 1.001f);
 			}
 
 			float max_distance = 0.0f;
@@ -926,7 +926,7 @@ TEST_SUITE("SoftBodyTests")
 		BodyID sensor_id = bi.CreateAndAddBody(sensor_settings, EActivation::DontActivate);
 
 		// Sensor whose bounding box overlaps with the soft body but that doesn't contain any vertices
-		BodyCreationSettings sensor2_settings(new SphereShape(0.3f), RVec3(0.75f, 0.75f, 0.75f), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
+		BodyCreationSettings sensor2_settings(new SphereShape(0.05f), RVec3(0.125f, 0, 0), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
 		sensor2_settings.mIsSensor = true;
 		BodyID sensor2_id = bi.CreateAndAddBody(sensor2_settings, EActivation::DontActivate);
 
@@ -978,7 +978,7 @@ TEST_SUITE("SoftBodyTests")
 			float min_y = FLT_MAX;
 			for (uint v = 0; v < mp->GetVertices().size(); ++v)
 				min_y = min(min_y, float(sGetVertexPosition(soft_body, v).GetY()));
-			CHECK_APPROX_EQUAL(min_y, 0.0f, 0.02f);
+			CHECK_APPROX_EQUAL(min_y, 0.0f, 1.0e-5f);
 		}
 	}
 }
