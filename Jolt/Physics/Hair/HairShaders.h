@@ -17,6 +17,26 @@ public:
 	/// Note that if you want to run the sim on CPU you need call HairRegisterShaders first.
 	void				Init(ComputeSystem *inComputeSystem);
 
+	/// Check if all shaders were loaded
+	bool				AllValid() const
+	{
+		return mTeleportCS != nullptr
+			&& mApplyDeltaTransformCS != nullptr
+			&& mSkinVerticesCS != nullptr
+			&& mSkinRootsCS != nullptr
+			&& mApplyGlobalPoseCS != nullptr
+			&& mCalculateCollisionPlanesCS != nullptr
+			&& mGridClearCS != nullptr
+			&& mGridAccumulateCS != nullptr
+			&& mGridNormalizeCS != nullptr
+			&& mIntegrateCS != nullptr
+			&& mUpdateRootsCS != nullptr
+			&& mUpdateStrandsCS != nullptr
+			&& mUpdateVelocityCS != nullptr
+			&& mUpdateVelocityIntegrateCS != nullptr
+			&& mCalculateRenderPositionsCS != nullptr;
+	}
+
 	Ref<ComputeShader>	mTeleportCS;
 	Ref<ComputeShader>	mApplyDeltaTransformCS;
 	Ref<ComputeShader>	mSkinVerticesCS;
