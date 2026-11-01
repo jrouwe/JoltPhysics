@@ -121,10 +121,10 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 			<summary>MinGW</summary>
 			<ul>
 				<li>Follow download instructions for MSYS2 (https://www.msys2.org/)</li>
-				<li>From the MSYS2 MSYS app run: <code>pacman -Suy</code> and <code>pacman -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake</code></li>
-				<li>From the MSYS2 MINGW64 app, in the <code>Build</code> folder run: <code>./cmake_windows_mingw.sh</code></li>
-				<li>Run: <code>cmake --build MinGW_Debug</code></li>
-				<li>Run: <code>./MinGW_Debug/Samples.exe</code> or <code>./MinGW_Debug/UnitTests.exe</code></li>
+				<li>From the MSYS2 UCRT64 terminal run: <code>pacman -Suy</code> and <code>pacman -S --needed mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake</code></li>
+				<li>In the <code>Build</code> folder run: <code>./cmake_windows_mingw.sh</code></li>
+				<li>Run: <code>cmake --build MinGW_Release</code></li>
+				<li>Run: <code>./MinGW_Release/Samples.exe</code> or <code>./MinGW_Release/UnitTests.exe</code></li>
 			</ul>
 		</details>
 	</li></ul>
