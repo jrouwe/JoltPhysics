@@ -178,8 +178,8 @@ jobs:
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: mingw64
-        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
+        msystem: ucrt64
+        install: mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake
         update: true
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
