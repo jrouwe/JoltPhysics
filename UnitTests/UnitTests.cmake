@@ -3,6 +3,7 @@ set(UNIT_TESTS_ROOT ${PHYSICS_REPO_ROOT}/UnitTests)
 
 # Source files
 set(UNIT_TESTS_SRC_FILES
+	${UNIT_TESTS_ROOT}/Compute/ComputeShaderLoader.h
 	${UNIT_TESTS_ROOT}/Compute/ComputeTests.cpp
 	${UNIT_TESTS_ROOT}/Core/ArrayTest.cpp
 	${UNIT_TESTS_ROOT}/Core/BinaryHeapTest.cpp
@@ -55,6 +56,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/ConvexVsTrianglesTest.cpp
 	${UNIT_TESTS_ROOT}/Physics/DistanceConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/EstimateCollisionResponseTest.cpp
+	${UNIT_TESTS_ROOT}/Physics/HairTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/HeightFieldShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/HingeConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/MotionQualityLinearCastTests.cpp
