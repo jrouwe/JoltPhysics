@@ -23,7 +23,8 @@ fi
 echo "Checking $(echo "$FILES" | wc -l) files for use of the global operator new"
 
 # Find new expressions in the Jolt folder that are not placement new and don't resolve to a class operator new
-export QUERY='match cxxNewExpr(isExpansionInFileMatching("[/\\\\]Jolt[/\\\\]"), unless(hasAnyPlacementArg(anything())), unless(hasDeclaration(cxxMethodDecl())))'
+# (expressions in uninstantiated templates are skipped as their operator new is not known yet, the template instantiations are checked instead)
+export QUERY='match cxxNewExpr(isExpansionInFileMatching("[/\\\\]Jolt[/\\\\]"), unless(isInstantiationDependent()), unless(hasAnyPlacementArg(anything())), unless(hasDeclaration(cxxMethodDecl())))'
 export BUILD_DIR
 export OUT_DIR=$(mktemp -d)
 trap 'rm -rf "$OUT_DIR"' EXIT
