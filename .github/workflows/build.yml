@@ -15,8 +15,8 @@ on:
 env:
   EMSCRIPTEN_VERSION: 6.0.8
   NODE_VERSION: 24.x
-  UBUNTU_CLANG_VERSION: clang++-18
-  UBUNTU_GCC_VERSION: g++-14
+  UBUNTU_CLANG_VERSION: 18
+  UBUNTU_GCC_VERSION: 14
 
 jobs:
   linux-clang:
@@ -35,12 +35,30 @@ jobs:
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}}
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
+
+  linux-clang-check-global-new:
+    runs-on: ubuntu-latest
+    name: Linux Clang Check Global New
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v7
+    - name: Install Vulkan
+      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
+    - name: Install clang-query
+      run: sudo apt update && sudo apt -y install clang-tools-${{env.UBUNTU_CLANG_VERSION}}
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_linux_clang_gcc.sh Debug clang++-${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON -DTARGET_UNIT_TESTS=OFF -DTARGET_SAMPLES=OFF -DTARGET_VIEWER=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF
+    - name: Check Global New
+      working-directory: ${{github.workspace}}/Build
+      run: ./check_global_new.sh Linux_Debug clang-query-${{env.UBUNTU_CLANG_VERSION}}
 
   linux_clang_tsan:
     runs-on: ubuntu-latest
@@ -57,7 +75,7 @@ jobs:
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Unit Tests
@@ -85,7 +103,7 @@ jobs:
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DBUILD_SHARED_LIBS=YES
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DBUILD_SHARED_LIBS=YES
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -109,7 +127,7 @@ jobs:
       run: sudo apt -y install g++-multilib
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -131,7 +149,7 @@ jobs:
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}}
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} g++-${{env.UBUNTU_GCC_VERSION}}
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -153,7 +171,7 @@ jobs:
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}} -DBUILD_SHARED_LIBS=Yes
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} g++-${{env.UBUNTU_GCC_VERSION}} -DBUILD_SHARED_LIBS=Yes
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
