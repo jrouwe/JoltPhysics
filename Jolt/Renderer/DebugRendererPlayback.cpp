@@ -52,12 +52,12 @@ void DebugRendererPlayback::Parse(StreamIn &inStream)
 			uint32 index_count;
 			inStream.Read(index_count);
 
-			uint32 *indices = new uint32 [index_count];
+			uint32 *indices = (uint32 *)Allocate(index_count * sizeof(uint32));
 			inStream.ReadBytes(indices, index_count * sizeof(uint32));
 
 			mBatches.insert({ id, mRenderer.CreateTriangleBatch(vertices, vertex_count, indices, index_count) });
 
-			delete [] indices;
+			Free(indices);
 			delete [] vertices;
 		}
 		else if (command == ECommand::CreateGeometry)

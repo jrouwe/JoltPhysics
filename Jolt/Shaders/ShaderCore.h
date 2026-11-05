@@ -74,7 +74,11 @@
 	#define JPH_AtomicAdd							InterlockedAdd
 #endif
 
-#define JPH_SHADER_STRUCT_BEGIN(name)				struct name {
+#ifdef __cplusplus
+	#define JPH_SHADER_STRUCT_BEGIN(name)			struct name { JPH_OVERRIDE_NEW_DELETE
+#else
+	#define JPH_SHADER_STRUCT_BEGIN(name)			struct name {
+#endif
 #define JPH_SHADER_STRUCT_MEMBER(type, name)		type m##name;
 #define JPH_SHADER_STRUCT_END(name)					};
 

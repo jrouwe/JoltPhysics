@@ -182,6 +182,8 @@ public:
 	class Vertex
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		Float3				mPosition;
 		Float3				mNormal;
 		Float2				mUV;
@@ -192,6 +194,8 @@ public:
 	class JPH_DEBUG_RENDERER_EXPORT Triangle
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 							Triangle() = default;
 							Triangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor);
 							Triangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor, Vec3Arg inUVOrigin, Vec3Arg inUVDirection);
@@ -206,6 +210,8 @@ public:
 	class LOD
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		Batch				mTriangleBatch;
 		float				mDistance;
 	};
