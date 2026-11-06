@@ -15,6 +15,8 @@ using ColorArg = Color;
 class JPH_EXPORT_GCC_BUG_WORKAROUND [[nodiscard]] Color
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructors
 							Color() = default; ///< Intentionally not initialized for performance reasons
 							Color(const Color &inRHS) = default;

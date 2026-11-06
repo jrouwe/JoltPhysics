@@ -725,24 +725,24 @@ TEST_SUITE("HairTests")
 		if (queue.HasError())
 			return;
 
-		Ref<HairShaders> shaders = new HairShaders;
-		shaders->Init(inComputeSystem);
-		bool all_valid = shaders->AllValid();
+		HairShaders shaders;
+		shaders.Init(inComputeSystem);
+		bool all_valid = shaders.AllValid();
 		CHECK(all_valid);
 		if (!all_valid)
 			return;
 
 	#ifdef JPH_OBJECT_STREAM
-		sTestHairSettingsObjectStreamRestoreSimulatesIdentically(inComputeSystem, queue.Get(), *shaders);
+		sTestHairSettingsObjectStreamRestoreSimulatesIdentically(inComputeSystem, queue.Get(), shaders);
 	#endif // JPH_OBJECT_STREAM
-		sTestHairSettingsBinaryStateRestoreSimulatesIdentically(inComputeSystem, queue.Get(), *shaders);
-		sTestHairFallsUnderGravity(inComputeSystem, queue.Get(), *shaders);
-		sTestHairGlobalPoseOnly(inComputeSystem, queue.Get(), *shaders);
-		sTestHairWorldTransformInfluence(inComputeSystem, queue.Get(), *shaders);
-		sTestHairMaxDeltaTime(inComputeSystem, queue.Get(), *shaders);
-		sTestHairGrid(inComputeSystem, queue.Get(), *shaders);
-		sTestHairCollision(inComputeSystem, queue.Get(), *shaders);
-		sTestHairRenderStrands(inComputeSystem, queue.Get(), *shaders);
+		sTestHairSettingsBinaryStateRestoreSimulatesIdentically(inComputeSystem, queue.Get(), shaders);
+		sTestHairFallsUnderGravity(inComputeSystem, queue.Get(), shaders);
+		sTestHairGlobalPoseOnly(inComputeSystem, queue.Get(), shaders);
+		sTestHairWorldTransformInfluence(inComputeSystem, queue.Get(), shaders);
+		sTestHairMaxDeltaTime(inComputeSystem, queue.Get(), shaders);
+		sTestHairGrid(inComputeSystem, queue.Get(), shaders);
+		sTestHairCollision(inComputeSystem, queue.Get(), shaders);
+		sTestHairRenderStrands(inComputeSystem, queue.Get(), shaders);
 	}
 
 #ifdef JPH_USE_CPU_COMPUTE
