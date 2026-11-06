@@ -51,8 +51,6 @@ jobs:
       uses: actions/checkout@v7
     - name: Install Vulkan
       run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
-    - name: Install clang-query
-      run: sudo apt update && sudo apt -y install clang-tools-${{env.UBUNTU_CLANG_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_linux_clang_gcc.sh Debug clang++-${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON
