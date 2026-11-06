@@ -140,13 +140,9 @@ jobs:
       run: sudo apt -y install g++-multilib
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: |
-        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
-        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
     - name: Build
-      run: |
-        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
-        cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
