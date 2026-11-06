@@ -28,14 +28,17 @@ void JobSystemWithBarrier::BarrierImpl::AddJob(const JobHandle &inJob)
 {
 	JPH_PROFILE_FUNCTION();
 
-	bool release_semaphore = false;
+	// First increment mNumToAcquire so that the barrier knows to wait for it. If we do this after SetBarrier, it is possible for
+	// the job to finish and call OnJobFinished before we increment mNumToAcquire, which would cause WaitForJobs to return too early.
+	mNumToAcquire++;
 
 	// Set the barrier on the job, this returns true if the barrier was successfully set (otherwise the job is already done and we don't need to add it to our list)
 	Job *job = inJob.GetPtr();
 	if (job->SetBarrier(this))
 	{
+		bool release_semaphore = false;
+
 		// If the job can be executed we want to release the semaphore an extra time to allow the waiting thread to start executing it
-		mNumToAcquire++;
 		if (job->CanBeExecuted())
 		{
 			release_semaphore = true;
@@ -51,11 +54,20 @@ void JobSystemWithBarrier::BarrierImpl::AddJob(const JobHandle &inJob)
 			std::this_thread::sleep_for(std::chrono::microseconds(100));
 		}
 		mJobs[write_index & (cMaxJobs - 1)] = job;
-	}
 
-	// Notify waiting thread that a new executable job is available
-	if (release_semaphore)
-		mSemaphore.Release();
+		// Notify waiting thread that a new executable job is available
+		if (release_semaphore)
+			mSemaphore.Release();
+	}
+	else
+	{
+		// Job was already done, we didn't add it to the barrier so we need to decrement mNumToAcquire again.
+		// Note that this could cause Wait() to hang forever if the job finished in the mean time and the waiting
+		// thread looped and is waiting for the semaphore again. However, AddJob can only be called either before
+		// Wait is called or from a job that is part of the barrier, in which case that job is guaranteed
+		// to wake up the semaphore when it finishes.
+		mNumToAcquire--;
+	}
 }
 
 void JobSystemWithBarrier::BarrierImpl::AddJobs(const JobHandle *inHandles, uint inNumHandles)
@@ -66,12 +78,15 @@ void JobSystemWithBarrier::BarrierImpl::AddJobs(const JobHandle *inHandles, uint
 
 	for (const JobHandle *handle = inHandles, *handles_end = inHandles + inNumHandles; handle < handles_end; ++handle)
 	{
+		// First increment mNumToAcquire so that the barrier knows to wait for it. If we do this after SetBarrier, it is possible for
+		// the job to finish and call OnJobFinished before we increment mNumToAcquire, which would cause WaitForJobs to return too early.
+		mNumToAcquire++;
+
 		// Set the barrier on the job, this returns true if the barrier was successfully set (otherwise the job is already done and we don't need to add it to our list)
 		Job *job = handle->GetPtr();
 		if (job->SetBarrier(this))
 		{
 			// If the job can be executed we want to release the semaphore an extra time to allow the waiting thread to start executing it
-			mNumToAcquire++;
 			if (!release_semaphore && job->CanBeExecuted())
 			{
 				release_semaphore = true;
@@ -87,6 +102,15 @@ void JobSystemWithBarrier::BarrierImpl::AddJobs(const JobHandle *inHandles, uint
 				std::this_thread::sleep_for(std::chrono::microseconds(100));
 			}
 			mJobs[write_index & (cMaxJobs - 1)] = job;
+		}
+		else
+		{
+			// Job was already done, we didn't add it to the barrier so we need to decrement mNumToAcquire again.
+			// Note that this could cause Wait() to hang forever if the job finished in the mean time and the waiting
+			// thread looped and is waiting for the semaphore again. However, AddJob can only be called either before
+			// Wait is called or from a job that is part of the barrier, in which case that job is guaranteed
+			// to wake up the semaphore when it finishes.
+			mNumToAcquire--;
 		}
 	}
 
@@ -154,6 +178,9 @@ void JobSystemWithBarrier::BarrierImpl::Wait()
 		mSemaphore.Acquire(num_to_acquire);
 		mNumToAcquire -= num_to_acquire;
 	}
+
+	JPH_ASSERT(mSemaphore.GetValue() == 0);
+	JPH_ASSERT(mNumToAcquire == 0);
 
 	// All jobs should be done now, release them
 	while (mJobReadIndex < mJobWriteIndex)
