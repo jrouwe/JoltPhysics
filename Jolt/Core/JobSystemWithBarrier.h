@@ -55,7 +55,7 @@ private:
 		virtual void		AddJobs(const JobHandle *inHandles, uint inNumHandles) override;
 
 		/// Check if there are any jobs in the job barrier
-		inline bool			IsEmpty() const									{ return mJobReadIndex == mJobWriteIndex; }
+		inline bool			IsEmpty() const									{ return mJobReadIndex.load(memory_order_relaxed) == mJobWriteIndex.load(memory_order_relaxed); }
 
 		/// Wait for all jobs in this job barrier, while waiting, execute jobs that are part of this barrier on the current thread
 		void				Wait();

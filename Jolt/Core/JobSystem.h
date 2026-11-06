@@ -228,8 +228,9 @@ protected:
 		/// Set the job barrier that this job belongs to and returns false if this was not possible because the job already finished
 		inline bool			SetBarrier(Barrier *inBarrier)
 		{
+			// Acquire on failure so that, if the job already finished, the caller sees all side effects of the job function
 			intptr_t barrier = 0;
-			if (mBarrier.compare_exchange_strong(barrier, reinterpret_cast<intptr_t>(inBarrier), memory_order_relaxed))
+			if (mBarrier.compare_exchange_strong(barrier, reinterpret_cast<intptr_t>(inBarrier), memory_order_release, memory_order_acquire))
 				return true;
 			JPH_ASSERT(barrier == cBarrierDoneState, "A job can only belong to 1 barrier");
 			return false;
@@ -257,7 +258,8 @@ protected:
 			intptr_t barrier = mBarrier.load(memory_order_relaxed);
 			for (;;)
 			{
-				if (mBarrier.compare_exchange_weak(barrier, cBarrierDoneState, memory_order_relaxed))
+				// Acquire to pair with the release in SetBarrier, release so that a failing SetBarrier sees the side effects of the job function
+				if (mBarrier.compare_exchange_weak(barrier, cBarrierDoneState, memory_order_acq_rel, memory_order_relaxed))
 					break;
 			}
 			JPH_ASSERT(barrier != cBarrierDoneState);
