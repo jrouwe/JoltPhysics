@@ -3,14 +3,12 @@
 # Checks that Jolt never uses the global operator new, which would bypass the allocation hooks in Core/Memory.h.
 # Every new expression in the Jolt folder, and every new expression anywhere that allocates a class declared in the Jolt folder,
 # must resolve to a class operator new (e.g. through JPH_OVERRIDE_NEW_DELETE) or be a placement new.
-# Usage: [JOBS=N] ./check_global_new.sh [BUILD_DIR] [CLANG_QUERY]
+# Usage: ./check_global_new.sh [BUILD_DIR] [CLANG_QUERY]
 # BUILD_DIR must contain a compile_commands.json (configure with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON, default: Linux_Debug).
 # CLANG_QUERY is the clang-query executable to use (default: clang-query).
-# JOBS is the number of files that are processed in parallel (default: number of CPUs), lower it if you run out of memory.
 
 BUILD_DIR=${1:-Linux_Debug}
 CLANG_QUERY=${2:-clang-query}
-JOBS=${JOBS:-$(nproc)}
 
 if [ ! -f "$BUILD_DIR/compile_commands.json" ]; then
 	echo "Cannot find $BUILD_DIR/compile_commands.json, configure with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
@@ -33,9 +31,9 @@ export BUILD_DIR
 export OUT_DIR=$(mktemp -d)
 trap 'rm -rf "$OUT_DIR"' EXIT
 
-# Run one file per clang-query process (clang-query keeps the AST of all files it is given in memory),
+# Run one file per clang-query process in parallel (clang-query parses all files it is given sequentially and keeps their ASTs in memory),
 # each process appends to its own file so that the output doesn't get interleaved
-echo "$FILES" | tr '\n' '\0' | xargs -0 -P "$JOBS" -n 1 sh -c \
+echo "$FILES" | tr '\n' '\0' | xargs -0 -P "$(nproc)" -n 1 sh -c \
 	'echo "$1"; "$0" -p "$BUILD_DIR" -c "set output diag" -c "$QUERY" "$1" >> "$OUT_DIR/out.$$" 2>&1' "$CLANG_QUERY"
 
 # Matches in headers are reported once per translation unit, so remove duplicates
