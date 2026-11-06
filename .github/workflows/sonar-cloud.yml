@@ -14,7 +14,7 @@ on:
 
 jobs:
   check-secret:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       sonar-token: ${{ steps.sonar-token.outputs.defined }}
     steps:
@@ -28,26 +28,32 @@ jobs:
     name: Build
     needs: [check-secret]
     if: needs.check-secret.outputs.sonar-token == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
-      CLANG_VERSION: 18
+      CLANG_VERSION: 22
+      VULKAN_VERSION: 1.4.363.1
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Install Vulkan
-        run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
+        run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
       - name: Install build-wrapper
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v8
       - name: Configure CMake
         working-directory: ${{github.workspace}}/Build
-        run: ./cmake_linux_clang_gcc.sh ReleaseCoverage clang++-${{ env.CLANG_VERSION }}
+        run: |
+          source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+          ./cmake_linux_clang_gcc.sh ReleaseCoverage clang++-${{ env.CLANG_VERSION }}
       - name: Run build-wrapper
-        run: build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build ${{github.workspace}}/Build/Linux_ReleaseCoverage -j $(nproc)
+        run: |
+          source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build ${{github.workspace}}/Build/Linux_ReleaseCoverage -j $(nproc)
       - name: Run unit tests and create coverage report
         working-directory: ${{github.workspace}}/Build/Linux_ReleaseCoverage
         run: |
+          source $HOME/vulkan/${{ env.VULKAN_VERSION }}/setup-env.sh
           cmake --build . --target test -j $(nproc)
           llvm-profdata-${{ env.CLANG_VERSION }} merge -sparse default.profraw -o default.profdata
           llvm-cov-${{ env.CLANG_VERSION }} show -format=text UnitTests -instr-profile=default.profdata > coverage.txt
