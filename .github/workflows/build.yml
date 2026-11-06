@@ -55,7 +55,7 @@ jobs:
       run: sudo apt update && sudo apt -y install clang-tools-${{env.UBUNTU_CLANG_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Debug clang++-${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON -DTARGET_UNIT_TESTS=OFF -DTARGET_SAMPLES=OFF -DTARGET_VIEWER=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF
+      run: ./cmake_linux_clang_gcc.sh Debug clang++-${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON
     - name: Check Global New
       working-directory: ${{github.workspace}}/Build
       run: ./check_global_new.sh Linux_Debug clang-query-${{env.UBUNTU_CLANG_VERSION}}
