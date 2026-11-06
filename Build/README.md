@@ -138,7 +138,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 			<ul>
 				<li>Install clang (<code>apt-get install clang</code>)</li>
 				<li>Install cmake (<code>apt-get install cmake</code>)</li>
-				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu24_install_vulkan_sdk.sh</code> in this folder.</li>
+				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu26_install_vulkan_sdk.sh</code> in this folder.</li>
 				<li>Run: <code>./cmake_linux_clang_gcc.sh</code></li>
 				<li>Go to the <code>Linux_Debug</code> folder</li>
 				<li>Run: <code>make -j$(nproc) && ./UnitTests</code></li>
@@ -151,7 +151,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 				<li>Install clang (<code>apt-get install clang</code>)</li>
 				<li>Install cmake (<code>apt-get install cmake</code>)</li>
 				<li>Install ninja (<code>apt-get install ninja-build</code>)</li>
-				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu24_install_vulkan_sdk.sh</code> in this folder.</li>
+				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu26_install_vulkan_sdk.sh</code> in this folder.</li>
 				<li>Run: <code>./cmake_ninja.sh</code></li>
 				<li>Go to the <code>Ninja_MultiConfig</code> folder</li>
 				<li>Run: <code>cmake --build . --config Debug && ./UnitTests</code></li>
