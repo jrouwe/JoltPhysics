@@ -426,7 +426,7 @@ jobs:
       run: sudo apt-get install g++-${{env.UBUNTU_GCC_VERSION}}-riscv64-linux-gnu gcc-${{env.UBUNTU_GCC_VERSION}}-multilib g++-${{env.UBUNTU_GCC_VERSION}}-multilib qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution riscv64-linux-gnu-g++-${{env.UBUNTU_GCC_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution riscv64-linux-gnu-g++-${{env.UBUNTU_GCC_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DCMAKE_CXX_FLAGS="-march=rv64gc"
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
