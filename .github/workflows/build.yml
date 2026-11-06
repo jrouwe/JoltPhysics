@@ -20,7 +20,7 @@ env:
 
 jobs:
   linux-clang:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux Clang
     strategy:
         fail-fast: false
@@ -43,7 +43,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-clang-check-global-new:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux Clang Check Global New
 
     steps:
@@ -59,7 +59,7 @@ jobs:
       run: ./check_global_new.sh Linux_Debug clang-query-${{env.UBUNTU_CLANG_VERSION}}
 
   linux_clang_tsan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux Clang Sanitizers
     strategy:
         fail-fast: false
@@ -87,7 +87,7 @@ jobs:
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll
 
   linux-clang-so:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux Clang Shared Library
     strategy:
         fail-fast: false
@@ -109,7 +109,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-clang-32-bit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux Clang 32-bit
     strategy:
         fail-fast: false
@@ -133,7 +133,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux GCC
     strategy:
         fail-fast: false
@@ -155,7 +155,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-gcc-so:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux GCC Shared Library
     strategy:
         fail-fast: false
@@ -367,7 +367,7 @@ jobs:
         ctest --output-on-failure --verbose
 
   android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Android
     strategy:
         fail-fast: false
@@ -399,7 +399,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch arm64 -j $(sysctl -n hw.ncpu)
 
   emscripten:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Emscripten
 
     steps:

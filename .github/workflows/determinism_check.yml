@@ -35,7 +35,7 @@ on:
 
 jobs:
   linux_clang:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux Clang Determinism Check
 
     steps:
@@ -66,7 +66,7 @@ jobs:
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   linux_clang_double:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux Clang Double Determinism Check
 
     steps:
@@ -97,7 +97,7 @@ jobs:
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH_DOUBLE}
 
   linux_clang_avx512:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux Clang AVX512 Determinism Check
 
     steps:
@@ -142,7 +142,7 @@ jobs:
       run: ${{env.SDE_PATH}}/sde64 -skx -- ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   linux_gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Linux GCC Determinism Check
 
     steps:
@@ -321,7 +321,7 @@ jobs:
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH_DOUBLE}
 
   arm_clang:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: ARM Clang Determinism Check
     steps:
     - name: Checkout Code
@@ -355,7 +355,7 @@ jobs:
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   arm_clang_32:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: ARM Clang 32-bit Determinism Check
     steps:
     - name: Checkout Code
@@ -389,7 +389,7 @@ jobs:
       run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   arm_gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: ARM GCC Determinism Check
     steps:
     - name: Checkout Code
@@ -423,7 +423,7 @@ jobs:
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   riscv_gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: RISC-V GCC Determinism Check
     steps:
     - name: Checkout Code
@@ -457,7 +457,7 @@ jobs:
       run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   riscv_clang_rvv:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: RISC-V Clang RVV Determinism Check
     steps:
     - name: Checkout Code
@@ -492,7 +492,7 @@ jobs:
       run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   powerpcle_gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: PowerPC Little Endian GCC Determinism Check
     steps:
     - name: Checkout Code
@@ -524,7 +524,7 @@ jobs:
 #      run: qemu-ppc64le -L /usr/powerpc64le-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   loongarch_gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: LoongArch GCC Determinism Check
     steps:
     - name: Checkout Code
@@ -556,7 +556,7 @@ jobs:
 #      run: qemu-loongarch64 -L /usr/loongarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   emscripten:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Emscripten WASM32 Determinism Check
 
     steps:
@@ -597,7 +597,7 @@ jobs:
       run: node PerformanceTest.js -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   emscripten64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Emscripten WASM64 Determinism Check
 
     steps:
