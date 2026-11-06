@@ -128,16 +128,23 @@ TEST_SUITE("JobSystemTest")
 			barrier->AddJob(adder);
 
 			// Start the job after the main thread has had time to go to sleep in WaitForJobs
-			std::thread starter([&adder]() {
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			#if !defined(JPH_CPU_WASM) || defined(__EMSCRIPTEN_PTHREADS__)
+				std::thread starter([&adder]() {
+					std::this_thread::sleep_for(std::chrono::milliseconds(1));
+					adder.RemoveDependency();
+				});
+			#else
+				// If we're running without threads support we just start the thread now
 				adder.RemoveDependency();
-			});
+			#endif
 
 			// Wait for the barrier to complete, this should not return until the adding job and all jobs it added have finished
 			system.WaitForJobs(barrier);
 			bool adder_finished = adder_done.load(std::memory_order_relaxed);
 			uint32 added_finished = added_jobs_done.load(std::memory_order_relaxed);
-			starter.join();
+			#if !defined(JPH_CPU_WASM) || defined(__EMSCRIPTEN_PTHREADS__)
+				starter.join();
+			#endif
 
 			// Check that all jobs have finished, if not the barrier has released too early
 			CHECK(adder_finished);
