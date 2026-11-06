@@ -13,12 +13,8 @@ env:
   CHARACTER_VIRTUAL_HASH_DOUBLE: '0xf027a6850a67d51e'
   EMSCRIPTEN_VERSION: 6.0.8
   NODE_VERSION: 24.x
-  UBUNTU_CLANG_VERSION: clang++-18
-  UBUNTU_GCC_VERSION: g++-14
-  UBUNTU_GCC_AARCH64_VERSION: aarch64-linux-gnu-g++-14
-  UBUNTU_GCC_RISCV_VERSION: riscv64-linux-gnu-g++-14
-  UBUNTU_GCC_POWERPC_VERSION: powerpc64le-linux-gnu-g++-14
-  UBUNTU_GCC_LOONGARCH_VERSION: loongarch64-linux-gnu-g++-14
+  UBUNTU_CLANG_VERSION: 22
+  UBUNTU_GCC_VERSION: 15
   SDE_VERSION: '10.8.0-2026-03-15'
 
 on:
@@ -35,7 +31,7 @@ on:
 
 jobs:
   linux_clang:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: Linux Clang Determinism Check
 
     steps:
@@ -43,7 +39,7 @@ jobs:
       uses: actions/checkout@v7
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution clang++-${{env.UBUNTU_CLANG_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
@@ -66,7 +62,7 @@ jobs:
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   linux_clang_double:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: Linux Clang Double Determinism Check
 
     steps:
@@ -74,7 +70,7 @@ jobs:
       uses: actions/checkout@v7
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution clang++-${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
@@ -97,7 +93,7 @@ jobs:
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH_DOUBLE}
 
   linux_clang_avx512:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: Linux Clang AVX512 Determinism Check
 
     steps:
@@ -119,7 +115,7 @@ jobs:
       run: echo "SDE_PATH=$PWD/sde-external-${{env.SDE_VERSION}}-lin" >> $GITHUB_ENV
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DUSE_AVX512=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution clang++-${{env.UBUNTU_CLANG_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DUSE_AVX512=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
@@ -142,7 +138,7 @@ jobs:
       run: ${{env.SDE_PATH}}/sde64 -skx -- ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   linux_gcc:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: Linux GCC Determinism Check
 
     steps:
@@ -150,7 +146,7 @@ jobs:
       uses: actions/checkout@v7
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution g++-${{env.UBUNTU_GCC_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
@@ -321,41 +317,39 @@ jobs:
       run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH_DOUBLE}
 
   arm_clang:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04-arm
     name: ARM Clang Determinism Check
     steps:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Update index
       run: sudo apt-get update
-    - name: Install Cross Compiler
-      run: sudo apt-get install gcc-14-aarch64-linux-gnu gcc-14-multilib g++-14-multilib libstdc++-14-dev-arm64-cross qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution clang++-${{env.UBUNTU_CLANG_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./UnitTests
+      run: ./UnitTests
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test HighSpeed
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
     - name: Test CharacterVirtual
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
+      run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   arm_clang_32:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: ARM Clang 32-bit Determinism Check
     steps:
     - name: Checkout Code
@@ -363,10 +357,10 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-14-arm-linux-gnueabihf qemu-user -y
+      run: sudo apt-get install g++-${{env.UBUNTU_GCC_VERSION}}-arm-linux-gnueabihf qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_COMPILE_ARM_TARGET="arm-linux-gnueabihf" -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution clang++-${{env.UBUNTU_CLANG_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_COMPILE_ARM_TARGET="arm-linux-gnueabihf" -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
@@ -389,41 +383,39 @@ jobs:
       run: qemu-arm -L /usr/arm-linux-gnueabihf/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   arm_gcc:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04-arm
     name: ARM GCC Determinism Check
     steps:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Update index
       run: sudo apt-get update
-    - name: Install Cross Compiler
-      run: sudo apt-get install g++-14-aarch64-linux-gnu gcc-14-multilib g++-14-multilib libstdc++-14-dev-arm64-cross qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_AARCH64_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution g++-${{env.UBUNTU_GCC_VERSION}} -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./UnitTests
+      run: ./UnitTests
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
     - name: Test HighSpeed
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=HighSpeed -validate_hash=${HIGH_SPEED_HASH}
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
     - name: Test Pyramid
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
+      run: ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
     - name: Test CharacterVirtual
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
-      run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
+      run: ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   riscv_gcc:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: RISC-V GCC Determinism Check
     steps:
     - name: Checkout Code
@@ -431,10 +423,10 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-14-riscv64-linux-gnu gcc-14-multilib g++-14-multilib qemu-user -y
+      run: sudo apt-get install g++-${{env.UBUNTU_GCC_VERSION}}-riscv64-linux-gnu gcc-${{env.UBUNTU_GCC_VERSION}}-multilib g++-${{env.UBUNTU_GCC_VERSION}}-multilib qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_RISCV_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution riscv64-linux-gnu-g++-${{env.UBUNTU_GCC_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DCMAKE_CXX_FLAGS="-march=rv64gc"
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
@@ -457,7 +449,7 @@ jobs:
       run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   riscv_clang_rvv:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: RISC-V Clang RVV Determinism Check
     steps:
     - name: Checkout Code
@@ -465,10 +457,10 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install RISC-V Support
-      run: sudo apt-get install g++-14-riscv64-linux-gnu gcc-14-multilib g++-14-multilib qemu-user lld -y
+      run: sudo apt-get install g++-${{env.UBUNTU_GCC_VERSION}}-riscv64-linux-gnu gcc-${{env.UBUNTU_GCC_VERSION}}-multilib g++-${{env.UBUNTU_GCC_VERSION}}-multilib qemu-user lld -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_CLANG_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DJPH_USE_VK=OFF -DCMAKE_CXX_FLAGS="--target=riscv64-unknown-linux-gnu -march=rv64gcv" -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
+      run: ./cmake_linux_clang_gcc.sh Distribution clang++-${{env.UBUNTU_CLANG_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON -DJPH_USE_VK=OFF -DCMAKE_CXX_FLAGS="--target=riscv64-unknown-linux-gnu -march=rv64gcv" -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
@@ -492,7 +484,7 @@ jobs:
       run: qemu-riscv64 -L /usr/riscv64-linux-gnu/ ./PerformanceTest -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   powerpcle_gcc:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: PowerPC Little Endian GCC Determinism Check
     steps:
     - name: Checkout Code
@@ -500,10 +492,10 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-14-powerpc64le-linux-gnu gcc-14-multilib g++-14-multilib qemu-user -y
+      run: sudo apt-get install g++-${{env.UBUNTU_GCC_VERSION}}-powerpc64le-linux-gnu gcc-${{env.UBUNTU_GCC_VERSION}}-multilib g++-${{env.UBUNTU_GCC_VERSION}}-multilib qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_POWERPC_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution powerpc64le-linux-gnu-g++-${{env.UBUNTU_GCC_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
@@ -524,7 +516,7 @@ jobs:
 #      run: qemu-ppc64le -L /usr/powerpc64le-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   loongarch_gcc:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: LoongArch GCC Determinism Check
     steps:
     - name: Checkout Code
@@ -532,10 +524,10 @@ jobs:
     - name: Update index
       run: sudo apt-get update
     - name: Install Cross Compiler
-      run: sudo apt-get install g++-14-loongarch64-linux-gnu gcc-14-multilib g++-14-multilib qemu-user -y
+      run: sudo apt-get install g++-${{env.UBUNTU_GCC_VERSION}}-loongarch64-linux-gnu gcc-${{env.UBUNTU_GCC_VERSION}}-multilib g++-${{env.UBUNTU_GCC_VERSION}}-multilib qemu-user -y
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh Distribution ${{env.UBUNTU_GCC_LOONGARCH_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: ./cmake_linux_clang_gcc.sh Distribution loongarch64-linux-gnu-g++-${{env.UBUNTU_GCC_VERSION}} -DCROSS_COMPILE_ARM=ON -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM_TARGET="" -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution -j $(nproc)
     - name: Unit Tests
@@ -556,7 +548,7 @@ jobs:
 #      run: qemu-loongarch64 -L /usr/loongarch64-linux-gnu/ ./PerformanceTest -q=LinearCast -t=max -s=Pyramid -validate_hash=${PYRAMID_HASH}
 
   emscripten:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: Emscripten WASM32 Determinism Check
 
     steps:
@@ -597,7 +589,7 @@ jobs:
       run: node PerformanceTest.js -q=Discrete -t=max -s=CharacterVirtual -validate_hash=${CHARACTER_VIRTUAL_HASH}
 
   emscripten64:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: Emscripten WASM64 Determinism Check
 
     steps:
