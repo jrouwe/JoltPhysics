@@ -46,7 +46,7 @@ public:
 		BodyInterface &bi = inPhysicsSystem.GetBodyInterface();
 
 		// Create floor
-		BodyCreationSettings floor(new BoxShape(Vec3(50.0f, 1.0f, 50.0f)), RVec3(0, -0.5f, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings floor(new BoxShape(Vec3(50.0f, 1.0f, 50.0f)), RVec3(0, -0.5_r, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 		floor.mFriction = 1.0f;
 		bi.CreateAndAddBody(floor, EActivation::DontActivate);
 
@@ -57,7 +57,7 @@ public:
 			for (int y = 0; y < 40; ++y)
 				for (int z = 0; z < 10; ++z)
 				{
-					BodyCreationSettings bcs(mShapes[next_shape], RVec3(x * 2.0f - 10.0f, y * 2.0f + 1.0f, z * 2.0f - 10.0f), Quat::sRandom(random), EMotionType::Dynamic, Layers::MOVING);
+					BodyCreationSettings bcs(mShapes[next_shape], RVec3(x * 2.0_r - 10.0_r, y * 2.0_r + 1.0_r, z * 2.0_r - 10.0_r), Quat::sRandom(random), EMotionType::Dynamic, Layers::MOVING);
 					bcs.mFriction = 1.0f;
 					bi.CreateAndAddBody(bcs, EActivation::Activate);
 					next_shape = (next_shape + 1) % (int)mShapes.size();
