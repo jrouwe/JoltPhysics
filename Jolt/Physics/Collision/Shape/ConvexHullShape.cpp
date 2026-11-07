@@ -318,15 +318,16 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 			if (point.mNumFacesForShrinking != 1) // If we have a single face, shifting back is easy and we don't need to reduce the convex radius
 			{
 				// Get first two planes
-				Plane p1 = mPlanes[mFaceIdx[point.mFirstFace]];
-				Plane p2 = mPlanes[mFaceIdx[point.mFirstFace + 1]];
+				const uint16 *first_face = &mFaceIdx[point.mFirstFace];
+				Plane p1 = mPlanes[*first_face];
+				Plane p2 = mPlanes[first_face[1]];
 				Plane p3;
 				Vec3 offset_mask;
 
 				if (point.mNumFacesForShrinking == 3)
 				{
 					// Get third plane
-					p3 = mPlanes[mFaceIdx[point.mFirstFace + 2]];
+					p3 = mPlanes[first_face[2]];
 
 					// All 3 planes will be offset by the convex radius
 					offset_mask = Vec3::sReplicate(1);
@@ -584,22 +585,23 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 			{
 				Vec3 new_point;
 
+				const uint16 *first_face = &mFaceIdx[point.mFirstFace];
 				if (point.mNumFacesForShrinking == 1)
 				{
 					// Simply shift back by the convex radius using our 1 plane
-					new_point = point.mPosition - mPlanes[mFaceIdx[point.mFirstFace]].GetNormal() * mConvexRadius;
+					new_point = point.mPosition - mPlanes[*first_face].GetNormal() * mConvexRadius;
 				}
 				else
 				{
 					// Get first two planes and offset inwards by convex radius
-					Plane p1 = mPlanes[mFaceIdx[point.mFirstFace]].Offset(-mConvexRadius);
-					Plane p2 = mPlanes[mFaceIdx[point.mFirstFace + 1]].Offset(-mConvexRadius);
+					Plane p1 = mPlanes[*first_face].Offset(-mConvexRadius);
+					Plane p2 = mPlanes[first_face[1]].Offset(-mConvexRadius);
 					Plane p3;
 
 					if (point.mNumFacesForShrinking == 3)
 					{
 						// Get third plane and offset inwards by convex radius
-						p3 = mPlanes[mFaceIdx[point.mFirstFace + 2]].Offset(-mConvexRadius);
+						p3 = mPlanes[first_face[2]].Offset(-mConvexRadius);
 					}
 					else
 					{
@@ -641,7 +643,8 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 				Vec3 pos = inScale * point.mPosition;
 
 				// Transform normals for plane 1 with scale
-				Vec3 n1 = (inv_scale * mPlanes[mFaceIdx[point.mFirstFace]].GetNormal()).Normalized();
+				const uint16 *first_face = &mFaceIdx[point.mFirstFace];
+				Vec3 n1 = (inv_scale * mPlanes[*first_face].GetNormal()).Normalized();
 
 				Vec3 new_point;
 
@@ -653,7 +656,7 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 				else
 				{
 					// Transform normals for plane 2 with scale
-					Vec3 n2 = (inv_scale * mPlanes[mFaceIdx[point.mFirstFace + 1]].GetNormal()).Normalized();
+					Vec3 n2 = (inv_scale * mPlanes[first_face[1]].GetNormal()).Normalized();
 
 					// Get first two planes and offset inwards by convex radius
 					Plane p1 = Plane::sFromPointAndNormal(pos, n1).Offset(-convex_radius);
@@ -663,7 +666,7 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 					if (point.mNumFacesForShrinking == 3)
 					{
 						// Transform last normal with scale
-						Vec3 n3 = (inv_scale * mPlanes[mFaceIdx[point.mFirstFace + 2]].GetNormal()).Normalized();
+						Vec3 n3 = (inv_scale * mPlanes[first_face[2]].GetNormal()).Normalized();
 
 						// Get third plane and offset inwards by convex radius
 						p3 = Plane::sFromPointAndNormal(pos, n3).Offset(-convex_radius);
@@ -904,8 +907,9 @@ void ConvexHullShape::DrawShrunkShape(DebugRenderer *inRenderer, RMat44Arg inCen
 		inRenderer->DrawLine(position, shrunk_point, Color::sGreen);
 
 		// Draw face normals that are contributing
+		const uint16 *first_face = &mFaceIdx[point.mFirstFace];
 		for (int i = 0; i < point.mNumFacesForShrinking; ++i)
-			inRenderer->DrawLine(position, position + 0.1f * mPlanes[mFaceIdx[point.mFirstFace + i]].GetNormal(), Color::sYellow);
+			inRenderer->DrawLine(position, position + 0.1f * mPlanes[first_face[i]].GetNormal(), Color::sYellow);
 
 		// Draw point index
 		inRenderer->DrawText3D(position, ConvertToString(p), Color::sWhite, 0.1f);
