@@ -3,7 +3,6 @@
 BUILD_TYPE=""
 COMPILER=""
 SHARED_LIB=false
-POSTFIX_DEBUG=false
 ENV_SCRIPT=""
 EXTRA_ARGS=""
 
@@ -11,10 +10,6 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --shared)
       SHARED_LIB=true
-      shift
-      ;;
-    --postfix-debug)
-      POSTFIX_DEBUG=true
       shift
       ;;
     --env-script=*)
@@ -68,9 +63,6 @@ fi
 BUILD_DIR=Linux_$BUILD_TYPE
 POSTFIX_ARG=""
 SHARED_ARG=""
-if [ "$BUILD_TYPE" = "Debug" ] && [ "$POSTFIX_DEBUG" = true ]; then
-  POSTFIX_ARG="-DCMAKE_DEBUG_POSTFIX=-d"
-fi
 if [ "$SHARED_LIB" = true ]; then
   BUILD_DIR=${BUILD_DIR}_shared
   SHARED_ARG="-DBUILD_SHARED_LIBS=ON"

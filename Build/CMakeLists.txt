@@ -326,6 +326,11 @@ endif()
 # Install Jolt library and includes
 if (ENABLE_INSTALL)
 	include(GNUInstallDirs)
+	include(CMakePackageConfigHelpers)
+
+	# Give the debug library a different name so that the debug and release libraries can be installed side by side
+	set_target_properties(Jolt PROPERTIES DEBUG_POSTFIX "d")
+
 	install(TARGETS Jolt
 		EXPORT JoltExport
 		INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -347,14 +352,23 @@ if (ENABLE_INSTALL)
 		install(FILES ${SRC_FILE} DESTINATION ${DST_FILE})
 	endforeach()
 
+	configure_package_config_file(
+	${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+	"${CMAKE_CURRENT_BINARY_DIR}/JoltConfig.cmake"
+	INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Jolt/)
+
+	install(FILES
+	${CMAKE_CURRENT_BINARY_DIR}/JoltConfig.cmake
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Jolt/)
+
 	# Export Jolt library
 	export(TARGETS Jolt
 		NAMESPACE Jolt::
-		FILE JoltConfig.cmake)
+		FILE JoltTargets.cmake)
 	install(EXPORT JoltExport
 		DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Jolt/
 		NAMESPACE Jolt::
-		FILE JoltConfig.cmake)
+		FILE JoltTargets.cmake)
 endif()
 
 # Check if we're the root CMakeLists.txt, if not we are included by another CMake file and we should disable everything except for the main library
