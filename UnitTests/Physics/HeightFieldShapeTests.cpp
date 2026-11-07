@@ -468,6 +468,57 @@ TEST_SUITE("HeightFieldShapeTests")
 		CHECK(test_cell(sx + 1, sy + 1));
 	}
 
+	TEST_CASE("TestSetHeightsOddBlockCountLastBlock")
+	{
+		// 20 x 20 samples with a block size of 2 gives 10 blocks per side. Going up the range block hierarchy this
+		// becomes 5 and then 3 blocks (not 2), so an edit that touches the last block of a level with an odd number
+		// of blocks must also update the last block of the next level.
+		const uint cSampleCount = 20;
+
+		HeightFieldShapeSettings settings;
+		settings.mSampleCount = cSampleCount;
+		settings.mBlockSize = 2;
+		settings.mMinHeightValue = 0.0f;
+		settings.mMaxHeightValue = 200.0f;
+		settings.mHeightSamples.resize(Square(cSampleCount), 0.0f);
+
+		Ref<Shape> shape = settings.Create().Get();
+		HeightFieldShape *height_field = StaticCast<HeightFieldShape>(shape);
+
+		// Raise the last rows over the full width of the height field
+		const uint sx = 0, sy = 16, cx = cSampleCount, cy = 4;
+		const float cRaisedHeight = 100.0f;
+		Array<float> raised_heights(cx * cy, cRaisedHeight);
+		TempAllocatorMalloc temp_allocator;
+		height_field->SetHeights(sx, sy, cx, cy, raised_heights.data(), cx, temp_allocator);
+
+		// Heights as the shape quantized them
+		Array<float> heights(Square(cSampleCount));
+		height_field->GetHeights(0, 0, cSampleCount, cSampleCount, heights.data(), cSampleCount);
+
+		// A sphere that dips 0.25 below the highest corner of a cell must collide with that cell
+		const float cSphereRadius = 0.5f;
+		Ref<Shape> sphere = new SphereShape(cSphereRadius);
+		CollideShapeSettings collide_settings;
+		auto test_cell = [&](uint inX, uint inY)
+		{
+			float top = max(max(heights[inY * cSampleCount + inX], heights[inY * cSampleCount + inX + 1]), max(heights[(inY + 1) * cSampleCount + inX], heights[(inY + 1) * cSampleCount + inX + 1]));
+			Vec3 sphere_position(float(inX) + 0.5f, top + cSphereRadius - 0.25f, float(inY) + 0.5f);
+			AllHitCollisionCollector<CollideShapeCollector> collector;
+			CollisionDispatch::sCollideShapeVsShape(sphere, shape, Vec3::sOne(), Vec3::sOne(), Mat44::sTranslation(sphere_position), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
+			return collector.HadHit();
+		};
+
+		// Every raised cell must collide at its new height, including those under the last block of each level
+		for (uint y = sy; y + 1 < cSampleCount; ++y)
+			for (uint x = 0; x + 1 < cSampleCount; ++x)
+			{
+				CAPTURE(x);
+				CAPTURE(y);
+				CHECK(test_cell(x, y));
+			}
+	}
+
 	TEST_CASE("TestSetMaterials")
 	{
 		constexpr uint cSampleCount = 32;

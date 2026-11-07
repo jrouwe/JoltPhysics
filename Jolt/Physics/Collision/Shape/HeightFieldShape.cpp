@@ -1205,7 +1205,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 
 		// Go up one level
 		--max_level;
-		num_blocks >>= 1;
+		num_blocks = (num_blocks + 1) >> 1;
 		block_start_x >>= 1;
 		block_start_y >>= 1;
 		num_blocks_x = min((num_blocks_x + 1) >> 1, num_blocks);
