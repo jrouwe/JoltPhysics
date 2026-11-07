@@ -43,6 +43,7 @@ JPH_SUPPRESS_WARNINGS
 // Local includes
 #include "RagdollScene.h"
 #include "ConvexVsMeshScene.h"
+#include "ConvexHullPileScene.h"
 #include "PyramidScene.h"
 #include "LargeMeshScene.h"
 #include "CharacterVirtualScene.h"
@@ -115,6 +116,8 @@ int main(int argc, char** argv)
 #endif // JPH_OBJECT_STREAM
 			else if (strcmp(arg + 3, "ConvexVsMesh") == 0)
 				scene = unique_ptr<PerformanceTestScene>(new ConvexVsMeshScene);
+			else if (strcmp(arg + 3, "ConvexHullPile") == 0)
+				scene = unique_ptr<PerformanceTestScene>(new ConvexHullPileScene);
 			else if (strcmp(arg + 3, "Pyramid") == 0)
 				scene = unique_ptr<PerformanceTestScene>(new PyramidScene);
 			else if (strcmp(arg + 3, "LargeMesh") == 0)

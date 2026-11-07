@@ -176,8 +176,10 @@ private:
 	struct Point
 	{
 		Vec3				mPosition;					///< Position of vertex
-		int					mNumFaces = 0;				///< Number of faces in the face array below
-		int					mFaces[3] = { -1, -1, -1 };	///< Indices of 3 neighboring faces with the biggest difference in normal (used to shift vertices for convex radius)
+		int					mFirstFace = 0;				///< First face in mFaceIdx to use
+		int					mNumFacesForShrinking = 0;	///< Number of faces in mFaceIdx to use for shrinking the hull by convex radius
+		int					mNumFaces = 0;				///< Number of faces in mFaceIdx that connect to this vertex
+		int					mUnused = 0;				///< Unused, set to zero so SaveBinaryState doesn't write uninitialized memory
 	};
 
 	static_assert(sizeof(Point) == 32, "Unexpected size");
@@ -190,6 +192,7 @@ private:
 	Array<Face>				mFaces;						///< Faces of the convex hull surface
 	Array<Plane>			mPlanes;					///< Planes for the faces (1-on-1 with mFaces array, separate because they need to be 16 byte aligned)
 	Array<uint8>			mVertexIdx;					///< A list of vertex indices (indexing in mPoints) for each of the faces
+	Array<uint16>			mFaceIdx;					///< A list of face indices (indexing in mFaces) for each of the points
 	float					mConvexRadius = 0.0f;		///< Convex radius
 	float					mVolume;					///< Total volume of the convex hull
 	float					mInnerRadius = FLT_MAX;		///< Radius of the biggest sphere that fits entirely in the convex hull
