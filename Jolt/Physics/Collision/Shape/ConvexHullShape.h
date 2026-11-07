@@ -176,9 +176,9 @@ private:
 	struct Point
 	{
 		Vec3				mPosition;					///< Position of vertex
-		int					mFirstFace;					///< First face in mFaceIdx to use
-		int					mNumFacesForShrinking;		///< Number of faces in mFaceIdx to use for shrinking the hull by convex radius
-		int					mNumFaces;					///< Number of faces in mFaceIdx that connect to this vertex
+		int					mFirstFace = 0;				///< First face in mFaceIdx to use
+		int					mNumFacesForShrinking = 0;	///< Number of faces in mFaceIdx to use for shrinking the hull by convex radius
+		int					mNumFaces = 0;				///< Number of faces in mFaceIdx that connect to this vertex
 		int					mUnused = 0;				///< Unused, set to zero so SaveBinaryState doesn't write uninitialized memory
 	};
 
