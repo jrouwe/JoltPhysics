@@ -215,12 +215,12 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 		// The largest tetrahedron we can get is ((1, 0, 0) x (0, 1, 0)) . (0, 0, 1) = 1, if the volume is only 5% of that,
 		// the three vectors are too coplanar and we fall back to using only 2 plane normals
 		float biggest_volume = 0.05f;
-		uint16 best3[3] = { uint16(-1), uint16(-1), uint16(-1) };
+		uint16 best3[3] = { 0xffff, 0xffff, 0xffff };
 
 		// When using 2 normals, we get the two with the biggest angle between them with a minimal difference of 1 degree
 		// otherwise we fall back to just using 1 plane normal
 		float smallest_dot = Cos(DegreesToRadians(1.0f));
-		uint16 best2[2] = { uint16(-1), uint16(-1) };
+		uint16 best2[2] = { 0xffff, 0xffff };
 
 		for (int face1 = 0; face1 < (int)faces.size(); ++face1)
 		{
@@ -266,12 +266,12 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 
 		// If we didn't find 3 planes, use 2, if we didn't find 2 use 1
 		int num_faces_for_shrinking;
-		if (best3[0] != uint16(-1))
+		if (best3[0] != 0xffff)
 		{
 			move_to_front(best3, best3 + 3);
 			num_faces_for_shrinking = 3;
 		}
-		else if (best2[0] != uint16(-1))
+		else if (best2[0] != 0xffff)
 		{
 			move_to_front(best2, best2 + 2);
 			num_faces_for_shrinking = 2;
