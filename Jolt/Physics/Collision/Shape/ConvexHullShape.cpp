@@ -170,6 +170,11 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 			edge = edge->mNextEdge;
 		} while (edge != builder_face->mFirstEdge);
 
+		// We're storing face indices as uint16 and are using 0xffff as marker for an invalid face index.
+		// Note that due to Euler's characteristic (V - E + F = 2), we can never reach this as V (cMaxHullPoints) is 256,
+		// every face has at least 3 edges and every edge is shared by 2 faces (2E >= 3F) so F <= 2V - 4 = 508.
+		JPH_ASSERT(mFaces.size() < 0xffff);
+
 		// Add face
 		mFaces.push_back({ first_vertex, num_vertices });
 
@@ -188,8 +193,8 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	for (int p = 0; p < (int)mPoints.size(); ++p)
 	{
 		// For each point, find faces that use the point
-		Array<int> faces;
-		for (int f = 0; f < (int)mFaces.size(); ++f)
+		Array<uint16> faces;
+		for (uint16 f = 0; f < (uint16)mFaces.size(); ++f)
 		{
 			const Face &face = mFaces[f];
 			for (int v = 0; v < face.mNumVertices; ++v)
@@ -210,12 +215,12 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 		// The largest tetrahedron we can get is ((1, 0, 0) x (0, 1, 0)) . (0, 0, 1) = 1, if the volume is only 5% of that,
 		// the three vectors are too coplanar and we fall back to using only 2 plane normals
 		float biggest_volume = 0.05f;
-		int best3[3] = { -1, -1, -1 };
+		uint16 best3[3] = { uint16(-1), uint16(-1), uint16(-1) };
 
 		// When using 2 normals, we get the two with the biggest angle between them with a minimal difference of 1 degree
 		// otherwise we fall back to just using 1 plane normal
 		float smallest_dot = Cos(DegreesToRadians(1.0f));
-		int best2[2] = { -1, -1 };
+		uint16 best2[2] = { uint16(-1), uint16(-1) };
 
 		for (int face1 = 0; face1 < (int)faces.size(); ++face1)
 		{
@@ -250,19 +255,38 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 			}
 		}
 
+		// Move the best faces to the front of the list so we can use them for shrinking the hull by convex radius
+		auto move_to_front = [&faces](const uint16 *inBegin, const uint16 *inEnd)
+		{
+			// Remove this face from the list of faces and reinsert it at the front
+			for (const uint16 *ptr = inBegin; ptr != inEnd; ++ptr)
+				faces.erase(std::find(faces.begin(), faces.end(), *ptr));
+			faces.insert(faces.begin(), inBegin, inEnd);
+		};
+
 		// If we didn't find 3 planes, use 2, if we didn't find 2 use 1
-		if (best3[0] != -1)
-			faces = { best3[0], best3[1], best3[2] };
-		else if (best2[0] != -1)
-			faces = { best2[0], best2[1] };
+		int num_faces_for_shrinking;
+		if (best3[0] != uint16(-1))
+		{
+			move_to_front(best3, best3 + 3);
+			num_faces_for_shrinking = 3;
+		}
+		else if (best2[0] != uint16(-1))
+		{
+			move_to_front(best2, best2 + 2);
+			num_faces_for_shrinking = 2;
+		}
 		else
-			faces = { faces[0] };
+		{
+			num_faces_for_shrinking = 1;
+		}
 
 		// Copy the faces to the points buffer
 		Point &point = mPoints[p];
+		point.mFirstFace = (int)mFaceIdx.size();
 		point.mNumFaces = (int)faces.size();
-		for (int i = 0; i < (int)faces.size(); ++i)
-			point.mFaces[i] = faces[i];
+		point.mNumFacesForShrinking = num_faces_for_shrinking;
+		mFaceIdx.insert(mFaceIdx.end(), faces.begin(), faces.end());
 	}
 
 	// If the convex radius is already zero, there's no point in further reducing it
@@ -291,18 +315,18 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	if (mConvexRadius > 0.0f)
 	{
 		for (const Point &point : mPoints)
-			if (point.mNumFaces != 1) // If we have a single face, shifting back is easy and we don't need to reduce the convex radius
+			if (point.mNumFacesForShrinking != 1) // If we have a single face, shifting back is easy and we don't need to reduce the convex radius
 			{
 				// Get first two planes
-				Plane p1 = mPlanes[point.mFaces[0]];
-				Plane p2 = mPlanes[point.mFaces[1]];
+				Plane p1 = mPlanes[mFaceIdx[point.mFirstFace]];
+				Plane p2 = mPlanes[mFaceIdx[point.mFirstFace + 1]];
 				Plane p3;
 				Vec3 offset_mask;
 
-				if (point.mNumFaces == 3)
+				if (point.mNumFacesForShrinking == 3)
 				{
 					// Get third plane
-					p3 = mPlanes[point.mFaces[2]];
+					p3 = mPlanes[mFaceIdx[point.mFirstFace + 2]];
 
 					// All 3 planes will be offset by the convex radius
 					offset_mask = Vec3::sReplicate(1);
@@ -310,7 +334,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 				else
 				{
 					// Third plane has normal perpendicular to the other two planes and goes through the vertex position
-					JPH_ASSERT(point.mNumFaces == 2);
+					JPH_ASSERT(point.mNumFacesForShrinking == 2);
 					p3 = Plane::sFromPointAndNormal(point.mPosition, p1.GetNormal().Cross(p2.GetNormal()));
 
 					// Only the first and 2nd plane will be offset, the 3rd plane is only there to guide the intersection point
@@ -560,27 +584,27 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 			{
 				Vec3 new_point;
 
-				if (point.mNumFaces == 1)
+				if (point.mNumFacesForShrinking == 1)
 				{
 					// Simply shift back by the convex radius using our 1 plane
-					new_point = point.mPosition - mPlanes[point.mFaces[0]].GetNormal() * mConvexRadius;
+					new_point = point.mPosition - mPlanes[mFaceIdx[point.mFirstFace]].GetNormal() * mConvexRadius;
 				}
 				else
 				{
 					// Get first two planes and offset inwards by convex radius
-					Plane p1 = mPlanes[point.mFaces[0]].Offset(-mConvexRadius);
-					Plane p2 = mPlanes[point.mFaces[1]].Offset(-mConvexRadius);
+					Plane p1 = mPlanes[mFaceIdx[point.mFirstFace]].Offset(-mConvexRadius);
+					Plane p2 = mPlanes[mFaceIdx[point.mFirstFace + 1]].Offset(-mConvexRadius);
 					Plane p3;
 
-					if (point.mNumFaces == 3)
+					if (point.mNumFacesForShrinking == 3)
 					{
 						// Get third plane and offset inwards by convex radius
-						p3 = mPlanes[point.mFaces[2]].Offset(-mConvexRadius);
+						p3 = mPlanes[mFaceIdx[point.mFirstFace + 2]].Offset(-mConvexRadius);
 					}
 					else
 					{
 						// Third plane has normal perpendicular to the other two planes and goes through the vertex position
-						JPH_ASSERT(point.mNumFaces == 2);
+						JPH_ASSERT(point.mNumFacesForShrinking == 2);
 						p3 = Plane::sFromPointAndNormal(point.mPosition, p1.GetNormal().Cross(p2.GetNormal()));
 					}
 
@@ -617,11 +641,11 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 				Vec3 pos = inScale * point.mPosition;
 
 				// Transform normals for plane 1 with scale
-				Vec3 n1 = (inv_scale * mPlanes[point.mFaces[0]].GetNormal()).Normalized();
+				Vec3 n1 = (inv_scale * mPlanes[mFaceIdx[point.mFirstFace]].GetNormal()).Normalized();
 
 				Vec3 new_point;
 
-				if (point.mNumFaces == 1)
+				if (point.mNumFacesForShrinking == 1)
 				{
 					// Simply shift back by the convex radius using our 1 plane
 					new_point = pos - n1 * convex_radius;
@@ -629,17 +653,17 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 				else
 				{
 					// Transform normals for plane 2 with scale
-					Vec3 n2 = (inv_scale * mPlanes[point.mFaces[1]].GetNormal()).Normalized();
+					Vec3 n2 = (inv_scale * mPlanes[mFaceIdx[point.mFirstFace + 1]].GetNormal()).Normalized();
 
 					// Get first two planes and offset inwards by convex radius
 					Plane p1 = Plane::sFromPointAndNormal(pos, n1).Offset(-convex_radius);
 					Plane p2 = Plane::sFromPointAndNormal(pos, n2).Offset(-convex_radius);
 					Plane p3;
 
-					if (point.mNumFaces == 3)
+					if (point.mNumFacesForShrinking == 3)
 					{
 						// Transform last normal with scale
-						Vec3 n3 = (inv_scale * mPlanes[point.mFaces[2]].GetNormal()).Normalized();
+						Vec3 n3 = (inv_scale * mPlanes[mFaceIdx[point.mFirstFace + 2]].GetNormal()).Normalized();
 
 						// Get third plane and offset inwards by convex radius
 						p3 = Plane::sFromPointAndNormal(pos, n3).Offset(-convex_radius);
@@ -647,7 +671,7 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 					else
 					{
 						// Third plane has normal perpendicular to the other two planes and goes through the vertex position
-						JPH_ASSERT(point.mNumFaces == 2);
+						JPH_ASSERT(point.mNumFacesForShrinking == 2);
 						p3 = Plane::sFromPointAndNormal(pos, n1.Cross(n2));
 					}
 
@@ -675,63 +699,33 @@ void ConvexHullShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg 
 {
 	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
-	Vec3 inv_scale = inScale.Reciprocal();
-
-	// Need to transform the plane normals using inScale
-	// Transforming a direction with matrix M is done through multiplying by (M^-1)^T
-	// In this case M is a diagonal matrix with the scale vector, so we need to multiply our normal by 1 / scale and renormalize afterwards
-	Vec3 plane0_normal = inv_scale * mPlanes[0].GetNormal();
-	float best_dot = plane0_normal.Dot(inDirection) / plane0_normal.Length();
-	int best_face_idx = 0;
-
-	for (Array<Plane>::size_type i = 1; i < mPlanes.size(); ++i)
+	// Find the vertex that is closest, the face must contain that vertex
+	Vec3 neg_support_direction = inScale * inDirection;
+	const Point *support_point = mPoints.data();
+	float support_dist = support_point->mPosition.Dot(neg_support_direction);
+	for (const Point *p = support_point + 1, *p_end = support_point + mPoints.size(); p < p_end; ++p)
 	{
-		Vec3 plane_normal = inv_scale * mPlanes[i].GetNormal();
+		float dist = p->mPosition.Dot(neg_support_direction);
+		if (dist < support_dist)
+		{
+			support_dist = dist;
+			support_point = p;
+		}
+	}
+
+	// Select the most aligned face that contains the deepest vertex
+	Vec3 inv_scale = inScale.Reciprocal();
+	float best_dot = FLT_MAX;
+	uint16 best_face_idx = 0;
+	for (const uint16 *f = &mFaceIdx[support_point->mFirstFace], *f_end = f + support_point->mNumFaces; f < f_end; ++f)
+	{
+		Vec3 plane_normal = inv_scale * mPlanes[*f].GetNormal();
 		float dot = plane_normal.Dot(inDirection) / plane_normal.Length();
 		if (dot < best_dot)
 		{
 			best_dot = dot;
-			best_face_idx = (int)i;
+			best_face_idx = *f;
 		}
-	}
-
-	// For a pointy hull the most aligned face can be far away from the deepest point (e.g. when the deepest point is at the end of a sharp edge).
-	// A contact manifold built from that face doesn't contain the deepest point, so the shapes keep penetrating there.
-	// Find the vertex that is furthest along the face normal and check if the face contains it.
-	Vec3 support_direction = -inScale * inDirection;
-	uint support_vtx = 0;
-	float support_dist = mPoints[0].mPosition.Dot(support_direction);
-	for (Array<Point>::size_type i = 1; i < mPoints.size(); ++i)
-	{
-		float dist = mPoints[i].mPosition.Dot(support_direction);
-		if (dist > support_dist)
-		{
-			support_dist = dist;
-			support_vtx = uint(i);
-		}
-	}
-	auto face_has_vertex = [this](const Face &inFace, uint inVertex)
-	{
-		for (const uint8 *v = mVertexIdx.data() + inFace.mFirstVertex, *v_end = v + inFace.mNumVertices; v < v_end; ++v)
-			if (*v == inVertex)
-				return true;
-		return false;
-	};
-	if (!face_has_vertex(mFaces[best_face_idx], support_vtx))
-	{
-		// Select the most aligned face that contains the deepest vertex
-		best_dot = FLT_MAX;
-		for (Array<Face>::size_type i = 0; i < mFaces.size(); ++i)
-			if (face_has_vertex(mFaces[i], support_vtx))
-			{
-				Vec3 plane_normal = inv_scale * mPlanes[i].GetNormal();
-				float dot = plane_normal.Dot(inDirection) / plane_normal.Length();
-				if (dot < best_dot)
-				{
-					best_dot = dot;
-					best_face_idx = (int)i;
-				}
-			}
 	}
 
 	// Get vertices
@@ -910,8 +904,8 @@ void ConvexHullShape::DrawShrunkShape(DebugRenderer *inRenderer, RMat44Arg inCen
 		inRenderer->DrawLine(position, shrunk_point, Color::sGreen);
 
 		// Draw face normals that are contributing
-		for (int i = 0; i < point.mNumFaces; ++i)
-			inRenderer->DrawLine(position, position + 0.1f * mPlanes[point.mFaces[i]].GetNormal(), Color::sYellow);
+		for (int i = 0; i < point.mNumFacesForShrinking; ++i)
+			inRenderer->DrawLine(position, position + 0.1f * mPlanes[mFaceIdx[point.mFirstFace + i]].GetNormal(), Color::sYellow);
 
 		// Draw point index
 		inRenderer->DrawText3D(position, ConvertToString(p), Color::sWhite, 0.1f);
@@ -1302,6 +1296,7 @@ void ConvexHullShape::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mFaces);
 	inStream.Write(mPlanes);
 	inStream.Write(mVertexIdx);
+	inStream.Write(mFaceIdx);
 	inStream.Write(mConvexRadius);
 	inStream.Write(mVolume);
 	inStream.Write(mInnerRadius);
@@ -1319,6 +1314,7 @@ void ConvexHullShape::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mFaces);
 	inStream.Read(mPlanes);
 	inStream.Read(mVertexIdx);
+	inStream.Read(mFaceIdx);
 	inStream.Read(mConvexRadius);
 	inStream.Read(mVolume);
 	inStream.Read(mInnerRadius);
@@ -1336,7 +1332,8 @@ Shape::Stats ConvexHullShape::GetStats() const
 			+ mPoints.size() * sizeof(Point)
 			+ mFaces.size() * sizeof(Face)
 			+ mPlanes.size() * sizeof(Plane)
-			+ mVertexIdx.size() * sizeof(uint8),
+			+ mVertexIdx.size() * sizeof(uint8)
+			+ mFaceIdx.size() * sizeof(uint16),
 		triangle_count);
 }
 

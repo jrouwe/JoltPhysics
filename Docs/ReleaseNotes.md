@@ -23,6 +23,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Changed the queue in `JobSystemThreadPool` so that a worker thread that doesn't wake up cannot prevent new jobs from being added to the queue.
 * Fixed an issue where `GearConstraint` would apply the wrong torque to body 2.
 * Fixed a race condition in `JobSystemWithBarrier` where a job that was added to a barrier could finish before the barrier counted it. When this happened from within a job (e.g. `SoftBodyPrepare` adding the soft body collide jobs), `WaitForJobs` could return too early resulting in  memory corruption and a hang.
+* `ConvexHullShape::GetSupportingFace` could return a face that did not contain the deepest vertex, resulting in objects being able to penetrate more than they should.
 
 ### Removed functionality
 
