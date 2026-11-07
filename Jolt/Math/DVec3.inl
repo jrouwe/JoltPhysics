@@ -422,7 +422,7 @@ DVec3 DVec3::sFusedMultiplyAdd(DVec3Arg inMul1, DVec3Arg inMul2, DVec3Arg inAdd)
 	#ifdef JPH_USE_AVX
 		return _mm256_fmadd_pd(inMul1.mValue, inMul2.mValue, inAdd.mValue);
 	#elif defined(JPH_USE_NEON)
-		return DVec3({ vmlaq_f64(inAdd.mValue.val[0], inMul1.mValue.val[0], inMul2.mValue.val[0]), vmlaq_f64(inAdd.mValue.val[1], inMul1.mValue.val[1], inMul2.mValue.val[1]) });
+		return DVec3({ vfmaq_f64(inAdd.mValue.val[0], inMul1.mValue.val[0], inMul2.mValue.val[0]), vfmaq_f64(inAdd.mValue.val[1], inMul1.mValue.val[1], inMul2.mValue.val[1]) });
 	#elif defined(JPH_USE_RVV)
 		DVec3 res;
 		const vfloat64m2_t v1 = __riscv_vle64_v_f64m2(inMul1.mF64, 3);
