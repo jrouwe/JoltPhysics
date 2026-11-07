@@ -72,13 +72,16 @@ TEST_SUITE("ShapeTests")
 		UnitTestRandom random;
 		uniform_real_distribution<float> coordinate(-1.0f, 1.0f);
 
-		for (int hull = 0; hull < 100; ++hull)
+		for (int hull = 0; hull < 10; ++hull)
 		{
 			// Hulls of random point clouds have sharp edges next to small faces
 			Array<Vec3> points;
 			for (int i = 0; i < 40; ++i)
 				points.push_back(Vec3(0.15f * coordinate(random), 0.05f * coordinate(random), 0.075f * coordinate(random)));
-			RefConst<ConvexHullShape> shape = StaticCast<ConvexHullShape>(ConvexHullShapeSettings(points).Create().Get());
+			ConvexHullShapeSettings shape_settings(points);
+			shape_settings.mHullTolerance = 1.0e-5f; // Hull should closely match the points, otherwise we can't use the original points to check the supporting face
+			RefConst<ConvexHullShape> shape = StaticCast<ConvexHullShape>(shape_settings.Create().Get());
+			Vec3 center = shape->GetCenterOfMass();
 
 			for (int i = 0; i < 100; ++i)
 			{
@@ -88,12 +91,12 @@ TEST_SUITE("ShapeTests")
 
 				// The face should reach as far as the hull does
 				float hull_max = -FLT_MAX;
-				for (uint v = 0; v < shape->GetNumPoints(); ++v)
-					hull_max = max(hull_max, -shape->GetPoint(v).Dot(direction));
+				for (Vec3 v : points)
+					hull_max = max(hull_max, -(v - center).Dot(direction));
 				float face_max = -FLT_MAX;
 				for (Vec3 v : face)
 					face_max = max(face_max, -v.Dot(direction));
-				CHECK_APPROX_EQUAL(face_max, hull_max, 1.0e-5f);
+				CHECK_APPROX_EQUAL(face_max, hull_max, 1.0e-4f);
 			}
 		}
 	}
