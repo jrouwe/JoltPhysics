@@ -321,6 +321,9 @@ include(${PHYSICS_REPO_ROOT}/Jolt/Jolt.cmake)
 if (XCODE)
 	# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
 	set_property(TARGET Jolt PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
+
+	# Some files compile to empty object files depending on the configuration (e.g. no profiler / debug renderer), don't warn about that
+	set_property(TARGET Jolt PROPERTY XCODE_ATTRIBUTE_OTHER_LIBTOOLFLAGS "$(inherited) -no_warning_for_no_symbols")
 endif()
 
 # Install Jolt library and includes
