@@ -26,6 +26,10 @@
 	#include <Input/MacOS/KeyboardMacOS.h>
 	#include <Input/MacOS/MouseMacOS.h>
 	#include <Window/ApplicationWindowMacOS.h>
+#elif defined(JPH_PLATFORM_IOS)
+	#include <Input/MacOS/KeyboardMacOS.h>
+	#include <Input/MacOS/MouseMacOS.h>
+	#include <Window/ApplicationWindowIOS.h>
 #endif
 
 #ifdef JPH_USE_VK
@@ -81,6 +85,8 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 		mWindow = new ApplicationWindowLinux;
 	#elif defined(JPH_PLATFORM_MACOS)
 		mWindow = new ApplicationWindowMacOS;
+	#elif defined(JPH_PLATFORM_IOS)
+		mWindow = new ApplicationWindowIOS;
 	#else
 		#error No window defined
 	#endif
@@ -108,7 +114,7 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 		mKeyboard = new KeyboardWin;
 	#elif defined(JPH_PLATFORM_LINUX)
 		mKeyboard = new KeyboardLinux;
-	#elif defined(JPH_PLATFORM_MACOS)
+	#elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 		mKeyboard = new KeyboardMacOS;
 	#else
 		#error No keyboard defined
@@ -120,7 +126,7 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 		mMouse = new MouseWin;
 	#elif defined(JPH_PLATFORM_LINUX)
 		mMouse = new MouseLinux;
-	#elif defined(JPH_PLATFORM_MACOS)
+	#elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 		mMouse = new MouseMacOS;
 	#else
 		#error No mouse defined

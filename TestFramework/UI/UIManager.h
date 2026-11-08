@@ -47,6 +47,12 @@ public:
 	/// Event handling (returns true if the event has been handled)
 	virtual bool				HandleUIEvent(EUIEvent inEvent, UIElement *inSender) override;
 
+	/// Mouse handling, dragging vertically scrolls menus that don't fit on screen
+	virtual bool				MouseDown(int inX, int inY) override;
+	virtual bool				MouseUp(int inX, int inY) override;
+	virtual bool				MouseMove(int inX, int inY) override;
+	virtual void				MouseCancel() override;
+
 	/// Current state
 	enum EState
 	{
@@ -81,6 +87,18 @@ private:
 	std::unique_ptr<PipelineState> mUntextured;
 	function<void()>			mDeactivatedAction;
 
+	/// Check if any of the active elements is too tall to fit on screen
+	bool						CanScroll() const;
+
+	/// Scroll the elements that don't fit on screen
+	void						Scroll(int inDeltaY);
+
 	EState						mState;
 	float						mStateTime;
+
+	// Scrolling state
+	bool						mMouseDown = false;
+	bool						mScrolling = false;
+	int							mMouseDownY = 0;
+	int							mLastMouseY = 0;
 };

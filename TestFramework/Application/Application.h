@@ -67,6 +67,7 @@ protected:
 
 	/// Pause / unpause the simulation
 	void						Pause(bool inPaused)							{ mIsPaused = inPaused; }
+	bool						IsPaused() const								{ return mIsPaused; }
 
 	/// Programmatically single step the simulation
 	void						SingleStep()									{ mIsPaused = true; mSingleStep = true; }

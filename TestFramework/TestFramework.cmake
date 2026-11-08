@@ -161,7 +161,7 @@ if (NOT CROSS_COMPILE_ARM AND (JPH_USE_VK OR JPH_USE_DX12 OR JPH_USE_MTL))
 	endif()
 
 	if (APPLE)
-		# macOS source files
+		# macOS / iOS source files
 		set(TEST_FRAMEWORK_SRC_FILES
 			${TEST_FRAMEWORK_SRC_FILES}
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/KeyboardMacOS.mm
@@ -170,9 +170,24 @@ if (NOT CROSS_COMPILE_ARM AND (JPH_USE_VK OR JPH_USE_DX12 OR JPH_USE_MTL))
 			${TEST_FRAMEWORK_ROOT}/Input/MacOS/MouseMacOS.h
 			${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.mm
 			${TEST_FRAMEWORK_ROOT}/Utils/Log.mm
-			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.mm
-			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.h
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowApple.mm
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowApple.h
 		)
+		if (IOS)
+			# iOS window
+			set(TEST_FRAMEWORK_SRC_FILES
+				${TEST_FRAMEWORK_SRC_FILES}
+				${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowIOS.mm
+				${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowIOS.h
+			)
+		else()
+			# macOS window
+			set(TEST_FRAMEWORK_SRC_FILES
+				${TEST_FRAMEWORK_SRC_FILES}
+				${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.mm
+				${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowMacOS.h
+			)
+		endif()
 
 		# Include the Metal renderer
 		if (JPH_USE_MTL)
@@ -211,16 +226,16 @@ if (NOT CROSS_COMPILE_ARM AND (JPH_USE_VK OR JPH_USE_DX12 OR JPH_USE_MTL))
 				cmake_path(GET SHADER FILENAME AIR_SHADER)
 				set(AIR_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${AIR_SHADER}.air")
 				add_custom_command(OUTPUT ${AIR_SHADER}
-					COMMAND xcrun -sdk macosx metal -c ${SHADER} -o ${AIR_SHADER}
+					COMMAND xcrun -sdk ${METAL_SDK_TARGET} metal -c ${SHADER} -o ${AIR_SHADER}
 					DEPENDS ${SHADER}
 					COMMENT "Compiling ${SHADER}")
 				list(APPEND TEST_FRAMEWORK_MTL_SHADERS ${AIR_SHADER})
 			endforeach()
 
-			# Link Metal shaders
-			set(TEST_FRAMEWORK_METAL_LIB ${PHYSICS_REPO_ROOT}/Assets/Shaders/MTL/Shaders.metallib)
+			# Link Metal shaders (output to the build folder since the library is different for macOS and iOS)
+			set(TEST_FRAMEWORK_METAL_LIB ${CMAKE_CURRENT_BINARY_DIR}/Shaders.metallib)
 			add_custom_command(OUTPUT ${TEST_FRAMEWORK_METAL_LIB}
-				COMMAND xcrun -sdk macosx metallib -o ${TEST_FRAMEWORK_METAL_LIB} ${TEST_FRAMEWORK_MTL_SHADERS}
+				COMMAND xcrun -sdk ${METAL_SDK_TARGET} metallib -o ${TEST_FRAMEWORK_METAL_LIB} ${TEST_FRAMEWORK_MTL_SHADERS}
 				DEPENDS ${TEST_FRAMEWORK_MTL_SHADERS}
 				COMMENT "Linking shaders")
 		endif()
@@ -314,8 +329,13 @@ if (NOT CROSS_COMPILE_ARM AND (JPH_USE_VK OR JPH_USE_DX12 OR JPH_USE_MTL))
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt X11)
 	endif()
 	if (APPLE)
-		# macOS configuration
-		target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework GameController")
+		if (IOS)
+			# iOS configuration
+			target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework UIKit -framework GameController")
+		else()
+			# macOS configuration
+			target_link_libraries(TestFramework LINK_PUBLIC Jolt "-framework Cocoa -framework GameController")
+		endif()
 
 		# Make sure that all test framework assets move to the Resources folder in the package
 		foreach(ASSET_FILE ${TEST_FRAMEWORK_ASSETS})
@@ -324,6 +344,12 @@ if (NOT CROSS_COMPILE_ARM AND (JPH_USE_VK OR JPH_USE_DX12 OR JPH_USE_MTL))
 			get_filename_component(ASSET_DST ${ASSET_DST} DIRECTORY)
 			set_source_files_properties(${ASSET_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION ${ASSET_DST})
 		endforeach()
+		if (JOLT_PHYSICS_METAL_LIB)
+			set_source_files_properties(${JOLT_PHYSICS_METAL_LIB} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/Jolt/Shaders)
+		endif()
+		if (TEST_FRAMEWORK_METAL_LIB)
+			set_source_files_properties(${TEST_FRAMEWORK_METAL_LIB} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/Shaders/MTL)
+		endif()
 
 		# Ignore PCH files for .mm files
 		foreach(SRC_FILE ${TEST_FRAMEWORK_SRC_FILES})

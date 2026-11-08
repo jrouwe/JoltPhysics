@@ -190,9 +190,18 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 		<li>Install XCode</li>
 		<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#mac">Vulkan SDK</a> or the dxc and spirv-cross tools (required to cross compile hlsl shaders to Metal)</li>
 		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
-		<li>Run: <code>./cmake_xcode.ios.sh</code></li>
+		<li>Run: <code>./cmake_xcode_ios.sh</code></li>
 		<li>This will open XCode with a newly generated project</li>
-		<li>Build and run the project (note that this will only work in the simulator as the code signing information is not set up)</li>
+		<li>Build and run either 'Samples' or 'UnitTests' (note that this will only work in the simulator as the code signing information is not set up and the shaders are compiled for the simulator)</li>
+		<li>In the Samples, touch input is mapped to mouse and keyboard input:
+			<ul>
+				<li>One finger drag: Rotate the camera / interact with the menu (drag vertically to scroll long menus)</li>
+				<li>One finger long press: Hold Space (drag the object under the crosshair)</li>
+				<li>Two finger drag: Move the camera (W, A, S, D)</li>
+				<li>Two finger tap: Open the menu / go back one level (Escape)</li>
+			</ul>
+			A hardware keyboard works as on macOS. A hardware mouse acts as a single finger (left button only).
+		</li>
 	</ul>
 </details>
 

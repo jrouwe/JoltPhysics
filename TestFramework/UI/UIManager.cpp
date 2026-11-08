@@ -150,6 +150,75 @@ bool UIManager::HandleUIEvent(EUIEvent inEvent, UIElement *inSender)
 	return mListener != nullptr && mListener->HandleUIEvent(inEvent, inSender);
 }
 
+bool UIManager::MouseDown(int inX, int inY)
+{
+	mMouseDown = true;
+	mScrolling = false;
+	mMouseDownY = mLastMouseY = inY;
+
+	return UIElement::MouseDown(inX, inY);
+}
+
+bool UIManager::MouseUp(int inX, int inY)
+{
+	mMouseDown = false;
+	if (mScrolling)
+	{
+		mScrolling = false;
+		return true;
+	}
+
+	return UIElement::MouseUp(inX, inY);
+}
+
+bool UIManager::MouseMove(int inX, int inY)
+{
+	// Start scrolling when the mouse is dragged far enough vertically
+	const int cScrollThreshold = 20;
+	if (mMouseDown && !mScrolling && mState == STATE_ACTIVE && abs(inY - mMouseDownY) > cScrollThreshold && CanScroll())
+	{
+		// Cancel any interaction with the elements (e.g. a button press)
+		UIElement::MouseCancel();
+		mScrolling = true;
+	}
+
+	if (mScrolling)
+	{
+		Scroll(inY - mLastMouseY);
+		mLastMouseY = inY;
+		return true;
+	}
+
+	return UIElement::MouseMove(inX, inY);
+}
+
+void UIManager::MouseCancel()
+{
+	mMouseDown = false;
+	mScrolling = false;
+
+	UIElement::MouseCancel();
+}
+
+bool UIManager::CanScroll() const
+{
+	int window_height = mRenderer->GetWindow()->GetWindowHeight();
+	for (const UIElement *e : mChildren)
+		if (e->GetHeight() > window_height)
+			return true;
+	return false;
+}
+
+void UIManager::Scroll(int inDeltaY)
+{
+	// Keep the same margin at the top and the bottom of the screen
+	const int cMargin = 10;
+	int window_height = mRenderer->GetWindow()->GetWindowHeight();
+	for (UIElement *e : mChildren)
+		if (e->GetHeight() > window_height)
+			e->SetRelativeY(Clamp(e->GetRelativeY() + inDeltaY, window_height - e->GetHeight() - cMargin, cMargin));
+}
+
 void UIManager::GetMaxElementDistanceToScreenEdge(int &outMaxH, int &outMaxV)
 {
 	outMaxH = 0;
