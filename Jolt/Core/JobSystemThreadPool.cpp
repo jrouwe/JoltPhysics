@@ -11,6 +11,9 @@
 
 #ifdef JPH_PLATFORM_LINUX
 	#include <sys/prctl.h>
+#elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+	#include <pthread.h>
+	#include <sys/qos.h>
 #endif
 
 JPH_NAMESPACE_BEGIN
@@ -56,9 +59,17 @@ void JobSystemThreadPool::StartThreads([[maybe_unused]] int inNumThreads)
 	// Start running threads
 	JPH_ASSERT(mThreads.empty());
 	mThreads.reserve(inNumThreads);
+#if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+	// Threads created through std::thread run at the default quality-of-service class.
+	// Run the worker threads at the same QoS class as the thread that creates them to avoid priority inversions when that thread waits for jobs.
+	qos_class_t qos_class = qos_class_self();
+	for (int i = 0; i < inNumThreads; ++i)
+		mThreads.emplace_back([this, i, qos_class] { pthread_set_qos_class_self_np(qos_class, 0); ThreadMain(i); });
+#else
 	for (int i = 0; i < inNumThreads; ++i)
 		mThreads.emplace_back([this, i] { ThreadMain(i); });
-#endif
+#endif // defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+#endif // !defined(JPH_CPU_WASM) || defined(__EMSCRIPTEN_PTHREADS__)
 }
 
 JobSystemThreadPool::~JobSystemThreadPool()
@@ -331,6 +342,10 @@ void JobSystemThreadPool::ExecuteJobs()
 	}
 #endif // JPH_PLATFORM_LINUX
 
+#if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+// Prevent inlining so that this function always shows up in backtraces, Build/macOS/ThreadPerformanceChecker.supp depends on this
+__attribute__((noinline))
+#endif
 void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 {
 	// Name the thread
