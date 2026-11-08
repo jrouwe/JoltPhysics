@@ -688,7 +688,7 @@ if (APPLE)
 				add_custom_command(OUTPUT ${AIR_SHADER}
 					COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I Jolt/Shaders -WX -O3 -all_resources_bound ${SHADER} -spirv -fvk-use-dx-layout -fspv-entrypoint-name=${SHADER_STEM} -Fo ${SPV_SHADER}
 					COMMAND ${SPIRV_CROSS_COMPILER} ${SPV_SHADER} --msl --output ${MTL_SHADER}
-					COMMAND xcrun -sdk ${METAL_SDK_TARGET} metal -c ${MTL_SHADER} -o ${AIR_SHADER}
+					COMMAND xcrun -sdk ${METAL_SDK_TARGET} metal -Wno-unused-variable -c ${MTL_SHADER} -o ${AIR_SHADER}
 					DEPENDS ${SHADER} ${JOLT_PHYSICS_SHADER_HEADERS} # Currently don't have a way to detect header dependencies, so making dependent on all
 					COMMENT "Compiling Metal ${SHADER}")
 				list(APPEND JOLT_PHYSICS_MTL_SHADERS ${AIR_SHADER})
