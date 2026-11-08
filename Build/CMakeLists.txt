@@ -407,7 +407,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
 
 			# Suppress false positives of the Thread Performance Checker
-			if (XCODE AND NOT IOS)
+			if (XCODE)
 				set_property(TARGET UnitTests PROPERTY XCODE_GENERATE_SCHEME TRUE)
 				set_property(TARGET UnitTests PROPERTY XCODE_SCHEME_ENVIRONMENT "PERFC_SUPPRESSION_FILE=${CMAKE_CURRENT_SOURCE_DIR}/macOS/ThreadPerformanceChecker.supp")
 			endif()

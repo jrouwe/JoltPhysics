@@ -368,7 +368,7 @@ if (APPLE)
 	set_property(TARGET Samples PROPERTY BUILD_RPATH "/usr/local/lib" INSTALL_RPATH "/usr/local/lib") # to find the Vulkan shared lib
 
 	# Suppress false positives of the Thread Performance Checker
-	if (XCODE AND NOT IOS)
+	if (XCODE)
 		set_property(TARGET Samples PROPERTY XCODE_GENERATE_SCHEME TRUE)
 		set_property(TARGET Samples PROPERTY XCODE_SCHEME_ENVIRONMENT "PERFC_SUPPRESSION_FILE=${CMAKE_CURRENT_SOURCE_DIR}/macOS/ThreadPerformanceChecker.supp")
 	endif()
