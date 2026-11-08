@@ -366,6 +366,10 @@ if (APPLE)
 	set_property(TARGET Samples PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/SamplesInfo.plist")
 	set_property(TARGET Samples PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.samples")
 	set_property(TARGET Samples PROPERTY BUILD_RPATH "/usr/local/lib" INSTALL_RPATH "/usr/local/lib") # to find the Vulkan shared lib
+	if (IOS)
+		# Build for both iPhone and iPad
+		set_property(TARGET Samples PROPERTY XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
+	endif()
 
 	# Suppress false positives of the Thread Performance Checker
 	if (XCODE)

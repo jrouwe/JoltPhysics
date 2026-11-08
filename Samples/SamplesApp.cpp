@@ -490,8 +490,8 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 	// Set shader loader
 	mComputeSystem = &mRenderer->GetComputeSystem();
 	mComputeSystem->mShaderLoader = [](const char *inName, Array<uint8> &outData, String &outError) {
-	#ifdef JPH_PLATFORM_MACOS
-		// In macOS the shaders are copied to the bundle
+	#if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+		// In macOS / iOS the shaders are copied to the bundle
 		String base_path = "Jolt/Shaders/";
 	#else
 		// On other platforms they are in the Jolt source folder
@@ -539,6 +539,7 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 			mDebugUI->ShowMenu(test_settings);
 		});
 		mDebugUI->CreateTextButton(main_menu, "Restart Test (R)", [this]() { StartTest(mTestClass); });
+		mDebugUI->CreateTextButton(main_menu, "Pause / Unpause (P)", [this]() { Pause(!IsPaused()); });
 		mDebugUI->CreateTextButton(main_menu, "Run All Tests", [this]() { RunAllTests(); });
 		mDebugUI->CreateTextButton(main_menu, "Next Test (N)", [this]() { NextTest(); });
 		mDebugUI->CreateTextButton(main_menu, "Take Snapshot", [this]() { TakeSnapshot(); });

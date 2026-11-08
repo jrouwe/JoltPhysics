@@ -6,7 +6,7 @@
 #include <Utils/AssetStream.h>
 #include <Utils/Log.h>
 
-#include <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
 String AssetStream::sGetAssetsBasePath()
 {

@@ -6,6 +6,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### New functionality
 
+* The Samples application now runs on iOS. Touch input is mapped to mouse and keyboard input, see `Build/README.md`.
 * Added support for 64-bit ObjectLayer. This e.g. allows for more groups in case you're using `ObjectLayerPairFilterMask`.
 * `EstimateCollisionResponse` now takes surface velocities into account.
 

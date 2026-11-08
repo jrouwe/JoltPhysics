@@ -665,6 +665,13 @@ if (APPLE)
 			${JOLT_PHYSICS_ROOT}/Compute/MTL/ComputeSystemMTLImpl.h
 		)
 
+		# Determine target for shader compiler
+		if (IOS)
+			set(METAL_SDK_TARGET "iphonesimulator")
+		else()
+			set(METAL_SDK_TARGET "macosx")
+		endif()
+
 		find_program(DXC_COMPILER NAMES dxc)
 		find_program(SPIRV_CROSS_COMPILER NAMES spirv-cross)
 		if (NOT DXC_COMPILER)
@@ -672,13 +679,6 @@ if (APPLE)
 		elseif (NOT SPIRV_CROSS_COMPILER)
 			MESSAGE("Application 'spirv-cross' not found. Can't compile compute shaders. Some functionality will be unavailable. You can install it by e.g. installing the Vulkan SDK.")
 		else()
-			# Determine target for shader compiler
-			if (IOS)
-				set(METAL_SDK_TARGET "iphonesimulator")
-			else()
-				set(METAL_SDK_TARGET "macosx")
-			endif()
-
 			# Compile Metal shaders
 			foreach(SHADER ${JOLT_PHYSICS_SHADERS})
 				cmake_path(GET SHADER STEM SHADER_STEM) # Filename without extension
@@ -694,8 +694,8 @@ if (APPLE)
 				list(APPEND JOLT_PHYSICS_MTL_SHADERS ${AIR_SHADER})
 			endforeach()
 
-			# Link Metal shaders
-			set(JOLT_PHYSICS_METAL_LIB ${JOLT_PHYSICS_ROOT}/Shaders/Jolt.metallib)
+			# Link Metal shaders (output to the build folder since the library is different for macOS and iOS)
+			set(JOLT_PHYSICS_METAL_LIB ${CMAKE_CURRENT_BINARY_DIR}/Jolt.metallib)
 			add_custom_command(OUTPUT ${JOLT_PHYSICS_METAL_LIB}
 				COMMAND xcrun -sdk ${METAL_SDK_TARGET} metallib -o ${JOLT_PHYSICS_METAL_LIB} ${JOLT_PHYSICS_MTL_SHADERS}
 				DEPENDS ${JOLT_PHYSICS_MTL_SHADERS}

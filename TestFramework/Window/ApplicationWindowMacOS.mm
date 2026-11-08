@@ -7,6 +7,7 @@
 #include <Window/ApplicationWindowMacOS.h>
 
 #import <MetalKit/MetalKit.h>
+#import <GameController/GameController.h>
 
 // This class implements a metal view
 @interface MetalView : MTKView <MTKViewDelegate>
@@ -91,17 +92,30 @@
 
 ApplicationWindowMacOS::~ApplicationWindowMacOS()
 {
-	[mMetalView release];
+	if (mKeyDownMonitor != nullptr)
+		[NSEvent removeMonitor: (id)mKeyDownMonitor];
+
+	if (mMouseConnectObserver != nullptr)
+	{
+		[NSNotificationCenter.defaultCenter removeObserver: (id)mMouseConnectObserver];
+
+		// Remove the handlers as they reference this window
+		for (GCMouse *mouse in GCMouse.mice)
+		{
+			GCMouseInput *mouse_input = mouse.mouseInput;
+			mouse_input.mouseMovedHandler = nil;
+			mouse_input.leftButton.pressedChangedHandler = nil;
+			mouse_input.rightButton.pressedChangedHandler = nil;
+			mouse_input.middleButton.pressedChangedHandler = nil;
+		}
+	}
 }
 
 void ApplicationWindowMacOS::Initialize(const char *inTitle)
 {
 	// Create metal view
 	MetalView *view = [[MetalView alloc] init: this];
-	view.clearColor = MTLClearColorMake(0.098f, 0.098f, 0.439f, 1.000f);
-	view.depthStencilPixelFormat = MTLPixelFormatDepth32Float;
-	view.clearDepth = 0.0f;
-	mMetalView = view;
+	SetMetalView(view);
 
 	// Create window
 	NSWindow *window = [[NSWindow alloc] initWithContentRect: NSMakeRect(0, 0, mWindowWidth, mWindowHeight)
@@ -112,6 +126,31 @@ void ApplicationWindowMacOS::Initialize(const char *inTitle)
 	[window setAcceptsMouseMovedEvents: YES];
 	[window setTitle: [NSString stringWithCString: inTitle encoding: NSUTF8StringEncoding]];
 	[window makeKeyAndOrderFront: nil];
+
+	// Key presses are received through the GameController framework, swallow the key down events to avoid the system beeping
+	mKeyDownMonitor = [NSEvent addLocalMonitorForEventsMatchingMask: NSEventMaskKeyDown handler: ^NSEvent *(NSEvent *event) {
+		// Ignore all keystrokes except Command-Q (Quit)
+		if ((event.modifierFlags & NSEventModifierFlagCommand) && [event.charactersIgnoringModifiers isEqual: @"q"])
+			return event;
+		else
+			return nil;
+	}];
+
+	// Listen for keyboards
+	ListenForKeyboards();
+
+	// Listen for mice being connected to receive relative mouse movement (will work also when mouse is outside the window or at the edge of the screen) and button presses
+	ApplicationWindowMacOS *window_macos = this;
+	mMouseConnectObserver = [NSNotificationCenter.defaultCenter addObserverForName: GCMouseDidConnectNotification object: nil queue: nil usingBlock: ^(NSNotification *notification) {
+		GCMouseInput *mouse_input = ((GCMouse *)notification.object).mouseInput;
+		if (mouse_input == nil)
+			return;
+
+		mouse_input.mouseMovedHandler = ^(GCMouseInput *, float inDeltaX, float inDeltaY) { window_macos->OnMouseDelta(int(inDeltaX), int(-inDeltaY)); };
+		mouse_input.leftButton.pressedChangedHandler = ^(GCControllerButtonInput *, float, BOOL inPressed) { window_macos->OnMouseButton(MouseMacOS::EMouseButton::Left, inPressed); };
+		mouse_input.rightButton.pressedChangedHandler = ^(GCControllerButtonInput *, float, BOOL inPressed) { window_macos->OnMouseButton(MouseMacOS::EMouseButton::Right, inPressed); };
+		mouse_input.middleButton.pressedChangedHandler = ^(GCControllerButtonInput *, float, BOOL inPressed) { window_macos->OnMouseButton(MouseMacOS::EMouseButton::Middle, inPressed); };
+	}];
 }
 
 void ApplicationWindowMacOS::MainLoop(ApplicationWindow::RenderCallback inRenderCallback)
@@ -126,9 +165,4 @@ void ApplicationWindowMacOS::MainLoop(ApplicationWindow::RenderCallback inRender
 		[app run];
 		[delegate release];
 	}
-}
-
-CAMetalLayer *ApplicationWindowMacOS::GetMetalLayer() const
-{
-	return (CAMetalLayer *)mMetalView.layer;
 }
