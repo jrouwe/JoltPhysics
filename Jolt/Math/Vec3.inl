@@ -356,7 +356,7 @@ Vec3 Vec3::sFusedMultiplyAdd(Vec3Arg inMul1, Vec3Arg inMul2, Vec3Arg inAdd)
 	#ifdef JPH_USE_SSE
 		return _mm_fmadd_ps(inMul1.mValue, inMul2.mValue, inAdd.mValue);
 	#elif defined(JPH_USE_NEON)
-		return vmlaq_f32(inAdd.mValue, inMul1.mValue, inMul2.mValue);
+		return vfmaq_f32(inAdd.mValue, inMul1.mValue, inMul2.mValue);
 	#elif defined(JPH_USE_RVV)
 		Vec3 res;
 		const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inMul1.mF32, 3);
