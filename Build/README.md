@@ -299,6 +299,24 @@ On Linux to see what instructions your CPU supports run `lscpu` and then look at
 
 Note that this example is for Linux but the cmake settings work on Windows too.
 
+### Thread Performance Checker Warnings on Apple Platforms
+
+When running under XCode with the Thread Performance Checker enabled (the default in a scheme's Diagnostics settings), you may see warnings like:
+
+```
+Thread Performance Checker: Thread running at User-interactive quality-of-service class waiting on a thread without a QoS class specified (base priority 0). Investigate ways to avoid priority inversions
+```
+
+The worker threads of `JobSystemThreadPool` run at the same quality-of-service (QoS) class as the thread that started them (the thread that constructed the job system or called `JobSystemThreadPool::Init` or `JobSystemThreadPool::SetNumThreads`), so the thread that waits for jobs (`JobSystem::WaitForJobs`) does not wait on lower priority threads. Idle worker threads wait on a `dispatch_semaphore` in `JobSystemThreadPool::ThreadMain`. The checker cannot determine which thread will signal this semaphore and can incorrectly report this as a priority inversion, even though all threads that signal it run at the same QoS class. To suppress only this false positive, set the environment variable `PERFC_SUPPRESSION_FILE` to the full path of `Build/macOS/ThreadPerformanceChecker.supp` (in XCode: Product > Scheme > Edit Scheme > Run > Arguments > Environment Variables). The XCode projects that cmake generates for `UnitTests` and `Samples` already do this.
+
+To run the checker from the command line, load it through `DYLD_INSERT_LIBRARIES`:
+
+```
+DYLD_INSERT_LIBRARIES=/usr/lib/libRPAC.dylib PERFC_SUPPRESSION_FILE=<path to>/Build/macOS/ThreadPerformanceChecker.supp ./UnitTests.app/Contents/MacOS/UnitTests
+```
+
+Note that the checker only reports an issue once per unique backtrace.
+
 ## Doxygen on Windows
 
 Documentation can be generated through doxygen:

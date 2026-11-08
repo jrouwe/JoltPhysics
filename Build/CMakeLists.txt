@@ -406,6 +406,12 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
 
+			# Suppress false positives of the Thread Performance Checker
+			if (XCODE)
+				set_property(TARGET UnitTests PROPERTY XCODE_GENERATE_SCHEME TRUE)
+				set_property(TARGET UnitTests PROPERTY XCODE_SCHEME_ENVIRONMENT "PERFC_SUPPRESSION_FILE=${CMAKE_CURRENT_SOURCE_DIR}/macOS/ThreadPerformanceChecker.supp")
+			endif()
+
 			# Unit tests are in the app bundle on macOS
 			set(UNIT_TEST_COMMAND UnitTests.app/Contents/MacOS/UnitTests)
 		else()
