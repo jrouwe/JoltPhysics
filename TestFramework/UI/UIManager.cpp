@@ -26,9 +26,8 @@ UIManager::UIManager(Renderer *inRenderer) :
 	mManager = this;
 
 	// Set dimensions of the screen
-	ApplicationWindow *window = mRenderer->GetWindow();
-	SetWidth(window->GetWindowWidth());
-	SetHeight(window->GetWindowHeight());
+	SetWidth(mRenderer->GetUIWidth());
+	SetHeight(mRenderer->GetUIHeight());
 
 	// Create input layout
 	const PipelineState::EInputDescription vertex_desc[] =
@@ -202,7 +201,7 @@ void UIManager::MouseCancel()
 
 bool UIManager::CanScroll() const
 {
-	int window_height = mRenderer->GetWindow()->GetWindowHeight();
+	int window_height = mRenderer->GetUIHeight();
 	for (const UIElement *e : mChildren)
 		if (e->GetHeight() > window_height)
 			return true;
@@ -213,7 +212,7 @@ void UIManager::Scroll(int inDeltaY)
 {
 	// Keep the same margin at the top and the bottom of the screen
 	const int cMargin = 10;
-	int window_height = mRenderer->GetWindow()->GetWindowHeight();
+	int window_height = mRenderer->GetUIHeight();
 	for (UIElement *e : mChildren)
 		if (e->GetHeight() > window_height)
 			e->SetRelativeY(Clamp(e->GetRelativeY() + inDeltaY, window_height - e->GetHeight() - cMargin, cMargin));
@@ -224,15 +223,14 @@ void UIManager::GetMaxElementDistanceToScreenEdge(int &outMaxH, int &outMaxV)
 	outMaxH = 0;
 	outMaxV = 0;
 
-	ApplicationWindow *window = mRenderer->GetWindow();
 	for (const UIElement *e : mChildren)
 		if (e->HasDeactivateAnimation())
 		{
 			int dl = e->GetX() + e->GetWidth();
-			int dr = window->GetWindowWidth() - e->GetX();
+			int dr = mRenderer->GetUIWidth() - e->GetX();
 			outMaxH = max(outMaxH, min(dl, dr));
 			int dt = e->GetY() + e->GetHeight();
-			int db = window->GetWindowHeight() - e->GetY();
+			int db = mRenderer->GetUIHeight() - e->GetY();
 			outMaxV = max(outMaxV, min(dt, db));
 		}
 }

@@ -165,9 +165,20 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 	<summary>Android</summary>
 	<ul>
 		<li>Install Android Studio (https://developer.android.com/studio/)</li>
+		<li>If you want to build the Samples, install the <a href="https://vulkan.lunarg.com/sdk/home">Vulkan SDK</a> (required to compile the shaders)</li>
 		<li>Open the 'Build/Android' folder in Android Studio and wait until gradle finishes</li>
-		<li>Select 'Run' and 'UnitTests'</li>
-		<li>If the screen turns green after a while the unit tests succeeded, when red they failed (see the android log for details)</li>
+		<li>Select 'Run' and 'UnitTests', 'PerformanceTest' or 'Samples'</li>
+		<li>For the UnitTests: If the screen turns green after a while the unit tests succeeded, when red they failed (see the android log for details)</li>
+		<li>The Samples use Vulkan for rendering. Touch input is mapped to mouse and keyboard input:
+			<ul>
+				<li>One finger drag: Rotate the camera / interact with the menu (drag vertically to scroll long menus)</li>
+				<li>One finger long press: Hold Space (drag the object under the crosshair)</li>
+				<li>Two finger drag: Move the camera, the scene follows your fingers (drag down to move forward, drag right to move left)</li>
+				<li>Two finger tap or the back button / gesture: Open the menu / go back one level (Escape)</li>
+			</ul>
+			A hardware keyboard works as on the desktop. A hardware mouse acts as a single finger (left button only). The UI is scaled by a factor 3 to make it easier to touch, use the <code>-uiscale=&lt;scale&gt;</code> command line option to change this.
+			To start a specific test, use e.g.: <code>adb shell am start -n com.joltphysics.samples/android.app.NativeActivity -e args "HairTest"</code>
+		</li>
 	</ul>
 </details>
 
@@ -197,10 +208,10 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 			<ul>
 				<li>One finger drag: Rotate the camera / interact with the menu (drag vertically to scroll long menus)</li>
 				<li>One finger long press: Hold Space (drag the object under the crosshair)</li>
-				<li>Two finger drag: Move the camera (W, A, S, D)</li>
+				<li>Two finger drag: Move the camera, the scene follows your fingers (drag down to move forward, drag right to move left)</li>
 				<li>Two finger tap: Open the menu / go back one level (Escape)</li>
 			</ul>
-			A hardware keyboard works as on macOS. A hardware mouse acts as a single finger (left button only).
+			A hardware keyboard (or the Mac keyboard in the simulator) works as on macOS. A hardware mouse acts as a single finger (left button only). The UI is scaled by a factor 3 to make it easier to touch, use the <code>-uiscale=&lt;scale&gt;</code> command line option to change this.
 		</li>
 	</ul>
 </details>

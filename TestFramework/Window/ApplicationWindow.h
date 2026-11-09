@@ -17,8 +17,8 @@ public:
 	virtual void					Initialize(const char *inTitle) = 0;
 
 	/// Get window size
-	int								GetWindowWidth()					{ return mWindowWidth; }
-	int								GetWindowHeight()					{ return mWindowHeight; }
+	int								GetWindowWidth() const				{ return mWindowWidth; }
+	int								GetWindowHeight() const				{ return mWindowHeight; }
 
 	/// Set callback when the window resizes
 	using WindowResizeListener = std::function<void()>;

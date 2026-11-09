@@ -6,7 +6,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### New functionality
 
-* The Samples application now runs on iOS. Touch input is mapped to mouse and keyboard input, see `Build/README.md`.
+* The Samples application now runs on iOS and Android. Touch input is mapped to mouse and keyboard input, see `Build/README.md`.
 * Added support for 64-bit ObjectLayer. This e.g. allows for more groups in case you're using `ObjectLayerPairFilterMask`.
 * `EstimateCollisionResponse` now takes surface velocities into account.
 
@@ -26,6 +26,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed an issue where `GearConstraint` would apply the wrong torque to body 2.
 * Fixed a race condition in `JobSystemWithBarrier` where a job that was added to a barrier could finish before the barrier counted it. When this happened from within a job (e.g. `SoftBodyPrepare` adding the soft body collide jobs), `WaitForJobs` could return too early resulting in  memory corruption and a hang.
 * `ConvexHullShape::GetSupportingFace` could return a face that did not contain the deepest vertex, resulting in objects being able to penetrate more than they should.
+* `ComputeSystemVK` now falls back to non-cached host memory on GPUs that don't have memory that is both host coherent and host cached (e.g. Mali).
+* `ComputeSystemVK` no longer requires the `VK_EXT_debug_utils` instance extension to be present.
 
 ### Removed functionality
 

@@ -8,3 +8,4 @@ dependencyResolutionManagement {
 rootProject.name = "Jolt Physics"
 include ':UnitTests'
 include ':PerformanceTest'
+include ':Samples'

@@ -28,6 +28,9 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #elif defined(JPH_PLATFORM_MACOS)
 	#include <vulkan/vulkan_metal.h>
 	#include <Window/ApplicationWindowMacOS.h>
+#elif defined(JPH_PLATFORM_ANDROID)
+	#include <vulkan/vulkan_android.h>
+	#include <Window/ApplicationWindowAndroid.h>
 #endif
 JPH_SUPPRESS_WARNINGS_STD_END
 
@@ -39,6 +42,10 @@ RendererVK::RendererVK()
 
 RendererVK::~RendererVK()
 {
+#ifdef JPH_PLATFORM_ANDROID
+	static_cast<ApplicationWindowAndroid *>(mWindow)->SetSurfaceCallback({});
+#endif
+
 	mVkDeviceWaitIdle(mDevice);
 
 	// Destroy the shadow map
@@ -100,7 +107,11 @@ void RendererVK::OnInstanceCreated()
 	JPH_LOAD_VK_INST(GetPhysicalDeviceSurfaceSupportKHR);
 	#undef JPH_LOAD_VK_INST
 
-	// Create surface
+	CreateSurface();
+}
+
+void RendererVK::CreateSurface()
+{
 #ifdef JPH_PLATFORM_WINDOWS
 	PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR = reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(reinterpret_cast<void *>(mVkGetInstanceProcAddr(mInstance, "vkCreateWin32SurfaceKHR")));
 	VkWin32SurfaceCreateInfoKHR surface_create_info = {};
@@ -122,6 +133,12 @@ void RendererVK::OnInstanceCreated()
 	surface_create_info.pNext = nullptr;
 	surface_create_info.pLayer = static_cast<ApplicationWindowMacOS *>(mWindow)->GetMetalLayer();
 	FatalErrorIfFailed(vkCreateMetalSurfaceEXT(mInstance, &surface_create_info, nullptr, &mSurface));
+#elif defined(JPH_PLATFORM_ANDROID)
+	PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR = reinterpret_cast<PFN_vkCreateAndroidSurfaceKHR>(reinterpret_cast<void *>(mVkGetInstanceProcAddr(mInstance, "vkCreateAndroidSurfaceKHR")));
+	VkAndroidSurfaceCreateInfoKHR surface_create_info = {};
+	surface_create_info.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+	surface_create_info.window = static_cast<ApplicationWindowAndroid *>(mWindow)->GetNativeWindow();
+	FatalErrorIfFailed(vkCreateAndroidSurfaceKHR(mInstance, &surface_create_info, nullptr, &mSurface));
 #endif
 }
 
@@ -169,13 +186,6 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 	JPH_LOAD_VK(BindImageMemory);
 	JPH_LOAD_VK(AcquireNextImageKHR);
 	#undef JPH_LOAD_VK
-
-	// Check if fill mode non solid is supported
-	VkPhysicalDeviceFeatures2 supported_features2 = {};
-	supported_features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-	mVkGetPhysicalDeviceFeatures2(mPhysicalDevice, &supported_features2);
-	if (!supported_features2.features.fillModeNonSolid)
-		FatalError("This Vulkan implementation does not support fill mode non solid");
 
 	VkCommandPoolCreateInfo pool_info = {};
 	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -440,6 +450,23 @@ void RendererVK::Initialize(ApplicationWindow *inWindow)
 
 	// Create the swap chain
 	CreateSwapChain(mPhysicalDevice);
+
+#ifdef JPH_PLATFORM_ANDROID
+	// On Android the native window is destroyed when the application goes to the background, so we need to recreate the surface
+	static_cast<ApplicationWindowAndroid *>(mWindow)->SetSurfaceCallback([this](bool inAvailable) {
+		mVkDeviceWaitIdle(mDevice);
+		DestroySwapChain();
+		mVkDestroySurfaceKHR(mInstance, mSurface, nullptr);
+		mSurface = VK_NULL_HANDLE;
+		mSubOptimalSwapChain = false;
+
+		if (inAvailable)
+		{
+			CreateSurface();
+			CreateSwapChain(mPhysicalDevice);
+		}
+	});
+#endif
 }
 
 void RendererVK::GetInstanceExtensions(Array<const char *> &outExtensions)
@@ -450,6 +477,8 @@ void RendererVK::GetInstanceExtensions(Array<const char *> &outExtensions)
 	outExtensions.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
 #elif defined(JPH_PLATFORM_MACOS)
 	outExtensions.push_back(VK_EXT_METAL_SURFACE_EXTENSION_NAME);
+#elif defined(JPH_PLATFORM_ANDROID)
+	outExtensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
 #endif
 }
 
@@ -460,7 +489,15 @@ void RendererVK::GetDeviceExtensions(Array<const char *> &outExtensions)
 
 void RendererVK::GetEnabledFeatures(VkPhysicalDeviceFeatures2 &ioFeatures)
 {
-	ioFeatures.features.fillModeNonSolid = VK_TRUE;
+	// Enable wireframe rendering if supported (e.g. many Mali GPUs on Android don't support it)
+	VkPhysicalDeviceFeatures2 supported_features2 = {};
+	supported_features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	mVkGetPhysicalDeviceFeatures2(mPhysicalDevice, &supported_features2);
+	mSupportsWireframe = supported_features2.features.fillModeNonSolid == VK_TRUE;
+	if (mSupportsWireframe)
+		ioFeatures.features.fillModeNonSolid = VK_TRUE;
+	else
+		Trace("VK: Device does not support fillModeNonSolid, wireframe will be drawn as solid");
 }
 
 bool RendererVK::HasPresentSupport(VkPhysicalDevice inDevice, uint32 inQueueFamilyIndex)
@@ -480,9 +517,9 @@ VkSurfaceFormatKHR RendererVK::SelectFormat(VkPhysicalDevice inDevice)
 	formats.resize(format_count);
 	mVkGetPhysicalDeviceSurfaceFormatsKHR(inDevice, mSurface, &format_count, formats.data());
 
-	// Select BGRA8 UNORM format if available, otherwise the 1st format
+	// Select BGRA8 / RGBA8 UNORM format if available, otherwise the 1st format
 	for (const VkSurfaceFormatKHR &format : formats)
-		if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+		if ((format.format == VK_FORMAT_B8G8R8A8_UNORM || format.format == VK_FORMAT_R8G8B8A8_UNORM) && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 			return format;
 	return formats[0];
 }
@@ -504,6 +541,10 @@ VkFormat RendererVK::FindDepthFormat()
 
 void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 {
+	// Check if we have a surface
+	if (mSurface == VK_NULL_HANDLE)
+		return;
+
 	// Select the format
 	VkSurfaceFormatKHR format = SelectFormat(inDevice);
 	mSwapChainImageFormat = format.format;
@@ -511,9 +552,14 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 	// Determine swap chain extent
 	VkSurfaceCapabilitiesKHR capabilities;
 	mVkGetPhysicalDeviceSurfaceCapabilitiesKHR(inDevice, mSurface, &capabilities);
+#ifdef JPH_PLATFORM_ANDROID
+	const ApplicationWindowAndroid *window = static_cast<const ApplicationWindowAndroid *>(mWindow);
+	mSwapChainExtent = { uint32(window->GetSurfaceWidth()), uint32(window->GetSurfaceHeight()) };
+#else
 	mSwapChainExtent = capabilities.currentExtent;
 	if (mSwapChainExtent.width == UINT32_MAX || mSwapChainExtent.height == UINT32_MAX)
 		mSwapChainExtent = { uint32(mWindow->GetWindowWidth()), uint32(mWindow->GetWindowHeight()) };
+#endif
 	mSwapChainExtent.width = Clamp(mSwapChainExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
 	mSwapChainExtent.height = Clamp(mSwapChainExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 	Trace("VK: Create swap chain %ux%u", mSwapChainExtent.width, mSwapChainExtent.height);
@@ -545,8 +591,20 @@ void RendererVK::CreateSwapChain(VkPhysicalDevice inDevice)
 		swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	}
 	swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+#ifdef JPH_PLATFORM_ANDROID
+	// We don't rotate the image ourselves, let the compositor do it
+	swapchain_create_info.preTransform = (capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) != 0? VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR : capabilities.currentTransform;
+#else
 	swapchain_create_info.preTransform = capabilities.currentTransform;
+#endif
 	swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	for (VkCompositeAlphaFlagBitsKHR composite_alpha : { VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR, VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR, VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR })
+		if (capabilities.supportedCompositeAlpha & composite_alpha)
+		{
+			// Select the first supported mode (Android e.g. may not support opaque)
+			swapchain_create_info.compositeAlpha = composite_alpha;
+			break;
+		}
 	swapchain_create_info.presentMode = VK_PRESENT_MODE_FIFO_KHR;
 	swapchain_create_info.clipped = VK_TRUE;
 	FatalErrorIfFailed(mVkCreateSwapchainKHR(mDevice, &swapchain_create_info, nullptr, &mSwapChain));
@@ -657,6 +715,10 @@ void RendererVK::DestroySwapChain()
 
 void RendererVK::OnWindowResize()
 {
+	// If we don't have a surface, the swap chain will be created when the surface is created
+	if (mSurface == VK_NULL_HANDLE)
+		return;
+
 	mVkDeviceWaitIdle(mDevice);
 	DestroySwapChain();
 	CreateSwapChain(mPhysicalDevice);
@@ -725,7 +787,9 @@ bool RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	else if (result == VK_SUBOPTIMAL_KHR)
 	{
 		// Render this frame with the suboptimal swap chain as we've already acquired an image
+	#ifndef JPH_PLATFORM_ANDROID // On Android the swap chain is reported as suboptimal when the device is rotated as we don't rotate the image ourselves, we ignore this as recreating the swap chain won't fix it
 		mSubOptimalSwapChain = true;
+	#endif
 		result = VK_SUCCESS;
 	}
 	FatalErrorIfFailed(result);
@@ -778,7 +842,7 @@ bool RendererVK::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	mPixelShaderConstantBuffer[mFrameIndex]->Unmap();
 
 	// Set the view port and scissor rect to the shadow map size
-	UpdateViewPortAndScissorRect(cShadowMapSize, cShadowMapSize);
+	UpdateViewPortAndScissorRect(0, 0, cShadowMapSize, cShadowMapSize);
 
 	// Switch to 3d projection mode
 	SetProjectionMode();
@@ -807,8 +871,16 @@ void RendererVK::EndShadowPass()
 	render_pass_begin_info.pClearValues = clear_values;
 	mVkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
+#ifdef JPH_PLATFORM_ANDROID
+	// Only render to the part of the screen that is not obscured by display cutouts / system bars
+	const ApplicationWindowAndroid *window = static_cast<const ApplicationWindowAndroid *>(mWindow);
+	int32 x = min(window->GetSafeAreaX(), int(mSwapChainExtent.width) - 1);
+	int32 y = min(window->GetSafeAreaY(), int(mSwapChainExtent.height) - 1);
+	UpdateViewPortAndScissorRect(x, y, min(uint32(window->GetWindowWidth()), mSwapChainExtent.width - x), min(uint32(window->GetWindowHeight()), mSwapChainExtent.height - y));
+#else
 	// Set the view port and scissor rect to the screen size
-	UpdateViewPortAndScissorRect(mSwapChainExtent.width, mSwapChainExtent.height);
+	UpdateViewPortAndScissorRect(0, 0, mSwapChainExtent.width, mSwapChainExtent.height);
+#endif
 }
 
 void RendererVK::EndFrame()
@@ -1022,14 +1094,14 @@ void RendererVK::DestroyImage(VkImage inImage, MemoryVK &ioMemory)
 	FreeMemory(ioMemory);
 }
 
-void RendererVK::UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight)
+void RendererVK::UpdateViewPortAndScissorRect(int32 inX, int32 inY, uint32 inWidth, uint32 inHeight)
 {
 	VkCommandBuffer command_buffer = GetCommandBuffer();
 
 	// Update the view port rect
 	VkViewport viewport = {};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
+	viewport.x = (float)inX;
+	viewport.y = (float)inY;
 	viewport.width = (float)inWidth;
 	viewport.height = (float)inHeight;
 	viewport.minDepth = 0.0f;
@@ -1038,6 +1110,7 @@ void RendererVK::UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight)
 
 	// Update the scissor rect
 	VkRect2D scissor = {};
+	scissor.offset = { inX, inY };
 	scissor.extent = { inWidth, inHeight };
 	mVkCmdSetScissor(command_buffer, 0, 1, &scissor);
 }

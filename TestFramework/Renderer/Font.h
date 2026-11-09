@@ -28,7 +28,8 @@ public:
 								Font(Renderer *inRenderer);
 
 	/// Create a font
-	bool						Create(const char *inFontName, int inCharHeight);
+	/// Create the font, inCharHeight is the height of a character in (UI) pixels, inTexelScale can be used to rasterize the characters at a higher resolution (e.g. when the UI is scaled up)
+	bool						Create(const char *inFontName, int inCharHeight, float inTexelScale = 1.0f);
 
 	/// Properties
 	const String &				GetFontName() const									{ return mFontName; }
@@ -56,6 +57,7 @@ private:
 	/// Properties of the font
 	String						mFontName;											///< Name of the font
 	int							mCharHeight;										///< Height of a character
+	int							mTexelHeight;										///< Height of a character in the texture
 	int							mHorizontalTexels;									///< Number of texels horizontally, determines the scale of mStartU, mWidth and mSpacing
 	int							mVerticalTexels;									///< Number of texels vertically, determines the scale of mStartV
 	uint16						mStartU[cNumChars] = {};							///< Start U in texels

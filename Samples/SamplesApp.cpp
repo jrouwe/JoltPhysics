@@ -490,8 +490,8 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 	// Set shader loader
 	mComputeSystem = &mRenderer->GetComputeSystem();
 	mComputeSystem->mShaderLoader = [](const char *inName, Array<uint8> &outData, String &outError) {
-	#if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
-		// In macOS / iOS the shaders are copied to the bundle
+	#if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_ANDROID)
+		// In macOS / iOS the shaders are copied to the bundle, on Android they are packaged in the APK
 		String base_path = "Jolt/Shaders/";
 	#else
 		// On other platforms they are in the Jolt source folder

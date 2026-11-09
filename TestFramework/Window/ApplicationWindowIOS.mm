@@ -12,16 +12,43 @@
 
 ApplicationWindowIOS *ApplicationWindowIOS::sInstance = nullptr;
 
-// Resolution scale used to render. Using less than the native scale of the screen makes the UI elements bigger which makes them easier to touch.
-static constexpr CGFloat cMaxContentScale = 1.5;
-
 // Touch gesture tuning parameters (in points)
 static constexpr CGFloat cLookSensitivity = 0.5; // Mouse delta units per point that the finger moves
-static constexpr CGFloat cJoystickDeadZone = 20.0;
 static constexpr CGFloat cTapMaxMovement = 15.0;
 static constexpr NSTimeInterval cTapMaxDuration = 0.3;
 static constexpr NSTimeInterval cPressDelay = 0.1;
 static constexpr NSTimeInterval cLongPressDuration = 0.5;
+
+// Convert a UIKit key code to our own key code
+static EKey sToKey(UIKeyboardHIDUsage inKeyCode)
+{
+	if (inKeyCode >= UIKeyboardHIDUsageKeyboardA && inKeyCode <= UIKeyboardHIDUsageKeyboardZ)
+		return EKey(int(EKey::A) + int(inKeyCode - UIKeyboardHIDUsageKeyboardA));
+	if (inKeyCode >= UIKeyboardHIDUsageKeyboard1 && inKeyCode <= UIKeyboardHIDUsageKeyboard9)
+		return EKey(int(EKey::Num1) + int(inKeyCode - UIKeyboardHIDUsageKeyboard1));
+
+	switch (inKeyCode)
+	{
+	case UIKeyboardHIDUsageKeyboard0:				return EKey::Num0;
+	case UIKeyboardHIDUsageKeyboardSpacebar:		return EKey::Space;
+	case UIKeyboardHIDUsageKeyboardComma:			return EKey::Comma;
+	case UIKeyboardHIDUsageKeyboardPeriod:			return EKey::Period;
+	case UIKeyboardHIDUsageKeyboardEscape:			return EKey::Escape;
+	case UIKeyboardHIDUsageKeyboardLeftShift:		return EKey::LShift;
+	case UIKeyboardHIDUsageKeyboardRightShift:		return EKey::RShift;
+	case UIKeyboardHIDUsageKeyboardLeftControl:		return EKey::LControl;
+	case UIKeyboardHIDUsageKeyboardRightControl:	return EKey::RControl;
+	case UIKeyboardHIDUsageKeyboardLeftAlt:			return EKey::LAlt;
+	case UIKeyboardHIDUsageKeyboardRightAlt:		return EKey::RAlt;
+	case UIKeyboardHIDUsageKeyboardLeftArrow:		return EKey::Left;
+	case UIKeyboardHIDUsageKeyboardRightArrow:		return EKey::Right;
+	case UIKeyboardHIDUsageKeyboardUpArrow:			return EKey::Up;
+	case UIKeyboardHIDUsageKeyboardDownArrow:		return EKey::Down;
+	case UIKeyboardHIDUsageKeyboardReturnOrEnter:	return EKey::Return;
+	case UIKeyboardHIDUsageKeypadEnter:				return EKey::Return;
+	default:										return EKey::Unknown;
+	}
+}
 
 // Type of touch gesture that is in progress
 enum class EGesture
@@ -49,7 +76,6 @@ enum class EGesture
 	CGPoint				mGestureStartPos;
 	CGPoint				mLastPos;
 	CGPoint				mDeltaRemainder;	// Fractional part of the mouse delta that has not been sent yet
-	bool				mVirtualKeys[4];	// W, A, S, D
 	bool				mLongPress;			// If the Space key is held because of a long press
 }
 
@@ -61,8 +87,6 @@ enum class EGesture
 
 	mWindow = window;
 	mGesture = EGesture::None;
-	for (bool &k : mVirtualKeys)
-		k = false;
 	mLongPress = false;
 	mInDraw = false;
 
@@ -70,15 +94,6 @@ enum class EGesture
 	self.multipleTouchEnabled = YES;
 
 	return self;
-}
-
-- (void)didMoveToWindow
-{
-	[super didMoveToWindow];
-
-	// Determine the scale at which we render
-	if (self.window != nil)
-		self.contentScaleFactor = std::min(self.window.windowScene.screen.scale, cMaxContentScale);
 }
 
 - (void)drawInMTKView:(MTKView *)view
@@ -154,23 +169,6 @@ enum class EGesture
 	mWindow->OnMouseButton(MouseMacOS::EMouseButton::Left, true);
 }
 
-- (void)setVirtualKey:(int)index key:(EKey)key pressed:(bool)pressed
-{
-	if (mVirtualKeys[index] != pressed)
-	{
-		mVirtualKeys[index] = pressed;
-		mWindow->OnKey(key, pressed);
-	}
-}
-
-- (void)releaseVirtualKeys
-{
-	[self setVirtualKey: 0 key: EKey::W pressed: false];
-	[self setVirtualKey: 1 key: EKey::A pressed: false];
-	[self setVirtualKey: 2 key: EKey::S pressed: false];
-	[self setVirtualKey: 3 key: EKey::D pressed: false];
-}
-
 - (void)tapKey:(EKey)key
 {
 	mWindow->OnKey(key, true);
@@ -204,7 +202,7 @@ enum class EGesture
 	}
 	else if (active.count > 1)
 	{
-		// Multiple fingers: Cancel the mouse press and use the center of the fingers as virtual joystick
+		// Multiple fingers: Cancel the mouse press and use the center of the fingers to pan the camera
 		if (mGesture == EGesture::OneFinger)
 		{
 			if (!mPressPending)
@@ -221,8 +219,7 @@ enum class EGesture
 			}
 		}
 		mGesture = EGesture::MultiFinger;
-		mGestureStartPos = [self centroid: active];
-		[self releaseVirtualKeys];
+		mGestureStartPos = mLastPos = [self centroid: active];
 	}
 }
 
@@ -257,16 +254,12 @@ enum class EGesture
 
 	case EGesture::MultiFinger:
 		{
-			// Virtual joystick
+			// Pan the camera by the distance that the center of the fingers moved
 			CGPoint pos = [self centroid: active];
-			CGFloat dx = pos.x - mGestureStartPos.x;
-			CGFloat dy = pos.y - mGestureStartPos.y;
-			if (hypot(dx, dy) > cTapMaxMovement)
+			if (hypot(pos.x - mGestureStartPos.x, pos.y - mGestureStartPos.y) > cTapMaxMovement)
 				mGestureMoved = true;
-			[self setVirtualKey: 0 key: EKey::W pressed: dy < -cJoystickDeadZone];
-			[self setVirtualKey: 1 key: EKey::A pressed: dx < -cJoystickDeadZone];
-			[self setVirtualKey: 2 key: EKey::S pressed: dy > cJoystickDeadZone];
-			[self setVirtualKey: 3 key: EKey::D pressed: dx > cJoystickDeadZone];
+			mWindow->OnPan(float(pos.x - mLastPos.x), float(pos.y - mLastPos.y));
+			mLastPos = pos;
 		}
 		break;
 
@@ -302,8 +295,6 @@ enum class EGesture
 	case EGesture::MultiFinger:
 		if (active.count == 0)
 		{
-			[self releaseVirtualKeys];
-
 			// A two finger tap presses Escape
 			if (!cancelled && !mGestureMoved && mGestureMaxTouches == 2 && event.timestamp - mGestureStartTime < cTapMaxDuration)
 				[self tapKey: EKey::Escape];
@@ -312,9 +303,8 @@ enum class EGesture
 		}
 		else
 		{
-			// Number of fingers changed, recenter the joystick
-			mGestureStartPos = [self centroid: active];
-			[self releaseVirtualKeys];
+			// Number of fingers changed, the center of the fingers jumps so start panning from the new center
+			mGestureStartPos = mLastPos = [self centroid: active];
 		}
 		break;
 
@@ -331,6 +321,56 @@ enum class EGesture
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
 	[self endTouches: event cancelled: true];
+}
+
+// Receive key presses from a hardware keyboard (this also works for the Mac keyboard in the simulator)
+- (BOOL)canBecomeFirstResponder
+{
+	return YES;
+}
+
+- (void)didMoveToWindow
+{
+	[super didMoveToWindow];
+
+	if (self.window != nil)
+		[self becomeFirstResponder];
+}
+
+// Report key presses / releases to the window, returns the presses that were not handled
+- (NSSet<UIPress *> *)handlePresses:(NSSet<UIPress *> *)presses pressed:(bool)pressed
+{
+	NSMutableSet<UIPress *> *unhandled = [NSMutableSet set];
+	for (UIPress *press in presses)
+	{
+		EKey key = press.key != nil? sToKey(press.key.keyCode) : EKey::Unknown;
+		if (key != EKey::Unknown)
+			mWindow->OnKey(key, pressed);
+		else
+			[unhandled addObject: press];
+	}
+	return unhandled;
+}
+
+- (void)pressesBegan:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
+{
+	NSSet<UIPress *> *unhandled = [self handlePresses: presses pressed: true];
+	if (unhandled.count > 0)
+		[super pressesBegan: unhandled withEvent: event];
+}
+
+- (void)pressesEnded:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
+{
+	NSSet<UIPress *> *unhandled = [self handlePresses: presses pressed: false];
+	if (unhandled.count > 0)
+		[super pressesEnded: unhandled withEvent: event];
+}
+
+- (void)pressesCancelled:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
+{
+	NSSet<UIPress *> *unhandled = [self handlePresses: presses pressed: false];
+	if (unhandled.count > 0)
+		[super pressesCancelled: unhandled withEvent: event];
 }
 
 @end
@@ -430,7 +470,7 @@ void ApplicationWindowIOS::Initialize(const char *inTitle)
 	SetMetalView(view);
 
 	// Listen for hardware keyboards
-	ListenForKeyboards();
+	// Note that we don't call ListenForKeyboards as keys are received through UIKit (pressesBegan / pressesEnded) which also works in the simulator
 }
 
 void ApplicationWindowIOS::MainLoop(ApplicationWindow::RenderCallback inRenderCallback)

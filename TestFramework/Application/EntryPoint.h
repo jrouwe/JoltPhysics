@@ -48,6 +48,34 @@ int __cdecl main(int inArgC, char **inArgV)																	\
 	return 0;																								\
 }
 
+#elif defined(JPH_PLATFORM_ANDROID)
+
+#include <Window/ApplicationWindowAndroid.h>
+#include <Utils/AssetStream.h>
+#include <android_native_app_glue.h>
+
+#define ENTRY_POINT(AppName, RegisterAllocator)																\
+																											\
+void android_main(struct android_app *ioApp)																\
+{																											\
+	if (!ApplicationWindowAndroid::sAcquireApp(ioApp))														\
+		return;																								\
+																											\
+	RegisterAllocator();																					\
+	AssetStream::sSetAssetManager(ioApp->activity->assetManager);											\
+																											\
+	JPH_PROFILE_START("Main");																				\
+																											\
+	{																										\
+		AppName app(ApplicationWindowAndroid::sGetCommandLine());											\
+		app.Run();																							\
+	}																										\
+																											\
+	JPH_PROFILE_END();																						\
+																											\
+	ApplicationWindowAndroid::sReleaseApp(ioApp);															\
+}
+
 #else
 
 #define ENTRY_POINT(AppName, RegisterAllocator)																\

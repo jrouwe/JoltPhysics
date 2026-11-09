@@ -34,9 +34,11 @@ public:
 	using MouseMovedCallback = function<void(int, int)>;					///< Absolute position in window coordinates (in pixels)
 	using MouseDeltaCallback = function<void(int, int)>;					///< Relative movement (also works when the mouse is at the edge of the screen)
 	using MouseButtonCallback = function<void(MouseMacOS::EMouseButton, bool)>;			///< Button pressed / released
+	using PanCallback = function<void(float, float)>;						///< Two finger drag on a touch screen (in points)
 	void							SetMouseMovedCallback(MouseMovedCallback inCallback) { mMouseMovedCallback = inCallback; }
 	void							SetMouseDeltaCallback(MouseDeltaCallback inCallback) { mMouseDeltaCallback = inCallback; }
 	void							SetMouseButtonCallback(MouseButtonCallback inCallback) { mMouseButtonCallback = inCallback; }
+	void							SetPanCallback(PanCallback inCallback)	{ mPanCallback = inCallback; }
 
 	/// Subscribe to key callbacks
 	using KeyCallback = function<void(EKey, bool)>;							///< Key pressed / released
@@ -46,6 +48,7 @@ public:
 	void							OnMouseMoved(int inX, int inY)			{ if (mMouseMovedCallback) mMouseMovedCallback(inX, inY); }
 	void							OnMouseDelta(int inDX, int inDY)		{ if (mMouseDeltaCallback) mMouseDeltaCallback(inDX, inDY); }
 	void							OnMouseButton(MouseMacOS::EMouseButton inButton, bool inPressed) { if (mMouseButtonCallback) mMouseButtonCallback(inButton, inPressed); }
+	void							OnPan(float inDX, float inDY)			{ if (mPanCallback) mPanCallback(inDX, inDY); }
 	void							OnKey(EKey inKey, bool inPressed)		{ if (mKeyCallback) mKeyCallback(inKey, inPressed); }
 
 protected:
@@ -60,6 +63,7 @@ protected:
 	MouseMovedCallback				mMouseMovedCallback;
 	MouseDeltaCallback				mMouseDeltaCallback;
 	MouseButtonCallback				mMouseButtonCallback;
+	PanCallback						mPanCallback;
 	KeyCallback						mKeyCallback;
 
 private:
