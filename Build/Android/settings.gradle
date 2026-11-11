@@ -8,4 +8,21 @@ dependencyResolutionManagement {
 rootProject.name = "Jolt Physics"
 include ':UnitTests'
 include ':PerformanceTest'
-include ':Samples'
+
+// The Samples need the Vulkan SDK (glslc and dxc) to compile their shaders, so only include them when it is installed.
+// This uses the same search locations as CMake's FindVulkan: $VULKAN_SDK/Bin and the PATH.
+def isVulkanSDKAvailable() {
+    def exe = System.getProperty('os.name').toLowerCase().contains('windows')? '.exe' : ''
+    def dirs = []
+    def sdk = System.getenv('VULKAN_SDK')
+    if (sdk)
+        dirs += [new File(sdk, 'Bin'), new File(sdk, 'bin')]
+    def path = System.getenv('PATH')
+    if (path)
+        dirs += path.split(File.pathSeparator).collect { new File(it) }
+    return dirs.any { new File(it, "glslc${exe}").isFile() && new File(it, "dxc${exe}").isFile() }
+}
+if (isVulkanSDKAvailable())
+    include ':Samples'
+else
+    logger.warn("Vulkan SDK not found (glslc/dxc), skipping Samples. Install the Vulkan SDK to build them.")

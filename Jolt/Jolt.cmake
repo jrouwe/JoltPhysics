@@ -719,7 +719,13 @@ endif()
 # Vulkan support
 if (JPH_USE_VK)
 	find_package(Vulkan)
-	if (Vulkan_FOUND)
+	if (Vulkan_FOUND AND (NOT Vulkan_GLSLC_EXECUTABLE OR NOT EXISTS "${Vulkan_GLSLC_EXECUTABLE}"))
+		# E.g. when cross compiling, the Vulkan headers/library may be found while the shader compilers are not.
+		# The path may also be stale in the CMake cache (e.g. when the Vulkan SDK was uninstalled), so remove it from the cache to search again on the next configure.
+		MESSAGE("Vulkan found but application 'glslc' not found. Can't compile shaders, disabling Vulkan support. You can install it by installing the Vulkan SDK.")
+		unset(Vulkan_GLSLC_EXECUTABLE CACHE)
+		set(JPH_USE_VK OFF)
+	elseif (Vulkan_FOUND)
 		# Vulkan source files
 		set(JOLT_PHYSICS_SRC_FILES
 			${JOLT_PHYSICS_SRC_FILES}
