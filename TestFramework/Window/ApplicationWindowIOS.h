@@ -11,8 +11,10 @@
 /// Touch input is translated into mouse and keyboard input:
 /// - One finger: Moves the mouse cursor and holds the left mouse button (rotates the camera / interacts with the menu)
 /// - One finger long press: Holds Space (drags the object under the cursor)
-/// - Two finger drag: Acts as a virtual joystick that presses W, A, S, D (moves the camera)
+/// - Two finger drag: Moves the camera, the scene follows the fingers (reported through Mouse::GetPanDX / GetPanDY)
 /// - Two finger tap: Presses Escape (toggles the menu / goes back one menu level)
+///
+/// A hardware keyboard (or the Mac keyboard in the simulator) works as on the desktop.
 class ApplicationWindowIOS : public ApplicationWindowApple
 {
 public:

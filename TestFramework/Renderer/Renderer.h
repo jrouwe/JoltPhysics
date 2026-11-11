@@ -85,6 +85,14 @@ public:
 	/// Get the window we're rendering to
 	ApplicationWindow *				GetWindow() const					{ return mWindow; }
 
+	/// Scale factor for the UI. All 2D (ortho mode) rendering is done in UI coordinates, which are window pixels divided by this scale.
+	void							SetUIScale(float inScale)			{ JPH_ASSERT(inScale > 0.0f); mUIScale = inScale; }
+	float							GetUIScale() const					{ return mUIScale; }
+
+	/// Size of the window in UI coordinates
+	int								GetUIWidth() const					{ return int(float(mWindow->GetWindowWidth()) / mUIScale); }
+	int								GetUIHeight() const					{ return int(float(mWindow->GetWindowHeight()) / mUIScale); }
+
 	/// Callback when the window resizes and the back buffer needs to be adjusted
 	virtual void					OnWindowResize() = 0;
 
@@ -108,6 +116,7 @@ protected:
 
 	ApplicationWindow *				mWindow = nullptr;					///< The window we're rendering to
 	float							mPerspectiveYSign = 1.0f;			///< Sign for the Y coordinate in the projection matrix (1 for DX, -1 for Vulkan)
+	float							mUIScale = 1.0f;					///< Scale factor for the UI
 	bool							mInFrame = false;					///< If we're within a BeginFrame() / EndFrame() pair
 	CameraState						mCameraState;
 	RVec3							mBaseOffset { RVec3::sZero() };		///< Offset to subtract from the camera position to deal with large worlds

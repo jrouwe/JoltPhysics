@@ -30,6 +30,10 @@
 	#include <Input/MacOS/KeyboardMacOS.h>
 	#include <Input/MacOS/MouseMacOS.h>
 	#include <Window/ApplicationWindowIOS.h>
+#elif defined(JPH_PLATFORM_ANDROID)
+	#include <Input/Android/KeyboardAndroid.h>
+	#include <Input/Android/MouseAndroid.h>
+	#include <Window/ApplicationWindowAndroid.h>
 #endif
 
 #ifdef JPH_USE_VK
@@ -37,6 +41,16 @@ extern Renderer *CreateRendererVK();
 #endif
 
 JPH_GCC_SUPPRESS_WARNING("-Wswitch")
+
+// Default scale factor for the UI, can be overridden with the -uiscale=<scale> command line option
+#if defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_ANDROID)
+	static constexpr float cDefaultUIScale = 3.0f; // Scale up the UI on mobile devices so that it is easier to touch
+#else
+	static constexpr float cDefaultUIScale = 1.0f;
+#endif
+
+// Distance that the camera moves per point / density independent pixel that two fingers are dragged over a touch screen (before applying the world scale)
+static constexpr float cTouchPanDistance = 0.05f;
 
 // Constructor
 Application::Application(const char *inApplicationName, [[maybe_unused]] const String &inCommandLine) :
@@ -87,6 +101,8 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 		mWindow = new ApplicationWindowMacOS;
 	#elif defined(JPH_PLATFORM_IOS)
 		mWindow = new ApplicationWindowIOS;
+	#elif defined(JPH_PLATFORM_ANDROID)
+		mWindow = new ApplicationWindowAndroid;
 	#else
 		#error No window defined
 	#endif
@@ -101,9 +117,16 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 			mRenderer = Renderer::sCreate();
 		mRenderer->Initialize(mWindow);
 
-		// Create font
+		// Set the UI scale
+		float ui_scale = cDefaultUIScale;
+		for (const String &arg : args)
+			if (strncmp(arg.c_str(), "-uiscale=", 9) == 0)
+				ui_scale = max(0.1f, float(atof(arg.c_str() + 9)));
+		mRenderer->SetUIScale(ui_scale);
+
+		// Create font (rasterize it at the resolution at which it will be displayed)
 		Font *font = new Font(mRenderer);
-		font->Create("Roboto-Regular", 24);
+		font->Create("Roboto-Regular", 24, ui_scale);
 		mFont = font;
 
 		// Init debug renderer
@@ -116,6 +139,8 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 		mKeyboard = new KeyboardLinux;
 	#elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 		mKeyboard = new KeyboardMacOS;
+	#elif defined(JPH_PLATFORM_ANDROID)
+		mKeyboard = new KeyboardAndroid;
 	#else
 		#error No keyboard defined
 	#endif
@@ -128,6 +153,8 @@ Application::Application(const char *inApplicationName, [[maybe_unused]] const S
 		mMouse = new MouseLinux;
 	#elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 		mMouse = new MouseMacOS;
+	#elif defined(JPH_PLATFORM_ANDROID)
+		mMouse = new MouseAndroid;
 	#else
 		#error No mouse defined
 	#endif
@@ -308,14 +335,17 @@ bool Application::RenderFrame()
 
 	if (mUI->IsVisible())
 	{
-		// Send mouse input to UI
+		// Send mouse input to UI (convert from window pixels to UI coordinates)
+		float ui_scale = mRenderer->GetUIScale();
+		int mouse_x = int(float(mMouse->GetX()) / ui_scale);
+		int mouse_y = int(float(mMouse->GetY()) / ui_scale);
 		bool left_pressed = mMouse->IsLeftPressed();
 		if (left_pressed && !mLeftMousePressed)
-			mUI->MouseDown(mMouse->GetX(), mMouse->GetY());
+			mUI->MouseDown(mouse_x, mouse_y);
 		else if (!left_pressed && mLeftMousePressed)
-			mUI->MouseUp(mMouse->GetX(), mMouse->GetY());
+			mUI->MouseUp(mouse_x, mouse_y);
 		mLeftMousePressed = left_pressed;
-		mUI->MouseMove(mMouse->GetX(), mMouse->GetY());
+		mUI->MouseMove(mouse_x, mouse_y);
 
 		{
 			// Disable allocation checking
@@ -390,6 +420,10 @@ void Application::UpdateCamera(float inDeltaTime)
 	if (mKeyboard->IsKeyPressed(EKey::W))	mLocalCamera.mPos += speed * mLocalCamera.mForward;
 	if (mKeyboard->IsKeyPressed(EKey::S))	mLocalCamera.mPos -= speed * mLocalCamera.mForward;
 
+	// Two finger drag on a touch screen: The scene follows the fingers (dragging down pulls the scene towards you so moves forward, dragging right moves left)
+	float pan_scale = cTouchPanDistance * GetWorldScale();
+	mLocalCamera.mPos += pan_scale * (mMouse->GetPanDY() * mLocalCamera.mForward - mMouse->GetPanDX() * right);
+
 	// Forward
 	float heading, pitch;
 	GetCameraLocalHeadingAndPitch(heading, pitch);
@@ -431,7 +465,7 @@ void Application::DrawFPS(float inDeltaTime)
 	int text_h = int(text_size.y * mFont->GetCharHeight());
 
 	// Draw FPS counter
-	int x = (mWindow->GetWindowWidth() - text_w) / 2 - 20;
+	int x = (mRenderer->GetUIWidth() - text_w) / 2 - 20;
 	int y = 10;
 	mUI->DrawQuad(x - 5, y - 3, text_w + 10, text_h + 6, UITexturedQuad(), Color(0, 0, 0, 128));
 	mUI->DrawText(x, y, fps, mFont);
@@ -445,7 +479,7 @@ void Application::DrawFPS(float inDeltaTime)
 	{
 		string_view paused_str = "P: Unpause, ESC: Menu";
 		Float2 pause_size = mFont->MeasureText(paused_str);
-		mUI->DrawText(mWindow->GetWindowWidth() - 5 - int(pause_size.x * mFont->GetCharHeight()), 5, paused_str, mFont);
+		mUI->DrawText(mRenderer->GetUIWidth() - 5 - int(pause_size.x * mFont->GetCharHeight()), 5, paused_str, mFont);
 	}
 
 	// Restore state

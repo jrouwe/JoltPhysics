@@ -14,6 +14,7 @@ bool MouseMacOS::Initialize(ApplicationWindow *inWindow)
 	// Install listeners for mouse callbacks
 	mWindow->SetMouseMovedCallback([this](int inX, int inY) { mX = inX; mY = inY; });
 	mWindow->SetMouseDeltaCallback([this](int inDX, int inDY) { mDeltaXAcc += inDX; mDeltaYAcc += inDY; });
+	mWindow->SetPanCallback([this](float inDX, float inDY) { mPanXAcc += inDX; mPanYAcc += inDY; });
 	mWindow->SetMouseButtonCallback([this](EMouseButton inButton, bool inPressed) {
 		int index = int(inButton);
 		mButtonDown[index] = inPressed;
@@ -29,6 +30,7 @@ void MouseMacOS::Shutdown()
 	{
 		mWindow->SetMouseMovedCallback({});
 		mWindow->SetMouseDeltaCallback({});
+		mWindow->SetPanCallback({});
 		mWindow->SetMouseButtonCallback({});
 		mWindow = nullptr;
 	}
@@ -41,6 +43,11 @@ void MouseMacOS::Poll()
 
 	mDeltaXAcc = 0;
 	mDeltaYAcc = 0;
+
+	mPanX = mPanXAcc;
+	mPanY = mPanYAcc;
+	mPanXAcc = 0.0f;
+	mPanYAcc = 0.0f;
 
 	// A button counts as pressed if it is currently pressed or if it was pressed since the last poll
 	for (int i = 0; i < cNumButtons; ++i)

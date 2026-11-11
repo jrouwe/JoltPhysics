@@ -52,6 +52,10 @@ uint32 ComputeSystemVKWithAllocator::FindMemoryType(uint32 inTypeFilter, VkMemor
 			&& (mMemoryProperties.memoryTypes[i].propertyFlags & inProperties) == inProperties)
 			return i;
 
+	// Host cached is a performance hint, some GPUs (e.g. Mali) don't have memory that is both host coherent and host cached, so try again without it
+	if (inProperties & VK_MEMORY_PROPERTY_HOST_CACHED_BIT)
+		return FindMemoryType(inTypeFilter, inProperties & ~VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+
 	JPH_ASSERT(false, "Failed to find memory type!");
 	return 0;
 }

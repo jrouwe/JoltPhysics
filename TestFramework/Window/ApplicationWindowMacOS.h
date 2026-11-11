@@ -20,6 +20,7 @@ public:
 	virtual void					MainLoop(ApplicationWindow::RenderCallback inRenderCallback) override;
 
 private:
+	void *							mKeyboardConnectObserver = nullptr;		///< Observer for GCKeyboardDidConnectNotification
 	void *							mMouseConnectObserver = nullptr;		///< Observer for GCMouseDidConnectNotification
 	void *							mKeyDownMonitor = nullptr;				///< Monitor that swallows key down events
 };

@@ -8,12 +8,21 @@
 
 #import <Foundation/Foundation.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <filesystem>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 String AssetStream::sGetAssetsBasePath()
 {
 	NSBundle *bundle = [NSBundle mainBundle];
 	String path = [[[bundle resourceURL] path] cStringUsingEncoding: NSUTF8StringEncoding];
 	path += "/";
 	return path;
+}
+
+bool AssetStream::sExists(const String &inFileName)
+{
+	return std::filesystem::exists(sGetAssetsBasePath() + inFileName);
 }
 
 AssetStream::AssetStream(const char *inFileName, std::ios_base::openmode inOpenMode) :

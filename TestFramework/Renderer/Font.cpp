@@ -27,13 +27,14 @@ Font::Font(Renderer *inRenderer) :
 {
 }
 
-bool Font::Create(const char *inFontName, int inCharHeight)
+bool Font::Create(const char *inFontName, int inCharHeight, float inTexelScale)
 {
 	JPH_PROFILE("Create");
 
 	// Initialize
 	mFontName = inFontName;
 	mCharHeight = inCharHeight;
+	mTexelHeight = max(1, int(inCharHeight * inTexelScale + 0.5f));
 	mHorizontalTexels = 64;
 	mVerticalTexels = 64;
 
@@ -49,7 +50,7 @@ bool Font::Create(const char *inFontName, int inCharHeight)
 		return false;
 
 	// Get the base line for the font
-	float scale = stbtt_ScaleForPixelHeight(&font, float(mCharHeight));
+	float scale = stbtt_ScaleForPixelHeight(&font, float(mTexelHeight));
 	int ascent;
 	stbtt_GetFontVMetrics(&font, &ascent, nullptr, nullptr);
 	int baseline = int(ascent * scale);
@@ -73,15 +74,18 @@ try_again:;
 		JPH_SCOPE_EXIT([bitmap]{ STBTT_free(bitmap, nullptr); });
 		yoff = baseline + yoff;
 
+		// Make room for the left side bearing so that characters don't overlap in the texture (a negative bearing is ignored)
+		xoff = max(xoff, 0);
+
 		// Check if there is room on this line
 		if (int(x + xoff + w + cSpacingH) > mHorizontalTexels)
 		{
 			// Next line
 			x = 0;
-			y += mCharHeight + cSpacingV;
+			y += mTexelHeight + cSpacingV;
 
 			// Check if character fits
-			if (y + mCharHeight + cSpacingV > mVerticalTexels)
+			if (y + mTexelHeight + cSpacingV > mVerticalTexels)
 			{
 				// Character doesn't fit, enlarge surface
 				if (mHorizontalTexels < 2 * mVerticalTexels)
@@ -103,10 +107,10 @@ try_again:;
 		// Get location of character in font surface
 		JPH_ASSERT(x >= 0 && x <= 0xffff);
 		JPH_ASSERT(y >= 0 && y <= 0xffff);
-		JPH_ASSERT(w <= 0xff);
+		JPH_ASSERT(xoff + w < 0xff);
 		mStartU[idx] = uint16(x);
 		mStartV[idx] = uint16(y);
-		mWidth[idx] = uint8(w + 1);
+		mWidth[idx] = uint8(xoff + w + 1);
 
 		// Copy the character data
 		for (int y2 = 0; y2 < h; ++y2)
@@ -117,7 +121,7 @@ try_again:;
 		}
 
 		// Go to the next character
-		x += w + cSpacingH;
+		x += xoff + w + cSpacingH;
 	}
 
 	// Calculate spacing between characters
@@ -156,7 +160,7 @@ try_again:;
 	mTexture = mRenderer->CreateTexture(surface);
 
 	// Trace success
-	Trace("Created font \"%s\" with height %d in a %dx%d surface", mFontName.c_str(), mCharHeight, mHorizontalTexels, mVerticalTexels);
+	Trace("Created font \"%s\" with height %d (%d texels) in a %dx%d surface", mFontName.c_str(), mCharHeight, mTexelHeight, mHorizontalTexels, mVerticalTexels);
 
 	return true;
 }
@@ -182,7 +186,7 @@ Float2 Font::MeasureText(const string_view &inText) const
 		{
 			// Update extents
 			int c1 = ch - cBeginChar;
-			extents.x = max(extents.x, x + float(mWidth[c1]) / mCharHeight);
+			extents.x = max(extents.x, x + float(mWidth[c1]) / mTexelHeight);
 		}
 
 		// Go to next (x, y) location
@@ -199,7 +203,7 @@ Float2 Font::MeasureText(const string_view &inText) const
 			int c2 = inText[i + 1] - cBeginChar;
 
 			if (c1 >= 0 && c1 < cNumChars && c2 >= 0 && c2 < cNumChars)
-				x += float(mSpacing[c1][c2]) / mCharHeight;
+				x += float(mSpacing[c1][c2]) / mTexelHeight;
 		}
 	}
 
@@ -275,8 +279,8 @@ bool Font::CreateString(Mat44Arg inTransform, const string_view &inText, ColorAr
 
 			// Get properties of this character
 			Float2 uv_start(texel_to_u * mStartU[c1], texel_to_v * mStartV[c1]);
-			Float2 uv_end(texel_to_u * (mStartU[c1] + mWidth[c1]), texel_to_v * (mStartV[c1] + mCharHeight));
-			Float2 xy_end(x + float(mWidth[c1]) / mCharHeight, y + 1.0f);
+			Float2 uv_end(texel_to_u * (mStartU[c1] + mWidth[c1]), texel_to_v * (mStartV[c1] + mTexelHeight));
+			Float2 xy_end(x + float(mWidth[c1]) / mTexelHeight, y + 1.0f);
 
 			// Create vertices
 			(inTransform * Vec3(x, y, 0)).StoreFloat3(&font_vtx->mPosition);
@@ -314,7 +318,7 @@ bool Font::CreateString(Mat44Arg inTransform, const string_view &inText, ColorAr
 			int c2 = inText[i + 1] - cBeginChar;
 
 			if (c1 >= 0 && c1 < cNumChars && c2 >= 0 && c2 < cNumChars)
-				x += float(mSpacing[c1][c2]) / mCharHeight;
+				x += float(mSpacing[c1][c2]) / mTexelHeight;
 		}
 	}
 

@@ -36,6 +36,9 @@ public:
 	virtual bool					IsRightPressed() const override		{ return mButtonPressed[int(EMouseButton::Right)]; }
 	virtual bool					IsMiddlePressed() const override	{ return mButtonPressed[int(EMouseButton::Middle)]; }
 
+	virtual float					GetPanDX() const override			{ return mPanX; }
+	virtual float					GetPanDY() const override			{ return mPanY; }
+
 	virtual void					HideCursor() override				{ }
 	virtual void					ShowCursor() override				{ }
 
@@ -50,6 +53,11 @@ private:
 	int								mDeltaY = 0;
 	int								mDeltaXAcc = 0;
 	int								mDeltaYAcc = 0;
+
+	float							mPanX = 0.0f;
+	float							mPanY = 0.0f;
+	float							mPanXAcc = 0.0f;
+	float							mPanYAcc = 0.0f;
 
 	bool							mButtonPressed[cNumButtons] = { };
 	bool							mButtonDown[cNumButtons] = { };				///< Current state of the buttons

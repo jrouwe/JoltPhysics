@@ -49,6 +49,7 @@ public:
 	void							DestroyImage(VkImage inImage, MemoryVK &ioMemory);
 	VkImageView						CreateImageView(VkImage inImage, VkFormat inFormat, VkImageAspectFlags inAspectFlags);
 	VkFormat						FindDepthFormat();
+	bool							SupportsWireframe() const										{ return mSupportsWireframe; }
 	void							FreeBufferDelayed(const BufferVK &inBuffer)						{ mPerFrameFreedBuffers[mFrameIndex].push_back(inBuffer); }
 
 	// Vulkan instance function pointers
@@ -102,13 +103,15 @@ protected:
 	virtual VkSurfaceFormatKHR		SelectFormat(VkPhysicalDevice inDevice) override;
 
 private:
+	void							CreateSurface();
 	void							CreateSwapChain(VkPhysicalDevice inDevice);
 	void							DestroySwapChain();
-	void							UpdateViewPortAndScissorRect(uint32 inWidth, uint32 inHeight);
+	void							UpdateViewPortAndScissorRect(int32 inX, int32 inY, uint32 inWidth, uint32 inHeight);
 	VkSemaphore						AllocateSemaphore();
 	void							FreeSemaphore(VkSemaphore inSemaphore);
 
 	VkSurfaceKHR					mSurface = VK_NULL_HANDLE;
+	bool							mSupportsWireframe = false;										///< If the device supports fillModeNonSolid
 	VkSwapchainKHR					mSwapChain = VK_NULL_HANDLE;
 	bool							mSubOptimalSwapChain = false;
 	Array<VkImage>					mSwapChainImages;

@@ -21,10 +21,6 @@
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <filesystem>
-JPH_SUPPRESS_WARNINGS_STD_END
-
 JPH_IMPLEMENT_RTTI_VIRTUAL(HairTest)
 {
 	JPH_ADD_BASE_CLASS(HairTest, Test)
@@ -45,10 +41,9 @@ void HairTest::Initialize()
 {
 	// Check groom file exists
 	String groom_file = "w" + String(sSelectedGroom->mName) + ".hair";
-	String full_path = AssetStream::sGetAssetsBasePath() + groom_file;
-	if (!std::filesystem::exists(full_path))
+	if (!AssetStream::sExists(groom_file))
 		FatalError("File %s not found.\n\n"
-			"wCurly.hair, wStraight.hair and wWavy.hair should be downloaded from https://www.cemyuksel.com/research/hairmodels/ (or by running Assets/download_hair.sh)", full_path.c_str());
+			"wCurly.hair, wStraight.hair and wWavy.hair should be downloaded from https://www.cemyuksel.com/research/hairmodels/ (or by running Assets/download_hair.sh)", (AssetStream::sGetAssetsBasePath() + groom_file).c_str());
 
 	// Read face mesh and animation
 	AssetStream asset_stream("face.bin", std::ios::in | std::ios::binary);

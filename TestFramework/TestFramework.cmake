@@ -160,6 +160,21 @@ if (NOT CROSS_COMPILE_ARM AND (JPH_USE_VK OR JPH_USE_DX12 OR JPH_USE_MTL))
 		)
 	endif()
 
+	if (ANDROID)
+		# Android source files
+		set(TEST_FRAMEWORK_SRC_FILES
+			${TEST_FRAMEWORK_SRC_FILES}
+			${TEST_FRAMEWORK_ROOT}/Input/Android/KeyboardAndroid.cpp
+			${TEST_FRAMEWORK_ROOT}/Input/Android/KeyboardAndroid.h
+			${TEST_FRAMEWORK_ROOT}/Input/Android/MouseAndroid.cpp
+			${TEST_FRAMEWORK_ROOT}/Input/Android/MouseAndroid.h
+			${TEST_FRAMEWORK_ROOT}/Utils/AssetStream.cpp
+			${TEST_FRAMEWORK_ROOT}/Utils/Log.cpp
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowAndroid.cpp
+			${TEST_FRAMEWORK_ROOT}/Window/ApplicationWindowAndroid.h
+		)
+	endif()
+
 	if (APPLE)
 		# macOS / iOS source files
 		set(TEST_FRAMEWORK_SRC_FILES
@@ -327,6 +342,10 @@ if (NOT CROSS_COMPILE_ARM AND (JPH_USE_VK OR JPH_USE_DX12 OR JPH_USE_MTL))
 	if (LINUX)
 		# Linux configuration
 		target_link_libraries(TestFramework LINK_PUBLIC Jolt X11)
+	endif()
+	if (ANDROID)
+		# Android configuration (the native app glue is expected to be in the include path)
+		target_link_libraries(TestFramework LINK_PUBLIC Jolt android log)
 	endif()
 	if (APPLE)
 		if (IOS)

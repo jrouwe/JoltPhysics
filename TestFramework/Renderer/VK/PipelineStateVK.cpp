@@ -93,7 +93,7 @@ PipelineStateVK::PipelineStateVK(RendererVK *inRenderer, const VertexShaderVK *i
 	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	rasterizer.depthClampEnable = VK_FALSE;
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
-	rasterizer.polygonMode = inFillMode == EFillMode::Solid? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
+	rasterizer.polygonMode = inFillMode == EFillMode::Wireframe && inRenderer->SupportsWireframe()? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
 	rasterizer.cullMode = inCullMode == ECullMode::Backface? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
