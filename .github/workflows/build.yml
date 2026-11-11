@@ -403,9 +403,13 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+    - name: Install Vulkan
+      run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
     - name: Gradle Build
       working-directory: ${{github.workspace}}/Build/Android
-      run: ./gradlew build --no-daemon
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        ./gradlew build --no-daemon
 
   ios:
     runs-on: macos-latest
