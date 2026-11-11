@@ -55,9 +55,6 @@ protected:
 	/// Take ownership of the metal view and configure it
 	void							SetMetalView(MTKView *inView);
 
-	/// Start listening for (hardware) keyboards, key presses will be reported through OnKey
-	void							ListenForKeyboards();
-
 	MTKView *						mMetalView = nullptr;
 	ApplicationWindow::RenderCallback mRenderCallback;
 	MouseMovedCallback				mMouseMovedCallback;
@@ -65,7 +62,4 @@ protected:
 	MouseButtonCallback				mMouseButtonCallback;
 	PanCallback						mPanCallback;
 	KeyCallback						mKeyCallback;
-
-private:
-	void *							mKeyboardConnectObserver = nullptr;		///< Observer for GCKeyboardDidConnectNotification
 };

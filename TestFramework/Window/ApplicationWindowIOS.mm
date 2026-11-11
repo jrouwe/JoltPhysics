@@ -467,10 +467,7 @@ void ApplicationWindowIOS::Initialize(const char *inTitle)
 
 	// Create metal view (it will be attached to a window when the application starts)
 	MetalView *view = [[MetalView alloc] init: this];
-	SetMetalView(view);
-
-	// Listen for hardware keyboards
-	// Note that we don't call ListenForKeyboards as keys are received through UIKit (pressesBegan / pressesEnded) which also works in the simulator
+	SetMetalView(view);	
 }
 
 void ApplicationWindowIOS::MainLoop(ApplicationWindow::RenderCallback inRenderCallback)
