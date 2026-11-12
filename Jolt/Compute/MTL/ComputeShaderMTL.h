@@ -29,9 +29,13 @@ public:
 	/// Get index of buffer name
 	uint						NameToBindingIndex(const char *inName) const;
 
+	/// Get all buffer binding indices used by this shader
+	const Array<uint> &			GetBufferBindingIndices() const					{ return mBufferBindingIndices; }
+
 private:
 	id<MTLComputePipelineState>	mPipelineState;
 	UnorderedMap<String, uint>	mNameToBindingIndex;
+	Array<uint>					mBufferBindingIndices;
 };
 
 JPH_NAMESPACE_END
