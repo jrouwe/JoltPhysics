@@ -344,6 +344,18 @@ set(SAMPLES_ASSETS
 	${PHYSICS_REPO_ROOT}/Assets/terrain2.bof
 )
 
+# Optional assets used by the samples (downloaded through Assets/download_hair.sh), only packaged when they exist
+set(SAMPLES_ASSETS_OPTIONAL
+	${PHYSICS_REPO_ROOT}/Assets/wCurly.hair
+	${PHYSICS_REPO_ROOT}/Assets/wStraight.hair
+	${PHYSICS_REPO_ROOT}/Assets/wWavy.hair
+)
+foreach(ASSET_FILE ${SAMPLES_ASSETS_OPTIONAL})
+	if (EXISTS ${ASSET_FILE})
+		list(APPEND SAMPLES_ASSETS ${ASSET_FILE})
+	endif()
+endforeach()
+
 # Group source files
 source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 

@@ -685,8 +685,10 @@ if (APPLE)
 				set(SPV_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${SHADER_STEM}.spv")
 				set(MTL_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${SHADER_STEM}.metal")
 				set(AIR_SHADER "${CMAKE_CURRENT_BINARY_DIR}/${SHADER_STEM}.air")
+				# Note: We compile to SPIR-V without optimizations (-Od) because spirv-cross can generate incorrect MSL from optimized SPIR-V
+				# (e.g. it moved a buffer load past an increment of its index in HairCalculateCollisionPlanes). The Metal compiler optimizes the shader instead.
 				add_custom_command(OUTPUT ${AIR_SHADER}
-					COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I Jolt/Shaders -WX -O3 -all_resources_bound ${SHADER} -spirv -fvk-use-dx-layout -fspv-entrypoint-name=${SHADER_STEM} -Fo ${SPV_SHADER}
+					COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I Jolt/Shaders -WX -Od -all_resources_bound ${SHADER} -spirv -fvk-use-dx-layout -fspv-entrypoint-name=${SHADER_STEM} -Fo ${SPV_SHADER}
 					COMMAND ${SPIRV_CROSS_COMPILER} ${SPV_SHADER} --msl --output ${MTL_SHADER}
 					COMMAND xcrun -sdk ${METAL_SDK_TARGET} metal -Wno-unused-variable -c ${MTL_SHADER} -o ${AIR_SHADER}
 					DEPENDS ${SHADER} ${JOLT_PHYSICS_SHADER_HEADERS} # Currently don't have a way to detect header dependencies, so making dependent on all

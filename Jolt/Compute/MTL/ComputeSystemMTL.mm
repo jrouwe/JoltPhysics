@@ -22,11 +22,18 @@ bool ComputeSystemMTL::Initialize(id<MTLDevice> inDevice)
 {
 	mDevice = [inDevice retain];
 
+	// Create the dummy buffer. This is bound to all buffer slots of a shader for which no buffer is provided as Metal requires all bindings to be set.
+	mDummyBuffer = [mDevice newBufferWithLength: 1024 options: MTLResourceStorageModePrivate | MTLResourceHazardTrackingModeUntracked];
+	if (mDummyBuffer == nil)
+		return false;
+
 	return true;
 }
 
 void ComputeSystemMTL::Shutdown()
 {
+	[mDummyBuffer release];
+	mDummyBuffer = nil;
 	[mShaderLibrary release];
 	[mDevice release];
 }
@@ -101,7 +108,7 @@ ComputeBufferResult ComputeSystemMTL::CreateComputeBuffer(ComputeBuffer::EType i
 ComputeQueueResult ComputeSystemMTL::CreateComputeQueue()
 {
 	ComputeQueueResult result;
-	result.Set(new ComputeQueueMTL(mDevice));
+	result.Set(new ComputeQueueMTL(mDevice, mDummyBuffer));
 	return result;
 }
 

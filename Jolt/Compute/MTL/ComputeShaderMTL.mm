@@ -19,6 +19,8 @@ ComputeShaderMTL::ComputeShaderMTL(id<MTLComputePipelineState> inPipelineState, 
 		const char *name = [binding.name UTF8String];
 		uint index = uint(binding.index);
 		mNameToBindingIndex[name] = index;
+		if (binding.type == MTLBindingTypeBuffer)
+			mBufferBindingIndices.push_back(index);
 	}
 }
 
