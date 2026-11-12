@@ -168,7 +168,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 		<li>If you want to build the Samples, install the <a href="https://vulkan.lunarg.com/sdk/home">Vulkan SDK</a> (required to compile the shaders)</li>
 		<li>Open the 'Build/Android' folder in Android Studio and wait until gradle finishes</li>
 		<li>Select 'Run' and 'UnitTests', 'PerformanceTest' or 'Samples'</li>
-		<li>For the UnitTests: If the screen turns green after a while the unit tests succeeded, when red they failed (see the android log for details)</li>
+		<li>For the UnitTests: The application exits when the unit tests complete. Look at the Android logs to see if they succeeded or failed. You can also run Build/Android/run_unit_tests.sh</li>
 		<li>The Samples use Vulkan for rendering. Touch input is mapped to mouse and keyboard input:
 			<ul>
 				<li>One finger drag: Rotate the camera / interact with the menu (drag vertically to scroll long menus)</li>
