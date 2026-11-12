@@ -12,7 +12,6 @@
 #include <crtdbg.h>
 #endif // JPH_PLATFORM_WINDOWS
 #ifdef JPH_PLATFORM_ANDROID
-#include <Jolt/Core/Color.h>
 #include <android/log.h>
 #include <android_native_app_glue.h>
 #endif // JPH_PLATFORM_ANDROID
@@ -286,52 +285,18 @@ void AndroidInitialize(android_app *inApp)
 	context.addFilter("reporters", "android_log");
 	int return_value = context.run();
 
-	// Color the screen according to the test result
-	JPH::Color color = return_value == 0? JPH::Color::sGreen : JPH::Color::sRed;
-	ANativeWindow_acquire(inApp->window);
-	ANativeWindow_Buffer buffer;
-	ARect bounds;
-	ANativeWindow_lock(inApp->window, &buffer, &bounds);
-	switch (buffer.format)
-	{
-		case AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM:
-		case AHARDWAREBUFFER_FORMAT_R8G8B8X8_UNORM:
-		{
-			uint32 color_u32 = color.GetUInt32();
-			for (int y = 0; y < buffer.height; ++y)
-			{
-				uint32 *dest = (uint32 *)((uint8 *)buffer.bits + y * buffer.stride * sizeof(uint32));
-				for (int x = 0; x < buffer.width; ++x)
-					*dest++ = color_u32;
-			}
-			break;
-		}
-
-		case AHARDWAREBUFFER_FORMAT_R5G6B5_UNORM:
-		{
-			uint16 color_u16 = (color.b >> 3) + ((color.g >> 2) << 5) + ((color.r >> 3) << 11);
-			for (int y = 0; y < buffer.height; ++y)
-			{
-				uint16 *dest = (uint16 *) ((uint8 *) buffer.bits + y * buffer.stride * sizeof(uint16));
-				for (int x = 0; x < buffer.width; ++x)
-					*dest++ = color_u16;
-			}
-			break;
-		}
-
-		default:
-			// TODO implement
-			break;
-	}
-	ANativeWindow_unlockAndPost(inApp->window);
-	ANativeWindow_release(inApp->window);
-
 	// Unregisters all types with the factory and cleans up the default material
 	UnregisterTypes();
 
 	// Destroy the factory
 	delete Factory::sInstance;
 	Factory::sInstance = nullptr;
+
+	// Report the result in the log (this is what the CI looks for, the exit code of a NativeActivity is not visible through adb)
+	__android_log_print(return_value == 0? ANDROID_LOG_INFO : ANDROID_LOG_ERROR, "Jolt", "UNIT_TESTS_RESULT: %s (return value %d)", return_value == 0? "PASSED" : "FAILED", return_value);
+
+	// Exit the process with the doctest return value
+	exit(return_value);
 }
 
 // Handle callback from Android

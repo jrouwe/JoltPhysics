@@ -410,6 +410,20 @@ jobs:
       run: |
         source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
         ./gradlew build --no-daemon
+    - name: Enable KVM group perms
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger --name-match=kvm
+    - name: Run Unit Tests
+      timeout-minutes: 30
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 34
+        arch: x86_64
+        emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+        disable-animations: true
+        script: ${{github.workspace}}/Build/Android/run_unit_tests.sh ${{github.workspace}}/Build/Android/UnitTests/build/intermediates/apk/debug/UnitTests-debug.apk 600
 
   ios:
     runs-on: macos-latest
