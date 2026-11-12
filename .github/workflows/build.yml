@@ -423,7 +423,7 @@ jobs:
         arch: x86_64
         emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
         disable-animations: true
-        script: ${{github.workspace}}/Build/Android/run_unit_tests.sh ${{github.workspace}}/Build/Android/UnitTests/build/intermediates/apk/debug/UnitTests-debug.apk 600
+        script: bash ${{github.workspace}}/Build/Android/run_unit_tests.sh ${{github.workspace}}/Build/Android/UnitTests/build 600
 
   ios:
     runs-on: macos-latest
