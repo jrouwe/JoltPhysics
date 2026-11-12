@@ -427,17 +427,45 @@ jobs:
 
   ios:
     runs-on: macos-latest
-    name: iOS
+    name: iOS ${{matrix.build_type}}
+    env:
+        VULKAN_SDK_INSTALL: ${{github.workspace}}/vulkan_sdk
     strategy:
         fail-fast: false
+        matrix:
+            build_type: [Debug, Release]
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v7
+    - name: Install Metal Toolchain
+      run: xcodebuild -downloadComponent MetalToolchain
+    - name: Install Vulkan
+      run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
+      run: |
+        source ${VULKAN_SDK_INSTALL}/setup-env.sh
+        cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch arm64 -j $(sysctl -n hw.ncpu)
+      run: cmake --build ${{github.workspace}}/Build/XCode_iOS --config ${{matrix.build_type}} -- -sdk iphonesimulator -arch arm64 -j $(sysctl -n hw.ncpu)
+    - name: Boot Simulator
+      run: |
+        # Create an iPhone simulator using the newest available iOS runtime
+        read RUNTIME DEVICE_TYPE < <(xcrun simctl list runtimes ios available -j | python3 -c "
+        import json, sys
+        r = json.load(sys.stdin)['runtimes'][-1]
+        print(r['identifier'], [d['identifier'] for d in r['supportedDeviceTypes'] if d['productFamily'] == 'iPhone'][-1])")
+        echo "Using $DEVICE_TYPE with $RUNTIME"
+        UDID=$(xcrun simctl create JoltUnitTests $DEVICE_TYPE $RUNTIME)
+        xcrun simctl bootstatus $UDID -b
+        echo "SIMULATOR_UDID=$UDID" >> $GITHUB_ENV
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/XCode_iOS
+      run: |
+        xcrun simctl install $SIMULATOR_UDID ${{matrix.build_type}}-iphonesimulator/UnitTests.app
+        # simctl launch does not forward the exit code of the app, so check the doctest output instead
+        xcrun simctl launch --console-pty --terminate-running-process $SIMULATOR_UDID com.joltphysics.unittests --no-colors 2>&1 | tee UnitTests.log
+        grep -q "Status: SUCCESS!" UnitTests.log
 
   emscripten:
     runs-on: ubuntu-26.04
