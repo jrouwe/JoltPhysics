@@ -1531,7 +1531,7 @@ void CharacterVirtual::MoveToContact(RVec3Arg inPosition, const CharacterContact
 	// Ensure that we mark inContact as colliding
 	bool found_contact = false;
 	for (CharacterContact &c : contacts)
-		if (c.mBodyB == inContact.mBodyB
+		if (c.IsSameBody(inContact)
 			&& c.mSubShapeIDB == inContact.mSubShapeIDB)
 		{
 			c.mHadCollision = true;
