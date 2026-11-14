@@ -467,7 +467,7 @@ void ApplicationWindowIOS::Initialize(const char *inTitle)
 
 	// Create metal view (it will be attached to a window when the application starts)
 	MetalView *view = [[MetalView alloc] init: this];
-	SetMetalView(view);	
+	SetMetalView(view);
 }
 
 void ApplicationWindowIOS::MainLoop(ApplicationWindow::RenderCallback inRenderCallback)
