@@ -281,10 +281,16 @@ TEST_SUITE("MultithreadedTests")
 		std::thread ragdoll_spawner([&c, &is_quitting]() { sRagdollSpawner(c, is_quitting); });
 		std::thread caster([&c, &is_quitting]() { sCaster(c, is_quitting); });
 
-		// Simulate while the threads are running
+		// Simulate for 2 seconds while the threads are running.
+		// We step in real time (like the sample does), otherwise the simulation runs much faster than the threads can add objects.
+		constexpr int cNumSteps = 120;
 		auto start = std::chrono::steady_clock::now();
-		while (std::chrono::steady_clock::now() - start < std::chrono::seconds(2))
+		std::chrono::duration<float> delta_time(c.GetDeltaTime());
+		for (int step = 1; step <= cNumSteps; ++step)
+		{
 			c.SimulateSingleStep();
+			std::this_thread::sleep_until(start + std::chrono::duration_cast<std::chrono::steady_clock::duration>(step * delta_time));
+		}
 
 		// Stop the threads
 		is_quitting = true;
