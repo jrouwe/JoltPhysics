@@ -53,7 +53,7 @@ Source files are listed explicitly — there is no globbing. A new file must be 
 
 - `Jolt/` — the library. `Core/` (allocators, `Array`/`UnorderedMap` containers, job system, RTTI, profiler, `StreamIn/Out`), `Math/` (SIMD `Vec3/Vec4/Mat44/Quat`, `RVec3`/`RMat44` which become doubles under `JPH_DOUBLE_PRECISION`), `Geometry/` (GJK, EPA, convex support, ray/AABox tests), `AABBTree/` (mesh BVH building/encoding), `Physics/` (simulation), `Skeleton/`, `Renderer/` (`DebugRenderer` interface), `Compute/` + `Shaders/` (GPU compute abstraction over DX12/Vulkan/Metal/CPU, used by hair simulation), `ObjectStream/` (text/binary reflection-based serialization).
 - `TestFramework/` — rendering/input/UI framework shared by `Samples` and `JoltViewer`.
-- `Samples/` — interactive demo app; each demo is a `Test` subclass under `Samples/Tests/<Category>/`.
+- `Samples/` — interactive demo app; each demo is a `Test` subclass under `Samples/Tests/<Category>/`. Start a specific sample by running `./Samples <TestClassName>`.
 - `JoltViewer/` — plays back recordings made with `DebugRendererRecorder`.
 - `HelloWorld/` — minimal usage example.
 - `PerformanceTest/` — benchmark/determinism scenes.
