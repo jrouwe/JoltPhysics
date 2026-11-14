@@ -695,9 +695,9 @@ SamplesApp::SamplesApp(const String &inCommandLine) :
 	Array<String> args;
 	StringToVector(ToLower(inCommandLine), args, " ");
 
-	// Remove entries starting with `-`
+	// Remove empty entries (e.g. due to a trailing space) and entries starting with `-`
 	for (int i = (int)args.size() - 1; i >= 0; --i)
-		if (!args[i].empty() && args[i].at(0) == '-')
+		if (args[i].empty() || args[i].at(0) == '-')
 			args.erase(args.begin() + i);
 
 	// Get test name from command line
