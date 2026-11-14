@@ -6,29 +6,50 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### New functionality
 
-* The Samples application now runs on iOS and Android. Touch input is mapped to mouse and keyboard input, see `Build/README.md`.
-* Added support for 64-bit ObjectLayer. This e.g. allows for more groups in case you're using `ObjectLayerPairFilterMask`.
+* The Samples application now runs on iOS and Android. See [Build/README.md](Build/README.md) for more information about the controls.
+* Added support for 64-bit `ObjectLayer`. This e.g. allows for more groups in case you're using `ObjectLayerPairFilterMask`.
+* Added `ModifyShapes` overload to `MutableCompoundShape`. Adds the ability to change position, rotation and shape at the same time.
 * `EstimateCollisionResponse` now takes surface velocities into account.
 
 ### Bug fixes
 
-* Avoiding overflow to INF if inverse effective mass is denormal. When restricting the rotation of an object using `EAllowedDOFs`, a tiny rotation in a restricted axis can cause the effective mass of the angular friction component to overflow to INF and cause a FP exception.
-* If `GJKClosestPoint::CastShape` failed to converge, it was accidentally using the rejected support point to calculate the contact point. In some cases this could lead to returning the wrong contact point.
-* When colliding with very long and thin triangles, GJK could fail to find the closest point to the triangle because it used a fixed epsilon to determine if the triangle was too thin. Changed this epsilon so that it is dependent on the length of the edges of the triangle so that we fall back to closest point to edge in those cases.
+#### Compiler
+
+* MSVC Build Tools 14.52 in combination with `/fp:fast` introduced some extra optimizations that were incompatible with Jolt. This caused failures in `Quat` multiplications and `FlipSign`. This completely broke the simulation.
 * MinGW32 defines `__STDCPP_DEFAULT_NEW_ALIGNMENT__` as 16 but its allocations are actually 8 byte aligned. This caused unaligned read access violations in `TriangleSplitterBinning::mBins`.
-* `HeightFieldShape::SetHeights` corrupted the bounding volume tree when the number of blocks (`GetNumBlocks`) was not a power of 2. This resulted in collision queries possibly failing to report the correct collision.
+
+#### Simulation
+
+* Avoiding overflow to INF if inverse effective mass is denormal. When restricting the rotation of an object using `EAllowedDOFs`, a tiny rotation in a restricted axis can cause the effective mass of the angular friction component to overflow to INF and cause a FP exception.
 * Clamping warm start impulse ratio to avoid the simulation from exploding when updating the physics system with wildly different delta times. Note that this is not a perfect solution, so it is still recommended to step physics at a fixed time step.
-* Suppressing clang thread safety analysis warnings which appeared under XCode 27.
-* On macOS/iOS, `JobSystemThreadPool` worker threads now run at the same quality-of-service class as the thread that starts them. Previously they ran at the default QoS, which triggered priority inversion warnings.
+* Fix out of bounds read for a body activated during the continous collision detection step.
 * `VehicleEngineSettings::mInertia` and `mAngularDamping` were not serialized in an `ObjectStream` or from `SaveBinaryState`/`RestoreBinaryState`.
 * Fixed an issue where a body with motion quality `LinearCast` could pass through another body if its center of mass was offset.
-* Changed the queue in `JobSystemThreadPool` so that a worker thread that doesn't wake up cannot prevent new jobs from being added to the queue.
 * Fixed an issue where `GearConstraint` would apply the wrong torque to body 2.
-* Fixed a race condition in `JobSystemWithBarrier` where a job that was added to a barrier could finish before the barrier counted it. When this happened from within a job (e.g. `SoftBodyPrepare` adding the soft body collide jobs), `WaitForJobs` could return too early resulting in  memory corruption and a hang.
+* `CharacterVirtual::WalkStairs` and `CharacterVirtual::StickToFloor` could trigger an assert when stepping onto another virtual character.
+
+#### Collision Detection
+
+* If `GJKClosestPoint::CastShape` failed to converge, it was accidentally using the rejected support point to calculate the contact point. In some cases this could lead to returning the wrong contact point.
+* When colliding with very long and thin triangles, GJK could fail to find the closest point to the triangle because it used a fixed epsilon to determine if the triangle was too thin. Changed this epsilon so that it is dependent on the length of the edges of the triangle so that we fall back to closest point to edge in those cases.
+* Handling of convex/sphere collision/cast checks against degenerate triangles. A `MeshShape` attached to a `Body` with a certain transform could result in an almost degenerate triangle becoming degenerate. The code now handles this.
+* `HeightFieldShape::SetHeights` corrupted the bounding volume tree when the number of blocks was not a power of 2. This resulted in collision queries possibly failing to report the correct collision.
+* Fixed `HeightFieldShape::SetHeights` not updating the last range block of a level with an odd number of blocks. This resulted in collision queries possibly failing to report the correct collision.
 * `ConvexHullShape::GetSupportingFace` could return a face that did not contain the deepest vertex, resulting in objects being able to penetrate more than they should.
+
+#### Hair
+
+* Fixed jitter in hair simulation on macOS/iOS. The shader compiler shuffled two instructions that it shouldn't have.
 * `ComputeSystemVK` now falls back to non-cached host memory on GPUs that don't have memory that is both host coherent and host cached (e.g. Mali).
 * `ComputeSystemVK` no longer requires the `VK_EXT_debug_utils` instance extension to be present.
-* MSVC Build Tools 14.52 in combination with `/fp:fast` introduced some extra optimizations that were incompatible with Jolt. Most importantly, the compiler replaced -0.0f with 0.0f, causing failures in `Quat` multiplications and `FlipSign`.
+
+#### Multi Threading
+
+* Changed the queue in `JobSystemThreadPool` so that a worker thread that doesn't wake up cannot prevent new jobs from being added to the queue.
+* Fixed macOS thread performance checker warnings. Note that this requires suppressing 1 warning on the application side. See [Build/README.md](Build/README.md).
+* `Semaphore::Acquire` ignored `sem_wait`'s `EINTR`. `JobSystemWithBarrier` could finish a wait early on Linux.
+* Fixed a race condition in `JobSystemWithBarrier` where a job that was added to a barrier could finish before the barrier counted it. When this happened, `WaitForJobs` could return too early resulting in memory corruption and a hang.
+* Suppressing clang thread safety analysis warnings which appeared under XCode 27.
 
 ### Removed functionality
 

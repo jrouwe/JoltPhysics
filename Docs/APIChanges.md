@@ -7,10 +7,13 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 ## Changes between v5.6.0 and latest
 
 * 20261107 - *SBS* - `ConvexHullShape` now tracks vertex to face links. This changes the binary serialization format. (2238d2a95b7159beffbdb176f2f2fbd5089c515d)
+* 20261025 - `TaperedCapsuleSettings` can now construct a `CapsuleShape` if the radii are equal. (8afbeaf4dde8e90f528a0557b7bb870dd3ccc122)
+* 20261024 - Added `JobSystem::CreateJobs` that starts a batch of jobs rather than 1 job. This virtual needs to be implemented if you have a custom `JobSystem` implementation. (6c38e33de1d9d5275ed63e08a30ef8a73abb7168)
 * 20261022 - *SBS* - `VehicleEngineSettings::mInertia` and `mAngularDamping` were not serialized by `SaveBinaryState`, this changes the serialization format. (33c944b0388a6744f54f96e0d160bd24c3510048)
-* 20261018 - EstimateCollisionResponse now takes surface velocities into account. This changes the function signature to accapt a `ContactSettings` parameter. (dc9b1e8eb64aaf7c06dfadac310f781f7c7a5871)
+* 20261018 - `EstimateCollisionResponse` now takes surface velocities into account. This changes the function signature to accept a `ContactSettings` parameter. (dc9b1e8eb64aaf7c06dfadac310f781f7c7a5871)
+* 20260928 - `EstimateCollisionResponse` now returns friction as a single vector instead of as 2 vector directions + 2 magnitude floats. (29f381b183ed4aa0357d55afd617bf23d1bb215f)
 * 20260919 - Removed `JPH_NO_DEBUG` and its dependency on `NDEBUG`, define `JPH_DEBUG` instead in the debug build. CMake files have been updated, so this is only relevant if you compile with your own build system. (6f2ed8c679eb8878d6cff4cb4c210a63d9e20028)
-* 20260905 - Removed support for using `std::vector` instead of `JPH::Array` (define `JPH_USE_STD_VECTOR`). This is a pretty obscure build option and not worth the continous testing needed to support it. (d52033ace5a33341985634d7bec5f7b1c4dec3ad)
+* 20260905 - Removed support for using `std::vector` instead of `JPH::Array` (define `JPH_USE_STD_VECTOR`). This is a pretty obscure build option and not worth the continuous testing needed to support it. (d52033ace5a33341985634d7bec5f7b1c4dec3ad)
 * 20260728 - Removed `PhysicsSettings::mDeterministicSimulation`. Turning this off has negative impact on stacking. The simulation is now always deterministic. (a5d1034b0760ba68f58fd80872635272e544b898)
 
 ## Changes between v5.5.0 and v5.6.0
