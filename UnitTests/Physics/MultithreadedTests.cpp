@@ -20,6 +20,8 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <chrono>
 JPH_SUPPRESS_WARNINGS_STD_END
 
+#if !defined(JPH_CPU_WASM) || defined(__EMSCRIPTEN_PTHREADS__)
+
 // Stress test that adds / removes bodies and ragdolls and does collision queries from multiple threads while the simulation is running.
 // This test is mainly useful when running under ThreadSanitizer as it checks for race conditions. It mimics the MultithreadedTest sample.
 TEST_SUITE("MultithreadedTests")
@@ -303,3 +305,5 @@ TEST_SUITE("MultithreadedTests")
 		CHECK(c.GetSystem()->GetConstraints().empty());
 	}
 }
+
+#endif // !defined(JPH_CPU_WASM) || defined(__EMSCRIPTEN_PTHREADS__)
