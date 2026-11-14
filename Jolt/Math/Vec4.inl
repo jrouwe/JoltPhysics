@@ -1081,7 +1081,7 @@ JPH_INLINE Vec4 Vec4::FlipSign() const
 	static_assert(Y == 1 || Y == -1, "Y must be 1 or -1");
 	static_assert(Z == 1 || Z == -1, "Z must be 1 or -1");
 	static_assert(W == 1 || W == -1, "W must be 1 or -1");
-	return Vec4::sXor(*this, Vec4(X > 0? 0.0f : -0.0f, Y > 0? 0.0f : -0.0f, Z > 0? 0.0f : -0.0f, W > 0? 0.0f : -0.0f));
+	return Vec4::sXor(*this, UVec4(X > 0? 0 : 0x80000000, Y > 0? 0 : 0x80000000, Z > 0? 0 : 0x80000000, W > 0? 0 : 0x80000000).ReinterpretAsFloat());
 }
 
 void Vec4::StoreFloat4(Float4 *outV) const

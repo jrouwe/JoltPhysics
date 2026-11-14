@@ -321,9 +321,11 @@ TEST_SUITE("DVec3Tests")
 	{
 		CHECK(DVec3(1.2345, -6.7891, 0).GetSign() == DVec3(1, -1, 1));
 		CHECK(DVec3(0, 2.3456, -7.8912).GetSign() == DVec3(1, 1, -1));
-		CHECK(DVec3(-0.0, 0.0, -0.0).GetSign() == DVec3(-1, 1, -1));
+		double neg_zero = DoubleFromBits(0x8000000000000000ull);
+		CHECK(DVec3(neg_zero, 0.0, neg_zero).GetSign() == DVec3(-1, 1, -1));
 		CHECK(DVec3(1.0, -1.0, 1.0).GetSign() == DVec3(1, -1, 1));
-		CHECK(DVec3(DBL_TRUE_MIN, -DBL_TRUE_MIN, DBL_TRUE_MIN).GetSign() == DVec3(1, -1, 1)); // Denormal number
+		double denormal = DoubleFromBits(0x0000000000000001ull); // DBL_TRUE_MIN
+		CHECK(DVec3(denormal, -denormal, denormal).GetSign() == DVec3(1, -1, 1));
 		CHECK(DVec3(numeric_limits<double>::infinity(), -numeric_limits<double>::infinity(), numeric_limits<double>::infinity()).GetSign() == DVec3(1, -1, 1));
 	}
 

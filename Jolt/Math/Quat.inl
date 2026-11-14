@@ -29,7 +29,7 @@ Quat Quat::operator * (QuatArg inRHS) const
 #endif
 
 	// Negate last (logical) component.
-	m3 = _mm_xor_ps(_mm_set_ps(-0.0f, 0.0f, 0.0f, 0.0f), m3);
+	m3 = _mm_xor_ps(_mm_castsi128_ps(_mm_set_epi32(int(0x80000000), 0, 0, 0)), m3);
 
 #ifdef JPH_USE_FMADD
 	__m128 m5 = _mm_fnmadd_ps(cabc, yzxz, m3);
@@ -111,7 +111,7 @@ Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 #endif
 
 	// Negate last (logical) component.
-	m3 = _mm_xor_ps(_mm_set_ps(-0.0f, 0.0f, 0.0f, 0.0f), m3);
+	m3 = _mm_xor_ps(_mm_castsi128_ps(_mm_set_epi32(int(0x80000000), 0, 0, 0)), m3);
 
 	__m128 m4 = _mm_mul_ps(cabc, yzxz);
 

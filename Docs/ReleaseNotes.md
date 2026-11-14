@@ -28,6 +28,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * `ConvexHullShape::GetSupportingFace` could return a face that did not contain the deepest vertex, resulting in objects being able to penetrate more than they should.
 * `ComputeSystemVK` now falls back to non-cached host memory on GPUs that don't have memory that is both host coherent and host cached (e.g. Mali).
 * `ComputeSystemVK` no longer requires the `VK_EXT_debug_utils` instance extension to be present.
+* MSVC Build Tools 14.52 in combination with `/fp:fast` introduced some extra optimizations that were incompatible with Jolt. Most importantly, the compiler replaced -0.0f with 0.0f, causing failures in `Quat` multiplications and `FlipSign`.
 
 ### Removed functionality
 

@@ -359,9 +359,11 @@ TEST_SUITE("Vec3Tests")
 	{
 		CHECK(Vec3(1.2345f, -6.7891f, 0).GetSign() == Vec3(1, -1, 1));
 		CHECK(Vec3(0, 2.3456f, -7.8912f).GetSign() == Vec3(1, 1, -1));
-		CHECK(Vec3(-0.0f, 0.0f, -0.0f).GetSign() == Vec3(-1, 1, -1));
+		float neg_zero = FloatFromBits(0x80000000u);
+		CHECK(Vec3(neg_zero, 0.0f, neg_zero).GetSign() == Vec3(-1, 1, -1));
 		CHECK(Vec3(1.0f, -1.0f, 1.0f).GetSign() == Vec3(1, -1, 1));
-		CHECK(Vec3(FLT_TRUE_MIN, -FLT_TRUE_MIN, FLT_TRUE_MIN).GetSign() == Vec3(1, -1, 1)); // Denormal number
+		float denormal = FloatFromBits(0x00000001u); // FLT_TRUE_MIN
+		CHECK(Vec3(denormal, -denormal, denormal).GetSign() == Vec3(1, -1, 1));
 		CHECK(Vec3(numeric_limits<float>::infinity(), -numeric_limits<float>::infinity(), numeric_limits<float>::infinity()).GetSign() == Vec3(1, -1, 1));
 	}
 

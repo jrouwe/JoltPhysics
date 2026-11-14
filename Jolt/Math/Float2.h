@@ -6,6 +6,11 @@
 
 JPH_NAMESPACE_BEGIN
 
+// With /fp:fast Float2 is using SIMD instructions where the last 2 floats are undefined, this causes exceptions
+#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+JPH_PRECISE_MATH_ON
+#endif // JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+
 /// Class that holds 2 floats, used as a storage class mainly.
 class [[nodiscard]] Float2
 {
@@ -32,5 +37,9 @@ public:
 };
 
 static_assert(std::is_trivially_default_constructible<Float2>() && std::is_trivially_copyable<Float2>(), "Is supposed to be a trivial type!");
+
+#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+JPH_PRECISE_MATH_OFF
+#endif // JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 
 JPH_NAMESPACE_END
