@@ -1035,15 +1035,11 @@ JPH_INLINE void QuadTree::WalkTree(const ObjectLayerFilter &inObjectLayerFilter,
 			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
 
 			// Load bounds of 4 children
-			Vec4 bounds_minx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinX);
-			Vec4 bounds_miny = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinY);
-			Vec4 bounds_minz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinZ);
-			Vec4 bounds_maxx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxX);
-			Vec4 bounds_maxy = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxY);
-			Vec4 bounds_maxz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxZ);
+			Vec4 bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz;
+			node.LoadChildBounds(bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz);
 
 			// Load ids for 4 children
-			UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
+			UVec4 child_ids = node.LoadChildNodeIDs();
 
 			// Check which sub nodes to visit
 			int num_results = ioVisitor.VisitNodes(bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz, child_ids, top);
@@ -1489,12 +1485,8 @@ void QuadTree::FindCollidingPairs(const BodyVector &inBodies, const BodyID *inAc
 				JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
 
 				// Get bounds of 4 children
-				Vec4 bounds_minx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinX);
-				Vec4 bounds_miny = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinY);
-				Vec4 bounds_minz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinZ);
-				Vec4 bounds_maxx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxX);
-				Vec4 bounds_maxy = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxY);
-				Vec4 bounds_maxz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxZ);
+				Vec4 bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz;
+				node.LoadChildBounds(bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz);
 
 				// Test overlap
 				UVec4 overlap = AABox4VsBox(bounds1, bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz);
@@ -1502,7 +1494,7 @@ void QuadTree::FindCollidingPairs(const BodyVector &inBodies, const BodyID *inAc
 				if (num_results > 0)
 				{
 					// Load ids for 4 children
-					UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
+					UVec4 child_ids = node.LoadChildNodeIDs();
 
 					// Sort so that overlaps are first
 					child_ids = UVec4::sSort4True(overlap, child_ids);

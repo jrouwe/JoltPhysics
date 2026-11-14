@@ -243,6 +243,9 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	mBodyManager.LockAllBodies();
 	mBroadPhase->LockModifications();
 
+	// Lock all constraints, this needs to happen before we query the number of constraints below
+	mConstraintManager.LockAllConstraints();
+
 	// Get max number of concurrent jobs
 	int max_concurrency = context.GetMaxConcurrency();
 
@@ -336,9 +339,6 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 				// Store the number of active bodies at the start of the step
 				step.mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
-
-				// Lock all constraints
-				mConstraintManager.LockAllConstraints();
 
 				// Allocate memory for storing the active constraints
 				JPH_ASSERT(context.mActiveConstraints == nullptr);
@@ -901,8 +901,11 @@ static void sFinalizeContactAllocator(PhysicsUpdateContext::Step &ioStep, const 
 	ioStep.mContext->mErrors.fetch_or((uint32)inAllocator.mErrors, memory_order_relaxed);
 }
 
-// Disable TSAN for this function. It detects a false positive race condition on mBodyPairs.
-// We have written mBodyPairs before doing mWriteIdx++ and we check mWriteIdx before reading mBodyPairs, so this should be safe.
+// Disable TSAN for this function. It detects a benign race condition on mBodyPairs.
+// mBodyPairs is a ring buffer per job: the owning job writes a pair and then does mWriteIdx++, other jobs check mWriteIdx before reading a pair.
+// A reader copies a pair out of the buffer and only then claims it through a compare exchange on mReadIdx. If another job claimed the pair first,
+// the owning job can already have reused that slot (the buffer wrapped around) while the reader was copying, so the copy can be torn.
+// In that case the compare exchange fails and the copy is discarded, so the race is harmless.
 JPH_TSAN_NO_SANITIZE
 void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex)
 {

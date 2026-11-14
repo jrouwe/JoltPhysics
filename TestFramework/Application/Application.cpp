@@ -11,6 +11,7 @@
 #include <Utils/CustomMemoryHook.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/LSANSuppressions.h>
+#include <Jolt/Core/TSANSuppressions.h>
 #include <Jolt/RegisterTypes.h>
 #include <Renderer/DebugRendererImp.h>
 #ifdef JPH_PLATFORM_WINDOWS
