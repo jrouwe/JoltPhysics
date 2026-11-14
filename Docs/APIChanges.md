@@ -4,7 +4,7 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See [Saving Shapes](https://jrouwe.github.io/JoltPhysics/#saving-shapes) for further information.
 
-## Changes between v5.6.0 and latest
+## Changes between v5.6.0 and v5.7.0
 
 * 20261107 - *SBS* - `ConvexHullShape` now tracks vertex to face links. This changes the binary serialization format. (2238d2a95b7159beffbdb176f2f2fbd5089c515d)
 * 20261025 - `TaperedCapsuleSettings` can now construct a `CapsuleShape` if the radii are equal. (8afbeaf4dde8e90f528a0557b7bb870dd3ccc122)
