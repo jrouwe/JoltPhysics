@@ -355,17 +355,24 @@ TEST_SUITE("Vec3Tests")
 	#endif
 	}
 
+	JPH_SUPPRESS_WARNING_PUSH
+	JPH_MSVC_SUPPRESS_WARNING(4746) // volatile access of 'X' is subject to / volatile : <iso | ms> setting; consider using __iso_volatile_load / store intrinsic functions
+
 	TEST_CASE("TestVec3Sign")
 	{
 		CHECK(Vec3(1.2345f, -6.7891f, 0).GetSign() == Vec3(1, -1, 1));
 		CHECK(Vec3(0, 2.3456f, -7.8912f).GetSign() == Vec3(1, 1, -1));
-		float neg_zero = FloatFromBits(0x80000000u);
+		volatile uint32 neg_zero_u32 = 0x80000000u; // -0.0f
+		float neg_zero = BitCast<float>(neg_zero_u32);
 		CHECK(Vec3(neg_zero, 0.0f, neg_zero).GetSign() == Vec3(-1, 1, -1));
 		CHECK(Vec3(1.0f, -1.0f, 1.0f).GetSign() == Vec3(1, -1, 1));
-		float denormal = FloatFromBits(0x00000001u); // FLT_TRUE_MIN
+		volatile uint32 pos_zero_u32 = 0x00000001u; // FLT_TRUE_MIN
+		float denormal = BitCast<float>(pos_zero_u32);
 		CHECK(Vec3(denormal, -denormal, denormal).GetSign() == Vec3(1, -1, 1));
 		CHECK(Vec3(numeric_limits<float>::infinity(), -numeric_limits<float>::infinity(), numeric_limits<float>::infinity()).GetSign() == Vec3(1, -1, 1));
 	}
+
+	JPH_SUPPRESS_WARNING_POP
 
 	TEST_CASE("TestVec3FlipSign")
 	{

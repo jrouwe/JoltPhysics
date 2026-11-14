@@ -317,17 +317,24 @@ TEST_SUITE("DVec3Tests")
 		CHECK(DVec3(3, 2, 1).Normalized() == DVec3(3, 2, 1) / Sqrt(9.0 + 4.0 + 1.0));
 	}
 
+	JPH_SUPPRESS_WARNING_PUSH
+	JPH_MSVC_SUPPRESS_WARNING(4746) // volatile access of 'X' is subject to / volatile : <iso | ms> setting; consider using __iso_volatile_load / store intrinsic functions
+
 	TEST_CASE("TestDVec3Sign")
 	{
 		CHECK(DVec3(1.2345, -6.7891, 0).GetSign() == DVec3(1, -1, 1));
 		CHECK(DVec3(0, 2.3456, -7.8912).GetSign() == DVec3(1, 1, -1));
-		double neg_zero = DoubleFromBits(0x8000000000000000ull);
+		volatile uint64 neg_zero_u64 = 0x8000000000000000ull; // -0.0
+		double neg_zero = BitCast<double>(neg_zero_u64);
 		CHECK(DVec3(neg_zero, 0.0, neg_zero).GetSign() == DVec3(-1, 1, -1));
 		CHECK(DVec3(1.0, -1.0, 1.0).GetSign() == DVec3(1, -1, 1));
-		double denormal = DoubleFromBits(0x0000000000000001ull); // DBL_TRUE_MIN
+		volatile uint64 denormal_u64 = 0x0000000000000001ull; // DBL_TRUE_MIN
+		double denormal = BitCast<double>(denormal_u64);
 		CHECK(DVec3(denormal, -denormal, denormal).GetSign() == DVec3(1, -1, 1));
 		CHECK(DVec3(numeric_limits<double>::infinity(), -numeric_limits<double>::infinity(), numeric_limits<double>::infinity()).GetSign() == DVec3(1, -1, 1));
 	}
+
+	JPH_SUPPRESS_WARNING_POP
 
 	TEST_CASE("TestDVec3ConvertToString")
 	{
