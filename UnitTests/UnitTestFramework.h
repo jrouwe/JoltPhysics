@@ -23,6 +23,9 @@ using namespace JPH;
 using namespace JPH::literals;
 using namespace std;
 
+JPH_SUPPRESS_WARNING_PUSH
+JPH_MSVC_SUPPRESS_WARNING(4746) // volatile access of 'X' is subject to / volatile : <iso | ms> setting; consider using __iso_volatile_load / store intrinsic functions
+
 /// Create a float from its bit pattern at runtime. This prevents the compiler from altering the constant (e.g. MSVC with /fp:fast replaces -0.0f by 0.0f and denormals by 0.0f).
 inline float FloatFromBits(uint32 inBits)
 {
@@ -36,6 +39,8 @@ inline double DoubleFromBits(uint64 inBits)
 	volatile uint64 bits = inBits;
 	return BitCast<double>(uint64(bits));
 }
+
+JPH_SUPPRESS_WARNING_POP
 
 inline void CHECK_APPROX_EQUAL(float inLHS, float inRHS, float inTolerance = 1.0e-6f)
 {
