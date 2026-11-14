@@ -14,7 +14,7 @@ FixedSizeFreeList<Object>::~FixedSizeFreeList()
 		JPH_ASSERT(mNumFreeObjects.load(memory_order_relaxed) == mNumPages * mPageSize);
 
 		// Free memory for pages
-		uint32 num_pages = mNumObjectsAllocated / mPageSize;
+		uint32 num_pages = mNumObjectsAllocated.load(memory_order_relaxed) / mPageSize;
 		for (uint32 page = 0; page < num_pages; ++page)
 			AlignedFree(mPages[page]);
 		Free(mPages);
@@ -39,7 +39,7 @@ void FixedSizeFreeList<Object>::Init(uint inMaxObjects, uint inPageSize)
 	mPages = reinterpret_cast<ObjectStorage **>(Allocate(mNumPages * sizeof(ObjectStorage *)));
 
 	// We didn't yet use any objects of any page
-	mNumObjectsAllocated = 0;
+	mNumObjectsAllocated.store(0, memory_order_relaxed);
 	mFirstFreeObjectInNewPage = 0;
 
 	// Start with 1 as the first tag
@@ -62,17 +62,19 @@ uint32 FixedSizeFreeList<Object>::ConstructObject(Parameters &&... inParameters)
 		{
 			// The free list is empty, we take an object from the page that has never been used before
 			first_free = mFirstFreeObjectInNewPage.fetch_add(1, memory_order_relaxed);
-			if (first_free >= mNumObjectsAllocated)
+			if (first_free >= mNumObjectsAllocated.load(memory_order_acquire)) // Acquire to ensure we see the page pointer if the page was allocated by another thread
 			{
 				// Allocate new page
 				lock_guard lock(mPageMutex);
-				while (first_free >= mNumObjectsAllocated)
+				uint32 num_objects_allocated = mNumObjectsAllocated.load(memory_order_relaxed); // Only modified under lock
+				while (first_free >= num_objects_allocated)
 				{
-					uint32 next_page = mNumObjectsAllocated / mPageSize;
+					uint32 next_page = num_objects_allocated / mPageSize;
 					if (next_page == mNumPages)
 						return cInvalidObjectIndex; // Out of space!
 					mPages[next_page] = reinterpret_cast<ObjectStorage *>(AlignedAllocate(mPageSize * sizeof(ObjectStorage), max<size_t>(alignof(ObjectStorage), JPH_CACHE_LINE_SIZE)));
-					mNumObjectsAllocated += mPageSize;
+					num_objects_allocated += mPageSize;
+					mNumObjectsAllocated.store(num_objects_allocated, memory_order_release); // Release so that the page pointer is visible to threads that read the new value
 				}
 			}
 
@@ -214,7 +216,7 @@ template<typename Object>
 inline void FixedSizeFreeList<Object>::DestructObject(Object *inObject)
 {
 	uint32 index = GetObjectIndex(inObject);
-	JPH_ASSERT(index < mNumObjectsAllocated);
+	JPH_ASSERT(index < mNumObjectsAllocated.load(memory_order_relaxed));
 	DestructObject(index);
 }
 

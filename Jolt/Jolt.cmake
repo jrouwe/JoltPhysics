@@ -87,6 +87,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/TempAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/TickCounter.cpp
 	${JOLT_PHYSICS_ROOT}/Core/TickCounter.h
+	${JOLT_PHYSICS_ROOT}/Core/TSANSuppressions.h
 	${JOLT_PHYSICS_ROOT}/Core/UnorderedMap.h
 	${JOLT_PHYSICS_ROOT}/Core/UnorderedMapFwd.h
 	${JOLT_PHYSICS_ROOT}/Core/UnorderedSet.h

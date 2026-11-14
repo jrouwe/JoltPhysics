@@ -243,6 +243,9 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	mBodyManager.LockAllBodies();
 	mBroadPhase->LockModifications();
 
+	// Lock all constraints, this needs to happen before we query the number of constraints below
+	mConstraintManager.LockAllConstraints();
+
 	// Get max number of concurrent jobs
 	int max_concurrency = context.GetMaxConcurrency();
 
@@ -336,9 +339,6 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 				// Store the number of active bodies at the start of the step
 				step.mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
-
-				// Lock all constraints
-				mConstraintManager.LockAllConstraints();
 
 				// Allocate memory for storing the active constraints
 				JPH_ASSERT(context.mActiveConstraints == nullptr);

@@ -115,6 +115,30 @@ private:
 		/// Encapsulate inBounds in node bounds, returns true if there were changes
 		bool					EncapsulateChildBounds(int inChildIndex, const AABox &inBounds);
 
+		// The functions below read the atomic bounds / child IDs using a non-atomic SIMD load while other threads may be modifying them.
+		// This is by design: SetChildBounds / InvalidateChildBounds write the values in an order that ensures readers see either a valid or an empty box.
+		// TSAN reports this as a data race, so we suppress the warning here. Note that these functions should not be marked JPH_INLINE, as force inlining
+		// them into an instrumented function would remove the attribute.
+
+		/// Load the bounds of all 4 children
+		JPH_TSAN_NO_SANITIZE
+		inline void				LoadChildBounds(Vec4 &outMinX, Vec4 &outMinY, Vec4 &outMinZ, Vec4 &outMaxX, Vec4 &outMaxY, Vec4 &outMaxZ) const
+		{
+			outMinX = Vec4::sLoadFloat4Aligned((const Float4 *)&mBoundsMinX);
+			outMinY = Vec4::sLoadFloat4Aligned((const Float4 *)&mBoundsMinY);
+			outMinZ = Vec4::sLoadFloat4Aligned((const Float4 *)&mBoundsMinZ);
+			outMaxX = Vec4::sLoadFloat4Aligned((const Float4 *)&mBoundsMaxX);
+			outMaxY = Vec4::sLoadFloat4Aligned((const Float4 *)&mBoundsMaxY);
+			outMaxZ = Vec4::sLoadFloat4Aligned((const Float4 *)&mBoundsMaxZ);
+		}
+
+		/// Load the IDs of all 4 children
+		JPH_TSAN_NO_SANITIZE
+		inline UVec4			LoadChildNodeIDs() const
+		{
+			return UVec4::sLoadInt4Aligned((const uint32 *)&mChildNodeID[0]);
+		}
+
 		/// Bounding box for child nodes or bodies (all initially set to invalid so no collision test will ever traverse to the leaf)
 		atomic<float>			mBoundsMinX[4];
 		atomic<float>			mBoundsMinY[4];
