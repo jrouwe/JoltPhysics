@@ -264,9 +264,9 @@ protected:
 			}
 			JPH_ASSERT(barrier != cBarrierDoneState);
 
-			// Mark job as done
+			// Mark job as done, release so that a thread that sees the done state through IsDone also sees the side effects of the job function
 			state = cExecutingState;
-			mNumDependencies.compare_exchange_strong(state, cDoneState, memory_order_relaxed);
+			mNumDependencies.compare_exchange_strong(state, cDoneState, memory_order_release);
 			JPH_ASSERT(state == cExecutingState);
 
 			// Notify the barrier after we've changed the job to the done state so that any thread reading the state after receiving the callback will see that the job has finished
@@ -279,8 +279,8 @@ protected:
 		/// Test if the job can be executed
 		inline bool			CanBeExecuted() const						{ return mNumDependencies.load(memory_order_relaxed) == 0; }
 
-		/// Test if the job finished executing
-		inline bool			IsDone() const								{ return mNumDependencies.load(memory_order_relaxed) == cDoneState; }
+		/// Test if the job finished executing. If this returns true, the side effects of the job function are visible to the calling thread.
+		inline bool			IsDone() const								{ return mNumDependencies.load(memory_order_acquire) == cDoneState; }
 
 	#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 		/// Get the name of the job
