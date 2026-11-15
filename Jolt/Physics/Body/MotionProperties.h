@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Jolt/Core/Atomics.h>
+#include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Geometry/Sphere.h>
 #include <Jolt/Physics/Body/AllowedDOFs.h>
 #include <Jolt/Physics/Body/MotionQuality.h>
@@ -26,7 +27,7 @@ enum class ECanSleep
 };
 
 /// The Body class only keeps track of state for static bodies, the MotionProperties class keeps the additional state needed for a moving Body. It has a 1-on-1 relationship with the body.
-class JPH_EXPORT MotionProperties
+class JPH_EXPORT MotionProperties : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
