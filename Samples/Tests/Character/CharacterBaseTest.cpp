@@ -86,6 +86,10 @@ static const int cMeshWallSegments = 25;
 static const RVec3 cHalfCylinderPosition(5.0f, 0, 8.0f);
 static const RVec3 cMeshBoxPosition(30.0f, 1.5f, 5.0f);
 static const RVec3 cSensorPosition(30, 0.9f, -5);
+static const RVec3 cCornersPosition(-20.0f, 0, -35.0f);
+static const RVec3 cMovingCornersPosition(-20.0f, 0, -45.0f);
+static const Vec3 cCornersDelta(7.0f, 0, 0);
+static const Quat cCornersOrientation = Quat::sRotation(Vec3::sAxisY(), -0.5f * JPH_PI);
 static const RVec3 cCharacterPosition(-3.5f, 0, 3.0f);
 static const RVec3 cCharacterVirtualPosition(-5.0f, 0, 3.0f);
 static const RVec3 cCharacterVirtualWithInnerBodyPosition(-6.5f, 0, 3.0f);
@@ -187,7 +191,7 @@ void CharacterBaseTest::Initialize()
 	else if (strcmp(sSceneName, "ObstacleCourse") == 0)
 	{
 		// Default terrain
-		CreateFloor(350.0f);
+		CreateFloor(1000.0f);
 
 		{
 			// Create ramps with different inclinations
@@ -610,6 +614,190 @@ void CharacterBaseTest::Initialize()
 			mAnimatedCharacterVirtualWithInnerBody->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
 			mCharacterVsCharacterCollision.Add(mAnimatedCharacterVirtualWithInnerBody);
 		}
+
+		// Create corners and slopes that used to make CharacterVirtual jitter (see also the TestJumpIntoCorner, TestWalkIntoCornerOnSlope and TestWalkUpSlopeIntoWall unit tests).
+		// Each configuration is a single shape so that it can be moved as a whole. We create a static and a moving version of each.
+		// In local space the character should approach them from +X, the shapes are rotated so that they open towards the player starting position.
+		{
+			// Add two vertical walls that meet at inApex with inCornerAngle between them, the corner opens towards +X
+			auto add_corner_walls = [](TriangleList &ioTriangles, Vec3Arg inApex, float inCornerAngle)
+			{
+				constexpr float cWallLength = 3.5f;
+				Vec3 bottom = inApex - Vec3(0, 1.5f, 0), top = inApex + Vec3(0, 3.0f, 0);
+				float half_angle = 0.5f * inCornerAngle;
+				Vec3 end = cWallLength * Vec3(Cos(half_angle), 0, Sin(half_angle));
+				ioTriangles.push_back(Triangle(bottom, top, end + top));
+				ioTriangles.push_back(Triangle(bottom, end + top, end + bottom));
+				end = end.FlipSign<1, 1, -1>();
+				ioTriangles.push_back(Triangle(bottom, end + top, top));
+				ioTriangles.push_back(Triangle(bottom, end + bottom, end + top));
+			};
+
+			// Add a box to a compound shape. The center of the top surface of the box is at inTopCenter and the box is rotated by inRotation.
+			auto add_slab = [](StaticCompoundShapeSettings &ioCompound, Vec3Arg inTopCenter, QuatArg inRotation, float inHalfLength, float inHalfWidth)
+			{
+				constexpr float cHalfThickness = 0.15f;
+				ioCompound.AddShape(inTopCenter - cHalfThickness * (inRotation * Vec3::sAxisY()), inRotation, new BoxShape(Vec3(inHalfLength, cHalfThickness, inHalfWidth), 0.0f));
+			};
+
+			// Create a static and a moving body for a compound shape (plus optional walls), inHeight is the height at which to place the bodies
+			int index = 0;
+			auto create_bodies = [this, &index](StaticCompoundShapeSettings &ioCompound, const TriangleList &inWalls, float inHeight)
+			{
+				if (!inWalls.empty())
+					ioCompound.AddShape(Vec3::sZero(), Quat::sIdentity(), MeshShapeSettings(inWalls).Create().Get());
+				RefConst<Shape> shape = ioCompound.Create().Get();
+
+				Vec3 offset = float(index++) * cCornersDelta + Vec3(0, inHeight, 0);
+				mBodyInterface->CreateAndAddBody(BodyCreationSettings(shape, cCornersPosition + offset, cCornersOrientation, EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+				// Create the moving version at the position it will have at time 0
+				RVec3 position = cMovingCornersPosition + offset;
+				BodyCreationSettings moving(shape, position + Vec3(0, 0, 2.0f), cCornersOrientation, EMotionType::Kinematic, Layers::MOVING);
+				moving.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided; // Mesh shapes have no mass properties
+				moving.mMassPropertiesOverride.SetMassAndInertiaOfSolidBox(Vec3::sReplicate(5.0f), 1000.0f);
+				mMovingCorners.push_back({ mBodyInterface->CreateAndAddBody(moving, EActivation::Activate), position });
+			};
+
+			// Walk up a 10 degree slope into a 135 degree corner
+			{
+				float slope = DegreesToRadians(10.0f);
+				Quat rotation = Quat::sRotation(Vec3::sAxisZ(), -slope);
+				StaticCompoundShapeSettings compound;
+				add_slab(compound, rotation * Vec3(1.5f, 0, 0), rotation, 2.5f, 3.0f);
+				TriangleList walls;
+				add_corner_walls(walls, Vec3::sZero(), DegreesToRadians(135.0f));
+				create_bodies(compound, walls, 4.0f * Sin(slope) + 0.5f);
+			}
+
+			// Walk up a 10 degree slope into a wall at an angle so that the character slides along the wall
+			{
+				float slope = DegreesToRadians(10.0f);
+				Quat rotation = Quat::sRotation(Vec3::sAxisZ(), -slope);
+				StaticCompoundShapeSettings compound;
+				add_slab(compound, rotation * Vec3(1.5f, 0, 0), rotation, 2.5f, 3.0f);
+				TriangleList walls;
+				add_corner_walls(walls, Vec3::sZero(), JPH_PI);
+				create_bodies(compound, walls, 4.0f * Sin(slope) + 0.5f);
+			}
+
+			// Steep pocket: Walk up a 30 degree ramp that turns into a 70 degree slope inside a 120 degree corner
+			{
+				float ramp = DegreesToRadians(30.0f), steep = DegreesToRadians(70.0f);
+				Quat ramp_rotation = Quat::sRotation(Vec3::sAxisZ(), -ramp);
+				Quat steep_rotation = Quat::sRotation(Vec3::sAxisZ(), -steep);
+				StaticCompoundShapeSettings compound;
+				add_slab(compound, ramp_rotation * Vec3(1.0f, 0, 0), ramp_rotation, 2.0f, 2.5f);
+				Vec3 steep_start(-0.3f, Tan(ramp) * 0.3f, 0);
+				add_slab(compound, steep_start + steep_rotation * Vec3(-1.2f, 0, 0), steep_rotation, 1.5f, 1.5f);
+				TriangleList walls;
+				add_corner_walls(walls, Vec3(-1.0f, 0, 0), DegreesToRadians(120.0f));
+				create_bodies(compound, walls, 3.0f * Sin(ramp) + 0.5f);
+			}
+
+			// Steep V: Walk up a valley formed by a 55 and a 60 degree slope, the valley rises 10 degrees towards -X
+			{
+				float incline = DegreesToRadians(10.0f);
+				Quat tilt = Quat::sRotation(Vec3::sAxisZ(), -incline);
+				StaticCompoundShapeSettings compound;
+				for (float side_angle : { 55.0f, -60.0f })
+				{
+					Quat rotation = tilt * Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(side_angle));
+					add_slab(compound, rotation * Vec3(0, 0, side_angle > 0.0f? -1.45f : 1.45f), rotation, 3.0f, 1.5f);
+				}
+				create_bodies(compound, TriangleList(), 3.0f * Sin(incline));
+			}
+
+			// Jump into a 130 and a 100 degree corner
+			for (float corner_angle : { 130.0f, 100.0f })
+			{
+				StaticCompoundShapeSettings compound;
+				add_slab(compound, Vec3(1.5f, 0, 0), Quat::sIdentity(), 2.5f, 3.0f);
+				TriangleList walls;
+				add_corner_walls(walls, Vec3::sZero(), DegreesToRadians(corner_angle));
+				create_bodies(compound, walls, 0.5f);
+			}
+
+			// Gondola: A narrow aisle between two benches made out of multiple segments, with pillars and a console at the far end.
+			// The character can walk in from +X.
+			{
+				// Add a box made out of triangles that face outwards
+				auto add_box = [](TriangleList &ioTriangles, Vec3Arg inMin, Vec3Arg inMax)
+				{
+					for (uint axis = 0; axis < 3; ++axis)
+						for (int side = 0; side < 2; ++side)
+						{
+							// Pick the tangent axes so that u x v points out of the box
+							uint u = (axis + 1) % 3, v = (axis + 2) % 3;
+							if (side == 0)
+								std::swap(u, v);
+							Vec3 quad[4];
+							for (int i = 0; i < 4; ++i)
+							{
+								Vec3 p = side == 0? inMin : inMax;
+								p.SetComponent(u, i == 1 || i == 2? inMax[u] : inMin[u]);
+								p.SetComponent(v, i >= 2? inMax[v] : inMin[v]);
+								quad[i] = p;
+							}
+							ioTriangles.push_back(Triangle(quad[0], quad[1], quad[2]));
+							ioTriangles.push_back(Triangle(quad[0], quad[2], quad[3]));
+						}
+				};
+
+				constexpr float cHalfLength = 3.0f;			// Gondola goes from -cHalfLength to cHalfLength along X
+				constexpr float cAisleHalfWidth = 0.5f;		// A bit wider than the character
+				constexpr float cBenchDepth = 0.5f;
+				constexpr float cBenchHeight = 0.45f;
+				constexpr float cBenchStart = -1.8f;		// Benches go from here to cHalfLength along X
+				constexpr float cBenchSegmentLength = 1.2f;
+				constexpr float cWallThickness = 0.05f;
+				constexpr float cWallHeight = 1.0f;
+				constexpr float cPillarHalfSize = 0.04f;
+				constexpr float cPillarTop = 2.2f;
+				constexpr float cBenchOuter = cAisleHalfWidth + cBenchDepth;
+
+				TriangleList triangles;
+
+				// Floor
+				add_box(triangles, Vec3(-cHalfLength, -0.1f, -cBenchOuter - cWallThickness), Vec3(cHalfLength, 0, cBenchOuter + cWallThickness));
+
+				for (float sign : { -1.0f, 1.0f })
+				{
+					// Benches consisting of multiple segments
+					for (float x = cBenchStart; x < cHalfLength - 1.0e-3f; x += cBenchSegmentLength)
+					{
+						Vec3 p1(x, 0, sign * cAisleHalfWidth), p2(x + cBenchSegmentLength, cBenchHeight, sign * cBenchOuter);
+						add_box(triangles, Vec3::sMin(p1, p2), Vec3::sMax(p1, p2));
+					}
+
+					// Side walls
+					Vec3 w1(-cHalfLength, 0, sign * cBenchOuter), w2(cHalfLength, cWallHeight, sign * (cBenchOuter + cWallThickness));
+					add_box(triangles, Vec3::sMin(w1, w2), Vec3::sMax(w1, w2));
+
+					// Pillars on top of the side walls
+					for (float x = -cHalfLength; x < cHalfLength + 1.0e-3f; x += cBenchSegmentLength)
+					{
+						Vec3 center(Clamp(x, -cHalfLength + cPillarHalfSize, cHalfLength - cPillarHalfSize), 0, sign * (cBenchOuter + 0.5f * cWallThickness));
+						add_box(triangles, center + Vec3(-cPillarHalfSize, cWallHeight, -cPillarHalfSize), center + Vec3(cPillarHalfSize, cPillarTop, cPillarHalfSize));
+					}
+				}
+
+				// Front wall
+				add_box(triangles, Vec3(-cHalfLength - cWallThickness, 0, -cBenchOuter - cWallThickness), Vec3(-cHalfLength, cWallHeight, cBenchOuter + cWallThickness));
+
+				// Console against the front wall
+				add_box(triangles, Vec3(-cHalfLength, 0, -0.6f), Vec3(-cHalfLength + 0.4f, 1.0f, 0.6f));
+
+				// Pole next to the console that goes up to the roof
+				add_box(triangles, Vec3(-cHalfLength + 0.5f, 0, -0.6f), Vec3(-cHalfLength + 0.58f, cPillarTop, -0.52f));
+
+				// Stool in front of the console
+				add_box(triangles, Vec3(-2.35f, 0, 0.1f), Vec3(-2.05f, 0.6f, 0.4f));
+
+				StaticCompoundShapeSettings compound;
+				create_bodies(compound, triangles, 0.5f);
+			}
+		}
 	}
 #ifdef JPH_OBJECT_STREAM
 	else
@@ -681,6 +869,8 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			mReversingVerticallyMovingVelocity = -1.0f;
 		mBodyInterface->MoveKinematic(mReversingVerticallyMovingBody, pos + Vec3(0, mReversingVerticallyMovingVelocity * 3.0f * inParams.mDeltaTime, 0), cReversingVerticallyMovingOrientation, inParams.mDeltaTime);
 	}
+	for (const MovingCorner &corner : mMovingCorners)
+		mBodyInterface->MoveKinematic(corner.mBodyID, corner.mPosition + 2.0f * Vec3(Sin(0.25f * JPH_PI * mTime), 1.0f - Cos(0.1f * JPH_PI * mTime), Cos(0.25f * JPH_PI * mTime)), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI * Sin(mTime)) * cCornersOrientation, inParams.mDeltaTime);
 
 	// Animate character
 	if (mAnimatedCharacter != nullptr)

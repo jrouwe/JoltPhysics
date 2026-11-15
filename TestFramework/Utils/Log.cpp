@@ -5,6 +5,9 @@
 #include <TestFramework.h>
 #include <Utils/Log.h>
 #include <cstdarg>
+#ifdef JPH_PLATFORM_ANDROID
+	#include <android/log.h>
+#endif
 
 // Trace to TTY
 void TraceImpl(const char *inFMT, ...)
@@ -20,6 +23,9 @@ void TraceImpl(const char *inFMT, ...)
 	// Log to the output window
 	strcat_s(buffer, "\n");
 	OutputDebugStringA(buffer);
+#elif defined(JPH_PLATFORM_ANDROID)
+	// Log to logcat
+	__android_log_write(ANDROID_LOG_INFO, "Jolt", buffer);
 #else
 	// Log to the console
 	printf("%s\n", buffer);

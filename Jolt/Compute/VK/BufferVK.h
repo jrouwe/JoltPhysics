@@ -14,6 +14,8 @@ JPH_NAMESPACE_BEGIN
 class MemoryVK : public RefTarget<MemoryVK>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 								~MemoryVK()
 	{
 		// We should have unmapped and freed the block before destruction

@@ -169,6 +169,37 @@ public:
 	const SerializableAttribute & GetAttribute(int inIdx) const;
 #endif // JPH_OBJECT_STREAM
 
+	/// Create an object of type T for types that cannot use JPH_OVERRIDE_NEW_DELETE (e.g. primitive types)
+	template <class T>
+	static void *				sCreateObjectInternal()
+	{
+	#ifdef JPH_DISABLE_CUSTOM_ALLOCATOR
+		return new T;
+	#else
+		void *object;
+		if constexpr (alignof(T) > JPH_DEFAULT_ALLOCATE_ALIGNMENT)
+			object = AlignedAllocate(sizeof(T), alignof(T));
+		else
+			object = JPH_INTERNAL_DEFAULT_ALLOCATE(sizeof(T));
+		return ::new (object) T;
+	#endif
+	}
+
+	/// Destruct an object created with sCreateObjectInternal
+	template <class T>
+	static void					sDestructObjectInternal(void *inObject)
+	{
+	#ifdef JPH_DISABLE_CUSTOM_ALLOCATOR
+		delete static_cast<T *>(inObject);
+	#else
+		static_cast<T *>(inObject)->~T();
+		if constexpr (alignof(T) > JPH_DEFAULT_ALLOCATE_ALIGNMENT)
+			AlignedFree(inObject);
+		else
+			JPH_INTERNAL_DEFAULT_FREE(inObject);
+	#endif
+	}
+
 protected:
 	/// Base class information
 	struct BaseClass
@@ -223,7 +254,7 @@ public:																												\
 #define JPH_IMPLEMENT_RTTI_OUTSIDE_CLASS(class_name)																\
 	JPH::RTTI *					GetRTTIOfType(class_name *)															\
 	{																												\
-		static JPH::RTTI rtti((const char *)#class_name, sizeof(class_name), []() -> void * { return new class_name; }, [](void *inObject) { delete (class_name *)inObject; }, &CreateRTTI##class_name); \
+		static JPH::RTTI rtti((const char *)#class_name, sizeof(class_name), &JPH::RTTI::sCreateObjectInternal<class_name>, &JPH::RTTI::sDestructObjectInternal<class_name>, &CreateRTTI##class_name); \
 		return &rtti;																								\
 	}																												\
 	void						CreateRTTI##class_name(JPH::RTTI &inRTTI)

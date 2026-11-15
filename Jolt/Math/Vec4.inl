@@ -353,7 +353,7 @@ Vec4 Vec4::sFusedMultiplyAdd(Vec4Arg inMul1, Vec4Arg inMul2, Vec4Arg inAdd)
 	#ifdef JPH_USE_SSE
 		return _mm_fmadd_ps(inMul1.mValue, inMul2.mValue, inAdd.mValue);
 	#elif defined(JPH_USE_NEON)
-		return vmlaq_f32(inAdd.mValue, inMul1.mValue, inMul2.mValue);
+		return vfmaq_f32(inAdd.mValue, inMul1.mValue, inMul2.mValue);
 	#elif defined(JPH_USE_RVV)
 		Vec4 res;
 		const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inMul1.mF32, 4);
@@ -1081,7 +1081,7 @@ JPH_INLINE Vec4 Vec4::FlipSign() const
 	static_assert(Y == 1 || Y == -1, "Y must be 1 or -1");
 	static_assert(Z == 1 || Z == -1, "Z must be 1 or -1");
 	static_assert(W == 1 || W == -1, "W must be 1 or -1");
-	return Vec4::sXor(*this, Vec4(X > 0? 0.0f : -0.0f, Y > 0? 0.0f : -0.0f, Z > 0? 0.0f : -0.0f, W > 0? 0.0f : -0.0f));
+	return Vec4::sXor(*this, UVec4(X > 0? 0 : 0x80000000, Y > 0? 0 : 0x80000000, Z > 0? 0 : 0x80000000, W > 0? 0 : 0x80000000).ReinterpretAsFloat());
 }
 
 void Vec4::StoreFloat4(Float4 *outV) const

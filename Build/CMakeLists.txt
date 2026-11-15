@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-project(JoltPhysics VERSION 5.6.0 LANGUAGES CXX)
+project(JoltPhysics VERSION 5.7.0 LANGUAGES CXX)
 
 # When turning this option on, the library will be compiled using assertions. By default asserts are enabled in Debug build.
 option(USE_ASSERTS "Enable asserts" OFF)
@@ -321,11 +321,19 @@ include(${PHYSICS_REPO_ROOT}/Jolt/Jolt.cmake)
 if (XCODE)
 	# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
 	set_property(TARGET Jolt PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
+
+	# Some files compile to empty object files depending on the configuration (e.g. no profiler / debug renderer), don't warn about that
+	set_property(TARGET Jolt PROPERTY XCODE_ATTRIBUTE_OTHER_LIBTOOLFLAGS "$(inherited) -no_warning_for_no_symbols")
 endif()
 
 # Install Jolt library and includes
 if (ENABLE_INSTALL)
 	include(GNUInstallDirs)
+	include(CMakePackageConfigHelpers)
+
+	# Give the debug library a different name so that the debug and release libraries can be installed side by side
+	set_target_properties(Jolt PROPERTIES DEBUG_POSTFIX "d")
+
 	install(TARGETS Jolt
 		EXPORT JoltExport
 		INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -340,21 +348,33 @@ if (ENABLE_INSTALL)
 			install(FILES ${SRC_FILE} DESTINATION ${DST_FILE})
 		endif()
 	endforeach()
-	foreach(SRC_FILE ${JOLT_PHYSICS_DXIL_SHADERS} ${JOLT_PHYSICS_METAL_LIB} ${JOLT_PHYSICS_SPV_SHADERS})
+	foreach(SRC_FILE ${JOLT_PHYSICS_DXIL_SHADERS} ${JOLT_PHYSICS_SPV_SHADERS})
 		string(REPLACE ${PHYSICS_REPO_ROOT} "" RELATIVE_SRC_FILE ${SRC_FILE})
 		get_filename_component(DESTINATION_PATH ${RELATIVE_SRC_FILE} DIRECTORY)
 		cmake_path(SET DST_FILE NORMALIZE "${CMAKE_INSTALL_DATADIR}/${DESTINATION_PATH}")
 		install(FILES ${SRC_FILE} DESTINATION ${DST_FILE})
 	endforeach()
+	if (JOLT_PHYSICS_METAL_LIB)
+		install(FILES ${JOLT_PHYSICS_METAL_LIB} DESTINATION "${CMAKE_INSTALL_DATADIR}/Jolt/Shaders")
+	endif()
+
+	configure_package_config_file(
+	${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+	"${CMAKE_CURRENT_BINARY_DIR}/JoltConfig.cmake"
+	INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Jolt/)
+
+	install(FILES
+	${CMAKE_CURRENT_BINARY_DIR}/JoltConfig.cmake
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Jolt/)
 
 	# Export Jolt library
 	export(TARGETS Jolt
 		NAMESPACE Jolt::
-		FILE JoltConfig.cmake)
+		FILE JoltTargets.cmake)
 	install(EXPORT JoltExport
 		DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Jolt/
 		NAMESPACE Jolt::
-		FILE JoltConfig.cmake)
+		FILE JoltTargets.cmake)
 endif()
 
 # Check if we're the root CMakeLists.txt, if not we are included by another CMake file and we should disable everything except for the main library
@@ -384,6 +404,9 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				get_filename_component(ASSET_DST ${ASSET_DST} DIRECTORY)
 				set_source_files_properties(${ASSET_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION ${ASSET_DST})
 			endforeach()
+			if (JOLT_PHYSICS_METAL_LIB)
+				set_source_files_properties(${JOLT_PHYSICS_METAL_LIB} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/Jolt/Shaders)
+			endif()
 
 			set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/UnitTestsInfo.plist")
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
@@ -391,6 +414,12 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 			# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
+
+			# Suppress false positives of the Thread Performance Checker
+			if (XCODE)
+				set_property(TARGET UnitTests PROPERTY XCODE_GENERATE_SCHEME TRUE)
+				set_property(TARGET UnitTests PROPERTY XCODE_SCHEME_ENVIRONMENT "PERFC_SUPPRESSION_FILE=${CMAKE_CURRENT_SOURCE_DIR}/macOS/ThreadPerformanceChecker.supp")
+			endif()
 
 			# Unit tests are in the app bundle on macOS
 			set(UNIT_TEST_COMMAND UnitTests.app/Contents/MacOS/UnitTests)
@@ -460,7 +489,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		endif()
 	endif()
 
-	if ((WIN32 OR LINUX OR ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")) AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
+	if ((WIN32 OR LINUX OR ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin") OR IOS) AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
 		if (TARGET_SAMPLES OR TARGET_VIEWER)
 			include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
 		endif()
@@ -471,7 +500,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				message("Cannot build Samples because Vulkan/DirectX/Metal SDK is not available!")
 			endif()
 		endif()
-		if (TARGET_VIEWER)
+		if (TARGET_VIEWER AND NOT IOS) # JoltViewer needs a recording passed on the command line, which is not possible on iOS
 			if (TEST_FRAMEWORK_AVAILABLE)
 				include(${PHYSICS_REPO_ROOT}/JoltViewer/JoltViewer.cmake)
 			else()

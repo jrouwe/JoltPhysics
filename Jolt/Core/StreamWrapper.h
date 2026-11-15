@@ -17,6 +17,8 @@ JPH_NAMESPACE_BEGIN
 class StreamOutWrapper : public StreamOut
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 						StreamOutWrapper(ostream &ioWrapped)						: mWrapped(ioWrapped) { }
 
@@ -34,6 +36,8 @@ private:
 class StreamInWrapper : public StreamIn
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 						StreamInWrapper(istream &ioWrapped)							: mWrapped(ioWrapped) { }
 

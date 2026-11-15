@@ -5,6 +5,10 @@
 #include "UnitTestFramework.h"
 #include <Jolt/Core/JobSystemThreadPool.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <thread>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 TEST_SUITE("JobSystemTest")
 {
 	TEST_CASE("TestJobSystemRunJobs")
@@ -87,5 +91,66 @@ TEST_SUITE("JobSystemTest")
 		// Test jobs were executed in reverse order
 		for (int i = cMaxJobs - 1; i >= 0; --i)
 			CHECK(values[i] == cMaxJobs - i);
+	}
+
+	// Tests that jobs added to a barrier from within a job don't cause the barrier to release too early. See issue #2198.
+	// Note that this only used to fail when explicitly putting a sleep inside JobSystemWithBarrier as specified in the issue.
+	TEST_CASE("TestJobSystemCheckBarrierDoesNotReleaseWaitEarly")
+	{
+		static constexpr int cMaxJobs = 127;
+		static constexpr int cMaxBarriers = 10;
+		static constexpr int cNumThreads = 4;
+		static constexpr int cNumIterations = 50;
+		static constexpr uint32 cNumAddedJobs = 4;
+
+		JobSystemThreadPool system(cMaxJobs + 1 /* Job system reserves 1 job, see documentation */, cMaxBarriers, cNumThreads);
+
+		JobSystem::Barrier *barrier = system.CreateBarrier();
+
+		for (int iteration = 0; iteration < cNumIterations; ++iteration)
+		{
+			// Keep track of whether the adder job is done and if its added jobs are done
+			atomic<bool> adder_done = false;
+			atomic<uint32> added_jobs_done = 0;
+
+			// Job that adds jobs to the barrier. It has a dependency so that it is not executable while the main thread starts waiting,
+			// this ensures that it runs on a worker thread rather than on the waiting thread
+			JobHandle adder = system.CreateJob("Adder", Color::sRed, [&system, barrier, &adder_done, &added_jobs_done] {
+				// Create jobs without dependencies, these are queued immediately and finish on other worker threads
+				JobHandle handles[cNumAddedJobs];
+				for (JobHandle &h : handles)
+					h = system.CreateJob("Added", Color::sGreen, [&added_jobs_done] { added_jobs_done.fetch_add(1, std::memory_order_relaxed); });
+				barrier->AddJobs(handles, cNumAddedJobs);
+
+				// Signal that we're done, this is the last thing that this job does
+				adder_done.store(true, std::memory_order_relaxed);
+			}, 1);
+			barrier->AddJob(adder);
+
+			// Start the job after the main thread has had time to go to sleep in WaitForJobs
+			#if !defined(JPH_CPU_WASM) || defined(__EMSCRIPTEN_PTHREADS__)
+				std::thread starter([&adder]() {
+					std::this_thread::sleep_for(std::chrono::milliseconds(1));
+					adder.RemoveDependency();
+				});
+			#else
+				// If we're running without threads support we just start the thread now
+				adder.RemoveDependency();
+			#endif
+
+			// Wait for the barrier to complete, this should not return until the adding job and all jobs it added have finished
+			system.WaitForJobs(barrier);
+			bool adder_finished = adder_done.load(std::memory_order_relaxed);
+			uint32 added_finished = added_jobs_done.load(std::memory_order_relaxed);
+			#if !defined(JPH_CPU_WASM) || defined(__EMSCRIPTEN_PTHREADS__)
+				starter.join();
+			#endif
+
+			// Check that all jobs have finished, if not the barrier has released too early
+			CHECK(adder_finished);
+			CHECK(added_finished == cNumAddedJobs);
+		}
+
+		system.DestroyBarrier(barrier);
 	}
 }

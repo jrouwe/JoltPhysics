@@ -50,6 +50,10 @@ public:
 			if (inManifold.HasContact(v))
 				bodies_in_contact.insert(inManifold.GetContactBodyID(v));
 
+		// Add the sensors that are in contact
+		for (uint i = 0; i < inManifold.GetNumSensorContacts(); ++i)
+			bodies_in_contact.insert(inManifold.GetSensorContactBodyID(i));
+
 		lock_guard lock(mLogMutex);
 		for (const BodyID &entry : bodies_in_contact)
 			mLog.push_back({ EType::Add, inSoftBody.GetID(), entry });

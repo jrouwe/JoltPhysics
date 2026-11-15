@@ -33,6 +33,7 @@ public:
 private:
 	id<MTLDevice>					mDevice;
 	id<MTLLibrary>					mShaderLibrary = nil;
+	id<MTLBuffer>					mDummyBuffer = nil;
 };
 
 JPH_NAMESPACE_END

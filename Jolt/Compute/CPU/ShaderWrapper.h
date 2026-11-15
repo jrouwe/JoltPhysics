@@ -14,6 +14,8 @@ namespace HLSLToCPP { struct uint3; }
 class ShaderWrapper
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 	virtual				~ShaderWrapper() = default;
 

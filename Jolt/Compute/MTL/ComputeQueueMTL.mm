@@ -18,9 +18,11 @@ ComputeQueueMTL::~ComputeQueueMTL()
 	Wait();
 
 	[mCommandQueue release];
+	[mDummyBuffer release];
 }
 
-ComputeQueueMTL::ComputeQueueMTL(id<MTLDevice> inDevice)
+ComputeQueueMTL::ComputeQueueMTL(id<MTLDevice> inDevice, id<MTLBuffer> inDummyBuffer) :
+	mDummyBuffer([inDummyBuffer retain])
 {
 	// Create the command queue
 	mCommandQueue = [inDevice newCommandQueue];
@@ -43,6 +45,10 @@ void ComputeQueueMTL::SetShader(const ComputeShader *inShader)
 	mShader = static_cast<const ComputeShaderMTL *>(inShader);
 
 	[mComputeEncoder setComputePipelineState: mShader->GetPipelineState()];
+
+	// Bind the dummy buffer to all buffer slots so that slots for which no buffer is provided are still valid
+	for (uint index : mShader->GetBufferBindingIndices())
+		[mComputeEncoder setBuffer: mDummyBuffer offset: 0 atIndex: index];
 }
 
 void ComputeQueueMTL::SetConstantBuffer(const char *inName, const ComputeBuffer *inBuffer)

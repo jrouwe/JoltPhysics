@@ -1,0 +1,92 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdk = 36
+    ndkVersion = "29.0.14206865"
+
+    defaultConfig {
+        applicationId = "com.joltphysics.samples"
+        minSdk = 26
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
+        ndk.abiFilters = ['arm64-v8a', 'x86_64']
+
+        externalNativeBuild {
+            cmake {
+                cppFlags = ['-std=c++17', '-Wall', '-Werror', '-DJPH_PROFILE_ENABLED', '-DJPH_DEBUG_RENDERER']
+                arguments = ['-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static']
+            }
+        }
+        signingConfig = signingConfigs.debug
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file('src/main/cpp/CMakeLists.txt')
+            version = '3.22.1'
+        }
+    }
+
+    sourceSets {
+        main {
+            // Package the Assets folder in the APK
+            assets.srcDirs = ['../../../Assets']
+        }
+    }
+
+    androidResources {
+        // Don't package scripts, shader sources and shaders for other platforms that are in the Assets folder
+        ignoreAssetsPattern = '!*.sh:!*.py:!LICENSE:!*.vert:!*.frag:!*.h:!<dir>DX:!<dir>MTL:!.*:!*~'
+    }
+
+    namespace = 'com.joltphysics.samples'
+}
+
+// Task that copies the compute shaders to Jolt/Shaders in a generated assets folder
+abstract class CopyJoltShadersTask extends DefaultTask {
+    @InputFiles
+    abstract ConfigurableFileCollection getShaders()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @Inject
+    abstract FileSystemOperations getFileSystemOperations()
+
+    @TaskAction
+    void copy() {
+        fileSystemOperations.sync {
+            from(shaders)
+            into(outputDir.dir('Jolt/Shaders'))
+        }
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        def variant_name = variant.name.substring(0, 1).toUpperCase() + variant.name.substring(1)
+        def copy_task = tasks.register("copy${variant_name}JoltShaders", CopyJoltShadersTask) {
+            // The shaders are compiled by the native build (this also compiles the shaders in the Assets folder)
+            dependsOn "externalNativeBuild${variant_name}"
+            shaders.from(fileTree('../../../Jolt/Shaders') { include '*.spv' })
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(copy_task, { it.outputDir })
+    }
+}
+
+dependencies {
+}

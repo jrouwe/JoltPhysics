@@ -448,7 +448,7 @@ void BodyManager::AddBodyToActiveBodies(Body &ioBody)
 
 	MotionProperties *mp = ioBody.mMotionProperties;
 	uint32 num_active_bodies_val = num_active_bodies.load(memory_order_relaxed);
-	mp->mIndexInActiveBodies = num_active_bodies_val;
+	mp->mIndexInActiveBodies.store(num_active_bodies_val, memory_order_relaxed); // Can be read without lock by other threads (e.g. Body::IsActive)
 	JPH_ASSERT(num_active_bodies_val < GetMaxBodies());
 	active_bodies[num_active_bodies_val] = ioBody.GetID();
 	num_active_bodies.fetch_add(1, memory_order_release); // Increment atomic after setting the body ID so that PhysicsSystem::JobFindCollisions (which doesn't lock the mActiveBodiesMutex) will only read valid IDs
@@ -467,20 +467,23 @@ void BodyManager::RemoveBodyFromActiveBodies(Body &ioBody)
 
 	uint32 last_body_index = num_active_bodies.load(memory_order_relaxed) - 1;
 	MotionProperties *mp = ioBody.mMotionProperties;
-	if (mp->mIndexInActiveBodies != last_body_index)
+	uint32 index_in_active_bodies = mp->GetIndexInActiveBodiesInternal();
+	if (index_in_active_bodies != last_body_index)
 	{
 		// This is not the last body, use the last body to fill the hole
 		BodyID last_body_id = active_bodies[last_body_index];
-		active_bodies[mp->mIndexInActiveBodies] = last_body_id;
+		active_bodies[index_in_active_bodies] = last_body_id;
 
-		// Update that body's index in the active list
+		// Update that body's index in the active list.
+		// Note that we don't hold the lock of last_body, so another thread can be reading this value at the same time (e.g. through Body::IsActive).
+		// This is fine since we change it from one valid index to another, so the active state of last_body doesn't change.
 		Body &last_body = *mBodies[last_body_id.GetIndex()];
-		JPH_ASSERT(last_body.mMotionProperties->mIndexInActiveBodies == last_body_index);
-		last_body.mMotionProperties->mIndexInActiveBodies = mp->mIndexInActiveBodies;
+		JPH_ASSERT(last_body.mMotionProperties->GetIndexInActiveBodiesInternal() == last_body_index);
+		last_body.mMotionProperties->mIndexInActiveBodies.store(index_in_active_bodies, memory_order_relaxed);
 	}
 
 	// Mark this body as no longer active
-	mp->mIndexInActiveBodies = Body::cInactiveIndex;
+	mp->mIndexInActiveBodies.store(Body::cInactiveIndex, memory_order_relaxed);
 
 	// Remove unused element from active bodies list
 	num_active_bodies.fetch_sub(1, memory_order_release);
@@ -515,7 +518,7 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 				body.ResetSleepTimer();
 
 				// Check if we're sleeping
-				if (body.mMotionProperties->mIndexInActiveBodies == Body::cInactiveIndex)
+				if (body.mMotionProperties->GetIndexInActiveBodiesInternal() == Body::cInactiveIndex)
 				{
 					AddBodyToActiveBodies(body);
 
@@ -546,8 +549,7 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 			JPH_ASSERT(body.GetID() == body_id);
 			JPH_ASSERT(body.IsInBroadPhase(), "Use BodyInterface::AddBody to add the body first!");
 
-			if (body.mMotionProperties != nullptr
-				&& body.mMotionProperties->mIndexInActiveBodies != Body::cInactiveIndex)
+			if (body.IsActive())
 			{
 				// Remove the body from the active bodies list
 				RemoveBodyFromActiveBodies(body);

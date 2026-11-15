@@ -131,6 +131,14 @@ private:
 	float					mReversingVerticallyMovingVelocity = 1.0f;
 	BodyID					mHorizontallyMovingBody;
 
+	// Corners and slopes that are hard for the character to navigate
+	struct MovingCorner
+	{
+		BodyID				mBodyID;
+		RVec3				mPosition;
+	};
+	Array<MovingCorner>		mMovingCorners;
+
 	// Moving characters
 	Ref<Character>			mAnimatedCharacter;
 	Ref<CharacterVirtual>	mAnimatedCharacterVirtual;

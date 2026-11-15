@@ -15,12 +15,13 @@ on:
 env:
   EMSCRIPTEN_VERSION: 6.0.8
   NODE_VERSION: 24.x
-  UBUNTU_CLANG_VERSION: clang++-18
-  UBUNTU_GCC_VERSION: g++-14
+  UBUNTU_CLANG_VERSION: 22
+  UBUNTU_GCC_VERSION: 15
+  VULKAN_VERSION: 1.4.363.1
 
 jobs:
   linux-clang:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Linux Clang
     strategy:
         fail-fast: false
@@ -32,18 +33,44 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}}
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
+  linux-clang-check-global-new:
+    runs-on: ubuntu-26.04
+    name: Linux Clang Check Global New
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v7
+    - name: Install Vulkan
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}/Build
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        ./cmake_linux_clang_gcc.sh Debug clang++-${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON
+    - name: Check Global New
+      working-directory: ${{github.workspace}}/Build
+      run: ./check_global_new.sh Linux_Debug clang-query-${{env.UBUNTU_CLANG_VERSION}}
+
   linux_clang_tsan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Linux Clang Sanitizers
     strategy:
         fail-fast: false
@@ -54,12 +81,18 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DTARGET_PERFORMANCE_TEST=ON
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -71,7 +104,7 @@ jobs:
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll
 
   linux-clang-so:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Linux Clang Shared Library
     strategy:
         fail-fast: false
@@ -82,18 +115,24 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DBUILD_SHARED_LIBS=YES
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DBUILD_SHARED_LIBS=YES
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
   linux-clang-32-bit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Linux Clang 32-bit
     strategy:
         fail-fast: false
@@ -109,7 +148,7 @@ jobs:
       run: sudo apt -y install g++-multilib
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
+      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} clang++-${{env.UBUNTU_CLANG_VERSION}} -DCMAKE_CXX_FLAGS=-m32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
@@ -117,7 +156,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Linux GCC
     strategy:
         fail-fast: false
@@ -128,18 +167,24 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}}
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} g++-${{env.UBUNTU_GCC_VERSION}}
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
 
   linux-gcc-so:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Linux GCC Shared Library
     strategy:
         fail-fast: false
@@ -150,12 +195,18 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu24_install_vulkan_sdk.sh
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} ${{env.UBUNTU_GCC_VERSION}} -DBUILD_SHARED_LIBS=Yes
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        ./cmake_linux_clang_gcc.sh ${{matrix.build_type}} g++-${{env.UBUNTU_GCC_VERSION}} -DBUILD_SHARED_LIBS=Yes
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}} -j $(nproc)
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}
       run: ctest --output-on-failure --verbose
@@ -178,8 +229,8 @@ jobs:
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: mingw64
-        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
+        msystem: ucrt64
+        install: mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake
         update: true
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
@@ -337,7 +388,10 @@ jobs:
     - name: Install Metal Toolchain
       run: xcodebuild -downloadComponent MetalToolchain
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
+      uses: ./.github/actions/install-vulkan-macos
+      with:
+        version: ${{env.VULKAN_VERSION}}
+        path: ${{env.VULKAN_SDK_INSTALL}}
     - name: Configure CMake
       run: |
         source ${VULKAN_SDK_INSTALL}/setup-env.sh
@@ -351,10 +405,15 @@ jobs:
         ctest --output-on-failure --verbose
 
   android:
-    runs-on: ubuntu-latest
-    name: Android
+    runs-on: ubuntu-26.04
+    name: Android (${{matrix.build_type}})
+    env:
+        ANDROID_API_LEVEL: 34
+        ANDROID_ARCH: x86_64
     strategy:
         fail-fast: false
+        matrix:
+            build_type: [Debug, Release]
 
     steps:
     - name: Checkout Code
@@ -364,26 +423,107 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v6
+    - name: Install Vulkan
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Gradle Build
       working-directory: ${{github.workspace}}/Build/Android
-      run: ./gradlew build --no-daemon
+      run: |
+        source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
+        ./gradlew assemble${{matrix.build_type}} --no-daemon
+    - name: Enable KVM group perms
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger --name-match=kvm
+        # Make the SDK location available to the cache step below
+        echo "ANDROID_SDK_DIR=$ANDROID_HOME" >> $GITHUB_ENV
+    - name: Cache Emulator
+      id: emulator-cache
+      uses: actions/cache@v6
+      with:
+        # The system image and the AVD including a snapshot of the booted emulator
+        path: |
+          ${{env.ANDROID_SDK_DIR}}/system-images/android-${{env.ANDROID_API_LEVEL}}
+          ~/.android/avd/*
+          ~/.android/adb*
+        key: android-emulator-${{env.ANDROID_API_LEVEL}}-${{env.ANDROID_ARCH}}
+    - name: Create Emulator Snapshot
+      if: steps.emulator-cache.outputs.cache-hit != 'true'
+      timeout-minutes: 30
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{env.ANDROID_API_LEVEL}}
+        arch: ${{env.ANDROID_ARCH}}
+        force-avd-creation: false
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: false
+        script: echo "Generated AVD snapshot for caching"
+    - name: Run Unit Tests
+      timeout-minutes: 30
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{env.ANDROID_API_LEVEL}}
+        arch: ${{env.ANDROID_ARCH}}
+        force-avd-creation: false
+        # Boot from the cached snapshot, but don't write the state after running the tests back to it
+        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: bash ${{github.workspace}}/Build/Android/run_unit_tests.sh ${{github.workspace}}/Build/Android/UnitTests/build 600 ${{matrix.build_type}}
 
   ios:
     runs-on: macos-latest
-    name: iOS
+    name: iOS (${{matrix.build_type}})
+    env:
+        VULKAN_SDK_INSTALL: ${{github.workspace}}/vulkan_sdk
     strategy:
         fail-fast: false
+        matrix:
+            build_type: [Debug, Release]
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v7
+    - name: Boot Simulator
+      run: |
+        # Create an iPhone simulator using the newest available iOS runtime
+        read RUNTIME DEVICE_TYPE < <(xcrun simctl list runtimes ios available -j | python3 -c "
+        import json, sys
+        r = json.load(sys.stdin)['runtimes'][-1]
+        print(r['identifier'], [d['identifier'] for d in r['supportedDeviceTypes'] if d['productFamily'] == 'iPhone'][-1])")
+        echo "Using $DEVICE_TYPE with $RUNTIME"
+        UDID=$(xcrun simctl create JoltUnitTests $DEVICE_TYPE $RUNTIME)
+        echo "SIMULATOR_UDID=$UDID" >> $GITHUB_ENV
+        # Boot in the background so that booting overlaps with the build, the 'Wait for Simulator' step waits for it to finish
+        nohup xcrun simctl boot $UDID > /dev/null 2>&1 &
+    - name: Install Metal Toolchain
+      run: xcodebuild -downloadComponent MetalToolchain
+    - name: Install Vulkan
+      uses: ./.github/actions/install-vulkan-macos
+      with:
+        version: ${{env.VULKAN_VERSION}}
+        path: ${{env.VULKAN_SDK_INSTALL}}
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
+      run: |
+        source ${VULKAN_SDK_INSTALL}/setup-env.sh
+        cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch arm64 -j $(sysctl -n hw.ncpu)
+      run: cmake --build ${{github.workspace}}/Build/XCode_iOS --config ${{matrix.build_type}} -- -sdk iphonesimulator -arch arm64 -j $(sysctl -n hw.ncpu)
+    - name: Wait for Simulator
+      run: xcrun simctl bootstatus $SIMULATOR_UDID -b
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/XCode_iOS
+      run: |
+        xcrun simctl install $SIMULATOR_UDID ${{matrix.build_type}}-iphonesimulator/UnitTests.app
+        # simctl launch does not forward the exit code of the app, so check the doctest output instead
+        xcrun simctl launch --console-pty --terminate-running-process $SIMULATOR_UDID com.joltphysics.unittests --no-colors 2>&1 | tee UnitTests.log
+        grep -q "Status: SUCCESS!" UnitTests.log
 
   emscripten:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Emscripten
 
     steps:

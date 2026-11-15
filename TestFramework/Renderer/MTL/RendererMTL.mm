@@ -12,7 +12,7 @@
 #include <Renderer/MTL/PixelShaderMTL.h>
 #include <Renderer/MTL/TextureMTL.h>
 #include <Renderer/MTL/FatalErrorIfFailedMTL.h>
-#include <Window/ApplicationWindowMacOS.h>
+#include <Window/ApplicationWindowApple.h>
 #include <Utils/Log.h>
 #include <Utils/AssetStream.h>
 #include <Jolt/Core/Profiler.h>
@@ -36,7 +36,7 @@ void RendererMTL::Initialize(ApplicationWindow *inWindow)
 {
 	Renderer::Initialize(inWindow);
 
-	mView = static_cast<ApplicationWindowMacOS *>(inWindow)->GetMetalView();
+	mView = static_cast<ApplicationWindowApple *>(inWindow)->GetMetalView();
 
 	id<MTLDevice> device = mView.device;
 

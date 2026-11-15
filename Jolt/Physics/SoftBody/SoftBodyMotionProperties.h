@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <Jolt/Core/StridedPtr.h>
 #include <Jolt/Geometry/AABox.h>
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Body/MotionProperties.h>
@@ -138,6 +139,18 @@ public:
 	/// @param inHardSkinAll Can be used to position all vertices on the skinned vertices and can be used to hard reset the soft body.
 	/// @param ioTempAllocator Allocator.
 	void								SkinVertices(RMat44Arg inCenterOfMassTransform, const Mat44 *inJointMatrices, uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator);
+
+	/// After calling SkinVertices, this gives access to the vertex positions and normals. This matrix takes the local space vertices to world space.
+	RMat44								GetSkinnedVertexTransform() const			{ return mSkinStateTransform; }
+
+	/// Access to the previous skinned position. During the simulation the skin constraints move from this position to the 'current position'. One entry per simulated vertex.
+	StridedPtr<const Vec3>				GetSkinnedVertexPreviousPositions() const	{ return StridedPtr(&mSkinState.data()->mPreviousPosition, sizeof(SkinState)); }
+
+	/// Access to the current skinned position. One entry per simulated vertex.
+	StridedPtr<const Vec3>				GetSkinnedVertexPositions() const			{ return StridedPtr(&mSkinState.data()->mPosition, sizeof(SkinState)); }
+
+	/// Access to the current skinned normal. One entry per simulated vertex.
+	StridedPtr<const Vec3>				GetSkinnedVertexNormals() const				{ return StridedPtr(&mSkinState.data()->mNormal, sizeof(SkinState)); }
 
 	/// This function allows you to update the soft body immediately without going through the PhysicsSystem.
 	/// This is useful if the soft body is teleported and needs to 'settle' or it can be used if a the soft body
@@ -309,8 +322,6 @@ private:
 	/// Helper function to draw constraints
 	template <typename GetEndIndex, typename DrawConstraint>
 		inline void						DrawConstraints(ESoftBodyConstraintColor inConstraintColor, const GetEndIndex &inGetEndIndex, const DrawConstraint &inDrawConstraint, ColorArg inBaseColor) const;
-
-	RMat44								mSkinStateTransform = RMat44::sIdentity();	///< The matrix that transforms mSkinState to world space
 #endif // JPH_DEBUG_RENDERER
 
 	RefConst<SoftBodySharedSettings>	mSettings;									///< Configuration of the particles and constraints
@@ -319,6 +330,7 @@ private:
 	Array<CollidingShape>				mCollidingShapes;							///< List of colliding shapes retrieved during the last update
 	Array<CollidingSensor>				mCollidingSensors;							///< List of colliding sensors retrieved during the last update
 	Array<SkinState>					mSkinState;									///< List of skinned positions (1-on-1 with mVertices but only those that are used by the skinning constraints are filled in)
+	RMat44								mSkinStateTransform = RMat44::sIdentity();	///< The matrix that transforms mSkinState to world space
 	AABox								mLocalBounds;								///< Bounding box of all vertices
 	AABox								mLocalPredictedBounds;						///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time
 	uint32								mNumIterations;								///< Number of solver iterations

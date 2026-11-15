@@ -890,7 +890,7 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 		// Update the skin state too since we will use this position as the previous position in the next update
 		for (SkinState &s : mSkinState)
 			s.mPosition -= delta;
-		JPH_IF_DEBUG_RENDERER(mSkinStateTransform.SetTranslation(mSkinStateTransform.GetTranslation() + ioContext.mDeltaPosition);)
+		mSkinStateTransform.SetTranslation(mSkinStateTransform.GetTranslation() + ioContext.mDeltaPosition);
 
 		// Offset bounds to match new position
 		mLocalBounds.Translate(-delta);
@@ -1152,7 +1152,7 @@ void SoftBodyMotionProperties::SkinVertices([[maybe_unused]] RMat44Arg inCenterO
 	}
 
 	// Skin the vertices
-	JPH_IF_DEBUG_RENDERER(mSkinStateTransform = inCenterOfMassTransform;)
+	mSkinStateTransform = inCenterOfMassTransform;
 	JPH_IF_ENABLE_ASSERTS(uint num_vertices = uint(mSettings->mVertices.size());)
 	JPH_ASSERT(mSkinState.size() == num_vertices);
 	const SoftBodySharedSettings::Vertex *in_vertices = mSettings->mVertices.data();

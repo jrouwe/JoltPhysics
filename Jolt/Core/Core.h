@@ -6,8 +6,8 @@
 
 // Jolt library version
 #define JPH_VERSION_MAJOR 5
-#define JPH_VERSION_MINOR 6
-#define JPH_VERSION_PATCH 1
+#define JPH_VERSION_MINOR 7
+#define JPH_VERSION_PATCH 0
 
 // Always turn on asserts in Debug mode
 #if defined(JPH_DEBUG) && !defined(JPH_ENABLE_ASSERTS)

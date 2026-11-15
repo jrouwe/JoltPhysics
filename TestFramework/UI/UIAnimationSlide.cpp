@@ -29,11 +29,11 @@ void UIAnimationSlide::Init(UIElement *inElement)
 	mTargetRelativeX = inElement->GetRelativeX();
 	mTargetRelativeY = inElement->GetRelativeY();
 
-	ApplicationWindow *window = inElement->GetManager()->GetRenderer()->GetWindow();
+	const Renderer *renderer = inElement->GetManager()->GetRenderer();
 	int dl = inElement->GetX();
-	int dr = window->GetWindowWidth() - (inElement->GetX() + inElement->GetWidth());
+	int dr = renderer->GetUIWidth() - (inElement->GetX() + inElement->GetWidth());
 	int dt = inElement->GetY();
-	int db = window->GetWindowHeight() - (inElement->GetY() + inElement->GetHeight());
+	int db = renderer->GetUIHeight() - (inElement->GetY() + inElement->GetHeight());
 
 	if (min(dl, dr) < min(dt, db))
 	{

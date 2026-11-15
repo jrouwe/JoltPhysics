@@ -70,7 +70,9 @@ bool ComputeSystemVK::Initialize(VkPhysicalDevice inPhysicalDevice, PFN_vkGetDev
 	#undef JPH_LOAD_VK
 
 	// Get function to set a debug name
+#ifndef JPH_PLATFORM_ANDROID // On the Android emulator vkSetDebugUtilsObjectNameEXT crashes in the driver, so we don't name objects on Android
 	mVkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(reinterpret_cast<void *>(inVkGetDeviceProcAddr(mDevice, "vkSetDebugUtilsObjectNameEXT")));
+#endif
 
 	if (!InitializeMemory())
 	{

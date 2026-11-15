@@ -30,6 +30,10 @@ public:
 	virtual bool					IsRightPressed() const = 0;
 	virtual bool					IsMiddlePressed() const = 0;
 
+	/// Distance that a two finger drag on a touch screen moved since the last poll (in points / density independent pixels), used to move the camera
+	virtual float					GetPanDX() const					{ return 0.0f; }
+	virtual float					GetPanDY() const					{ return 0.0f; }
+
 	virtual void					HideCursor() = 0;
 	virtual void					ShowCursor() = 0;
 };

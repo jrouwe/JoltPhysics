@@ -574,6 +574,8 @@ The most common collision tests are:
 * Casting a shape (sweeping it from a start to an end position and finding collisions along the way): NarrowPhaseQuery::CastShape, TransformedShape::CastShape, CollisionDispatch::sCastShapeVsShapeWorldSpace.
 * Checking if a shape contains a point: BroadPhaseQuery::CollidePoint, NarrowPhaseQuery::CollidePoint, TransformedShape::CollidePoint, Shape::CollidePoint.
 
+Ray casts against triangle meshes can miss when a ray passes exactly along an edge shared by two triangles because of floating-point rounding. If false negatives at such boundaries are unacceptable, use a small shape cast (for example, a sphere) with NarrowPhaseQuery::CastShape - this sweeps a volume rather than an exact ray - or cast additional rays with slightly offset origins and use the nearest hit.
+
 The following sections describe the collision detection system in more detail.
 
 ## Broad Phase {#broad-phase}

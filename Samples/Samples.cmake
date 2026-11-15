@@ -344,6 +344,18 @@ set(SAMPLES_ASSETS
 	${PHYSICS_REPO_ROOT}/Assets/terrain2.bof
 )
 
+# Optional assets used by the samples (downloaded through Assets/download_hair.sh), only packaged when they exist
+set(SAMPLES_ASSETS_OPTIONAL
+	${PHYSICS_REPO_ROOT}/Assets/wCurly.hair
+	${PHYSICS_REPO_ROOT}/Assets/wStraight.hair
+	${PHYSICS_REPO_ROOT}/Assets/wWavy.hair
+)
+foreach(ASSET_FILE ${SAMPLES_ASSETS_OPTIONAL})
+	if (EXISTS ${ASSET_FILE})
+		list(APPEND SAMPLES_ASSETS ${ASSET_FILE})
+	endif()
+endforeach()
+
 # Group source files
 source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 
@@ -366,6 +378,20 @@ if (APPLE)
 	set_property(TARGET Samples PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/SamplesInfo.plist")
 	set_property(TARGET Samples PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.samples")
 	set_property(TARGET Samples PROPERTY BUILD_RPATH "/usr/local/lib" INSTALL_RPATH "/usr/local/lib") # to find the Vulkan shared lib
+	if (IOS)
+		# Build for both iPhone and iPad
+		set_property(TARGET Samples PROPERTY XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
+	endif()
+
+	# Suppress false positives of the Thread Performance Checker
+	if (XCODE)
+		set_property(TARGET Samples PROPERTY XCODE_GENERATE_SCHEME TRUE)
+		set_property(TARGET Samples PROPERTY XCODE_SCHEME_ENVIRONMENT "PERFC_SUPPRESSION_FILE=${CMAKE_CURRENT_SOURCE_DIR}/macOS/ThreadPerformanceChecker.supp")
+	endif()
+elseif (ANDROID)
+	# Android configuration, the samples are a shared library that is loaded by NativeActivity
+	add_library(Samples SHARED ${SAMPLES_SRC_FILES})
+	target_link_options(Samples PRIVATE "-uANativeActivity_onCreate")
 else()
 	add_executable(Samples ${SAMPLES_SRC_FILES})
 endif()

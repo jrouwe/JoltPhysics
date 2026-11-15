@@ -34,6 +34,8 @@ class HairShaders;
 class JPH_EXPORT Hair : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / destructor
 										Hair(const HairSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, ObjectLayer inLayer);
 										~Hair();

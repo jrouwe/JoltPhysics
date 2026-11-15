@@ -1,0 +1,8 @@
+# Suppression file for the Xcode Thread Performance Checker.
+# To use it, set the environment variable PERFC_SUPPRESSION_FILE to the path of this file in the Run action of your Xcode scheme.
+# Symbols must be specified in their mangled form, a rule matches if the symbol appears anywhere in the backtrace.
+
+# Idle worker threads of JobSystemThreadPool wait on a dispatch_semaphore. The checker can incorrectly report this as a priority
+# inversion ("waiting on a thread without a QoS class specified") even though all threads that signal the semaphore run at the same QoS.
+# Note that this does not suppress real priority inversions when waiting for jobs to complete (JobSystem::WaitForJobs).
+priority_inversion:_ZN3JPH19JobSystemThreadPool10ThreadMainEi

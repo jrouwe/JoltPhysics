@@ -96,7 +96,6 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	// Required instance extensions
 	Array<const char *> required_instance_extensions;
 	required_instance_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-	required_instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #ifdef JPH_PLATFORM_MACOS
 	required_instance_extensions.push_back("VK_KHR_portability_enumeration");
 	required_instance_extensions.push_back("VK_KHR_get_physical_device_properties2");
@@ -126,6 +125,18 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	instance_extensions.resize(instance_extension_count);
 	if (VKFailed(mVkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, instance_extensions.data()), outResult))
 		return false;
+
+#ifdef JPH_DEBUG
+	// Enable the debug utils extension if it is supported (e.g. on Android it is often only available through the validation layer)
+	bool has_debug_utils = false;
+	for (const VkExtensionProperties &ext : instance_extensions)
+		if (strcmp(VK_EXT_DEBUG_UTILS_EXTENSION_NAME, ext.extensionName) == 0)
+		{
+			required_instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+			has_debug_utils = true;
+			break;
+		}
+#endif // JPH_DEBUG
 
 	// Query supported validation layers
 	uint32 validation_layer_count;
@@ -158,17 +169,14 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 
 	// Setup debug messenger callback if the extension is supported
 	VkDebugUtilsMessengerCreateInfoEXT messenger_create_info = {};
-	for (const VkExtensionProperties &ext : instance_extensions)
-		if (strcmp(VK_EXT_DEBUG_UTILS_EXTENSION_NAME, ext.extensionName) == 0)
-		{
-			messenger_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-			messenger_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-			messenger_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-			messenger_create_info.pfnUserCallback = sVulkanDebugCallback;
-			instance_create_info.pNext = &messenger_create_info;
-			required_instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-			break;
-		}
+	if (has_debug_utils)
+	{
+		messenger_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		messenger_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		messenger_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		messenger_create_info.pfnUserCallback = sVulkanDebugCallback;
+		instance_create_info.pNext = &messenger_create_info;
+	}
 #endif
 
 	instance_create_info.enabledExtensionCount = (uint32)required_instance_extensions.size();
@@ -349,6 +357,9 @@ bool ComputeSystemVKImpl::Initialize(ComputeSystemResult &outResult)
 	VkPhysicalDeviceScalarBlockLayoutFeatures enable_scalar_block = {};
 	enable_scalar_block.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
 	enable_scalar_block.scalarBlockLayout = VK_TRUE;
+
+	// Allow the derived class to query the features of the selected device
+	mPhysicalDevice = selected_device.mPhysicalDevice;
 
 	VkPhysicalDeviceFeatures2 enabled_features2 = {};
 	enabled_features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;

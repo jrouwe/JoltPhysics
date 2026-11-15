@@ -6,13 +6,15 @@
 
 #include <Input/Keyboard.h>
 
+class ApplicationWindowApple;
+
 /// Keyboard interface class which keeps track on the status of all keys and keeps track of the list of keys pressed.
 class KeyboardMacOS : public Keyboard
 {
 public:
 	/// Initialization / shutdown
 	virtual bool					Initialize(ApplicationWindow *inWindow) override;
-	virtual void					Shutdown() override							{ }
+	virtual void					Shutdown() override;
 
 	/// Update the keyboard state
 	virtual void					Poll() override;
@@ -24,11 +26,14 @@ public:
 	virtual EKey					GetFirstKey() override;
 	virtual EKey					GetNextKey() override;
 
+private:
 	/// Handle a key press event
 	void							OnKeyPressed(EKey inKey, bool inPressed);
 
-private:
+	ApplicationWindowApple *		mWindow = nullptr;
 	bool							mKeyPressed[(int)EKey::NumKeys] = { };
+	bool							mKeyDown[(int)EKey::NumKeys] = { };			///< Current state of the keys
+	bool							mKeyPressedLatched[(int)EKey::NumKeys] = { };	///< If a key was pressed since the last Poll (so that short key presses are not lost)
 	StaticArray<EKey, 128>			mPendingKeyBuffer;
 	StaticArray<EKey, 128>			mKeyBuffer;
 	uint							mCurrentKey = 0;

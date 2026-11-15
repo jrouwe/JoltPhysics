@@ -16,6 +16,8 @@ template <class MutexType>
 class MutexArray : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor, constructs an empty mutex array that you need to initialize with Init()
 							MutexArray() = default;
 

@@ -11,6 +11,7 @@
 #include <Jolt/Compute/CPU/ComputeBufferCPU.h>
 #include <Jolt/Compute/CPU/ShaderWrapper.h>
 #include <Jolt/Compute/CPU/HLSLToCPP.h>
+#include <Jolt/Core/FPException.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -70,6 +71,16 @@ void ComputeQueueCPU::Dispatch(uint inThreadGroupsX, uint inThreadGroupsY, uint 
 	uint nx = inThreadGroupsX * mShader->GetGroupSizeX();
 	uint ny = inThreadGroupsY * mShader->GetGroupSizeY();
 	uint nz = inThreadGroupsZ * mShader->GetGroupSizeZ();
+
+	// GPUs don't raise floating point exceptions, so shaders are not written to avoid them.
+	// Also, the compiler may vectorize partial vector operations using SIMD lanes that contain uninitialized data
+	// (which is allowed since we compile with /fp:except-). This can trigger spurious exceptions.
+	FPExceptionDisableInvalid disable_invalid;
+	FPExceptionDisableDivByZero disable_div_by_zero;
+	FPExceptionDisableOverflow disable_overflow;
+	JPH_UNUSED(disable_invalid);
+	JPH_UNUSED(disable_div_by_zero);
+	JPH_UNUSED(disable_overflow);
 
 	for (uint z = 0; z < nz; ++z)
 		for (uint y = 0; y < ny; ++y)

@@ -32,7 +32,7 @@ protected:
 	/// Override to add platform specific device extensions
 	virtual void					GetDeviceExtensions(Array<const char *> &outExtensions)							{ /* Add nothing */ }
 
-	/// Override  to enable specific features
+	/// Override to enable specific features. mPhysicalDevice is set to the selected device when this is called, so you can check if a feature is supported.
 	virtual void					GetEnabledFeatures(VkPhysicalDeviceFeatures2 &ioFeatures)						{ /* Add nothing */ }
 
 	/// Override to check for present support on a given device and queue family

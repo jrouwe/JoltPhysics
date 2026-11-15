@@ -1,0 +1,42 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/JoltTargets.cmake")
+
+check_required_components(Jolt)
+
+file(GLOB libTargets_files "${CMAKE_CURRENT_LIST_DIR}/JoltTargets-*.cmake")
+list(LENGTH libTargets_files num_files)
+
+if(num_files EQUAL 1)
+    list(GET libTargets_files 0 target_file)
+    get_filename_component(filename "${target_file}" NAME)
+
+    if(filename STREQUAL "JoltTargets-debug.cmake")
+        set_property(TARGET Jolt::Jolt APPEND PROPERTY
+            INTERFACE_COMPILE_DEFINITIONS "JPH_DEBUG")
+    endif()
+elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/JoltTargets-debug.cmake")
+    # Note that when evaluated on an imported target, $<CONFIG:Debug> matches the configuration of Jolt that was selected
+    set_property(TARGET Jolt::Jolt APPEND PROPERTY
+        INTERFACE_COMPILE_DEFINITIONS
+        "$<$<CONFIG:Debug>:JPH_DEBUG>"
+    )
+
+    # When the consumer uses a configuration that Jolt doesn't have, CMake picks the first installed configuration,
+    # which could be the debug library. Prefer an optimized library instead (unless the user specified a mapping).
+    get_target_property(imported_configs Jolt::Jolt IMPORTED_CONFIGURATIONS)
+    set(optimized_configs)
+    foreach(config RELEASE DISTRIBUTION)
+        if(config IN_LIST imported_configs)
+            list(APPEND optimized_configs ${config})
+        endif()
+    endforeach()
+    if(optimized_configs)
+        foreach(config RELWITHDEBINFO MINSIZEREL)
+            get_target_property(mapped_configs Jolt::Jolt MAP_IMPORTED_CONFIG_${config})
+            if(NOT mapped_configs AND NOT config IN_LIST imported_configs)
+                set_property(TARGET Jolt::Jolt PROPERTY MAP_IMPORTED_CONFIG_${config} ${optimized_configs})
+            endif()
+        endforeach()
+    endif()
+endif()

@@ -66,8 +66,10 @@ bool Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	mVSBuffer.mLightProjection = sPerspectiveInfiniteReverseZ(light_fov, 1.0f, light_near, mPerspectiveYSign);
 	mVSBuffer.mLightView = Mat44::sLookAt(light_pos, light_tgt, light_up);
 
-	// Camera ortho projection and view
-	mVSBufferOrtho.mProjection = Mat44(Vec4(2.0f / mWindow->GetWindowWidth(), 0.0f, 0.0f, 0.0f), Vec4(0.0f, -mPerspectiveYSign * 2.0f / mWindow->GetWindowHeight(), 0.0f, 0.0f), Vec4(0.0f, 0.0f, -1.0f, 0.0f), Vec4(-1.0f, mPerspectiveYSign * 1.0f, 0.0f, 1.0f));
+	// Camera ortho projection and view (in UI coordinates)
+	float ortho_sx = 2.0f * mUIScale / mWindow->GetWindowWidth();
+	float ortho_sy = 2.0f * mUIScale / mWindow->GetWindowHeight();
+	mVSBufferOrtho.mProjection = Mat44(Vec4(ortho_sx, 0.0f, 0.0f, 0.0f), Vec4(0.0f, -mPerspectiveYSign * ortho_sy, 0.0f, 0.0f), Vec4(0.0f, 0.0f, -1.0f, 0.0f), Vec4(-1.0f, mPerspectiveYSign * 1.0f, 0.0f, 1.0f));
 	mVSBufferOrtho.mView = Mat44::sIdentity();
 
 	// Light projection and view are unused in ortho mode

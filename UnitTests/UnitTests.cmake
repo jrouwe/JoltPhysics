@@ -3,6 +3,7 @@ set(UNIT_TESTS_ROOT ${PHYSICS_REPO_ROOT}/UnitTests)
 
 # Source files
 set(UNIT_TESTS_SRC_FILES
+	${UNIT_TESTS_ROOT}/Compute/ComputeShaderLoader.h
 	${UNIT_TESTS_ROOT}/Compute/ComputeTests.cpp
 	${UNIT_TESTS_ROOT}/Core/ArrayTest.cpp
 	${UNIT_TESTS_ROOT}/Core/BinaryHeapTest.cpp
@@ -51,12 +52,15 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/CollidePointTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/CollisionGroupTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ContactListenerTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/ConvexHullShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ConvexVsTrianglesTest.cpp
 	${UNIT_TESTS_ROOT}/Physics/DistanceConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/EstimateCollisionResponseTest.cpp
+	${UNIT_TESTS_ROOT}/Physics/HairTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/HeightFieldShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/HingeConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/MotionQualityLinearCastTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/MultithreadedTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/MutableCompoundShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ObjectLayerPairFilterTableTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ObjectLayerPairFilterMaskTests.cpp
@@ -65,6 +69,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/PhysicsDeterminismTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/PhysicsStepListenerTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/PhysicsTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/RagdollTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/RayShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SensorTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ShapeFilterTests.cpp

@@ -228,8 +228,9 @@ protected:
 		/// Set the job barrier that this job belongs to and returns false if this was not possible because the job already finished
 		inline bool			SetBarrier(Barrier *inBarrier)
 		{
+			// Acquire on failure so that, if the job already finished, the caller sees all side effects of the job function
 			intptr_t barrier = 0;
-			if (mBarrier.compare_exchange_strong(barrier, reinterpret_cast<intptr_t>(inBarrier), memory_order_relaxed))
+			if (mBarrier.compare_exchange_strong(barrier, reinterpret_cast<intptr_t>(inBarrier), memory_order_release, memory_order_acquire))
 				return true;
 			JPH_ASSERT(barrier == cBarrierDoneState, "A job can only belong to 1 barrier");
 			return false;
@@ -257,14 +258,15 @@ protected:
 			intptr_t barrier = mBarrier.load(memory_order_relaxed);
 			for (;;)
 			{
-				if (mBarrier.compare_exchange_weak(barrier, cBarrierDoneState, memory_order_relaxed))
+				// Acquire to pair with the release in SetBarrier, release so that a failing SetBarrier sees the side effects of the job function
+				if (mBarrier.compare_exchange_weak(barrier, cBarrierDoneState, memory_order_acq_rel, memory_order_relaxed))
 					break;
 			}
 			JPH_ASSERT(barrier != cBarrierDoneState);
 
-			// Mark job as done
+			// Mark job as done, release so that a thread that sees the done state through IsDone also sees the side effects of the job function
 			state = cExecutingState;
-			mNumDependencies.compare_exchange_strong(state, cDoneState, memory_order_relaxed);
+			mNumDependencies.compare_exchange_strong(state, cDoneState, memory_order_release);
 			JPH_ASSERT(state == cExecutingState);
 
 			// Notify the barrier after we've changed the job to the done state so that any thread reading the state after receiving the callback will see that the job has finished
@@ -277,8 +279,8 @@ protected:
 		/// Test if the job can be executed
 		inline bool			CanBeExecuted() const						{ return mNumDependencies.load(memory_order_relaxed) == 0; }
 
-		/// Test if the job finished executing
-		inline bool			IsDone() const								{ return mNumDependencies.load(memory_order_relaxed) == cDoneState; }
+		/// Test if the job finished executing. If this returns true, the side effects of the job function are visible to the calling thread.
+		inline bool			IsDone() const								{ return mNumDependencies.load(memory_order_acquire) == cDoneState; }
 
 	#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 		/// Get the name of the job

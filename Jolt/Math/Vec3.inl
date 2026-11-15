@@ -356,7 +356,7 @@ Vec3 Vec3::sFusedMultiplyAdd(Vec3Arg inMul1, Vec3Arg inMul2, Vec3Arg inAdd)
 	#ifdef JPH_USE_SSE
 		return _mm_fmadd_ps(inMul1.mValue, inMul2.mValue, inAdd.mValue);
 	#elif defined(JPH_USE_NEON)
-		return vmlaq_f32(inAdd.mValue, inMul1.mValue, inMul2.mValue);
+		return vfmaq_f32(inAdd.mValue, inMul1.mValue, inMul2.mValue);
 	#elif defined(JPH_USE_RVV)
 		Vec3 res;
 		const vfloat32m1_t v1 = __riscv_vle32_v_f32m1(inMul1.mF32, 3);
@@ -1191,7 +1191,7 @@ JPH_INLINE Vec3 Vec3::FlipSign() const
 	static_assert(X == 1 || X == -1, "X must be 1 or -1");
 	static_assert(Y == 1 || Y == -1, "Y must be 1 or -1");
 	static_assert(Z == 1 || Z == -1, "Z must be 1 or -1");
-	return Vec3::sXor(*this, Vec3(X > 0? 0.0f : -0.0f, Y > 0? 0.0f : -0.0f, Z > 0? 0.0f : -0.0f));
+	return Vec3::sXor(*this, Vec3(UVec4(X > 0? 0 : 0x80000000, Y > 0? 0 : 0x80000000, Z > 0? 0 : 0x80000000, Z > 0? 0 : 0x80000000).ReinterpretAsFloat()));
 }
 
 uint32 Vec3::CompressUnitVector() const

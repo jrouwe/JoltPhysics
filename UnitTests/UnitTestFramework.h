@@ -25,57 +25,79 @@ using namespace std;
 
 inline void CHECK_APPROX_EQUAL(float inLHS, float inRHS, float inTolerance = 1.0e-6f)
 {
-	CHECK(abs(inRHS - inLHS) <= inTolerance);
+	CAPTURE(inLHS);
+	CAPTURE(inRHS);
+	float diff = abs(inRHS - inLHS);
+	CAPTURE(diff);
+	CHECK(diff <= inTolerance);
 }
 
 inline void CHECK_APPROX_EQUAL(double inLHS, double inRHS, double inTolerance = 1.0e-6)
 {
-	CHECK(abs(inRHS - inLHS) <= inTolerance);
+	CAPTURE(inLHS);
+	CAPTURE(inRHS);
+	double diff = abs(inRHS - inLHS);
+	CAPTURE(diff);
+	CHECK(diff <= inTolerance);
 }
 
 inline void CHECK_APPROX_EQUAL(Vec3Arg inLHS, Vec3Arg inRHS, float inTolerance = 1.0e-6f)
 {
 	CAPTURE(inLHS);
 	CAPTURE(inRHS);
-	CAPTURE((inLHS - inRHS).Length());
+	float diff = (inLHS - inRHS).Length();
+	CAPTURE(diff);
 	CAPTURE(inTolerance);
-	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
+	CHECK(diff <= inTolerance);
 }
 
 inline void CHECK_APPROX_EQUAL(Vec4Arg inLHS, Vec4Arg inRHS, float inTolerance = 1.0e-6f)
 {
 	CAPTURE(inLHS);
 	CAPTURE(inRHS);
-	CAPTURE((inLHS - inRHS).Length());
+	float diff = (inLHS - inRHS).Length();
+	CAPTURE(diff);
 	CAPTURE(inTolerance);
-	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
+	CHECK(diff <= inTolerance);
 }
 
 inline void CHECK_APPROX_EQUAL(Mat44Arg inLHS, Mat44Arg inRHS, float inTolerance = 1.0e-6f)
 {
+	CAPTURE(inLHS);
+	CAPTURE(inRHS);
 	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
 }
 
 inline void CHECK_APPROX_EQUAL(DMat44Arg inLHS, DMat44Arg inRHS, float inTolerance = 1.0e-6f)
 {
+	CAPTURE(inLHS);
+	CAPTURE(inRHS);
 	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
 }
 
 inline void CHECK_APPROX_EQUAL(QuatArg inLHS, QuatArg inRHS, float inTolerance = 1.0e-6f)
 {
+	CAPTURE(inLHS);
+	CAPTURE(inRHS);
 	bool close = inLHS.IsClose(inRHS, inTolerance * inTolerance) || inLHS.IsClose(-inRHS, inTolerance * inTolerance);
 	CHECK(close);
 }
 
 inline void CHECK_APPROX_EQUAL(DVec3Arg inLHS, DVec3Arg inRHS, double inTolerance = 1.0e-6)
 {
+	CAPTURE(inLHS);
+	CAPTURE(inRHS);
 	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
 }
 
 inline void CHECK_APPROX_EQUAL(const Float2 &inLHS, const Float2 &inRHS, float inTolerance = 1.0e-6f)
 {
-	Float2 diff(inLHS.x - inRHS.x, inLHS.y - inRHS.y);
-	CHECK(Square(diff.x) + Square(diff.y) < inTolerance * inTolerance);
+	CAPTURE(inLHS);
+	CAPTURE(inRHS);
+	Float2 vdiff(inLHS.x - inRHS.x, inLHS.y - inRHS.y);
+	float diff = sqrt(Square(vdiff.x) + Square(vdiff.y));
+	CAPTURE(diff);
+	CHECK(diff <= inTolerance);
 }
 
 // Define the exact random number generator we want to use across platforms for consistency (default_random_engine's implementation is platform specific)

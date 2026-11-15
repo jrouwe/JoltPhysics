@@ -121,10 +121,10 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 			<summary>MinGW</summary>
 			<ul>
 				<li>Follow download instructions for MSYS2 (https://www.msys2.org/)</li>
-				<li>From the MSYS2 MSYS app run: <code>pacman -Suy</code> and <code>pacman -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake</code></li>
-				<li>From the MSYS2 MINGW64 app, in the <code>Build</code> folder run: <code>./cmake_windows_mingw.sh</code></li>
-				<li>Run: <code>cmake --build MinGW_Debug</code></li>
-				<li>Run: <code>./MinGW_Debug/Samples.exe</code> or <code>./MinGW_Debug/UnitTests.exe</code></li>
+				<li>From the MSYS2 UCRT64 terminal run: <code>pacman -Suy</code> and <code>pacman -S --needed mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake</code></li>
+				<li>In the <code>Build</code> folder run: <code>./cmake_windows_mingw.sh</code></li>
+				<li>Run: <code>cmake --build MinGW_Release</code></li>
+				<li>Run: <code>./MinGW_Release/Samples.exe</code> or <code>./MinGW_Release/UnitTests.exe</code></li>
 			</ul>
 		</details>
 	</li></ul>
@@ -138,7 +138,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 			<ul>
 				<li>Install clang (<code>apt-get install clang</code>)</li>
 				<li>Install cmake (<code>apt-get install cmake</code>)</li>
-				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu24_install_vulkan_sdk.sh</code> in this folder.</li>
+				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu26_install_vulkan_sdk.sh</code> in this folder.</li>
 				<li>Run: <code>./cmake_linux_clang_gcc.sh</code></li>
 				<li>Go to the <code>Linux_Debug</code> folder</li>
 				<li>Run: <code>make -j$(nproc) && ./UnitTests</code></li>
@@ -151,7 +151,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 				<li>Install clang (<code>apt-get install clang</code>)</li>
 				<li>Install cmake (<code>apt-get install cmake</code>)</li>
 				<li>Install ninja (<code>apt-get install ninja-build</code>)</li>
-				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu24_install_vulkan_sdk.sh</code> in this folder.</li>
+				<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#linux">Vulkan SDK</a>. Note that the Vulkan development packages usually do not include dxc so install the full SDK. Jolt uses dxc to cross compile hlsl shaders to Vulkan. See the helper script <code>ubuntu26_install_vulkan_sdk.sh</code> in this folder.</li>
 				<li>Run: <code>./cmake_ninja.sh</code></li>
 				<li>Go to the <code>Ninja_MultiConfig</code> folder</li>
 				<li>Run: <code>cmake --build . --config Debug && ./UnitTests</code></li>
@@ -165,9 +165,20 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 	<summary>Android</summary>
 	<ul>
 		<li>Install Android Studio (https://developer.android.com/studio/)</li>
+		<li>If you want to build the Samples, install the <a href="https://vulkan.lunarg.com/sdk/home">Vulkan SDK</a> (required to compile the shaders)</li>
 		<li>Open the 'Build/Android' folder in Android Studio and wait until gradle finishes</li>
-		<li>Select 'Run' and 'UnitTests'</li>
-		<li>If the screen turns green after a while the unit tests succeeded, when red they failed (see the android log for details)</li>
+		<li>Select 'Run' and 'UnitTests', 'PerformanceTest' or 'Samples'</li>
+		<li>For the UnitTests: The application exits when the unit tests complete. Look at the Android logs to see if they succeeded or failed. You can also run Build/Android/run_unit_tests.sh</li>
+		<li>The Samples use Vulkan for rendering. Touch input is mapped to mouse and keyboard input:
+			<ul>
+				<li>One finger drag: Rotate the camera / interact with the menu (drag vertically to scroll long menus)</li>
+				<li>One finger long press: Hold Space (drag the object under the crosshair)</li>
+				<li>Two finger drag: Move the camera, the scene follows your fingers (drag down to move forward, drag right to move left)</li>
+				<li>Two finger tap or the back button / gesture: Open the menu / go back one level (Escape)</li>
+			</ul>
+			A hardware keyboard works as on the desktop. A hardware mouse acts as a single finger (left button only). The UI is scaled by a factor 3 to make it easier to touch, use the <code>-uiscale=&lt;scale&gt;</code> command line option to change this.
+			To start a specific test, use e.g.: <code>adb shell am start -n com.joltphysics.samples/android.app.NativeActivity -e args "HairTest"</code>
+		</li>
 	</ul>
 </details>
 
@@ -190,9 +201,18 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 		<li>Install XCode</li>
 		<li>If you want to build the Samples, JoltViewer or use the ComputeSystem, install the <a href="https://vulkan.lunarg.com/sdk/home#mac">Vulkan SDK</a> or the dxc and spirv-cross tools (required to cross compile hlsl shaders to Metal)</li>
 		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
-		<li>Run: <code>./cmake_xcode.ios.sh</code></li>
+		<li>Run: <code>./cmake_xcode_ios.sh</code></li>
 		<li>This will open XCode with a newly generated project</li>
-		<li>Build and run the project (note that this will only work in the simulator as the code signing information is not set up)</li>
+		<li>Build and run either 'Samples' or 'UnitTests' (note that this will only work in the simulator as the code signing information is not set up and the shaders are compiled for the simulator)</li>
+		<li>In the Samples, touch input is mapped to mouse and keyboard input:
+			<ul>
+				<li>One finger drag: Rotate the camera / interact with the menu (drag vertically to scroll long menus)</li>
+				<li>One finger long press: Hold Space (drag the object under the crosshair)</li>
+				<li>Two finger drag: Move the camera, the scene follows your fingers (drag down to move forward, drag right to move left)</li>
+				<li>Two finger tap: Open the menu / go back one level (Escape)</li>
+			</ul>
+			A hardware keyboard (or the Mac keyboard in the simulator) works as on macOS. A hardware mouse acts as a single finger (left button only). The UI is scaled by a factor 3 to make it easier to touch, use the <code>-uiscale=&lt;scale&gt;</code> command line option to change this.
+		</li>
 	</ul>
 </details>
 
@@ -298,6 +318,24 @@ On Linux to see what instructions your CPU supports run `lscpu` and then look at
 ```
 
 Note that this example is for Linux but the cmake settings work on Windows too.
+
+### Thread Performance Checker Warnings on Apple Platforms
+
+When running under XCode with the Thread Performance Checker enabled (the default in a scheme's Diagnostics settings), you may see warnings like:
+
+```
+Thread Performance Checker: Thread running at User-interactive quality-of-service class waiting on a thread without a QoS class specified (base priority 0). Investigate ways to avoid priority inversions
+```
+
+The worker threads of `JobSystemThreadPool` run at the same quality-of-service (QoS) class as the thread that started them (the thread that constructed the job system or called `JobSystemThreadPool::Init` or `JobSystemThreadPool::SetNumThreads`), so the thread that waits for jobs (`JobSystem::WaitForJobs`) does not wait on lower priority threads. Idle worker threads wait on a `dispatch_semaphore` in `JobSystemThreadPool::ThreadMain`. The checker cannot determine which thread will signal this semaphore and can incorrectly report this as a priority inversion, even though all threads that signal it run at the same QoS class. To suppress only this false positive, set the environment variable `PERFC_SUPPRESSION_FILE` to the full path of `Build/macOS/ThreadPerformanceChecker.supp` (in XCode: Product > Scheme > Edit Scheme > Run > Arguments > Environment Variables). The XCode projects that cmake generates for `UnitTests` and `Samples` already do this.
+
+To run the checker from the command line, load it through `DYLD_INSERT_LIBRARIES`:
+
+```
+DYLD_INSERT_LIBRARIES=/usr/lib/libRPAC.dylib PERFC_SUPPRESSION_FILE=<path to>/Build/macOS/ThreadPerformanceChecker.supp ./UnitTests.app/Contents/MacOS/UnitTests
+```
+
+Note that the checker only reports an issue once per unique backtrace.
 
 ## Doxygen on Windows
 

@@ -409,6 +409,37 @@ TEST_SUITE("CharacterVirtualTests")
 		}
 	}
 
+	// Tests that a character gets projected onto another character when StickToFloor is called
+	TEST_CASE("TestStickToFloorCharacter")
+	{
+		PhysicsTestContext ctx;
+
+		constexpr float cRadius = 0.3f;
+		constexpr float cHalfHeight = 0.6f;
+		constexpr float cHeight = 2.0f * (cHalfHeight + cRadius);
+
+		CharacterVirtualSettings s;
+		s.mShape = new RotatedTranslatedShape(Vec3(0, 0.5f * cHeight, 0), Quat::sIdentity(), new CapsuleShape(cHalfHeight, cRadius));
+		s.mSupportingVolume = Plane(Vec3::sAxisY(), -cRadius);
+		CharacterContactListener listener;
+		CharacterVsCharacterCollisionSimple cvc;
+		CharacterVirtual a(&s, RVec3(0, cHeight + 2.0f * s.mCharacterPadding + 0.05f, 0), Quat::sIdentity(), 0, ctx.GetSystem()); // 5 cm above B's head
+		s.mID = CharacterID::sNextCharacterID();
+		CharacterVirtual b(&s, RVec3(0, 0, 0), Quat::sIdentity(), 0, ctx.GetSystem()); // Below A
+		s.mID = CharacterID::sNextCharacterID();
+		CharacterVirtual c(&s, RVec3(0.61f, cHeight + 2.0f * s.mCharacterPadding + 0.05f, 0), Quat::sIdentity(), 0, ctx.GetSystem()); // 1 cm beside A, should not affect A's position when sticking to floor
+		for (CharacterVirtual *ch : { &a, &b, &c })
+		{
+			cvc.Add(ch);
+			ch->SetCharacterVsCharacterCollision(&cvc);
+			ch->SetListener(&listener);
+		}
+
+		a.StickToFloor(Vec3(0, -0.5f, 0), {}, {}, {}, {}, *ctx.GetTempAllocator());
+
+		CHECK_APPROX_EQUAL(a.GetPosition(), RVec3(0, cHeight + 2.0f * s.mCharacterPadding, 0), 1.0e-6f);
+	}
+
 	TEST_CASE("TestWalkStairs")
 	{
 		const float cStepHeight = 0.3f;
