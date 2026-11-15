@@ -7,6 +7,8 @@
 #include "Layers.h"
 #include "LoggingContactListener.h"
 #include "LoggingBodyActivationListener.h"
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 
 TEST_SUITE("MotionQualityLinearCastTests")
 {
@@ -415,5 +417,63 @@ TEST_SUITE("MotionQualityLinearCastTests")
 		Vec3 new_velocity = -0.25f * cVelocity;
 		CHECK_APPROX_EQUAL(box3.GetLinearVelocity(), new_velocity);
 		CHECK_APPROX_EQUAL(inactive[0]->GetLinearVelocity(), new_velocity);
+	}
+
+	// A box that lands flat on two static bodies with level tops hits both at the same fraction.
+	// Which of the two is taken as the hit must not depend on the order in which they were added to
+	// the physics system, as long as their body IDs are the same.
+	TEST_CASE("TestLinearCastHitIndependentOfBodyAddOrder")
+	{
+		struct Result
+		{
+			RVec3	mPosition;
+			Quat	mRotation;
+			Vec3	mLinearVelocity;
+			Vec3	mAngularVelocity;
+		};
+
+		auto simulate = [](bool inFloorFirst) {
+			const BodyID cFloorID(0), cStripID(1), cBoxID(2);
+
+			PhysicsTestContext c(1.0f / cFrequency, 1);
+			BodyInterface &bi = c.GetBodyInterface();
+
+			// A large floor and a narrow strip lying in it, both with their top at Y = 0
+			BodyCreationSettings floor(new BoxShape(Vec3(100.0f, 1.0f, 100.0f)), RVec3(0, -1, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			BodyCreationSettings strip(new BoxShape(Vec3(8.0f, 1.0f, 0.5f)), RVec3(0, -1, 0.5_r), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			if (inFloorFirst)
+			{
+				bi.AddBody(bi.CreateBodyWithID(cFloorID, floor)->GetID(), EActivation::DontActivate);
+				bi.AddBody(bi.CreateBodyWithID(cStripID, strip)->GetID(), EActivation::DontActivate);
+			}
+			else
+			{
+				bi.AddBody(bi.CreateBodyWithID(cStripID, strip)->GetID(), EActivation::DontActivate);
+				bi.AddBody(bi.CreateBodyWithID(cFloorID, floor)->GetID(), EActivation::DontActivate);
+			}
+
+			// A flat box that lies across the edge of the strip, moving down fast enough to be cast
+			BodyCreationSettings box(new BoxShape(Vec3(1.0f, 0.1f, 0.3f)), RVec3(0, 3.75_r, 1), Quat::sRotation(Vec3::sAxisY(), 0.6f), EMotionType::Dynamic, Layers::MOVING);
+			box.mMotionQuality = EMotionQuality::LinearCast;
+			box.mLinearVelocity = Vec3(0, -9.0f, 0);
+			Body &body = *bi.CreateBodyWithID(cBoxID, box);
+			bi.AddBody(body.GetID(), EActivation::Activate);
+
+			c.Simulate(2.0f);
+
+			return Result { body.GetPosition(), body.GetRotation(), body.GetLinearVelocity(), body.GetAngularVelocity() };
+		};
+
+		Result floor_first = simulate(true);
+		Result strip_first = simulate(false);
+
+		// The box has landed
+		CHECK(floor_first.mPosition.GetY() < 0.2_r);
+
+		// The results must be bitwise identical
+		CHECK(floor_first.mPosition == strip_first.mPosition);
+		CHECK(floor_first.mRotation == strip_first.mRotation);
+		CHECK(floor_first.mLinearVelocity == strip_first.mLinearVelocity);
+		CHECK(floor_first.mAngularVelocity == strip_first.mAngularVelocity);
 	}
 }
