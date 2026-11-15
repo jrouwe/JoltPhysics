@@ -1273,7 +1273,7 @@ Vec4 Vec4::ASin() const
 	Vec4 a = Vec4::sXor(*this, asin_sign.ReinterpretAsFloat());
 
 	// ASin is not defined outside the range [-1, 1] but it often happens that a value is slightly above 1 so we just clamp here
-	a = Vec4::sMin(a, Vec4::sOne());
+	a = Vec4::sMin(Vec4::sOne(), a); // Note that we take 'a' as the 2nd param because on x64 this means that if 'a' is NaN, the return value will be so as well.
 
 	// When |x| <= 0.5 we use the asin approximation as is
 	Vec4 z1 = a * a;
