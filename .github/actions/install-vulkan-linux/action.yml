@@ -1,0 +1,19 @@
+name: Install Vulkan SDK (Linux)
+description: Installs the Vulkan SDK in ~/vulkan/<version>, the SDK is cached between runs. Source ~/vulkan/<version>/setup-env.sh to use it.
+
+inputs:
+  version:
+    description: Vulkan SDK version
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Vulkan SDK
+      uses: actions/cache@v6
+      with:
+        path: ~/vulkan/${{inputs.version}}
+        key: vulkan-sdk-${{runner.os}}-${{runner.arch}}-${{inputs.version}}
+    - name: Install Vulkan SDK
+      shell: bash
+      run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{inputs.version}}

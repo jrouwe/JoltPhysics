@@ -1,0 +1,22 @@
+name: Install Vulkan SDK (macOS)
+description: Installs the Vulkan SDK in the specified folder, the SDK is cached between runs. Source <path>/setup-env.sh to use it.
+
+inputs:
+  version:
+    description: Vulkan SDK version
+    required: true
+  path:
+    description: Installation folder
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Vulkan SDK
+      uses: actions/cache@v6
+      with:
+        path: ${{inputs.path}}
+        key: vulkan-sdk-${{runner.os}}-${{runner.arch}}-${{inputs.version}}
+    - name: Install Vulkan SDK
+      shell: bash
+      run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh "${{inputs.path}}" ${{inputs.version}}
