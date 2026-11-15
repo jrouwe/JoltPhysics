@@ -207,7 +207,16 @@ int main(int argc, char** argv)
 	// Register physics types
 	RegisterTypes();
 
-	int rv = Context(argc, argv).run();
+	Context context(argc, argv);
+
+#if defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+	// The Xcode console reports itself as a tty but doesn't understand ANSI color codes, disable colors when we're not running in a real terminal
+	const char *term = getenv("TERM");
+	if (term == nullptr || strcmp(term, "dumb") == 0)
+		context.setOption("no-colors", true);
+#endif
+
+	int rv = context.run();
 
 	// Unregisters all types with the factory and cleans up the default material
 	UnregisterTypes();
