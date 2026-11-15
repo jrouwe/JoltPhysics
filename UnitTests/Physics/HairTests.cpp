@@ -760,7 +760,6 @@ TEST_SUITE("HairTests")
 	}
 #endif // JPH_USE_CPU_COMPUTE
 
-#ifndef JPH_USE_MTL // TODO: Is broken, need to fix the tests
 	TEST_CASE("TestHairGPU")
 	{
 		RegisterHair();
@@ -773,7 +772,6 @@ TEST_SUITE("HairTests")
 			RunTests(compute_system.Get());
 		}
 	}
-#endif // JPH_USE_MTL
 }
 
 #endif // defined(JPH_USE_DX12) || defined(JPH_USE_VK) || defined(JPH_USE_MTL) || defined(JPH_USE_CPU_COMPUTE)
