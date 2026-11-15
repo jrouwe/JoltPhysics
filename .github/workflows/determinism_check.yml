@@ -16,6 +16,7 @@ env:
   UBUNTU_CLANG_VERSION: 22
   UBUNTU_GCC_VERSION: 15
   SDE_VERSION: '10.8.0-2026-03-15'
+  VULKAN_VERSION: 1.4.363.1
 
 on:
   push:
@@ -246,7 +247,10 @@ jobs:
     - name: Install Metal Toolchain
       run: xcodebuild -downloadComponent MetalToolchain
     - name: Install Vulkan SDK
-      run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
+      uses: ./.github/actions/install-vulkan-macos
+      with:
+        version: ${{env.VULKAN_VERSION}}
+        path: ${{env.VULKAN_SDK_INSTALL}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: |
@@ -287,7 +291,10 @@ jobs:
     - name: Install Metal Toolchain
       run: xcodebuild -downloadComponent MetalToolchain
     - name: Install Vulkan SDK
-      run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
+      uses: ./.github/actions/install-vulkan-macos
+      with:
+        version: ${{env.VULKAN_VERSION}}
+        path: ${{env.VULKAN_SDK_INSTALL}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: |

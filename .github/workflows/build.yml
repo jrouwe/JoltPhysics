@@ -33,7 +33,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: |
@@ -55,7 +57,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: |
@@ -77,7 +81,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: |
@@ -109,7 +115,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: |
@@ -159,7 +167,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: |
@@ -185,7 +195,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v7
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: |
@@ -376,7 +388,10 @@ jobs:
     - name: Install Metal Toolchain
       run: xcodebuild -downloadComponent MetalToolchain
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
+      uses: ./.github/actions/install-vulkan-macos
+      with:
+        version: ${{env.VULKAN_VERSION}}
+        path: ${{env.VULKAN_SDK_INSTALL}}
     - name: Configure CMake
       run: |
         source ${VULKAN_SDK_INSTALL}/setup-env.sh
@@ -391,9 +406,14 @@ jobs:
 
   android:
     runs-on: ubuntu-26.04
-    name: Android
+    name: Android (${{matrix.build_type}})
+    env:
+        ANDROID_API_LEVEL: 34
+        ANDROID_ARCH: x86_64
     strategy:
         fail-fast: false
+        matrix:
+            build_type: [Debug, Release]
 
     steps:
     - name: Checkout Code
@@ -403,27 +423,56 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v6
     - name: Install Vulkan
-      run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
+      uses: ./.github/actions/install-vulkan-linux
+      with:
+        version: ${{env.VULKAN_VERSION}}
     - name: Gradle Build
       working-directory: ${{github.workspace}}/Build/Android
       run: |
         source $HOME/vulkan/${{env.VULKAN_VERSION}}/setup-env.sh
-        ./gradlew build --no-daemon
+        ./gradlew assemble${{matrix.build_type}} --no-daemon
     - name: Enable KVM group perms
       run: |
         echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
         sudo udevadm control --reload-rules
         sudo udevadm trigger --name-match=kvm
+        # Make the SDK location available to the cache step below
+        echo "ANDROID_SDK_DIR=$ANDROID_HOME" >> $GITHUB_ENV
+    - name: Cache Emulator
+      id: emulator-cache
+      uses: actions/cache@v6
+      with:
+        # The system image and the AVD including a snapshot of the booted emulator
+        path: |
+          ${{env.ANDROID_SDK_DIR}}/system-images/android-${{env.ANDROID_API_LEVEL}}
+          ~/.android/avd/*
+          ~/.android/adb*
+        key: android-emulator-${{env.ANDROID_API_LEVEL}}-${{env.ANDROID_ARCH}}
+    - name: Create Emulator Snapshot
+      if: steps.emulator-cache.outputs.cache-hit != 'true'
+      timeout-minutes: 30
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{env.ANDROID_API_LEVEL}}
+        arch: ${{env.ANDROID_ARCH}}
+        force-avd-creation: false
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: false
+        script: echo "Generated AVD snapshot for caching"
     - name: Run Unit Tests
       timeout-minutes: 30
       uses: reactivecircus/android-emulator-runner@v2
       with:
-        api-level: 34
-        arch: x86_64
-        emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+        api-level: ${{env.ANDROID_API_LEVEL}}
+        arch: ${{env.ANDROID_ARCH}}
+        force-avd-creation: false
+        # Boot from the cached snapshot, but don't write the state after running the tests back to it
+        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
-        script: bash ${{github.workspace}}/Build/Android/run_unit_tests.sh ${{github.workspace}}/Build/Android/UnitTests/build 600
+        script: bash ${{github.workspace}}/Build/Android/run_unit_tests.sh ${{github.workspace}}/Build/Android/UnitTests/build 600 ${{matrix.build_type}}
 
   ios:
     runs-on: macos-latest
@@ -438,16 +487,6 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v7
-    - name: Install Metal Toolchain
-      run: xcodebuild -downloadComponent MetalToolchain
-    - name: Install Vulkan
-      run: ${{github.workspace}}/Build/macos_install_vulkan_sdk.sh ${VULKAN_SDK_INSTALL}
-    - name: Configure CMake
-      run: |
-        source ${VULKAN_SDK_INSTALL}/setup-env.sh
-        cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
-    - name: Build
-      run: cmake --build ${{github.workspace}}/Build/XCode_iOS --config ${{matrix.build_type}} -- -sdk iphonesimulator -arch arm64 -j $(sysctl -n hw.ncpu)
     - name: Boot Simulator
       run: |
         # Create an iPhone simulator using the newest available iOS runtime
@@ -457,8 +496,24 @@ jobs:
         print(r['identifier'], [d['identifier'] for d in r['supportedDeviceTypes'] if d['productFamily'] == 'iPhone'][-1])")
         echo "Using $DEVICE_TYPE with $RUNTIME"
         UDID=$(xcrun simctl create JoltUnitTests $DEVICE_TYPE $RUNTIME)
-        xcrun simctl bootstatus $UDID -b
         echo "SIMULATOR_UDID=$UDID" >> $GITHUB_ENV
+        # Boot in the background so that booting overlaps with the build, the 'Wait for Simulator' step waits for it to finish
+        nohup xcrun simctl boot $UDID > /dev/null 2>&1 &
+    - name: Install Metal Toolchain
+      run: xcodebuild -downloadComponent MetalToolchain
+    - name: Install Vulkan
+      uses: ./.github/actions/install-vulkan-macos
+      with:
+        version: ${{env.VULKAN_VERSION}}
+        path: ${{env.VULKAN_SDK_INSTALL}}
+    - name: Configure CMake
+      run: |
+        source ${VULKAN_SDK_INSTALL}/setup-env.sh
+        cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/XCode_iOS --config ${{matrix.build_type}} -- -sdk iphonesimulator -arch arm64 -j $(sysctl -n hw.ncpu)
+    - name: Wait for Simulator
+      run: xcrun simctl bootstatus $SIMULATOR_UDID -b
     - name: Test
       working-directory: ${{github.workspace}}/Build/XCode_iOS
       run: |

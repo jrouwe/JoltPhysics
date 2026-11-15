@@ -38,7 +38,9 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Install Vulkan
-        run: ${{github.workspace}}/Build/ubuntu26_install_vulkan_sdk.sh ${{env.VULKAN_VERSION}}
+        uses: ./.github/actions/install-vulkan-linux
+        with:
+          version: ${{env.VULKAN_VERSION}}
       - name: Install build-wrapper
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v8
       - name: Configure CMake

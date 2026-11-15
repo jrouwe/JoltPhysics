@@ -1,17 +1,18 @@
 #!/bin/bash
 # Installs the unit test APK on the connected device / emulator, runs it and fails (exit code 1) if the unit tests failed.
-# Usage: run_unit_tests.sh <apk or directory to search for UnitTests-debug.apk> [timeout in seconds]
+# Usage: run_unit_tests.sh <apk or directory to search for UnitTests-<build type>.apk> [timeout in seconds] [build type: debug|release]
 
 APK="$1"
 TIMEOUT="${2:-900}"
+BUILD_TYPE=$(echo "${3:-debug}" | tr '[:upper:]' '[:lower:]')
 
-# If a directory is given, search it for the debug APK (its location differs between Gradle tasks / versions)
+# If a directory is given, search it for the APK (its location differs between Gradle tasks / versions)
 if [ -d "$APK" ]; then
-	APK=$(find "$APK" -name "UnitTests-debug.apk" | head -n 1)
+	APK=$(find "$APK" -name "UnitTests-$BUILD_TYPE.apk" | head -n 1)
 fi
 
 if [ -z "$APK" ] || [ ! -f "$APK" ]; then
-	echo "APK not found. Usage: $0 <apk or directory> [timeout in seconds]"
+	echo "APK not found. Usage: $0 <apk or directory> [timeout in seconds] [build type: debug|release]"
 	exit 2
 fi
 
