@@ -116,6 +116,18 @@ inline const char *GetConfigurationString()
 #ifdef JPH_SHARED_LIBRARY
 		"(Shared Library) "
 #endif
+#ifdef JPH_USE_CPU_COMPUTE
+		"(CPU Compute) "
+#endif
+#ifdef JPH_USE_DX12
+		"(DX12) "
+#endif
+#ifdef JPH_USE_VK
+		"(Vulkan) "
+#endif
+#ifdef JPH_USE_MTL
+		"(Metal) "
+#endif
 		;
 }
 
