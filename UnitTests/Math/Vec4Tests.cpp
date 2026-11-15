@@ -4,6 +4,7 @@
 
 #include "UnitTestFramework.h"
 #include <Jolt/Core/StringTools.h>
+#include <Jolt/Core/FPException.h>
 
 TEST_SUITE("Vec4Tests")
 {
@@ -822,9 +823,13 @@ TEST_SUITE("Vec4Tests")
 
 		CHECK(ma < 3.0e-7);
 	}
-	
+
 	TEST_CASE("TestTrigNaN")
 	{
+		// This is expected to trigger a floating point exception
+		FPExceptionDisableInvalid disable;
+		JPH_UNUSED(disable);
+
 		Vec4 nan = Vec4::sNaN();
 		CHECK(nan.ACos().ReinterpretAsInt() == nan.ReinterpretAsInt());
 		CHECK(nan.ASin().ReinterpretAsInt() == nan.ReinterpretAsInt());
@@ -836,7 +841,7 @@ TEST_SUITE("Vec4Tests")
 		CHECK(c.ReinterpretAsInt() == nan.ReinterpretAsInt());
 
 		CHECK(nan.Tan().ReinterpretAsInt() == nan.ReinterpretAsInt());
-		
+
 		CHECK(Vec4::sATan2(Vec4::sOne(), nan).ReinterpretAsInt() == nan.ReinterpretAsInt());
 		CHECK(Vec4::sATan2(nan, Vec4::sOne()).ReinterpretAsInt() == nan.ReinterpretAsInt());
 	}
