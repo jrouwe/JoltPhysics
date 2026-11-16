@@ -11,6 +11,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * `ConvexHullShape::GetTrianglesNext` would not split faces into multiple batches when the number of triangles in a single face was bigger than `inMaxTrianglesRequested`. In this case it would return 0 which made the calling code think that all triangles were collected when they were not.
 * `DVec3::ToVec3RoundUp/Down` could round in the wrong direction on SSE4.1, AVX and NEON when the CPU was set to flush denormals to zero. `FPFlushDenormals` now also sets the denormals-are-zero flag on x86 so that it treats denormal inputs the same as on ARM.
 * `HeightFieldShape::GetTrianglesNext` could return the same triangles multiple times when the output buffer was full in the middle of a block.
+* A flat `HeightFieldShape` with a number of blocks per side that is not a power of 2 could return collisions and triangles beyond its far edges (and read out of bounds) because the inside-out height range of the padding blocks became valid after dequantization.
 
 ## v5.7.0
 

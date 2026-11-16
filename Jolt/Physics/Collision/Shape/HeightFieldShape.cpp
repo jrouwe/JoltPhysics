@@ -2033,8 +2033,17 @@ public:
 				// Decode min/max height
 				JPH_ASSERT(offset < mShape->mRangeBlocksSize);
 				UVec4 block = UVec4::sLoadInt4Aligned(reinterpret_cast<const uint32 *>(&mShape->mRangeBlocks[offset]));
-				Vec4 bounds_miny = oy + sy * block.Expand4Uint16Lo().ToFloat();
-				Vec4 bounds_maxy = oy + sy * block.Expand4Uint16Hi().ToFloat();
+				Vec4 block_min = block.Expand4Uint16Lo().ToFloat();
+				Vec4 block_max = block.Expand4Uint16Hi().ToFloat();
+				Vec4 bounds_miny = oy + sy * block_min;
+				Vec4 bounds_maxy = oy + sy * block_max;
+
+				// A child without collision has an inside-out range (this includes the padding blocks beyond the edge of the height field
+				// that we get because the grid is built as if the number of blocks were a power of 2). On an (almost) flat height field
+				// sy is so small that oy + sy * block_min can round to oy, which makes the range look valid. Make sure the visitor rejects these children.
+				UVec4 no_collision = Vec4::sGreater(block_min, block_max);
+				bounds_miny = Vec4::sSelect(bounds_miny, Vec4::sReplicate(cLargeFloat), no_collision);
+				bounds_maxy = Vec4::sSelect(bounds_maxy, Vec4::sReplicate(-cLargeFloat), no_collision);
 
 				// Calculate size of one cell at this grid level
 				UVec4 internal_cell_size = UVec4::sReplicate(block_size << (max_level - level - 1)); // subtract 1 from level because we have an internal grid of 2x2
