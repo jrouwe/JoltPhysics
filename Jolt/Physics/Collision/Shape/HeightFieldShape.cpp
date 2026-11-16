@@ -1952,6 +1952,9 @@ public:
 				UVec4 colliding_blocks(0, 1, 2, 3);
 				int num_results = ioVisitor.VisitRangeBlock(transposed_min.GetColumn4(0), transposed_min.GetColumn4(1), transposed_min.GetColumn4(2), transposed_max.GetColumn4(0), transposed_max.GetColumn4(1), transposed_max.GetColumn4(2), colliding_blocks, mTop);
 
+				// Number of triangles of this block that were passed to the visitor (or skipped when continuing an aborted walk)
+				uint32 visited = 0;
+
 				// Loop through the results backwards (closest first)
 				int result = num_results - 1;
 				while (result >= 0)
@@ -2008,12 +2011,24 @@ public:
 									DebugRenderer::sInstance->DrawWireTriangle(RVec3(v0), RVec3(v1), RVec3(v2), Color::sWhite);
 								#endif
 
+									// When continuing an aborted walk, skip the triangles that the visitor already took
+									if (visited < mResumeTriangles)
+									{
+										++visited;
+										continue;
+									}
+
 									// Call visitor
 									ioVisitor.VisitTriangle(v_x, v_y, t, v0, v1, v2);
 
-									// Check if we're done
+									// Check if we're done. Only GetTrianglesNext continues an aborted walk and its visitor does not take the triangle
+									// that made it abort, so remember how many triangles of this block it took. We start at this block again and skip those.
 									if (ioVisitor.ShouldAbort())
+									{
+										mResumeTriangles = visited;
 										return;
+									}
+									++visited;
 								}
 							}
 						}
@@ -2023,6 +2038,9 @@ public:
 						--result;
 					while (result >= 0 && !ioVisitor.ShouldVisitRangeBlock(mTop + result));
 				}
+
+				// The block is done
+				mResumeTriangles = 0;
 			}
 			else
 			{
@@ -2091,6 +2109,7 @@ public:
 private:
 	const HeightFieldShape *	mShape;
 	int							mTop = 0;
+	uint32						mResumeTriangles = 0; ///< Number of triangles of the block on top of the stack that the visitor took before it aborted
 	uint32						mPropertiesStack[cStackSize];
 };
 

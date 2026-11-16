@@ -1070,4 +1070,47 @@ TEST_SUITE("HeightFieldShapeTests")
 			});
 		}
 	}
+
+	TEST_CASE("TestHeightFieldGetTrianglesInBatches")
+	{
+		for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+		{
+			SinCosHeightField height_field(sample_count);
+			uint num_quads = sample_count - 1;
+
+			// Different batch sizes so that the output buffer fills up at different positions within a block
+			for (int batch_size : { Shape::cGetTrianglesMinTrianglesRequested, 33, 47, 100 })
+			{
+				CAPTURE(sample_count);
+				CAPTURE(batch_size);
+
+				// Get all triangles in batches and count how often each triangle is returned
+				Array<uint> count(2 * Square(num_quads), 0);
+				Shape::GetTrianglesContext context;
+				height_field.mShape->GetTrianglesStart(context, height_field.mShape->GetLocalBounds(), Vec3::sZero(), Quat::sIdentity(), Vec3::sOne());
+				Array<Float3> vertices(3 * size_t(batch_size));
+				for (int num_triangles = height_field.mShape->GetTrianglesNext(context, batch_size, vertices.data()); num_triangles > 0; num_triangles = height_field.mShape->GetTrianglesNext(context, batch_size, vertices.data()))
+					for (int i = 0; i < num_triangles; ++i)
+					{
+						// Find the triangle from its centroid, triangle 0 has its centroid at (x + 1/3, y + 2/3) and triangle 1 at (x + 2/3, y + 1/3)
+						Vec3 centroid = (Vec3(vertices[3 * i]) + Vec3(vertices[3 * i + 1]) + Vec3(vertices[3 * i + 2])) / 3.0f;
+						Vec3 sample = (centroid - height_field.mSettings.mOffset) / height_field.mSettings.mScale;
+						uint x = uint(sample.GetX()), y = uint(sample.GetZ());
+						uint t = sample.GetX() - float(x) > 0.5f? 1 : 0;
+						CHECK(x < num_quads);
+						CHECK(y < num_quads);
+						if (x < num_quads && y < num_quads)
+							++count[2 * (y * num_quads + x) + t];
+					}
+
+				// Each triangle that has collision should be returned exactly once
+				height_field.ForEachTriangle([&](uint inX, uint inY, uint inTriangle, bool inHasCollision, [[maybe_unused]] Vec3Arg inCentroid, [[maybe_unused]] Vec3Arg inNormal) {
+					CAPTURE(inX);
+					CAPTURE(inY);
+					CAPTURE(inTriangle);
+					CHECK(count[2 * (inY * num_quads + inX) + inTriangle] == (inHasCollision? 1u : 0u));
+				});
+			}
+		}
+	}
 }
