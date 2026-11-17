@@ -108,6 +108,25 @@ private:
 	JPH_PLATFORM_BLUE_RWLOCK	mRWLock;
 };
 
+#elif defined(JPH_COMPILER_MINGW)
+
+// On MinGW the STL mutex can be used directly
+using MutexBase = mutex;
+
+/// On MinGW, libstdc++ implements std::shared_mutex using a pthread_rwlock_t that is not initialized in a thread safe way.
+/// We work around this by locking and unlocking the mutex once in the constructor, which forces the lazy initialization to happen
+/// on a single thread before the mutex is shared with other threads.
+/// See: https://sourceforge.net/p/mingw-w64/bugs/1044/
+class SharedMutexBase : public shared_mutex
+{
+public:
+					SharedMutexBase()
+	{
+		shared_mutex::lock();
+		shared_mutex::unlock();
+	}
+};
+
 #else
 
 // On other platforms just use the STL implementation
