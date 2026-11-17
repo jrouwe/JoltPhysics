@@ -1844,7 +1844,12 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 					if (denominator > mCCDBody.mMaxPenetration) // Avoid dividing by zero, if extra hit fraction > 1 there's also no point in continuing
 					{
 						float fraction_plus_slop = fraction + mCCDBody.mMaxPenetration / denominator;
-						if (fraction_plus_slop < mCCDBody.mFractionPlusSlop)
+
+						// When two bodies are hit at exactly the same fraction, we take the one with the lowest body ID.
+						// The order in which the broad phase returns bodies depends on how its tree was built, so without this the result
+						// would depend on the order in which bodies were added to the physics system (e.g. after restoring a saved state).
+						if (fraction_plus_slop < mCCDBody.mFractionPlusSlop
+							|| (fraction_plus_slop == mCCDBody.mFractionPlusSlop && !mCCDBody.mBodyID2.IsInvalid() && inResult.mBodyID2 < mCCDBody.mBodyID2))
 						{
 							const Body &body2 = mBodyManager.GetBody(inResult.mBodyID2);
 
