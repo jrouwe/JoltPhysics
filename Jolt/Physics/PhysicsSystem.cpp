@@ -1849,7 +1849,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 						// The order in which the broad phase returns bodies depends on how its tree was built, so without this the result
 						// would depend on the order in which bodies were added to the physics system (e.g. after restoring a saved state).
 						if (fraction_plus_slop < mCCDBody.mFractionPlusSlop
-							|| (fraction_plus_slop == mCCDBody.mFractionPlusSlop && !mCCDBody.mBodyID2.IsInvalid() && inResult.mBodyID2 < mCCDBody.mBodyID2))
+							|| (fraction_plus_slop == mCCDBody.mFractionPlusSlop && inResult.mBodyID2 < mCCDBody.mBodyID2))
 						{
 							const Body &body2 = mBodyManager.GetBody(inResult.mBodyID2);
 
