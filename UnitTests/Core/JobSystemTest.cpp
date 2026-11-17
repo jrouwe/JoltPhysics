@@ -153,4 +153,44 @@ TEST_SUITE("JobSystemTest")
 
 		system.DestroyBarrier(barrier);
 	}
+
+	// Tests that jobs that were executed by a barrier are freed when the barrier wait returns, even if no worker thread got to remove them from the queue. See issue #2231.
+	TEST_CASE("TestJobSystemBarrierFreesJobsWhenWorkersAreStalled")
+	{
+		static constexpr int cMaxJobs = 128;
+		static constexpr int cMaxBarriers = 10;
+		static constexpr int cNumIterations = 10;
+		static constexpr int cNumJobs = cMaxJobs - 1; // The job system reserves 1 job, see documentation
+
+		// Create a job system with a single worker thread that doesn't pick up any jobs until we tell it to
+		atomic<bool> release_worker = false;
+		JobSystemThreadPool system;
+		system.SetThreadInitFunction([&release_worker](int) {
+			while (!release_worker.load(std::memory_order_acquire))
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		});
+		system.Init(cMaxJobs, cMaxBarriers, 1);
+
+		JobSystem::Barrier *barrier = system.CreateBarrier();
+
+		atomic<uint32> counter = 0;
+		for (int iteration = 0; iteration < cNumIterations; ++iteration)
+		{
+			// Fill the job system with jobs, this will run out of jobs if the jobs of the previous iteration have not been freed
+			JobHandle handles[cNumJobs];
+			for (JobHandle &h : handles)
+				h = system.CreateJob("Job", Color::sRed, [&counter] { counter.fetch_add(1, std::memory_order_relaxed); });
+			barrier->AddJobs(handles, cNumJobs);
+
+			// The worker thread is stalled, so the main thread executes all jobs
+			system.WaitForJobs(barrier);
+		}
+
+		CHECK(counter.load(std::memory_order_relaxed) == cNumIterations * cNumJobs);
+
+		system.DestroyBarrier(barrier);
+
+		// Let the worker thread go so that the job system can shut down
+		release_worker.store(true, std::memory_order_release);
+	}
 }
