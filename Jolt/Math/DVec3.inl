@@ -1207,24 +1207,26 @@ DVec3 DVec3::PrepareRoundToInf() const
 	return _mm256_mask_blend_pd(is_zero, value_or_mantissa_loss, mValue);
 #elif defined(JPH_USE_AVX)
 	__m256i mantissa_loss = _mm256_set1_epi64x(cDoubleToFloatMantissaLoss);
-	__m256i val_i = _mm256_castpd_si256(mValue);
-	__m256i value_and_mantissa_loss = _mm256_and_si256(val_i, mantissa_loss);
-	__m256i is_zero = _mm256_cmpeq_epi64(value_and_mantissa_loss, _mm256_setzero_si256());
-	__m256i value_or_mantissa_loss = _mm256_or_si256(val_i, mantissa_loss);
-	__m256i result = _mm256_blendv_epi8(value_or_mantissa_loss, val_i, is_zero);
-	return _mm256_castsi256_pd(result);
+	__m256d value_and_mantissa_loss = _mm256_and_pd(mValue, _mm256_castsi256_pd(mantissa_loss));
+	__m256d one = _mm256_set1_pd(1.0);
+	__m256d loss_or_one = _mm256_or_pd(value_and_mantissa_loss, one);
+	__m256d is_zero = _mm256_cmp_pd(loss_or_one, one, _CMP_EQ_OQ);
+	__m256d value_or_mantissa_loss = _mm256_or_pd(mValue, _mm256_castsi256_pd(mantissa_loss));
+	return _mm256_blendv_pd(value_or_mantissa_loss, mValue, is_zero);
 #elif defined(JPH_USE_SSE4_1)
 	__m128i mantissa_loss = _mm_set1_epi64x(cDoubleToFloatMantissaLoss);
 	__m128i zero_i = _mm_setzero_si128();
-	__m128i value_and_mantissa_loss_low = _mm_and_si128(mValue.mLow, mantissa_loss);
+	__m128i value_low_i = _mm_castpd_si128(mValue.mLow);
+	__m128i value_and_mantissa_loss_low = _mm_and_si128(value_low_i, mantissa_loss);
 	__m128i is_zero_low = _mm_cmpeq_epi64(value_and_mantissa_loss_low, zero_i);
-	__m128i value_or_mantissa_loss_low = _mm_or_si128(mValue.mLow, mantissa_loss);
-	__m128i value_and_mantissa_loss_high = _mm_and_si128(mValue.mHigh, mantissa_loss);
+	__m128i value_or_mantissa_loss_low = _mm_or_si128(value_low_i, mantissa_loss);
+	__m128i value_high_i = _mm_castpd_si128(mValue.mHigh);
+	__m128i value_and_mantissa_loss_high = _mm_and_si128(value_high_i, mantissa_loss);
 	__m128i is_zero_high = _mm_cmpeq_epi64(value_and_mantissa_loss_high, zero_i);
-	__m128i value_or_mantissa_loss_high = _mm_or_si128(mValue.mHigh, mantissa_loss);
-	__m128i value_low = _mm_blendv_epi8(value_or_mantissa_loss_low, mValue.mLow, is_zero_low);
-	__m128i value_high = _mm_blendv_epi8(value_or_mantissa_loss_high, mValue.mHigh, is_zero_high);
-	return DVec3({ value_low, value_high });
+	__m128i value_or_mantissa_loss_high = _mm_or_si128(value_high_i, mantissa_loss);
+	__m128i value_low = _mm_blendv_epi8(value_or_mantissa_loss_low, value_low_i, is_zero_low);
+	__m128i value_high = _mm_blendv_epi8(value_or_mantissa_loss_high, value_high_i, is_zero_high);
+	return DVec3({ _mm_castsi128_pd(value_low), _mm_castsi128_pd(value_high) });
 #elif defined(JPH_USE_NEON)
 	uint64x2_t mantissa_loss = vdupq_n_u64(cDoubleToFloatMantissaLoss);
 	float64x2_t zero = vdupq_n_f64(0.0);
