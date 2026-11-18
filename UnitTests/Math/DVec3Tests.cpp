@@ -107,6 +107,7 @@ TEST_SUITE("DVec3Tests")
 		{
 			// Repeat with flush denormals to zero
 			FPFlushDenormals flush_denormals;
+			JPH_UNUSED(flush_denormals);
 
 			// Check rounding up and down (the value is loaded after the FP control word has been changed)
 			double v = TestDVec3JustAbove2;
