@@ -275,6 +275,61 @@ TEST_SUITE("ConvexHullShapeTests")
 		}
 	}
 
+	TEST_CASE("TestConvexHullShapeGetPartialTriangles")
+	{
+		const Vec3 cHalfExtent(1, 2, 3);
+		for (int num_points = 3; num_points < ConvexHullShape::cMaxPointsInHull; ++num_points)
+		{
+			// Create a simple disc with num_point vertices
+			Array<Vec3> points;
+			for (int i = 0; i < num_points; ++i)
+			{
+				float angle = float(i) / num_points * 2.0f * JPH_PI;
+				points.push_back(Vec3(Sin(angle), 0, Cos(angle)));
+			}
+			ConvexHullShapeSettings settings(points);
+			settings.mHullTolerance = 0; // Ensure we get all points
+			Shape::ShapeResult result = settings.Create();
+			CHECK(result.IsValid());
+			RefConst<ConvexHullShape> hull = StaticCast<ConvexHullShape>(result.Get());
+
+			// Check basic properties of the hull, we expect that all points made it in the final hull
+			Shape::Stats stats = hull->GetStats();
+			int triangles_per_face = num_points - 2;
+			int num_triangles = 2 * triangles_per_face;
+			CHECK(stats.mNumTriangles == num_triangles);
+			CHECK(hull->GetNumFaces() == 2);
+			CHECK(hull->GetNumPoints() == num_points);
+			for (uint i = 0; i < hull->GetNumFaces(); ++i)
+				CHECK(hull->GetNumVerticesInFace(i) == num_points);
+
+			// Try various batch sizes to see if we can correctly collect partial faces
+			Array<Float3> vertices;
+			int max_triangles_to_test = num_triangles + 8;
+			vertices.resize(3 * max_triangles_to_test);
+			for (int triangles_per_batch : { Shape::cGetTrianglesMinTrianglesRequested, Shape::cGetTrianglesMinTrianglesRequested + 1, triangles_per_face - 1, triangles_per_face, triangles_per_face + 1, num_triangles - 1, num_triangles, num_triangles + 1 })
+				if (triangles_per_batch >= Shape::cGetTrianglesMinTrianglesRequested)
+				{
+					Shape::GetTrianglesContext context;
+					hull->GetTrianglesStart(context, AABox::sBiggest(), Vec3::sZero(), Quat::sIdentity(), Vec3::sOne());
+
+					// Loop until we have all triangles
+					uint total_triangles = 0;
+					for (;;)
+					{
+						int count = hull->GetTrianglesNext(context, triangles_per_batch, vertices.data());
+						CHECK(count <= triangles_per_batch);
+						if (count == 0)
+							break;
+						total_triangles += count;
+					}
+
+					// Check that we got all triangles
+					CHECK(total_triangles == num_triangles);
+				}
+		}
+	}
+
 	TEST_CASE("TestConvexHullShapeSaveRestore")
 	{
 		Ref<ConvexHullShape> hull = sCreateSphereHull(2.0f);

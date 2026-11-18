@@ -1210,6 +1210,7 @@ public:
 	Mat44		mTransform;
 	bool		mIsInsideOut;
 	size_t		mCurrentFace = 0;
+	size_t		mCurrentTriangle = 0;
 };
 
 void ConvexHullShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const
@@ -1228,53 +1229,60 @@ int ConvexHullShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxT
 	CHSGetTrianglesContext &context = (CHSGetTrianglesContext &)ioContext;
 
 	int total_num_triangles = 0;
-	for (; context.mCurrentFace < mFaces.size(); ++context.mCurrentFace)
+	for (; context.mCurrentFace < mFaces.size() && inMaxTrianglesRequested > 0; ++context.mCurrentFace)
 	{
 		const Face &f = mFaces[context.mCurrentFace];
 
-		const uint8 *first_vtx = mVertexIdx.data() + f.mFirstVertex;
-		const uint8 *end_vtx = first_vtx + f.mNumVertices;
+		// Determine how many triangles there are left in this face
+		int num_triangles_in_face = int(f.mNumVertices - 2 - context.mCurrentTriangle);
 
-		// Check if there is still room in the output buffer for this face
-		int num_triangles = f.mNumVertices - 2;
-		inMaxTrianglesRequested -= num_triangles;
-		if (inMaxTrianglesRequested < 0)
-			break;
+		// Determine how many we're going to write
+		int num_triangles = min(num_triangles_in_face, inMaxTrianglesRequested);
+		JPH_ASSERT(num_triangles > 0);
 		total_num_triangles += num_triangles;
 
-		// Get first triangle of polygon
+		// Get first vertex of polygon, this vertex will be shared by all triangles
+		const uint8 *first_vtx = mVertexIdx.data() + f.mFirstVertex;
 		Vec3 v0 = context.mTransform * mPoints[first_vtx[0]].mPosition;
-		Vec3 v1 = context.mTransform * mPoints[first_vtx[1]].mPosition;
-		Vec3 v2 = context.mTransform * mPoints[first_vtx[2]].mPosition;
-		v0.StoreFloat3(outTriangleVertices++);
+
+		// Go to the first vertex of the triangle that we need to write next
+		first_vtx += 1 + context.mCurrentTriangle;
+		const uint8 *end_vtx = first_vtx + num_triangles;
+
 		if (context.mIsInsideOut)
 		{
-			// Store first triangle in this polygon flipped
-			v2.StoreFloat3(outTriangleVertices++);
-			v1.StoreFloat3(outTriangleVertices++);
-
-			// Store other triangles in this polygon flipped
-			for (const uint8 *v = first_vtx + 3; v < end_vtx; ++v)
+			// Store triangles in this polygon flipped
+			for (const uint8 *v = first_vtx; v < end_vtx; ++v)
 			{
 				v0.StoreFloat3(outTriangleVertices++);
+				(context.mTransform * mPoints[*(v + 1)].mPosition).StoreFloat3(outTriangleVertices++);
 				(context.mTransform * mPoints[*v].mPosition).StoreFloat3(outTriangleVertices++);
-				(context.mTransform * mPoints[*(v - 1)].mPosition).StoreFloat3(outTriangleVertices++);
 			}
 		}
 		else
 		{
-			// Store first triangle in this polygon
-			v1.StoreFloat3(outTriangleVertices++);
-			v2.StoreFloat3(outTriangleVertices++);
-
-			// Store other triangles in this polygon
-			for (const uint8 *v = first_vtx + 3; v < end_vtx; ++v)
+			// Store triangles in this polygon
+			for (const uint8 *v = first_vtx; v < end_vtx; ++v)
 			{
 				v0.StoreFloat3(outTriangleVertices++);
-				(context.mTransform * mPoints[*(v - 1)].mPosition).StoreFloat3(outTriangleVertices++);
 				(context.mTransform * mPoints[*v].mPosition).StoreFloat3(outTriangleVertices++);
+				(context.mTransform * mPoints[*(v + 1)].mPosition).StoreFloat3(outTriangleVertices++);
 			}
 		}
+
+		// Check if we could write less than we needed, if so we need to remember where to start next time and return the buffer
+		if (num_triangles < num_triangles_in_face)
+		{
+			context.mCurrentTriangle += num_triangles;
+			break;
+		}
+
+		// Next face is going to start at the first triangle again
+		context.mCurrentTriangle = 0;
+
+		// Update the remaining budget, and if we ran out then abort
+		inMaxTrianglesRequested -= num_triangles;
+		JPH_ASSERT(inMaxTrianglesRequested >= 0);
 	}
 
 	// Store materials
