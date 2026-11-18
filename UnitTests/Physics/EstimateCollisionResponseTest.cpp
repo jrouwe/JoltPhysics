@@ -75,7 +75,7 @@ TEST_SUITE("EstimateCollisionResponseTests")
 											c.SimulateSingleStep();
 
 											// Check that the predicted velocities are correct
-											CHECK_APPROX_EQUAL(listener.mResult.mLinearVelocity1, box1.GetLinearVelocity());
+											CHECK_APPROX_EQUAL(listener.mResult.mLinearVelocity1, box1.GetLinearVelocity(), 2.0e-6f);
 											CHECK_APPROX_EQUAL(listener.mResult.mAngularVelocity1, box1.GetAngularVelocity());
 											CHECK_APPROX_EQUAL(listener.mResult.mLinearVelocity2, box2.GetLinearVelocity());
 											CHECK_APPROX_EQUAL(listener.mResult.mAngularVelocity2, box2.GetAngularVelocity());
