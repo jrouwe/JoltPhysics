@@ -321,7 +321,7 @@ TEST_SUITE("ConvexHullShapeTests")
 						CHECK(count <= triangles_per_batch);
 						if (count == 0)
 							break;
-						total_triangles += count;;
+						total_triangles += count;
 					}
 
 					// Check that we got all triangles
