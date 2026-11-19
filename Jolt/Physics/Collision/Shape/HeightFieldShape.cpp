@@ -2014,7 +2014,7 @@ public:
 									// Check if we're done
 									if (ioVisitor.ShouldAbort())
 										return;
-									}
+								}
 							}
 						}
 
