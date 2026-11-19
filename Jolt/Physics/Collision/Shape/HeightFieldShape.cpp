@@ -1952,9 +1952,6 @@ public:
 				UVec4 colliding_blocks(0, 1, 2, 3);
 				int num_results = ioVisitor.VisitRangeBlock(transposed_min.GetColumn4(0), transposed_min.GetColumn4(1), transposed_min.GetColumn4(2), transposed_max.GetColumn4(0), transposed_max.GetColumn4(1), transposed_max.GetColumn4(2), colliding_blocks, mTop);
 
-				// Number of triangles of this block that were passed to the visitor (or skipped when continuing an aborted walk)
-				uint32 visited = 0;
-
 				// Loop through the results backwards (closest first)
 				int result = num_results - 1;
 				while (result >= 0)
@@ -2011,25 +2008,13 @@ public:
 									DebugRenderer::sInstance->DrawWireTriangle(RVec3(v0), RVec3(v1), RVec3(v2), Color::sWhite);
 								#endif
 
-									// When continuing an aborted walk, skip the triangles that the visitor already took
-									if (visited < mResumeTriangles)
-									{
-										++visited;
-										continue;
-									}
-
 									// Call visitor
 									ioVisitor.VisitTriangle(v_x, v_y, t, v0, v1, v2);
 
-									// Check if we're done. Only GetTrianglesNext continues an aborted walk and its visitor does not take the triangle
-									// that made it abort, so remember how many triangles of this block it took. We start at this block again and skip those.
+									// Check if we're done
 									if (ioVisitor.ShouldAbort())
-									{
-										mResumeTriangles = visited;
 										return;
 									}
-									++visited;
-								}
 							}
 						}
 
@@ -2038,9 +2023,6 @@ public:
 						--result;
 					while (result >= 0 && !ioVisitor.ShouldVisitRangeBlock(mTop + result));
 				}
-
-				// The block is done
-				mResumeTriangles = 0;
 			}
 			else
 			{
@@ -2109,7 +2091,6 @@ public:
 private:
 	const HeightFieldShape *	mShape;
 	int							mTop = 0;
-	uint32						mResumeTriangles = 0; ///< Number of triangles of the block on top of the stack that the visitor took before it aborted
 	uint32						mPropertiesStack[cStackSize];
 };
 
@@ -2467,8 +2448,11 @@ struct HeightFieldShape::HSGetTrianglesContext
 		return true;
 	}
 
-	int		VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
+	int		VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop)
 	{
+		// Start counting triangles again
+		mCurrentTriangle = 0;
+
 		// Scale the bounding boxes of this node
 		Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
 		AABox4Scale(mHeightFieldScale, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
@@ -2484,9 +2468,18 @@ struct HeightFieldShape::HSGetTrianglesContext
 
 	void	VisitTriangle(uint inX, uint inY, [[maybe_unused]] uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
 	{
+		// Index of this triangle within the block that is being visited
+		int current_triangle = mCurrentTriangle++;
+
+		// When continuing an aborted walk, the walk restarts at the block that we aborted in. Skip the triangles of this block that we already returned.
+		if (current_triangle < mFirstTriangle)
+			return;
+		mFirstTriangle = 0;
+
 		// When the buffer is full and we cannot process the triangles, abort the height field walk. The next time GetTrianglesNext is called we will continue here.
 		if (mNumTrianglesFound + 1 > mMaxTrianglesRequested)
 		{
+			mFirstTriangle = current_triangle;
 			mShouldAbort = true;
 			return;
 		}
@@ -2522,6 +2515,8 @@ struct HeightFieldShape::HSGetTrianglesContext
 	Mat44						mLocalToWorld;
 	int							mMaxTrianglesRequested;
 	Float3 *					mTriangleVertices;
+	int							mCurrentTriangle = 0;		///< Index of the next triangle within the block that is being visited
+	int							mFirstTriangle = 0;			///< When continuing an aborted walk: index of the first triangle within the block that has not been returned yet
 	int							mNumTrianglesFound;
 	const PhysicsMaterial **	mMaterials;
 	bool						mShouldAbort;
