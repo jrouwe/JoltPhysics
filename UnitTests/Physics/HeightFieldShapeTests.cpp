@@ -667,12 +667,12 @@ TEST_SUITE("HeightFieldShapeTests")
 		static constexpr uint	cHoleX = 10;
 		static constexpr uint	cHoleY = 13;
 
-		explicit				SinCosHeightField(uint inSampleCount)
+		explicit				SinCosHeightField(uint inSampleCount, uint inBlockSize = 2)
 		{
 			mSettings.mOffset = Vec3(-20.0f, 3.0f, -15.0f);
 			mSettings.mScale = Vec3(1.5f, 2.0f, 1.25f);
 			mSettings.mSampleCount = inSampleCount;
-			mSettings.mBlockSize = 2;
+			mSettings.mBlockSize = inBlockSize;
 			mSettings.mBitsPerSample = HeightFieldShapeConstants::cMaxBitsPerSample; // Minimize quantization error so we can compare with the analytic surface
 			mSettings.mHeightSamples.resize(Square(inSampleCount));
 			for (uint y = 0; y < inSampleCount; ++y)
@@ -1068,6 +1068,66 @@ TEST_SUITE("HeightFieldShapeTests")
 				else
 					CHECK(!found[inTriangle]);
 			});
+		}
+	}
+
+	TEST_CASE("TestHeightFieldGetTrianglesInBatches")
+	{
+		// Block size 2 has up to 8 triangles per block so the batch ends in the middle of a block,
+		// block size 8 has up to 128 triangles per block so a single block needs to be returned over multiple batches
+		for (uint block_size : { 2u, 8u })
+		{
+			for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+			{
+				SinCosHeightField height_field(sample_count, block_size);
+				uint num_quads = sample_count - 1;
+
+				// Different batch sizes so that the output buffer fills up at different positions within a block
+				for (int batch_size : { Shape::cGetTrianglesMinTrianglesRequested, 33, 47, 100 })
+				{
+					CAPTURE(block_size);
+					CAPTURE(sample_count);
+					CAPTURE(batch_size);
+
+					// Get all triangles in batches and count how often each triangle is returned
+					Array<uint> count(2 * Square(num_quads), 0);
+					Shape::GetTrianglesContext context;
+					height_field.mShape->GetTrianglesStart(context, height_field.mShape->GetLocalBounds(), Vec3::sZero(), Quat::sIdentity(), Vec3::sOne());
+					Array<Float3> vertices(3 * size_t(batch_size));
+					uint total_triangles = 0;
+					for (int num_triangles = height_field.mShape->GetTrianglesNext(context, batch_size, vertices.data()); num_triangles > 0; num_triangles = height_field.mShape->GetTrianglesNext(context, batch_size, vertices.data()))
+					{
+						// Guard against GetTrianglesNext never finishing
+						total_triangles += uint(num_triangles);
+						if (total_triangles > count.size())
+						{
+							FAIL_CHECK("GetTrianglesNext returned more triangles than the height field has");
+							break;
+						}
+
+						for (int i = 0; i < num_triangles; ++i)
+						{
+							// Find the triangle from its centroid, triangle 0 has its centroid at (x + 1/3, y + 2/3) and triangle 1 at (x + 2/3, y + 1/3)
+							Vec3 centroid = (Vec3(vertices[3 * i]) + Vec3(vertices[3 * i + 1]) + Vec3(vertices[3 * i + 2])) / 3.0f;
+							Vec3 sample = (centroid - height_field.mSettings.mOffset) / height_field.mSettings.mScale;
+							uint x = uint(sample.GetX()), y = uint(sample.GetZ());
+							uint t = sample.GetX() - float(x) > 0.5f? 1 : 0;
+							CHECK(x < num_quads);
+							CHECK(y < num_quads);
+							if (x < num_quads && y < num_quads)
+								++count[2 * (y * num_quads + x) + t];
+						}
+					}
+
+					// Each triangle that has collision should be returned exactly once
+					height_field.ForEachTriangle([&](uint inX, uint inY, uint inTriangle, bool inHasCollision, [[maybe_unused]] Vec3Arg inCentroid, [[maybe_unused]] Vec3Arg inNormal) {
+						CAPTURE(inX);
+						CAPTURE(inY);
+						CAPTURE(inTriangle);
+						CHECK(count[2 * (inY * num_quads + inX) + inTriangle] == (inHasCollision? 1u : 0u));
+					});
+				}
+			}
 		}
 	}
 }
