@@ -115,6 +115,17 @@ JobSystemThreadPool::Job *JobSystemThreadPool::AllocateJob(const char *inName, C
 		if (index != AvailableJobs::cInvalidObjectIndex)
 			break;
 
+		// Jobs that have finished executing (e.g. by a barrier) remain in the queue until a worker thread removes them.
+		// If the worker threads don't get scheduled, the queue could grow until we run out of jobs, so free the finished jobs at the front of the queue now.
+		bool freed_jobs = false;
+		while (Job *job = Dequeue(true))
+		{
+			job->Release(); // The job has already executed, so we only need to release the reference that was taken in Enqueue
+			freed_jobs = true;
+		}
+		if (freed_jobs)
+			continue; // Try to allocate a job again, maybe we can now get one
+
 		// Report the stall once, if this happens often, consider increasing inMaxJobs in the Init function
 		if (!reported)
 		{
@@ -164,17 +175,6 @@ void JobSystemThreadPool::CreateJobs(const char *inName, ColorArg inColor, const
 		static_assert(sizeof(JobHandle) == sizeof(Job *));
 		QueueJobs(reinterpret_cast<Job **>(outJobs), inNumJobs);
 	}
-}
-
-void JobSystemThreadPool::WaitForJobs(Barrier *inBarrier)
-{
-	JobSystemWithBarrier::WaitForJobs(inBarrier);
-
-	// Jobs that were executed by the barrier remain in the queue until a worker thread removes them.
-	// If the worker threads don't get scheduled, the queue could grow until we run out of jobs, so free the finished jobs at the front of the queue now.
-	if (!mThreads.empty())
-		while (Job *job = Dequeue(true))
-			job->Release(); // The job has already executed, so we only need to release the reference that was taken in Enqueue
 }
 
 void JobSystemThreadPool::FreeJob(Job *inJob)
