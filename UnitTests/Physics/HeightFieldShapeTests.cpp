@@ -519,6 +519,61 @@ TEST_SUITE("HeightFieldShapeTests")
 			}
 	}
 
+	TEST_CASE("TestFlatHeightFieldNonPowerOf2BlockCount")
+	{
+		// 20 x 20 samples with a block size of 2 gives 10 blocks per side. The range block hierarchy is built as if there were
+		// 16 blocks per side, the blocks beyond the edge of the height field get an inside-out height range. When the height
+		// field is flat, the height range is so small that it is no longer inside-out after dequantizing it, so a query near
+		// the far edges must not visit these blocks.
+		const uint cSampleCount = 20;
+		const float cMaxCoordinate = float(cSampleCount - 1);
+		const float cHeight = 100.0f;
+
+		HeightFieldShapeSettings settings;
+		settings.mSampleCount = cSampleCount;
+		settings.mBlockSize = 2;
+		settings.mHeightSamples.resize(Square(cSampleCount), cHeight);
+		Ref<Shape> shape = settings.Create().Get();
+
+		// Collide spheres along the far edges, they overlap both the last cells and the blocks beyond the height field
+		const float cSphereRadius = 1.0f;
+		Ref<Shape> sphere = new SphereShape(cSphereRadius);
+		CollideShapeSettings collide_settings;
+		for (uint i = 0; i < cSampleCount; ++i)
+			for (Vec3 sphere_position : { Vec3(cMaxCoordinate + 0.5f, cHeight + 0.5f, float(i)), Vec3(float(i), cHeight + 0.5f, cMaxCoordinate + 0.5f) })
+			{
+				CAPTURE(sphere_position);
+				AllHitCollisionCollector<CollideShapeCollector> collector;
+				CollisionDispatch::sCollideShapeVsShape(sphere, shape, Vec3::sOne(), Vec3::sOne(), Mat44::sTranslation(sphere_position), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
+				CHECK(collector.HadHit());
+				for (const CollideShapeResult &hit : collector.mHits)
+				{
+					Vec3 contact = hit.mContactPointOn2;
+					CHECK(contact.GetX() <= cMaxCoordinate);
+					CHECK(contact.GetZ() <= cMaxCoordinate);
+				}
+			}
+
+		// Get the triangles in a box that overlaps the far corner and extends beyond the height field
+		Shape::GetTrianglesContext context;
+		shape->GetTrianglesStart(context, AABox(Vec3(cMaxCoordinate - 0.5f, cHeight - 1.0f, cMaxCoordinate - 0.5f), Vec3(cMaxCoordinate + 10.0f, cHeight + 1.0f, cMaxCoordinate + 10.0f)), Vec3::sZero(), Quat::sIdentity(), Vec3::sOne());
+		Float3 vertices[3 * Shape::cGetTrianglesMinTrianglesRequested];
+		int num_triangles = 0;
+		for (;;)
+		{
+			int count = shape->GetTrianglesNext(context, Shape::cGetTrianglesMinTrianglesRequested, vertices);
+			if (count == 0)
+				break;
+			for (int i = 0; i < 3 * count; ++i)
+			{
+				CHECK(vertices[i].x <= cMaxCoordinate);
+				CHECK(vertices[i].z <= cMaxCoordinate);
+			}
+			num_triangles += count;
+		}
+		CHECK(num_triangles > 0);
+	}
+
 	TEST_CASE("TestSetMaterials")
 	{
 		constexpr uint cSampleCount = 32;
