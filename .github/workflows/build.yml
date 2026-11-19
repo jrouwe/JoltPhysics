@@ -439,18 +439,25 @@ jobs:
         echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
         sudo udevadm control --reload-rules
         sudo udevadm trigger --name-match=kvm
-        # Make the SDK location available to the cache step below
+    - name: Install Emulator
+      id: emulator
+      run: |
+        # Make the SDK location available to the cache steps below
         echo "ANDROID_SDK_DIR=$ANDROID_HOME" >> $GITHUB_ENV
-    - name: Cache Emulator
+        # Install the latest emulator (the same as android-emulator-runner does) so that we can include its version in the cache key.
+        # A snapshot made by an older emulator version can't be loaded, so we need to regenerate it.
+        sdkmanager --install emulator --channel=0 > /dev/null
+        echo "version=$(grep Pkg.Revision $ANDROID_HOME/emulator/source.properties | cut -d= -f2)" >> $GITHUB_OUTPUT
+    - name: Restore Emulator
       id: emulator-cache
-      uses: actions/cache@v6
+      uses: actions/cache/restore@v6
       with:
         # The system image and the AVD including a snapshot of the booted emulator
         path: |
           ${{env.ANDROID_SDK_DIR}}/system-images/android-${{env.ANDROID_API_LEVEL}}
           ~/.android/avd/*
           ~/.android/adb*
-        key: android-emulator-${{env.ANDROID_API_LEVEL}}-${{env.ANDROID_ARCH}}
+        key: android-emulator-${{env.ANDROID_API_LEVEL}}-${{env.ANDROID_ARCH}}-${{steps.emulator.outputs.version}}
     - name: Create Emulator Snapshot
       if: steps.emulator-cache.outputs.cache-hit != 'true'
       timeout-minutes: 30
@@ -462,6 +469,16 @@ jobs:
         emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: false
         script: echo "Generated AVD snapshot for caching"
+    - name: Save Emulator
+      # Save the cache right after creating the snapshot, if we save it at the end of the job the disk image of the AVD will contain the installed unit tests
+      if: steps.emulator-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v6
+      with:
+        path: |
+          ${{env.ANDROID_SDK_DIR}}/system-images/android-${{env.ANDROID_API_LEVEL}}
+          ~/.android/avd/*
+          ~/.android/adb*
+        key: ${{steps.emulator-cache.outputs.cache-primary-key}}
     - name: Run Unit Tests
       timeout-minutes: 30
       uses: reactivecircus/android-emulator-runner@v2

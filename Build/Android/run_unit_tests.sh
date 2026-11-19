@@ -16,6 +16,8 @@ if [ -z "$APK" ] || [ ! -f "$APK" ]; then
 	exit 2
 fi
 
+# Remove any previously installed version, it may have been signed with a different (debug) key
+adb uninstall com.joltphysics.unittests > /dev/null 2>&1
 adb install -t -r "$APK" || exit 2
 adb logcat -c
 adb shell am start -n com.joltphysics.unittests/android.app.NativeActivity || exit 2
