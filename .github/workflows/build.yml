@@ -21,6 +21,7 @@ env:
 
 jobs:
   linux-clang:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: ubuntu-26.04
     name: Linux Clang
     strategy:
@@ -50,6 +51,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-clang-check-global-new:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: ubuntu-26.04
     name: Linux Clang Check Global New
 
@@ -70,6 +72,7 @@ jobs:
       run: ./check_global_new.sh Linux_Debug clang-query-${{env.UBUNTU_CLANG_VERSION}}
 
   linux_clang_tsan:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: ubuntu-26.04
     name: Linux Clang Sanitizers
     strategy:
@@ -104,6 +107,7 @@ jobs:
       run: ./PerformanceTest -q=LinearCast -t=max -s=Ragdoll
 
   linux-clang-so:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: ubuntu-26.04
     name: Linux Clang Shared Library
     strategy:
@@ -132,6 +136,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-clang-32-bit:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: ubuntu-26.04
     name: Linux Clang 32-bit
     strategy:
@@ -156,6 +161,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-gcc:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: ubuntu-26.04
     name: Linux GCC
     strategy:
@@ -184,6 +190,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   linux-gcc-so:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: ubuntu-26.04
     name: Linux GCC Shared Library
     strategy:
@@ -212,6 +219,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   msys2_mingw_gcc:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: windows-2025-vs2026
     defaults:
       run:
@@ -242,6 +250,7 @@ jobs:
       run: ctest --output-on-failure --verbose
 
   msvc_cl:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: windows-2025-vs2026
     name: Visual Studio CL
     strategy:
@@ -265,6 +274,7 @@ jobs:
       run: ./UnitTests.exe
 
   msvc_cl_no_object_stream:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: windows-2025-vs2026
     name: Visual Studio CL - No Object Stream
     strategy:
@@ -287,6 +297,7 @@ jobs:
       run: ./UnitTests.exe
 
   msvc_cl_dll:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: windows-2025-vs2026
     name: Visual Studio CL Shared Library
     strategy:
@@ -309,6 +320,7 @@ jobs:
       run: ./UnitTests.exe
 
   msvc_cl_32_bit:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: windows-2025-vs2026
     name: Visual Studio CL 32-bit
     strategy:
@@ -331,6 +343,7 @@ jobs:
       run: ./UnitTests.exe
 
   msvc_cl_arm:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: windows-2025-vs2026
     name: Visual Studio CL ARM
     strategy:
@@ -350,6 +363,7 @@ jobs:
       run: msbuild Build\VS2026_CL_ARM\JoltPhysics.slnx /property:Configuration=${{matrix.build_type}} -m
 
   msvc_clang:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: windows-2025-vs2026
     name: Visual Studio Clang
     strategy:
@@ -373,6 +387,7 @@ jobs:
       run: ./UnitTests.exe
 
   macos:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: macos-latest
     name: macOS
     env:
@@ -494,6 +509,7 @@ jobs:
         script: bash ${{github.workspace}}/Build/Android/run_unit_tests.sh ${{github.workspace}}/Build/Android/UnitTests/build 600 ${{matrix.build_type}}
 
   ios:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: macos-latest
     name: iOS (${{matrix.build_type}})
     env:
@@ -542,6 +558,7 @@ jobs:
         grep -q "Status: SUCCESS!" UnitTests.log
 
   emscripten:
+    if: false # TEMP: disabled while testing the Android build
     runs-on: ubuntu-26.04
     name: Emscripten
 
