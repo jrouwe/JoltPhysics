@@ -446,7 +446,9 @@ jobs:
         echo "ANDROID_SDK_DIR=$ANDROID_HOME" >> $GITHUB_ENV
         # Install the latest emulator (the same as android-emulator-runner does) so that we can include its version in the cache key.
         # A snapshot made by an older emulator version can't be loaded, so we need to regenerate it.
-        sdkmanager --install emulator --channel=0 > /dev/null
+        # sdkmanager is not in the PATH, prefer cmdline-tools/latest but fall back to any other installed version
+        SDKMANAGER=$(ls $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $ANDROID_HOME/cmdline-tools/*/bin/sdkmanager 2> /dev/null | head -n 1)
+        "$SDKMANAGER" --install emulator --channel=0 > /dev/null
         echo "version=$(grep Pkg.Revision $ANDROID_HOME/emulator/source.properties | cut -d= -f2)" >> $GITHUB_OUTPUT
     - name: Restore Emulator
       id: emulator-cache
