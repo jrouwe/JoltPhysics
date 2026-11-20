@@ -48,7 +48,6 @@ public:
 	virtual int				GetMaxConcurrency() const override				{ return int(mThreads.size()) + 1; }
 	virtual JobHandle		CreateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies = 0) override;
 	virtual void			CreateJobs(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, JobHandle *outJobs, uint32 inNumJobs, uint32 inNumDependencies = 0) override;
-	virtual void			WaitForJobs(Barrier *inBarrier) override;
 
 	/// Change the max concurrency after initialization
 	void					SetNumThreads(int inNumThreads)					{ StopThreads(); StartThreads(inNumThreads); }
