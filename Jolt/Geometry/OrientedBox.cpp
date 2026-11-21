@@ -21,24 +21,29 @@ static inline bool sOverlaps(Mat44Arg inRot, Vec3Arg inHalfExtentsA, Vec3Arg inH
 	Vec3 c0 = inRot.GetAxisX(), c1 = inRot.GetAxisY(), c2 = inRot.GetAxisZ();
 	Vec3 abs_c0 = c0.Abs() + epsilon, abs_c1 = c1.Abs() + epsilon, abs_c2 = c2.Abs() + epsilon;
 
-	// Rows of the rotation and their absolute values
-	Mat44 rot_t = inRot.Transposed3x3();
-	Vec3 r0 = rot_t.GetAxisX(), r1 = rot_t.GetAxisY(), r2 = rot_t.GetAxisZ();
-	Vec3 abs_r0 = r0.Abs() + epsilon, abs_r1 = r1.Abs() + epsilon, abs_r2 = r2.Abs() + epsilon;
-
 	Vec3 t = inRot.GetTranslation();
-	Vec3 tx = t.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(), ty = t.Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y>(), tz = t.Swizzle<SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z>();
-	Vec3 ax = inHalfExtentsA.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(), ay = inHalfExtentsA.Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y>(), az = inHalfExtentsA.Swizzle<SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z>();
 	Vec3 bx = inHalfExtentsB.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(), by = inHalfExtentsB.Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y>(), bz = inHalfExtentsB.Swizzle<SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z>();
 
 	// Test axes L = A0, L = A1, L = A2
 	Vec3 rb = abs_c0 * bx + abs_c1 * by + abs_c2 * bz;
 	UVec4 separated = Vec3::sLess(inHalfExtentsA + rb, t.Abs());
+	if (separated.TestAnyXYZTrue())
+		return false;
+
+	// Rows of the rotation and their absolute values
+	Mat44 rot_t = inRot.Transposed3x3();
+	Vec3 r0 = rot_t.GetAxisX(), r1 = rot_t.GetAxisY(), r2 = rot_t.GetAxisZ();
+	Vec3 abs_r0 = r0.Abs() + epsilon, abs_r1 = r1.Abs() + epsilon, abs_r2 = r2.Abs() + epsilon;
+
+	Vec3 tx = t.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(), ty = t.Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y>(), tz = t.Swizzle<SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z>();
+	Vec3 ax = inHalfExtentsA.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(), ay = inHalfExtentsA.Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y>(), az = inHalfExtentsA.Swizzle<SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z>();
 
 	// Test axes L = B0, L = B1, L = B2
 	Vec3 ra = abs_r0 * ax + abs_r1 * ay + abs_r2 * az;
 	Vec3 dist = r0 * tx + r1 * ty + r2 * tz;
-	separated = UVec4::sOr(separated, Vec3::sLess(ra + inHalfExtentsB, dist.Abs()));
+	separated = Vec3::sLess(ra + inHalfExtentsB, dist.Abs());
+	if (separated.TestAnyXYZTrue())
+		return false;
 
 	// Radius of B projected on axis L = Ai x Bj, first calculated for all i per j and then transposed to get all j per i
 	Mat44 rb_cross_t(Vec4(abs_c2 * by + abs_c1 * bz), Vec4(abs_c2 * bx + abs_c0 * bz), Vec4(abs_c1 * bx + abs_c0 * by), Vec4::sZero());
@@ -46,7 +51,7 @@ static inline bool sOverlaps(Mat44Arg inRot, Vec3Arg inHalfExtentsA, Vec3Arg inH
 
 	// Test axes L = A0 x B0, L = A0 x B1, L = A0 x B2
 	ra = abs_r2 * ay + abs_r1 * az;
-	separated = UVec4::sOr(separated, Vec3::sLess(ra + rb_cross.GetAxisX(), (r1 * tz - r2 * ty).Abs()));
+	separated = Vec3::sLess(ra + rb_cross.GetAxisX(), (r1 * tz - r2 * ty).Abs());
 
 	// Test axes L = A1 x B0, L = A1 x B1, L = A1 x B2
 	ra = abs_r2 * ax + abs_r0 * az;
