@@ -15,6 +15,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * `HeightFieldShapeSettings::CalculateBitsPerSampleForError` read out of bounds when `mSampleCount` was not a multiple of `mBlockSize`.
 * A flat `HeightFieldShape` with a number of blocks per side that is not a power of 2 could return collisions and triangles beyond its far edges (and read out of bounds) because the inside-out height range of the padding blocks became valid after dequantization.
 * On MinGW, `SharedMutex::try_lock` / `try_lock_shared` could trigger a libstdc++ assert (`__ret == 0`) in debug builds when multiple threads used a mutex for the first time simultaneously. The mutex is now initialized in its constructor. See [bug report](https://sourceforge.net/p/mingw-w64/bugs/1044/).
+* `MotionProperties::SetMassProperties` replaced small but valid inertia tensors (all principal moments below about 1e-6 kg m^2) with the inertia of a sphere of radius 1 m. The degenerate inertia check is now relative to the mass of the body.
 
 ## v5.7.0
 
