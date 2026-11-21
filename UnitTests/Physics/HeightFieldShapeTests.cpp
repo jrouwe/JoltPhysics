@@ -281,6 +281,47 @@ TEST_SUITE("HeightFieldShapeTests")
 		Shape::Stats stats = shape->GetStats();
 		CHECK(stats.mNumTriangles == 0);
 		CHECK(stats.mSizeBytes == sizeof(HeightFieldShape));
+
+		// Check that a clone also has no collision and also allocated the minimum amount of memory
+		Ref<HeightFieldShape> clone = shape->Clone();
+		CHECK(clone->GetSampleCount() == shape->GetSampleCount());
+		for (uint y = 0; y < clone->GetSampleCount(); ++y)
+			for (uint x = 0; x < clone->GetSampleCount(); ++x)
+				CHECK(clone->IsNoCollision(x, y));
+		Shape::Stats clone_stats = clone->GetStats();
+		CHECK(clone_stats.mNumTriangles == 0);
+		CHECK(clone_stats.mSizeBytes == sizeof(HeightFieldShape));
+	}
+
+	TEST_CASE("TestCalculateBitsPerSampleSampleCountNotMultipleOfBlockSize")
+	{
+		const float cMinHeight = 0.0f;
+		const float cMaxHeight = 10.0f;
+
+		UnitTestRandom random;
+		uniform_real_distribution<float> height_distribution(cMinHeight, cMaxHeight);
+
+		// Create height field where the sample count is not a multiple of the block size
+		HeightFieldShapeSettings settings;
+		settings.mSampleCount = 20;
+		settings.mBlockSize = 8;
+		settings.mHeightSamples.resize(Square(settings.mSampleCount));
+		for (float &h : settings.mHeightSamples)
+			h = height_distribution(random);
+
+		// Test a small error and an error that allows any height (so that we visit all samples before returning)
+		for (float max_error : { 0.05f, cMaxHeight - cMinHeight })
+		{
+			// This should not read outside of mHeightSamples
+			uint32 bits_per_sample = settings.CalculateBitsPerSampleForError(max_error);
+			CHECK(bits_per_sample >= 1);
+			CHECK(bits_per_sample < HeightFieldShapeConstants::cMaxBitsPerSample);
+
+			// Check that the calculated amount of bits is enough to reach the requested accuracy
+			settings.mBitsPerSample = bits_per_sample;
+			Ref<HeightFieldShape> shape = sValidateGetPosition(settings, max_error);
+			CHECK(shape->GetSampleCount() == 24);
+		}
 	}
 
 	TEST_CASE("TestGetHeights")

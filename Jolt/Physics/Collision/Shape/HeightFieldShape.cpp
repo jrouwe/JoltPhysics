@@ -161,8 +161,8 @@ uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError
 					float block_height = block_max_value - block_min_value;
 
 					// Loop over the block again
-					for (uint bx = x; bx < x + mBlockSize; ++bx)
-						for (uint by = y; by < y + mBlockSize; ++by)
+					for (uint bx = x; bx < min(x + mBlockSize, mSampleCount); ++bx)
+						for (uint by = y; by < min(y + mBlockSize, mSampleCount); ++by)
 						{
 							// Get the height
 							float height = mHeightSamples[by * mSampleCount + bx];
@@ -764,8 +764,11 @@ Ref<HeightFieldShape> HeightFieldShape::Clone() const
 	clone->mMinSample = mMinSample;
 	clone->mMaxSample = mMaxSample;
 
-	clone->AllocateBuffers();
-	memcpy(clone->mRangeBlocks, mRangeBlocks, mRangeBlocksSize * sizeof(RangeBlock) + mHeightSamplesSize + mActiveEdgesSize); // Copy the entire buffer in 1 go
+	if (mRangeBlocks != nullptr) // Height field without collision has no buffers
+	{
+		clone->AllocateBuffers();
+		memcpy(clone->mRangeBlocks, mRangeBlocks, mRangeBlocksSize * sizeof(RangeBlock) + mHeightSamplesSize + mActiveEdgesSize); // Copy the entire buffer in 1 go
+	}
 
 	clone->mMaterials.reserve(mMaterials.capacity()); // Ensure we keep the capacity of the original
 	clone->mMaterials = mMaterials;
