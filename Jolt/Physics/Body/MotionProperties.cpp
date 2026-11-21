@@ -44,7 +44,7 @@ void MotionProperties::SetMassProperties(EAllowedDOFs inAllowedDOFs, const MassP
 		Mat44 rotation;
 		Vec3 diagonal;
 		if (inMassProperties.DecomposePrincipalMomentsOfInertia(rotation, diagonal)
-			&& !diagonal.IsNearZero())
+			&& !(diagonal / max(inMassProperties.mMass, 1.0e-12f)).IsNearZero()) // Inertia scales linearly with mass, so make the check relative to the mass (diagonal / mass has unit m^2)
 		{
 			mInvInertiaDiagonal = diagonal.Reciprocal();
 			mInertiaRotation = rotation.GetQuaternion();
