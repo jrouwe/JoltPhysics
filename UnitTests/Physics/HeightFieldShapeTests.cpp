@@ -281,6 +281,47 @@ TEST_SUITE("HeightFieldShapeTests")
 		Shape::Stats stats = shape->GetStats();
 		CHECK(stats.mNumTriangles == 0);
 		CHECK(stats.mSizeBytes == sizeof(HeightFieldShape));
+
+		// Check that a clone also has no collision and also allocated the minimum amount of memory
+		Ref<HeightFieldShape> clone = shape->Clone();
+		CHECK(clone->GetSampleCount() == shape->GetSampleCount());
+		for (uint y = 0; y < clone->GetSampleCount(); ++y)
+			for (uint x = 0; x < clone->GetSampleCount(); ++x)
+				CHECK(clone->IsNoCollision(x, y));
+		Shape::Stats clone_stats = clone->GetStats();
+		CHECK(clone_stats.mNumTriangles == 0);
+		CHECK(clone_stats.mSizeBytes == sizeof(HeightFieldShape));
+	}
+
+	TEST_CASE("TestCalculateBitsPerSampleSampleCountNotMultipleOfBlockSize")
+	{
+		const float cMinHeight = 0.0f;
+		const float cMaxHeight = 10.0f;
+
+		UnitTestRandom random;
+		uniform_real_distribution<float> height_distribution(cMinHeight, cMaxHeight);
+
+		// Create height field where the sample count is not a multiple of the block size
+		HeightFieldShapeSettings settings;
+		settings.mSampleCount = 20;
+		settings.mBlockSize = 8;
+		settings.mHeightSamples.resize(Square(settings.mSampleCount));
+		for (float &h : settings.mHeightSamples)
+			h = height_distribution(random);
+
+		// Test a small error and an error that allows any height (so that we visit all samples before returning)
+		for (float max_error : { 0.05f, cMaxHeight - cMinHeight })
+		{
+			// This should not read outside of mHeightSamples
+			uint32 bits_per_sample = settings.CalculateBitsPerSampleForError(max_error);
+			CHECK(bits_per_sample >= 1);
+			CHECK(bits_per_sample < HeightFieldShapeConstants::cMaxBitsPerSample);
+
+			// Check that the calculated amount of bits is enough to reach the requested accuracy
+			settings.mBitsPerSample = bits_per_sample;
+			Ref<HeightFieldShape> shape = sValidateGetPosition(settings, max_error);
+			CHECK(shape->GetSampleCount() == 24);
+		}
 	}
 
 	TEST_CASE("TestGetHeights")
@@ -519,6 +560,61 @@ TEST_SUITE("HeightFieldShapeTests")
 			}
 	}
 
+	TEST_CASE("TestFlatHeightFieldNonPowerOf2BlockCount")
+	{
+		// 20 x 20 samples with a block size of 2 gives 10 blocks per side. The range block hierarchy is built as if there were
+		// 16 blocks per side, the blocks beyond the edge of the height field get an inside-out height range. When the height
+		// field is flat, the height range is so small that it is no longer inside-out after dequantizing it, so a query near
+		// the far edges must not visit these blocks.
+		const uint cSampleCount = 20;
+		const float cMaxCoordinate = float(cSampleCount - 1);
+		const float cHeight = 100.0f;
+
+		HeightFieldShapeSettings settings;
+		settings.mSampleCount = cSampleCount;
+		settings.mBlockSize = 2;
+		settings.mHeightSamples.resize(Square(cSampleCount), cHeight);
+		Ref<Shape> shape = settings.Create().Get();
+
+		// Collide spheres along the far edges, they overlap both the last cells and the blocks beyond the height field
+		const float cSphereRadius = 1.0f;
+		Ref<Shape> sphere = new SphereShape(cSphereRadius);
+		CollideShapeSettings collide_settings;
+		for (uint i = 0; i < cSampleCount; ++i)
+			for (Vec3 sphere_position : { Vec3(cMaxCoordinate + 0.5f, cHeight + 0.5f, float(i)), Vec3(float(i), cHeight + 0.5f, cMaxCoordinate + 0.5f) })
+			{
+				CAPTURE(sphere_position);
+				AllHitCollisionCollector<CollideShapeCollector> collector;
+				CollisionDispatch::sCollideShapeVsShape(sphere, shape, Vec3::sOne(), Vec3::sOne(), Mat44::sTranslation(sphere_position), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collide_settings, collector);
+				CHECK(collector.HadHit());
+				for (const CollideShapeResult &hit : collector.mHits)
+				{
+					Vec3 contact = hit.mContactPointOn2;
+					CHECK(contact.GetX() <= cMaxCoordinate);
+					CHECK(contact.GetZ() <= cMaxCoordinate);
+				}
+			}
+
+		// Get the triangles in a box that overlaps the far corner and extends beyond the height field
+		Shape::GetTrianglesContext context;
+		shape->GetTrianglesStart(context, AABox(Vec3(cMaxCoordinate - 0.5f, cHeight - 1.0f, cMaxCoordinate - 0.5f), Vec3(cMaxCoordinate + 10.0f, cHeight + 1.0f, cMaxCoordinate + 10.0f)), Vec3::sZero(), Quat::sIdentity(), Vec3::sOne());
+		Float3 vertices[3 * Shape::cGetTrianglesMinTrianglesRequested];
+		int num_triangles = 0;
+		for (;;)
+		{
+			int count = shape->GetTrianglesNext(context, Shape::cGetTrianglesMinTrianglesRequested, vertices);
+			if (count == 0)
+				break;
+			for (int i = 0; i < 3 * count; ++i)
+			{
+				CHECK(vertices[i].x <= cMaxCoordinate);
+				CHECK(vertices[i].z <= cMaxCoordinate);
+			}
+			num_triangles += count;
+		}
+		CHECK(num_triangles > 0);
+	}
+
 	TEST_CASE("TestSetMaterials")
 	{
 		constexpr uint cSampleCount = 32;
@@ -667,12 +763,12 @@ TEST_SUITE("HeightFieldShapeTests")
 		static constexpr uint	cHoleX = 10;
 		static constexpr uint	cHoleY = 13;
 
-		explicit				SinCosHeightField(uint inSampleCount)
+		explicit				SinCosHeightField(uint inSampleCount, uint inBlockSize = 2)
 		{
 			mSettings.mOffset = Vec3(-20.0f, 3.0f, -15.0f);
 			mSettings.mScale = Vec3(1.5f, 2.0f, 1.25f);
 			mSettings.mSampleCount = inSampleCount;
-			mSettings.mBlockSize = 2;
+			mSettings.mBlockSize = inBlockSize;
 			mSettings.mBitsPerSample = HeightFieldShapeConstants::cMaxBitsPerSample; // Minimize quantization error so we can compare with the analytic surface
 			mSettings.mHeightSamples.resize(Square(inSampleCount));
 			for (uint y = 0; y < inSampleCount; ++y)
@@ -1068,6 +1164,66 @@ TEST_SUITE("HeightFieldShapeTests")
 				else
 					CHECK(!found[inTriangle]);
 			});
+		}
+	}
+
+	TEST_CASE("TestHeightFieldGetTrianglesInBatches")
+	{
+		// Block size 2 has up to 8 triangles per block so the batch ends in the middle of a block,
+		// block size 8 has up to 128 triangles per block so a single block needs to be returned over multiple batches
+		for (uint block_size : { 2u, 8u })
+		{
+			for (uint sample_count : { 32u, 33u }) // Test power of 2 and non-power of 2 sample counts
+			{
+				SinCosHeightField height_field(sample_count, block_size);
+				uint num_quads = sample_count - 1;
+
+				// Different batch sizes so that the output buffer fills up at different positions within a block
+				for (int batch_size : { Shape::cGetTrianglesMinTrianglesRequested, 33, 47, 100 })
+				{
+					CAPTURE(block_size);
+					CAPTURE(sample_count);
+					CAPTURE(batch_size);
+
+					// Get all triangles in batches and count how often each triangle is returned
+					Array<uint> count(2 * Square(num_quads), 0);
+					Shape::GetTrianglesContext context;
+					height_field.mShape->GetTrianglesStart(context, height_field.mShape->GetLocalBounds(), Vec3::sZero(), Quat::sIdentity(), Vec3::sOne());
+					Array<Float3> vertices(3 * size_t(batch_size));
+					uint total_triangles = 0;
+					for (int num_triangles = height_field.mShape->GetTrianglesNext(context, batch_size, vertices.data()); num_triangles > 0; num_triangles = height_field.mShape->GetTrianglesNext(context, batch_size, vertices.data()))
+					{
+						// Guard against GetTrianglesNext never finishing
+						total_triangles += uint(num_triangles);
+						if (total_triangles > count.size())
+						{
+							FAIL_CHECK("GetTrianglesNext returned more triangles than the height field has");
+							break;
+						}
+
+						for (int i = 0; i < num_triangles; ++i)
+						{
+							// Find the triangle from its centroid, triangle 0 has its centroid at (x + 1/3, y + 2/3) and triangle 1 at (x + 2/3, y + 1/3)
+							Vec3 centroid = (Vec3(vertices[3 * i]) + Vec3(vertices[3 * i + 1]) + Vec3(vertices[3 * i + 2])) / 3.0f;
+							Vec3 sample = (centroid - height_field.mSettings.mOffset) / height_field.mSettings.mScale;
+							uint x = uint(sample.GetX()), y = uint(sample.GetZ());
+							uint t = sample.GetX() - float(x) > 0.5f? 1 : 0;
+							CHECK(x < num_quads);
+							CHECK(y < num_quads);
+							if (x < num_quads && y < num_quads)
+								++count[2 * (y * num_quads + x) + t];
+						}
+					}
+
+					// Each triangle that has collision should be returned exactly once
+					height_field.ForEachTriangle([&](uint inX, uint inY, uint inTriangle, bool inHasCollision, [[maybe_unused]] Vec3Arg inCentroid, [[maybe_unused]] Vec3Arg inNormal) {
+						CAPTURE(inX);
+						CAPTURE(inY);
+						CAPTURE(inTriangle);
+						CHECK(count[2 * (inY * num_quads + inX) + inTriangle] == (inHasCollision? 1u : 0u));
+					});
+				}
+			}
 		}
 	}
 }

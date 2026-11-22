@@ -1200,6 +1200,7 @@ DVec3 DVec3::PrepareRoundToInf() const
 	// Float has 23 bit mantissa, double 52 bit mantissa => we lose 29 bits when converting from double to float
 	constexpr uint64 cDoubleToFloatMantissaLoss = (1U << 29) - 1;
 
+	// Test in the integer domain, the masked value is a denormal which would compare equal to zero when flushing denormals to zero
 #if defined(JPH_USE_AVX512)
 	__m256i mantissa_loss = _mm256_set1_epi64x(cDoubleToFloatMantissaLoss);
 	__mmask8 is_zero = _mm256_testn_epi64_mask(_mm256_castpd_si256(mValue), mantissa_loss);
@@ -1208,31 +1209,30 @@ DVec3 DVec3::PrepareRoundToInf() const
 #elif defined(JPH_USE_AVX)
 	__m256i mantissa_loss = _mm256_set1_epi64x(cDoubleToFloatMantissaLoss);
 	__m256d value_and_mantissa_loss = _mm256_and_pd(mValue, _mm256_castsi256_pd(mantissa_loss));
-	__m256d is_zero = _mm256_cmp_pd(value_and_mantissa_loss, _mm256_setzero_pd(), _CMP_EQ_OQ);
+	__m256d one = _mm256_set1_pd(1.0);
+	__m256d loss_or_one = _mm256_or_pd(value_and_mantissa_loss, one); // Add one to avoid comparing denormals, integer compare unavailable on AVX
+	__m256d is_zero = _mm256_cmp_pd(loss_or_one, one, _CMP_EQ_OQ);
 	__m256d value_or_mantissa_loss = _mm256_or_pd(mValue, _mm256_castsi256_pd(mantissa_loss));
 	return _mm256_blendv_pd(value_or_mantissa_loss, mValue, is_zero);
 #elif defined(JPH_USE_SSE4_1)
 	__m128i mantissa_loss = _mm_set1_epi64x(cDoubleToFloatMantissaLoss);
-	__m128d zero = _mm_setzero_pd();
-	__m128d value_and_mantissa_loss_low = _mm_and_pd(mValue.mLow, _mm_castsi128_pd(mantissa_loss));
-	__m128d is_zero_low = _mm_cmpeq_pd(value_and_mantissa_loss_low, zero);
-	__m128d value_or_mantissa_loss_low = _mm_or_pd(mValue.mLow, _mm_castsi128_pd(mantissa_loss));
-	__m128d value_and_mantissa_loss_high = _mm_and_pd(mValue.mHigh, _mm_castsi128_pd(mantissa_loss));
-	__m128d is_zero_high = _mm_cmpeq_pd(value_and_mantissa_loss_high, zero);
-	__m128d value_or_mantissa_loss_high = _mm_or_pd(mValue.mHigh, _mm_castsi128_pd(mantissa_loss));
-	return DVec3({ _mm_blendv_pd(value_or_mantissa_loss_low, mValue.mLow, is_zero_low), _mm_blendv_pd(value_or_mantissa_loss_high, mValue.mHigh, is_zero_high) });
+	__m128i zero = _mm_setzero_si128();
+	__m128i value_low = _mm_castpd_si128(mValue.mLow);
+	__m128i value_high = _mm_castpd_si128(mValue.mHigh);
+	__m128i is_zero_low = _mm_cmpeq_epi64(_mm_and_si128(value_low, mantissa_loss), zero);
+	__m128i is_zero_high = _mm_cmpeq_epi64(_mm_and_si128(value_high, mantissa_loss), zero);
+	value_low = _mm_or_si128(value_low, _mm_andnot_si128(is_zero_low, mantissa_loss));
+	value_high = _mm_or_si128(value_high, _mm_andnot_si128(is_zero_high, mantissa_loss));
+	return DVec3({ _mm_castsi128_pd(value_low), _mm_castsi128_pd(value_high) });
 #elif defined(JPH_USE_NEON)
 	uint64x2_t mantissa_loss = vdupq_n_u64(cDoubleToFloatMantissaLoss);
-	float64x2_t zero = vdupq_n_f64(0.0);
-	float64x2_t value_and_mantissa_loss_low = vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[0]), mantissa_loss));
-	uint64x2_t is_zero_low = vceqq_f64(value_and_mantissa_loss_low, zero);
-	float64x2_t value_or_mantissa_loss_low = vreinterpretq_f64_u64(vorrq_u64(vreinterpretq_u64_f64(mValue.val[0]), mantissa_loss));
-	float64x2_t value_and_mantissa_loss_high = vreinterpretq_f64_u64(vandq_u64(vreinterpretq_u64_f64(mValue.val[1]), mantissa_loss));
-	float64x2_t value_low = vbslq_f64(is_zero_low, mValue.val[0], value_or_mantissa_loss_low);
-	uint64x2_t is_zero_high = vceqq_f64(value_and_mantissa_loss_high, zero);
-	float64x2_t value_or_mantissa_loss_high = vreinterpretq_f64_u64(vorrq_u64(vreinterpretq_u64_f64(mValue.val[1]), mantissa_loss));
-	float64x2_t value_high = vbslq_f64(is_zero_high, mValue.val[1], value_or_mantissa_loss_high);
-	return DVec3({ value_low, value_high });
+	uint64x2_t value_low = vreinterpretq_u64_f64(mValue.val[0]);
+	uint64x2_t value_high = vreinterpretq_u64_f64(mValue.val[1]);
+	uint64x2_t has_loss_low = vtstq_u64(value_low, mantissa_loss);
+	uint64x2_t has_loss_high = vtstq_u64(value_high, mantissa_loss);
+	value_low = vorrq_u64(value_low, vandq_u64(has_loss_low, mantissa_loss));
+	value_high = vorrq_u64(value_high, vandq_u64(has_loss_high, mantissa_loss));
+	return DVec3({ vreinterpretq_f64_u64(value_low), vreinterpretq_f64_u64(value_high) });
 #elif defined(JPH_USE_RVV)
 	const vfloat64m2_t dvec = __riscv_vle64_v_f64m2(mF64, 3);
 	const vuint64m2_t dvec_u64 = __riscv_vreinterpret_v_f64m2_u64m2(dvec);

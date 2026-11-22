@@ -87,7 +87,8 @@ private:
 	void					Enqueue(Job *inJob);
 
 	/// Take a job from the queue, returns nullptr when the queue is empty. The caller must Release() the returned job after executing it.
-	Job *					Dequeue();
+	/// If inOnlyIfDone is true, it will also return nullptr when the first job in the queue has not finished executing yet.
+	Job *					Dequeue(bool inOnlyIfDone = false);
 
 	/// Start/stop the worker threads
 	void					StartThreads(int inNumThreads);

@@ -5,6 +5,13 @@
 #include "UnitTestFramework.h"
 #include <Jolt/Math/DVec3.h>
 #include <Jolt/Core/StringTools.h>
+#include <Jolt/Core/FPFlushDenormals.h>
+#include <atomic>
+
+// A value that just doesn't fit in a float (only the lowest mantissa bit is set).
+// Implemented as a global atomic so the compiler can't constant fold the rounding operations below.
+extern atomic<double> TestDVec3JustAbove2;
+atomic<double> TestDVec3JustAbove2 = 0x1.0000000000001p1;
 
 TEST_SUITE("DVec3Tests")
 {
@@ -91,8 +98,22 @@ TEST_SUITE("DVec3Tests")
 		CHECK(Vec3(DVec3(1, 3, 5)) == Vec3(1, 3, 5));
 
 		// Check rounding up and down
-		CHECK(DVec3(2.0, 0x1.0000000000001p1, -0x1.0000000000001p1).ToVec3RoundUp() == Vec3(2.0, 0x1.000002p1f, -2.0));
-		CHECK(DVec3(2.0, 0x1.0000000000001p1, -0x1.0000000000001p1).ToVec3RoundDown() == Vec3(2.0, 2.0, -0x1.000002p1f));
+		{
+			double v = TestDVec3JustAbove2;
+			CHECK(DVec3(2.0, v, -v).ToVec3RoundUp() == Vec3(2.0, 0x1.000002p1f, -2.0));
+			CHECK(DVec3(2.0, v, -v).ToVec3RoundDown() == Vec3(2.0, 2.0, -0x1.000002p1f));
+		}
+
+		{
+			// Repeat with flush denormals to zero
+			FPFlushDenormals flush_denormals;
+			JPH_UNUSED(flush_denormals);
+
+			// Check rounding up and down (the value is loaded after the FP control word has been changed)
+			double v = TestDVec3JustAbove2;
+			CHECK(DVec3(2.0, v, -v).ToVec3RoundUp() == Vec3(2.0, 0x1.000002p1f, -2.0));
+			CHECK(DVec3(2.0, v, -v).ToVec3RoundDown() == Vec3(2.0, 2.0, -0x1.000002p1f));
+		}
 	}
 
 	TEST_CASE("TestVec3MinMax")

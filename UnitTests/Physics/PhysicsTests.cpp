@@ -9,6 +9,7 @@
 #include "LoggingContactListener.h"
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
@@ -427,6 +428,45 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(b3.GetMotionProperties()->GetInverseMass(), 1.0f / cOverriddenMass);
 		CHECK_APPROX_EQUAL(b3.GetMotionProperties()->GetInertiaRotation(), cOverriddenInertiaRotation);
 		CHECK_APPROX_EQUAL(b3.GetMotionProperties()->GetInverseInertiaDiagonal(), cOverriddenInertiaDiagonal.Reciprocal());
+	}
+
+	// Test that small but valid inertia is not replaced by the fallback inertia (see: #2220)
+	TEST_CASE("TestPhysicsSmallInertia")
+	{
+		PhysicsTestContext c;
+		BodyInterface &bi = c.GetBodyInterface();
+
+		// A cylinder of 9 mm high with a radius of 5 mm and a mass of 4 g
+		const float cHalfHeight = 0.0045f;
+		const float cRadius = 0.005f;
+		const float cMass = 0.004f;
+		const float cInertiaXZ = cMass * (3.0f * Square(cRadius) + Square(2.0f * cHalfHeight)) / 12.0f;
+		const float cInertiaY = 0.5f * cMass * Square(cRadius);
+		const Vec3 cExpectedInertiaDiagonal(cInertiaXZ, cInertiaY, cInertiaXZ);
+
+		// Calculate inertia of the cylinder
+		BodyCreationSettings body_settings(new CylinderShapeSettings(cHalfHeight, cRadius, 0.2f * cRadius), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		body_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+		body_settings.mMassPropertiesOverride.mMass = cMass;
+		Body &b1 = *bi.CreateBody(body_settings);
+		CHECK_APPROX_EQUAL(b1.GetMotionProperties()->GetInverseMass(), 1.0f / cMass);
+		CHECK_APPROX_EQUAL(b1.GetMotionProperties()->GetLocalSpaceInverseInertia() * Mat44::sScale(cExpectedInertiaDiagonal), Mat44::sIdentity(), 1.0e-5f);
+
+		// Provide the inertia directly (values similar to a finger link of a robot hand)
+		const float cOverriddenMass = 0.01f;
+		const Vec3 cOverriddenInertiaDiagonal(3.0e-7f, 2.0e-7f, 1.0e-7f);
+		body_settings.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
+		body_settings.mMassPropertiesOverride.mMass = cOverriddenMass;
+		body_settings.mMassPropertiesOverride.mInertia = Mat44::sScale(cOverriddenInertiaDiagonal);
+		Body &b2 = *bi.CreateBody(body_settings);
+		CHECK_APPROX_EQUAL(b2.GetMotionProperties()->GetInverseMass(), 1.0f / cOverriddenMass);
+		CHECK_APPROX_EQUAL(b2.GetMotionProperties()->GetLocalSpaceInverseInertia() * Mat44::sScale(cOverriddenInertiaDiagonal), Mat44::sIdentity(), 1.0e-5f);
+
+		// Degenerate inertia should still fall back to the inertia of a sphere with radius 1
+		body_settings.mMassPropertiesOverride.mInertia = Mat44::sScale(1.0e-12f * cOverriddenMass);
+		Body &b3 = *bi.CreateBody(body_settings);
+		CHECK_APPROX_EQUAL(b3.GetMotionProperties()->GetInverseInertiaDiagonal(), Vec3::sReplicate(2.5f / cOverriddenMass));
+		CHECK_APPROX_EQUAL(b3.GetMotionProperties()->GetInertiaRotation(), Quat::sIdentity());
 	}
 
 	// Test a box free falling under gravity

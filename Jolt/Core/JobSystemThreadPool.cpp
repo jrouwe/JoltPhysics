@@ -106,13 +106,37 @@ void JobSystemThreadPool::StopThreads()
 JobSystemThreadPool::Job *JobSystemThreadPool::AllocateJob(const char *inName, ColorArg inColor, const JobFunction &inJobFunction, uint32 inNumDependencies)
 {
 	// Loop until we can get a job from the free list
+	// WARNING: If this loops forever, then inMaxJobs in the Init function is too low and needs to be increased
 	uint32 index;
+	bool reported = false;
 	for (;;)
 	{
 		index = mJobs.ConstructObject(inName, inColor, this, inJobFunction, inNumDependencies);
 		if (index != AvailableJobs::cInvalidObjectIndex)
 			break;
-		JPH_ASSERT(false, "No jobs available!");
+
+		// Jobs that have finished executing (e.g. by a barrier) remain in the queue until a worker thread removes them.
+		// If the worker threads don't get scheduled, the queue could grow until we run out of jobs, so free the finished jobs at the front of the queue now.
+		bool freed_jobs = false;
+		while (Job *job = Dequeue(true))
+		{
+			job->Release(); // The job has already executed, so we only need to release the reference that was taken in Enqueue
+			freed_jobs = true;
+		}
+		if (freed_jobs)
+			continue; // Try to allocate a job again, maybe we can now get one
+
+		// Report the stall once, if this happens often, consider increasing inMaxJobs in the Init function
+		if (!reported)
+		{
+			Trace("JobSystemThreadPool: No jobs available, stalling! If this happens regularly consider increasing inMaxJobs in the Init function.");
+			reported = true;
+		}
+
+		// Wake up all threads so that they can execute and free the jobs that are in the queue
+		if (!mThreads.empty())
+			mSemaphore.Release((uint)mThreads.size());
+
 		std::this_thread::sleep_for(std::chrono::microseconds(100));
 	}
 	return &mJobs.Get(index);
@@ -195,13 +219,15 @@ void JobSystemThreadPool::Enqueue(Job *inJob)
 	}
 }
 
-JobSystem::Job *JobSystemThreadPool::Dequeue()
+JobSystem::Job *JobSystemThreadPool::Dequeue(bool inOnlyIfDone)
 {
 	for (;;)
 	{
 		uint64 head = mHead.load(std::memory_order_acquire);
 		uint64 tail = mTail.load(std::memory_order_acquire);
 		uint64 next = mJobs.Get(sGetIndex(head)).mNext.load(std::memory_order_acquire); // Node could be deleted but since we used a fixed freelist, the memory is still accessible
+		if (inOnlyIfDone && sGetIndex(next) != cNullIndex && !mJobs.Get(sGetIndex(next)).IsDone())
+			return nullptr; // First job in the queue has not finished yet (next could be stale, in which case we stop early, which is harmless)
 		if (head == mHead.load(std::memory_order_relaxed)) // Are head, tail and next consistent?
 		{
 			if (sGetIndex(head) == sGetIndex(tail)) // Is queue empty or tail falling behind?

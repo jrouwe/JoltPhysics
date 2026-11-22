@@ -7,6 +7,15 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 ### Bug fixes
 
 * Floating point exceptions are now disabled while executing compute shaders on the CPU. GPUs don't raise FP exceptions and MSVC can vectorize the emulated shader code using SIMD lanes with uninitialized data, causing spurious FP exceptions (e.g. an overflow in `HairGridNormalize`).
+* `JobSystemThreadPool` could run out of jobs ("No jobs available!" assert) when its worker threads didn't get scheduled, e.g. when there were more worker threads than CPU cores available to the process. The assert is a trace now and the underlying issue has been fixed.
+* `ConvexHullShape::GetTrianglesNext` would not split faces into multiple batches when the number of triangles in a single face was bigger than `inMaxTrianglesRequested`. In this case it would return 0 which made the calling code think that all triangles were collected when they were not.
+* `DVec3::ToVec3RoundUp/Down` could round in the wrong direction on SSE4.1, AVX and NEON when the CPU was set to flush denormals to zero. `FPFlushDenormals` now also sets the denormals-are-zero flag on x86 so that it treats denormal inputs the same as on ARM.
+* `HeightFieldShape::GetTrianglesNext` could return the same triangles multiple times when the output buffer was full in the middle of a block.
+* `HeightFieldShape::Clone` of a height field without any collision returned a shape that had uninitialized buffers and could report collision.
+* `HeightFieldShapeSettings::CalculateBitsPerSampleForError` read out of bounds when `mSampleCount` was not a multiple of `mBlockSize`.
+* A flat `HeightFieldShape` with a number of blocks per side that is not a power of 2 could return collisions and triangles beyond its far edges (and read out of bounds) because the inside-out height range of the padding blocks became valid after dequantization.
+* On MinGW, `SharedMutex::try_lock` / `try_lock_shared` could trigger a libstdc++ assert (`__ret == 0`) in debug builds when multiple threads used a mutex for the first time simultaneously. The mutex is now initialized in its constructor. See [bug report](https://sourceforge.net/p/mingw-w64/bugs/1044/).
+* `MotionProperties::SetMassProperties` replaced small but valid inertia tensors (all principal moments below about 1e-6 kg m^2) with the inertia of a sphere of radius 1 m. The degenerate inertia check is now relative to the mass of the body.
 
 ## v5.7.0
 

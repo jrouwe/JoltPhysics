@@ -17,7 +17,7 @@ class FPFlushDenormals { };
 
 /// Helper class that needs to be put on the stack to enable flushing denormals to zero
 /// This can make floating point operations much faster when working with very small numbers
-class FPFlushDenormals : public FPControlWord<_MM_FLUSH_ZERO_ON, _MM_FLUSH_ZERO_MASK> { };
+class FPFlushDenormals : public FPControlWord<_MM_FLUSH_ZERO_ON | _MM_DENORMALS_ZERO_ON, _MM_FLUSH_ZERO_MASK | _MM_DENORMALS_ZERO_MASK> { };
 
 #elif defined(JPH_CPU_ARM) && defined(JPH_COMPILER_MSVC)
 

@@ -9,170 +9,73 @@
 
 JPH_NAMESPACE_BEGIN
 
-bool OrientedBox::Overlaps(const AABox &inBox, float inEpsilon) const
+/// Separating axis test between box A (axis aligned, centered at the origin) and box B (positioned by inRot in A's space).
+/// Taken from: Real Time Collision Detection - Christer Ericson, Chapter 4.4.1, page 103-105.
+/// The 15 axes are tested 3 at a time.
+static inline bool sOverlaps(Mat44Arg inRot, Vec3Arg inHalfExtentsA, Vec3Arg inHalfExtentsB, float inEpsilon)
 {
-	// Taken from: Real Time Collision Detection - Christer Ericson
-	// Chapter 4.4.1, page 103-105.
-	// Note that the code is swapped around: A is the aabox and B is the oriented box (this saves us from having to invert the orientation of the oriented box)
-
-	// Convert AABox to center / extent representation
-	Vec3 a_center = inBox.GetCenter();
-	Vec3 a_half_extents = inBox.GetExtent();
-
-	// Compute rotation matrix expressing b in a's coordinate frame
-	Mat44 rot(mOrientation.GetColumn4(0), mOrientation.GetColumn4(1), mOrientation.GetColumn4(2), mOrientation.GetColumn4(3) - Vec4(a_center, 0));
-
-	// Compute common subexpressions. Add in an epsilon term to
-	// counteract arithmetic errors when two edges are parallel and
-	// their cross product is (near) null (see text for details)
+	// Add in an epsilon term to counteract arithmetic errors when two edges are parallel and their cross product is (near) null (see text for details)
 	Vec3 epsilon = Vec3::sReplicate(inEpsilon);
-	Vec3 abs_r[3] { rot.GetAxisX().Abs() + epsilon, rot.GetAxisY().Abs() + epsilon, rot.GetAxisZ().Abs() + epsilon };
+
+	// Columns of the rotation (B's axes in A's space) and their absolute values
+	Vec3 c0 = inRot.GetAxisX(), c1 = inRot.GetAxisY(), c2 = inRot.GetAxisZ();
+	Vec3 abs_c0 = c0.Abs() + epsilon, abs_c1 = c1.Abs() + epsilon, abs_c2 = c2.Abs() + epsilon;
+
+	Vec3 t = inRot.GetTranslation();
+	Vec3 bx = inHalfExtentsB.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(), by = inHalfExtentsB.Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y>(), bz = inHalfExtentsB.Swizzle<SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z>();
 
 	// Test axes L = A0, L = A1, L = A2
-	float ra, rb;
-	for (int i = 0; i < 3; i++)
-	{
-		ra = a_half_extents[i];
-		rb = mHalfExtents[0] * abs_r[0][i] + mHalfExtents[1] * abs_r[1][i] + mHalfExtents[2] * abs_r[2][i];
-		if (abs(rot(i, 3)) > ra + rb) return false;
-	}
+	Vec3 rb = abs_c0 * bx + abs_c1 * by + abs_c2 * bz;
+	UVec4 separated = Vec3::sLess(inHalfExtentsA + rb, t.Abs());
+	if (separated.TestAnyXYZTrue())
+		return false;
+
+	// Rows of the rotation and their absolute values
+	Mat44 rot_t = inRot.Transposed3x3();
+	Vec3 r0 = rot_t.GetAxisX(), r1 = rot_t.GetAxisY(), r2 = rot_t.GetAxisZ();
+	Vec3 abs_r0 = r0.Abs() + epsilon, abs_r1 = r1.Abs() + epsilon, abs_r2 = r2.Abs() + epsilon;
+
+	Vec3 tx = t.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(), ty = t.Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y>(), tz = t.Swizzle<SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z>();
+	Vec3 ax = inHalfExtentsA.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(), ay = inHalfExtentsA.Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y>(), az = inHalfExtentsA.Swizzle<SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z>();
 
 	// Test axes L = B0, L = B1, L = B2
-	for (int i = 0; i < 3; i++)
-	{
-		ra = a_half_extents.Dot(abs_r[i]);
-		rb = mHalfExtents[i];
-		if (abs(rot.GetTranslation().Dot(rot.GetColumn3(i))) > ra + rb) return false;
-	}
+	Vec3 ra = abs_r0 * ax + abs_r1 * ay + abs_r2 * az;
+	Vec3 dist = r0 * tx + r1 * ty + r2 * tz;
+	separated = Vec3::sLess(ra + inHalfExtentsB, dist.Abs());
+	if (separated.TestAnyXYZTrue())
+		return false;
 
-	// Test axis L = A0 x B0
-	ra = a_half_extents[1] * abs_r[0][2] + a_half_extents[2] * abs_r[0][1];
-	rb = mHalfExtents[1] * abs_r[2][0] + mHalfExtents[2] * abs_r[1][0];
-	if (abs(rot(2, 3) * rot(1, 0) - rot(1, 3) * rot(2, 0)) > ra + rb) return false;
+	// Radius of B projected on axis L = Ai x Bj, first calculated for all i per j and then transposed to get all j per i
+	Mat44 rb_cross_t(Vec4(abs_c2 * by + abs_c1 * bz), Vec4(abs_c2 * bx + abs_c0 * bz), Vec4(abs_c1 * bx + abs_c0 * by), Vec4::sZero());
+	Mat44 rb_cross = rb_cross_t.Transposed3x3();
 
-	// Test axis L = A0 x B1
-	ra = a_half_extents[1] * abs_r[1][2] + a_half_extents[2] * abs_r[1][1];
-	rb = mHalfExtents[0] * abs_r[2][0] + mHalfExtents[2] * abs_r[0][0];
-	if (abs(rot(2, 3) * rot(1, 1) - rot(1, 3) * rot(2, 1)) > ra + rb) return false;
+	// Test axes L = A0 x B0, L = A0 x B1, L = A0 x B2
+	ra = abs_r2 * ay + abs_r1 * az;
+	separated = Vec3::sLess(ra + rb_cross.GetAxisX(), (r1 * tz - r2 * ty).Abs());
 
-	// Test axis L = A0 x B2
-	ra = a_half_extents[1] * abs_r[2][2] + a_half_extents[2] * abs_r[2][1];
-	rb = mHalfExtents[0] * abs_r[1][0] + mHalfExtents[1] * abs_r[0][0];
-	if (abs(rot(2, 3) * rot(1, 2) - rot(1, 3) * rot(2, 2)) > ra + rb) return false;
+	// Test axes L = A1 x B0, L = A1 x B1, L = A1 x B2
+	ra = abs_r2 * ax + abs_r0 * az;
+	separated = UVec4::sOr(separated, Vec3::sLess(ra + rb_cross.GetAxisY(), (r2 * tx - r0 * tz).Abs()));
 
-	// Test axis L = A1 x B0
-	ra = a_half_extents[0] * abs_r[0][2] + a_half_extents[2] * abs_r[0][0];
-	rb = mHalfExtents[1] * abs_r[2][1] + mHalfExtents[2] * abs_r[1][1];
-	if (abs(rot(0, 3) * rot(2, 0) - rot(2, 3) * rot(0, 0)) > ra + rb) return false;
+	// Test axes L = A2 x B0, L = A2 x B1, L = A2 x B2
+	ra = abs_r1 * ax + abs_r0 * ay;
+	separated = UVec4::sOr(separated, Vec3::sLess(ra + rb_cross.GetAxisZ(), (r0 * ty - r1 * tx).Abs()));
 
-	// Test axis L = A1 x B1
-	ra = a_half_extents[0] * abs_r[1][2] + a_half_extents[2] * abs_r[1][0];
-	rb = mHalfExtents[0] * abs_r[2][1] + mHalfExtents[2] * abs_r[0][1];
-	if (abs(rot(0, 3) * rot(2, 1) - rot(2, 3) * rot(0, 1)) > ra + rb) return false;
+	// If no separating axis is found, the boxes must be intersecting
+	return !separated.TestAnyXYZTrue();
+}
 
-	// Test axis L = A1 x B2
-	ra = a_half_extents[0] * abs_r[2][2] + a_half_extents[2] * abs_r[2][0];
-	rb = mHalfExtents[0] * abs_r[1][1] + mHalfExtents[1] * abs_r[0][1];
-	if (abs(rot(0, 3) * rot(2, 2) - rot(2, 3) * rot(0, 2)) > ra + rb) return false;
-
-	// Test axis L = A2 x B0
-	ra = a_half_extents[0] * abs_r[0][1] + a_half_extents[1] * abs_r[0][0];
-	rb = mHalfExtents[1] * abs_r[2][2] + mHalfExtents[2] * abs_r[1][2];
-	if (abs(rot(1, 3) * rot(0, 0) - rot(0, 3) * rot(1, 0)) > ra + rb) return false;
-
-	// Test axis L = A2 x B1
-	ra = a_half_extents[0] * abs_r[1][1] + a_half_extents[1] * abs_r[1][0];
-	rb = mHalfExtents[0] * abs_r[2][2] + mHalfExtents[2] * abs_r[0][2];
-	if (abs(rot(1, 3) * rot(0, 1) - rot(0, 3) * rot(1, 1)) > ra + rb) return false;
-
-	// Test axis L = A2 x B2
-	ra = a_half_extents[0] * abs_r[2][1] + a_half_extents[1] * abs_r[2][0];
-	rb = mHalfExtents[0] * abs_r[1][2] + mHalfExtents[1] * abs_r[0][2];
-	if (abs(rot(1, 3) * rot(0, 2) - rot(0, 3) * rot(1, 2)) > ra + rb) return false;
-
-	// Since no separating axis is found, the OBB and AAB must be intersecting
-	return true;
+bool OrientedBox::Overlaps(const AABox &inBox, float inEpsilon) const
+{
+	// Note that the code is swapped around: A is the aabox and B is the oriented box (this saves us from having to invert the orientation of the oriented box)
+	Mat44 rot(mOrientation.GetColumn4(0), mOrientation.GetColumn4(1), mOrientation.GetColumn4(2), mOrientation.GetColumn4(3) - Vec4(inBox.GetCenter(), 0));
+	return sOverlaps(rot, inBox.GetExtent(), mHalfExtents, inEpsilon);
 }
 
 bool OrientedBox::Overlaps(const OrientedBox &inBox, float inEpsilon) const
 {
-	// Taken from: Real Time Collision Detection - Christer Ericson
-	// Chapter 4.4.1, page 103-105.
 	// Note that A is this, B is inBox
-
-	// Compute rotation matrix expressing b in a's coordinate frame
-	Mat44 rot = mOrientation.InversedRotationTranslation() * inBox.mOrientation;
-
-	// Compute common subexpressions. Add in an epsilon term to
-	// counteract arithmetic errors when two edges are parallel and
-	// their cross product is (near) null (see text for details)
-	Vec3 epsilon = Vec3::sReplicate(inEpsilon);
-	Vec3 abs_r[3] { rot.GetAxisX().Abs() + epsilon, rot.GetAxisY().Abs() + epsilon, rot.GetAxisZ().Abs() + epsilon };
-
-	// Test axes L = A0, L = A1, L = A2
-	float ra, rb;
-	for (int i = 0; i < 3; i++)
-	{
-		ra = mHalfExtents[i];
-		rb = inBox.mHalfExtents[0] * abs_r[0][i] + inBox.mHalfExtents[1] * abs_r[1][i] + inBox.mHalfExtents[2] * abs_r[2][i];
-		if (abs(rot(i, 3)) > ra + rb) return false;
-	}
-
-	// Test axes L = B0, L = B1, L = B2
-	for (int i = 0; i < 3; i++)
-	{
-		ra = mHalfExtents.Dot(abs_r[i]);
-		rb = inBox.mHalfExtents[i];
-		if (abs(rot.GetTranslation().Dot(rot.GetColumn3(i))) > ra + rb) return false;
-	}
-
-	// Test axis L = A0 x B0
-	ra = mHalfExtents[1] * abs_r[0][2] + mHalfExtents[2] * abs_r[0][1];
-	rb = inBox.mHalfExtents[1] * abs_r[2][0] + inBox.mHalfExtents[2] * abs_r[1][0];
-	if (abs(rot(2, 3) * rot(1, 0) - rot(1, 3) * rot(2, 0)) > ra + rb) return false;
-
-	// Test axis L = A0 x B1
-	ra = mHalfExtents[1] * abs_r[1][2] + mHalfExtents[2] * abs_r[1][1];
-	rb = inBox.mHalfExtents[0] * abs_r[2][0] + inBox.mHalfExtents[2] * abs_r[0][0];
-	if (abs(rot(2, 3) * rot(1, 1) - rot(1, 3) * rot(2, 1)) > ra + rb) return false;
-
-	// Test axis L = A0 x B2
-	ra = mHalfExtents[1] * abs_r[2][2] + mHalfExtents[2] * abs_r[2][1];
-	rb = inBox.mHalfExtents[0] * abs_r[1][0] + inBox.mHalfExtents[1] * abs_r[0][0];
-	if (abs(rot(2, 3) * rot(1, 2) - rot(1, 3) * rot(2, 2)) > ra + rb) return false;
-
-	// Test axis L = A1 x B0
-	ra = mHalfExtents[0] * abs_r[0][2] + mHalfExtents[2] * abs_r[0][0];
-	rb = inBox.mHalfExtents[1] * abs_r[2][1] + inBox.mHalfExtents[2] * abs_r[1][1];
-	if (abs(rot(0, 3) * rot(2, 0) - rot(2, 3) * rot(0, 0)) > ra + rb) return false;
-
-	// Test axis L = A1 x B1
-	ra = mHalfExtents[0] * abs_r[1][2] + mHalfExtents[2] * abs_r[1][0];
-	rb = inBox.mHalfExtents[0] * abs_r[2][1] + inBox.mHalfExtents[2] * abs_r[0][1];
-	if (abs(rot(0, 3) * rot(2, 1) - rot(2, 3) * rot(0, 1)) > ra + rb) return false;
-
-	// Test axis L = A1 x B2
-	ra = mHalfExtents[0] * abs_r[2][2] + mHalfExtents[2] * abs_r[2][0];
-	rb = inBox.mHalfExtents[0] * abs_r[1][1] + inBox.mHalfExtents[1] * abs_r[0][1];
-	if (abs(rot(0, 3) * rot(2, 2) - rot(2, 3) * rot(0, 2)) > ra + rb) return false;
-
-	// Test axis L = A2 x B0
-	ra = mHalfExtents[0] * abs_r[0][1] + mHalfExtents[1] * abs_r[0][0];
-	rb = inBox.mHalfExtents[1] * abs_r[2][2] + inBox.mHalfExtents[2] * abs_r[1][2];
-	if (abs(rot(1, 3) * rot(0, 0) - rot(0, 3) * rot(1, 0)) > ra + rb) return false;
-
-	// Test axis L = A2 x B1
-	ra = mHalfExtents[0] * abs_r[1][1] + mHalfExtents[1] * abs_r[1][0];
-	rb = inBox.mHalfExtents[0] * abs_r[2][2] + inBox.mHalfExtents[2] * abs_r[0][2];
-	if (abs(rot(1, 3) * rot(0, 1) - rot(0, 3) * rot(1, 1)) > ra + rb) return false;
-
-	// Test axis L = A2 x B2
-	ra = mHalfExtents[0] * abs_r[2][1] + mHalfExtents[1] * abs_r[2][0];
-	rb = inBox.mHalfExtents[0] * abs_r[1][2] + inBox.mHalfExtents[1] * abs_r[0][2];
-	if (abs(rot(1, 3) * rot(0, 2) - rot(0, 3) * rot(1, 2)) > ra + rb) return false;
-
-	// Since no separating axis is found, the OBBs must be intersecting
-	return true;
+	return sOverlaps(mOrientation.InversedRotationTranslation() * inBox.mOrientation, mHalfExtents, inBox.mHalfExtents, inEpsilon);
 }
 
 JPH_NAMESPACE_END

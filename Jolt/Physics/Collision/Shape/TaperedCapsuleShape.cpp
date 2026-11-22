@@ -134,8 +134,8 @@ TaperedCapsuleShape::TaperedCapsuleShape(const TaperedCapsuleShapeSettings &inSe
 	// Calculate the sin and tan of the angle that the cone surface makes with the Y axis
 	// See: TaperedCapsuleShape.gliffy
 	mSinAlpha = (mBottomRadius - mTopRadius) / (mTopCenter - mBottomCenter);
-	JPH_ASSERT(mSinAlpha >= -1.0f && mSinAlpha <= 1.0f);
-	mTanAlpha = Tan(ASin(mSinAlpha));
+	JPH_ASSERT(mSinAlpha > -1.0f && mSinAlpha < 1.0f);
+	mTanAlpha = mSinAlpha / Sqrt(1.0f - Square(mSinAlpha));
 
 	outResult.Set(this);
 }
