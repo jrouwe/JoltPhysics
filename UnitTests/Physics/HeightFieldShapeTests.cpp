@@ -32,7 +32,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		CHECK(!make_settings().Create().HasError());
 
 		// Block size out of range
-		for (uint32 block_size : { 1u, 9u })
+		for (uint32 block_size : { 0u, 1u, 9u })
 		{
 			HeightFieldShapeSettings settings = make_settings();
 			settings.mBlockSize = block_size;
