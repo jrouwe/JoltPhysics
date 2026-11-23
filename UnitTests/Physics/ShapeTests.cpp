@@ -18,11 +18,15 @@
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/PlaneShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVertexIterator.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Core/StreamWrapper.h>
 
 TEST_SUITE("ShapeTests")
@@ -1115,5 +1119,85 @@ TEST_SUITE("ShapeTests")
 			c.Simulate(1.0f);
 			CHECK_APPROX_EQUAL(body1.GetPosition(), RVec3::sZero());
 		}
+	}
+
+	// Test that the support function of a triangle with convex radius doesn't count the convex radius twice
+	TEST_CASE("TestTriangleShapeConvexRadius")
+	{
+		const float cRadius = 0.03f;
+		const Vec3 cUp = Vec3::sAxisY();
+
+		// Triangle in the XZ plane
+		RefConst<TriangleShape> triangle = StaticCast<TriangleShape>(TriangleShapeSettings(Vec3(-1, 0, -1), Vec3(1, 0, -1), Vec3(0, 0, 1), cRadius).Create().Get());
+		CHECK(triangle->GetLocalBounds().mMax.GetY() == cRadius);
+
+		for (float scale : { 1.0f, 2.0f, -2.0f })
+		{
+			Vec3 scale3 = Vec3::sReplicate(scale);
+			float scaled_radius = ScaleHelpers::ScaleConvexRadius(cRadius, scale3);
+
+			ConvexShape::SupportBuffer buffer;
+
+			// Including the convex radius: support point should include the radius and convex radius should be 0
+			const ConvexShape::Support *support = triangle->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, scale3);
+			CHECK(support->GetConvexRadius() == 0.0f);
+			CHECK_APPROX_EQUAL(support->GetSupport(cUp).Dot(cUp), scaled_radius);
+
+			// Excluding the convex radius: support point should not include the radius and convex radius should be returned separately
+			support = triangle->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer, scale3);
+			CHECK_APPROX_EQUAL(support->GetConvexRadius(), scaled_radius);
+			CHECK_APPROX_EQUAL(support->GetSupport(cUp).Dot(cUp), 0.0f);
+
+			// Default: support point + convex radius should match the shape
+			support = triangle->GetSupportFunction(ConvexShape::ESupportMode::Default, buffer, scale3);
+			CHECK_APPROX_EQUAL(support->GetSupport(cUp).Dot(cUp) + support->GetConvexRadius(), scaled_radius);
+		}
+
+		// Collide against a horizontal plane at height inPlaneY (solid below)
+		auto collide_vs_plane = [&triangle](float inPlaneY, CollideShapeResult &outHit) {
+			RefConst<Shape> plane = new PlaneShape(Plane(Vec3::sAxisY(), -inPlaneY));
+			CollideShapeSettings settings;
+			ClosestHitCollisionCollector<CollideShapeCollector> collector;
+			CollisionDispatch::sCollideShapeVsShape(triangle, plane, Vec3::sOne(), Vec3::sOne(), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+			if (collector.HadHit())
+				outHit = collector.mHit;
+			return collector.HadHit();
+		};
+
+		CollideShapeResult hit;
+
+		// Plane is 0.03 below the inflated triangle, should not collide
+		CHECK(!collide_vs_plane(-0.06f, hit));
+
+		// Plane is 0.01 above the lowest point of the inflated triangle
+		CHECK(collide_vs_plane(-0.02f, hit));
+		CHECK_APPROX_EQUAL(hit.mPenetrationDepth, 0.01f);
+		CHECK_APPROX_EQUAL(hit.mContactPointOn1.GetY(), -cRadius);
+		CHECK_APPROX_EQUAL(hit.mContactPointOn2.GetY(), -0.02f);
+	}
+
+	// Test that a RotatedTranslatedShape correctly passes the scale to its inner shape when colliding with soft body vertices
+	TEST_CASE("TestRotatedTranslatedShapeCollideSoftBodyVertices")
+	{
+		const int cCollidingShapeIndex = 7;
+
+		// Box rotated 90 degrees around Y, scaled non-uniformly so that it is 4 units wide along X
+		RefConst<Shape> box = new BoxShape(Vec3::sOne(), 0.0f);
+		RefConst<Shape> rt = new RotatedTranslatedShape(Vec3::sZero(), Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI), box);
+		const Vec3 cScale(2, 1, 1);
+		AABox bounds = rt->GetWorldSpaceBounds(Mat44::sIdentity(), cScale);
+		CHECK_APPROX_EQUAL(bounds.mMin, Vec3(-2, -1, -1));
+		CHECK_APPROX_EQUAL(bounds.mMax, Vec3(2, 1, 1));
+
+		// Vertex inside the scaled shape, 0.5 from the +X face
+		SoftBodyVertex v;
+		v.mPreviousPosition = v.mPosition = Vec3(1.5f, 0, 0);
+		v.mVelocity = Vec3::sZero();
+		v.mInvMass = 1.0f;
+		v.ResetCollision();
+		rt->CollideSoftBodyVertices(Mat44::sIdentity(), cScale, CollideSoftBodyVertexIterator(&v), 1, cCollidingShapeIndex);
+		CHECK(v.mCollidingShapeIndex == cCollidingShapeIndex);
+		CHECK_APPROX_EQUAL(v.mLargestPenetration, 0.5f);
+		CHECK_APPROX_EQUAL(v.mCollisionPlane.GetNormal(), Vec3::sAxisX());
 	}
 }

@@ -90,8 +90,9 @@ AABox TriangleShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3A
 class TriangleShape::TriangleNoConvex final : public Support
 {
 public:
-							TriangleNoConvex(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3) :
-		mTriangleSupport(inV1, inV2, inV3)
+							TriangleNoConvex(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, float inConvexRadius) :
+		mTriangleSupport(inV1, inV2, inV3),
+		mConvexRadius(inConvexRadius)
 	{
 		static_assert(sizeof(TriangleNoConvex) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(TriangleNoConvex)));
@@ -104,11 +105,12 @@ public:
 
 	virtual float			GetConvexRadius() const override
 	{
-		return 0.0f;
+		return mConvexRadius;
 	}
 
 private:
 	TriangleConvexSupport	mTriangleSupport;
+	float					mConvexRadius;
 };
 
 class TriangleShape::TriangleWithConvex final : public Support
@@ -133,7 +135,7 @@ public:
 
 	virtual float			GetConvexRadius() const override
 	{
-		return mConvexRadius;
+		return 0.0f;
 	}
 
 private:
@@ -143,16 +145,19 @@ private:
 
 const ConvexShape::Support *TriangleShape::GetSupportFunction(ESupportMode inMode, SupportBuffer &inBuffer, Vec3Arg inScale) const
 {
+	// Calculate scaled convex radius
+	float convex_radius = ScaleHelpers::ScaleConvexRadius(mConvexRadius, inScale);
+
 	switch (inMode)
 	{
 	case ESupportMode::IncludeConvexRadius:
-	case ESupportMode::Default:
-		if (mConvexRadius > 0.0f)
-			return new (&inBuffer) TriangleWithConvex(inScale * mV1, inScale * mV2, inScale * mV3, mConvexRadius);
+		if (convex_radius > 0.0f)
+			return new (&inBuffer) TriangleWithConvex(inScale * mV1, inScale * mV2, inScale * mV3, convex_radius);
 		[[fallthrough]];
 
 	case ESupportMode::ExcludeConvexRadius:
-		return new (&inBuffer) TriangleNoConvex(inScale * mV1, inScale * mV2, inScale * mV3);
+	case ESupportMode::Default:
+		return new (&inBuffer) TriangleNoConvex(inScale * mV1, inScale * mV2, inScale * mV3, convex_radius);
 	}
 
 	JPH_ASSERT(false);

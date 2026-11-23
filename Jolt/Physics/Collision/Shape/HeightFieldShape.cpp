@@ -438,7 +438,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	Shape(EShapeType::HeightField, EShapeSubType::HeightField, inSettings, outResult),
 	mOffset(inSettings.mOffset),
 	mScale(inSettings.mScale),
-	mSampleCount(((inSettings.mSampleCount + inSettings.mBlockSize - 1) / inSettings.mBlockSize) * inSettings.mBlockSize), // Round sample count to nearest block size
+	mSampleCount(inSettings.mBlockSize > 0? ((inSettings.mSampleCount + inSettings.mBlockSize - 1) / inSettings.mBlockSize) * inSettings.mBlockSize : 0), // Round sample count to nearest block size (block size is validated below)
 	mBlockSize(inSettings.mBlockSize),
 	mBitsPerSample(uint8(inSettings.mBitsPerSample))
 {

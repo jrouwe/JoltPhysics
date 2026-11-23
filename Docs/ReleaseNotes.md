@@ -16,6 +16,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * A flat `HeightFieldShape` with a number of blocks per side that is not a power of 2 could return collisions and triangles beyond its far edges (and read out of bounds) because the inside-out height range of the padding blocks became valid after dequantization.
 * On MinGW, `SharedMutex::try_lock` / `try_lock_shared` could trigger a libstdc++ assert (`__ret == 0`) in debug builds when multiple threads used a mutex for the first time simultaneously. The mutex is now initialized in its constructor. See [bug report](https://sourceforge.net/p/mingw-w64/bugs/1044/).
 * `MotionProperties::SetMassProperties` replaced small but valid inertia tensors (all principal moments below about 1e-6 kg m^2) with the inertia of a sphere of radius 1 m. The degenerate inertia check is now relative to the mass of the body.
+* `TriangleShape` with a convex radius counted the convex radius twice in `ESupportMode::IncludeConvexRadius` and `ESupportMode::Default` mode, and ignored it in `ESupportMode::ExcludeConvexRadius` mode. This e.g. caused triangle vs plane collisions to report collisions too early with too large a penetration depth. The convex radius is now also scaled.
+* `RotatedTranslatedShape::CollideSoftBodyVertices` did not transform the scale before passing it to the inner shape, resulting in incorrect soft body collision when the shape was rotated and non-uniformly scaled.
 
 ## v5.7.0
 
