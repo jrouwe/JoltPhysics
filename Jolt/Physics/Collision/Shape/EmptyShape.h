@@ -65,8 +65,15 @@ public:
 	float					GetVolume() const override										{ return 0.0f; }
 	bool					IsValidScale([[maybe_unused]] Vec3Arg inScale) const override	{ return true; }
 
+	// See Shape::SaveBinaryState
+	virtual void			SaveBinaryState(StreamOut &inStream) const override;
+
 	// Register shape functions with the registry
 	static void				sRegister();
+
+protected:
+	// See: Shape::RestoreBinaryState
+	virtual void			RestoreBinaryState(StreamIn &inStream) override;
 
 private:
 	Vec3					mCenterOfMass = Vec3::sZero();

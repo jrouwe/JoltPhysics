@@ -7,6 +7,8 @@
 #include <Jolt/Physics/Collision/Shape/EmptyShape.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -33,6 +35,20 @@ MassProperties EmptyShape::GetMassProperties() const
 	mass_properties.mMass = 1.0f;
 	mass_properties.mInertia = Mat44::sIdentity();
 	return mass_properties;
+}
+
+void EmptyShape::SaveBinaryState(StreamOut &inStream) const
+{
+	Shape::SaveBinaryState(inStream);
+
+	inStream.Write(mCenterOfMass);
+}
+
+void EmptyShape::RestoreBinaryState(StreamIn &inStream)
+{
+	Shape::RestoreBinaryState(inStream);
+
+	inStream.Read(mCenterOfMass);
 }
 
 #ifdef JPH_DEBUG_RENDERER
