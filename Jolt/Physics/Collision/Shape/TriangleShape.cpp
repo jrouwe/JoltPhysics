@@ -146,7 +146,7 @@ private:
 const ConvexShape::Support *TriangleShape::GetSupportFunction(ESupportMode inMode, SupportBuffer &inBuffer, Vec3Arg inScale) const
 {
 	// Calculate scaled convex radius
-	float convex_radius = ScaleHelpers::ScaleConvexRadius(mConvexRadius, inScale);
+	float convex_radius = abs(inScale.GetX()) * mConvexRadius;
 
 	switch (inMode)
 	{

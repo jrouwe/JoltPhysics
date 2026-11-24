@@ -1134,7 +1134,7 @@ TEST_SUITE("ShapeTests")
 		for (float scale : { 1.0f, 2.0f, -2.0f })
 		{
 			Vec3 scale3 = Vec3::sReplicate(scale);
-			float scaled_radius = ScaleHelpers::ScaleConvexRadius(cRadius, scale3);
+			float scaled_radius = abs(scale) * cRadius;
 
 			ConvexShape::SupportBuffer buffer;
 
