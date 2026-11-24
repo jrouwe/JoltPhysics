@@ -16,6 +16,8 @@ public:
 	// Underlying vector type
 #if defined(JPH_USE_SSE)
 	using Type = __m128i;
+#elif defined(JPH_USE_VSX)
+	using Type = __vector unsigned int;
 #elif defined(JPH_USE_NEON)
 	using Type = uint32x4_t;
 #else
@@ -93,6 +95,11 @@ public:
 	JPH_INLINE uint32			GetY() const										{ return mU32[1]; }
 	JPH_INLINE uint32			GetZ() const										{ return mU32[2]; }
 	JPH_INLINE uint32			GetW() const										{ return mU32[3]; }
+#elif defined(JPH_USE_VSX)
+	JPH_INLINE uint32			GetX() const										{ return vec_extract(mValue, 0); }
+	JPH_INLINE uint32			GetY() const										{ return vec_extract(mValue, 1); }
+	JPH_INLINE uint32			GetZ() const										{ return vec_extract(mValue, 2); }
+	JPH_INLINE uint32			GetW() const										{ return vec_extract(mValue, 3); }
 #elif defined(JPH_USE_NEON)
 	JPH_INLINE uint32			GetX() const										{ return vgetq_lane_u32(mValue, 0); }
 	JPH_INLINE uint32			GetY() const										{ return vgetq_lane_u32(mValue, 1); }
