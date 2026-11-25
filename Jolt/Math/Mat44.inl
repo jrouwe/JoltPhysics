@@ -251,6 +251,16 @@ Mat44 Mat44::operator * (Mat44Arg inM) const
 		t = _mm_add_ps(t, _mm_mul_ps(mCol[3].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(3, 3, 3, 3))));
 		result.mCol[i].mValue = t;
 	}
+#elif defined(JPH_USE_VSX)
+	for (int i = 0; i < 4; ++i)
+	{
+		Type c = inM.mCol[i].mValue;
+		Type t = vec_mul(mCol[0].mValue, vec_splat(c, 0));
+		t = vec_add(t, vec_mul(mCol[1].mValue, vec_splat(c, 1)));
+		t = vec_add(t, vec_mul(mCol[2].mValue, vec_splat(c, 2)));
+		t = vec_add(t, vec_mul(mCol[3].mValue, vec_splat(c, 3)));
+		result.mCol[i].mValue = t;
+	}
 #elif defined(JPH_USE_NEON)
 	for (int i = 0; i < 4; ++i)
 	{
@@ -300,6 +310,12 @@ Vec3 Mat44::operator * (Vec3Arg inV) const
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(2, 2, 2, 2))));
 	t = _mm_add_ps(t, mCol[3].mValue);
 	return Vec3::sFixW(t);
+#elif defined(JPH_USE_VSX)
+	Type t = vec_mul(mCol[0].mValue, vec_splat(inV.mValue, 0));
+	t = vec_add(t, vec_mul(mCol[1].mValue, vec_splat(inV.mValue, 1)));
+	t = vec_add(t, vec_mul(mCol[2].mValue, vec_splat(inV.mValue, 2)));
+	t = vec_add(t, mCol[3].mValue); // Don't combine this with the first mul into a fused multiply add, causes precision issues
+	return Vec3::sFixW(t);
 #elif defined(JPH_USE_NEON)
 	Type t = vmulq_f32(mCol[0].mValue, vdupq_laneq_f32(inV.mValue, 0));
 	t = vmlaq_f32(t, mCol[1].mValue, vdupq_laneq_f32(inV.mValue, 1));
@@ -342,6 +358,12 @@ Vec4 Mat44::operator * (Vec4Arg inV) const
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(1, 1, 1, 1))));
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(2, 2, 2, 2))));
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[3].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(3, 3, 3, 3))));
+	return t;
+#elif defined(JPH_USE_VSX)
+	Type t = vec_mul(mCol[0].mValue, vec_splat(inV.mValue, 0));
+	t = vec_add(t, vec_mul(mCol[1].mValue, vec_splat(inV.mValue, 1)));
+	t = vec_add(t, vec_mul(mCol[2].mValue, vec_splat(inV.mValue, 2)));
+	t = vec_add(t, vec_mul(mCol[3].mValue, vec_splat(inV.mValue, 3)));
 	return t;
 #elif defined(JPH_USE_NEON)
 	Type t = vmulq_f32(mCol[0].mValue, vdupq_laneq_f32(inV.mValue, 0));
@@ -387,6 +409,11 @@ Vec3 Mat44::Multiply3x3(Vec3Arg inV) const
 	__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(0, 0, 0, 0)));
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(1, 1, 1, 1))));
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(2, 2, 2, 2))));
+	return Vec3::sFixW(t);
+#elif defined(JPH_USE_VSX)
+	Type t = vec_mul(mCol[0].mValue, vec_splat(inV.mValue, 0));
+	t = vec_add(t, vec_mul(mCol[1].mValue, vec_splat(inV.mValue, 1)));
+	t = vec_add(t, vec_mul(mCol[2].mValue, vec_splat(inV.mValue, 2)));
 	return Vec3::sFixW(t);
 #elif defined(JPH_USE_NEON)
 	Type t = vmulq_f32(mCol[0].mValue, vdupq_laneq_f32(inV.mValue, 0));
@@ -439,6 +466,15 @@ Mat44 Mat44::Multiply3x3(Mat44Arg inM) const
 		__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 0)));
 		t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(1, 1, 1, 1))));
 		t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(2, 2, 2, 2))));
+		result.mCol[i].mValue = t;
+	}
+#elif defined(JPH_USE_VSX)
+	for (int i = 0; i < 3; ++i)
+	{
+		Type c = inM.mCol[i].mValue;
+		Type t = vec_mul(mCol[0].mValue, vec_splat(c, 0));
+		t = vec_add(t, vec_mul(mCol[1].mValue, vec_splat(c, 1)));
+		t = vec_add(t, vec_mul(mCol[2].mValue, vec_splat(c, 2)));
 		result.mCol[i].mValue = t;
 	}
 #elif defined(JPH_USE_NEON)
@@ -576,6 +612,18 @@ Mat44 Mat44::Transposed() const
 	result.mCol[2].mValue = _mm_shuffle_ps(tmp3, tmp4, _MM_SHUFFLE(2, 0, 2, 0));
 	result.mCol[3].mValue = _mm_shuffle_ps(tmp3, tmp4, _MM_SHUFFLE(3, 1, 3, 1));
 	return result;
+#elif defined(JPH_USE_VSX)
+	Type tmp1 = vec_mergeh(mCol[0].mValue, mCol[2].mValue);
+	Type tmp2 = vec_mergel(mCol[0].mValue, mCol[2].mValue);
+	Type tmp3 = vec_mergeh(mCol[1].mValue, mCol[3].mValue);
+	Type tmp4 = vec_mergel(mCol[1].mValue, mCol[3].mValue);
+
+	Mat44 result;
+	result.mCol[0].mValue = vec_mergeh(tmp1, tmp3);
+	result.mCol[1].mValue = vec_mergel(tmp1, tmp3);
+	result.mCol[2].mValue = vec_mergeh(tmp2, tmp4);
+	result.mCol[3].mValue = vec_mergel(tmp2, tmp4);
+	return result;
 #elif defined(JPH_USE_NEON)
 	float32x4x2_t tmp1 = vzipq_f32(mCol[0].mValue, mCol[2].mValue);
 	float32x4x2_t tmp2 = vzipq_f32(mCol[1].mValue, mCol[3].mValue);
@@ -622,6 +670,17 @@ Mat44 Mat44::Transposed3x3() const
 	result.mCol[0].mValue = _mm_shuffle_ps(tmp1, tmp2, _MM_SHUFFLE(2, 0, 2, 0));
 	result.mCol[1].mValue = _mm_shuffle_ps(tmp1, tmp2, _MM_SHUFFLE(3, 1, 3, 1));
 	result.mCol[2].mValue = _mm_shuffle_ps(tmp3, tmp4, _MM_SHUFFLE(2, 0, 2, 0));
+#elif defined(JPH_USE_VSX)
+	Type zero = vec_splats(0.0f);
+	Type tmp1 = vec_mergeh(mCol[0].mValue, mCol[2].mValue);
+	Type tmp2 = vec_mergel(mCol[0].mValue, mCol[2].mValue);
+	Type tmp3 = vec_mergeh(mCol[1].mValue, zero);
+	Type tmp4 = vec_mergel(mCol[1].mValue, zero);
+
+	Mat44 result;
+	result.mCol[0].mValue = vec_mergeh(tmp1, tmp3);
+	result.mCol[1].mValue = vec_mergel(tmp1, tmp3);
+	result.mCol[2].mValue = vec_mergeh(tmp2, tmp4);
 #elif defined(JPH_USE_NEON)
 	float32x4x2_t tmp1 = vzipq_f32(mCol[0].mValue, mCol[2].mValue);
 	float32x4x2_t tmp2 = vzipq_f32(mCol[1].mValue, vdupq_n_f32(0));
@@ -741,6 +800,80 @@ Mat44 Mat44::Inversed() const
 	result.mCol[1].mValue = _mm_mul_ps(det, minor1);
 	result.mCol[2].mValue = _mm_mul_ps(det, minor2);
 	result.mCol[3].mValue = _mm_mul_ps(det, minor3);
+	return result;
+#elif defined(JPH_USE_VSX)
+	// Adapted from the SSE version, see the comments there
+	Type tmp1 = __builtin_shufflevector(mCol[0].mValue, mCol[1].mValue, 0, 1, 4, 5);
+	Type row1 = __builtin_shufflevector(mCol[2].mValue, mCol[3].mValue, 0, 1, 4, 5);
+	Type row0 = __builtin_shufflevector(tmp1, row1, 0, 2, 4, 6);
+	row1 = __builtin_shufflevector(row1, tmp1, 1, 3, 5, 7);
+	tmp1 = __builtin_shufflevector(mCol[0].mValue, mCol[1].mValue, 2, 3, 6, 7);
+	Type row3 = __builtin_shufflevector(mCol[2].mValue, mCol[3].mValue, 2, 3, 6, 7);
+	Type row2 = __builtin_shufflevector(tmp1, row3, 0, 2, 4, 6);
+	row3 = __builtin_shufflevector(row3, tmp1, 1, 3, 5, 7);
+
+	tmp1 = vec_mul(row2, row3);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 1, 0, 3, 2);
+	Type minor0 = vec_mul(row1, tmp1);
+	Type minor1 = vec_mul(row0, tmp1);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 2, 3, 0, 1);
+	minor0 = vec_sub(vec_mul(row1, tmp1), minor0);
+	minor1 = vec_sub(vec_mul(row0, tmp1), minor1);
+	minor1 = __builtin_shufflevector(minor1, minor1, 2, 3, 0, 1);
+
+	tmp1 = vec_mul(row1, row2);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 1, 0, 3, 2);
+	minor0 = vec_add(vec_mul(row3, tmp1), minor0);
+	Type minor3 = vec_mul(row0, tmp1);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 2, 3, 0, 1);
+	minor0 = vec_sub(minor0, vec_mul(row3, tmp1));
+	minor3 = vec_sub(vec_mul(row0, tmp1), minor3);
+	minor3 = __builtin_shufflevector(minor3, minor3, 2, 3, 0, 1);
+
+	tmp1 = __builtin_shufflevector(row1, row1, 2, 3, 0, 1);
+	tmp1 = vec_mul(tmp1, row3);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 1, 0, 3, 2);
+	row2 = __builtin_shufflevector(row2, row2, 2, 3, 0, 1);
+	minor0 = vec_add(vec_mul(row2, tmp1), minor0);
+	Type minor2 = vec_mul(row0, tmp1);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 2, 3, 0, 1);
+	minor0 = vec_sub(minor0, vec_mul(row2, tmp1));
+	minor2 = vec_sub(vec_mul(row0, tmp1), minor2);
+	minor2 = __builtin_shufflevector(minor2, minor2, 2, 3, 0, 1);
+
+	tmp1 = vec_mul(row0, row1);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 1, 0, 3, 2);
+	minor2 = vec_add(vec_mul(row3, tmp1), minor2);
+	minor3 = vec_sub(vec_mul(row2, tmp1), minor3);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 2, 3, 0, 1);
+	minor2 = vec_sub(vec_mul(row3, tmp1), minor2);
+	minor3 = vec_sub(minor3, vec_mul(row2, tmp1));
+
+	tmp1 = vec_mul(row0, row3);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 1, 0, 3, 2);
+	minor1 = vec_sub(minor1, vec_mul(row2, tmp1));
+	minor2 = vec_add(vec_mul(row1, tmp1), minor2);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 2, 3, 0, 1);
+	minor1 = vec_add(vec_mul(row2, tmp1), minor1);
+	minor2 = vec_sub(minor2, vec_mul(row1, tmp1));
+
+	tmp1 = vec_mul(row0, row2);
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 1, 0, 3, 2);
+	minor1 = vec_add(vec_mul(row3, tmp1), minor1);
+	minor3 = vec_sub(minor3, vec_mul(row1, tmp1));
+	tmp1 = __builtin_shufflevector(tmp1, tmp1, 2, 3, 0, 1);
+	minor1 = vec_sub(minor1, vec_mul(row3, tmp1));
+	minor3 = vec_add(vec_mul(row1, tmp1), minor3);
+
+	Type det = vec_mul(row0, minor0);
+	det = vec_splats(Vec4(det).ReduceSum());
+	det = vec_div(vec_splats(1.0f), det);
+
+	Mat44 result;
+	result.mCol[0].mValue = vec_mul(det, minor0);
+	result.mCol[1].mValue = vec_mul(det, minor1);
+	result.mCol[2].mValue = vec_mul(det, minor2);
+	result.mCol[3].mValue = vec_mul(det, minor3);
 	return result;
 #elif defined(JPH_USE_NEON)
 	// Adapted from the SSE version, there's surprising few articles about efficient ways of calculating an inverse for ARM on the internet
@@ -1089,6 +1222,12 @@ Mat44 Mat44::GetRotationSafe() const
 	return Mat44(_mm_blend_ps(mCol[0].mValue, zero, 8),
 				 _mm_blend_ps(mCol[1].mValue, zero, 8),
 				 _mm_blend_ps(mCol[2].mValue, zero, 8),
+				 Vec4(0, 0, 0, 1));
+#elif defined(JPH_USE_VSX)
+	const Type mask = (Type)UVec4::Type { 0xffffffffu, 0xffffffffu, 0xffffffffu, 0 };
+	return Mat44(vec_and(mCol[0].mValue, mask),
+				 vec_and(mCol[1].mValue, mask),
+				 vec_and(mCol[2].mValue, mask),
 				 Vec4(0, 0, 0, 1));
 #elif defined(JPH_USE_NEON)
 	return Mat44(vsetq_lane_f32(0, mCol[0].mValue, 3),
