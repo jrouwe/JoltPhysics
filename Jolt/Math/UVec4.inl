@@ -531,7 +531,7 @@ Vec4 UVec4::ReinterpretAsFloat() const
 #elif defined(JPH_USE_NEON)
 	return vreinterpretq_f32_u32(mValue);
 #else
-	return *reinterpret_cast<const Vec4 *>(this);
+	return BitCast<Vec4>(*this);
 #endif
 }
 
