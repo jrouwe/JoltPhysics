@@ -1098,7 +1098,7 @@ UVec4 Vec3::ReinterpretAsInt() const
 #elif defined(JPH_USE_NEON)
 	return vreinterpretq_u32_f32(mValue);
 #else
-	return *reinterpret_cast<const UVec4 *>(this);
+	return BitCast<UVec4>(*this);
 #endif
 }
 

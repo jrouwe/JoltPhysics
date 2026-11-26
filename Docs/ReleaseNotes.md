@@ -18,6 +18,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * `MotionProperties::SetMassProperties` replaced small but valid inertia tensors (all principal moments below about 1e-6 kg m^2) with the inertia of a sphere of radius 1 m. The degenerate inertia check is now relative to the mass of the body.
 * `TriangleShape` with a convex radius counted the convex radius twice in `ESupportMode::IncludeConvexRadius` and `ESupportMode::Default` mode, and ignored it in `ESupportMode::ExcludeConvexRadius` mode. This e.g. caused triangle vs plane collisions to report collisions too early with too large a penetration depth. The convex radius is now also scaled.
 * `RotatedTranslatedShape::CollideSoftBodyVertices` did not transform the scale before passing it to the inner shape, resulting in incorrect soft body collision when the shape was rotated and non-uniformly scaled.
+* `Vec3::ReinterpretAsInt`, `Vec4::ReinterpretAsInt` and `UVec4::ReinterpretAsFloat` violated the strict aliasing rule on platforms that don't use SSE or NEON (e.g. PowerPC, LoongArch and RISC-V). When compiled with GCC 16 and link time optimizations this caused the simulation to produce incorrect results (the `PhysicsDeterminismTests` failed and could hang on PowerPC 64-bit Little Endian).
 
 ## v5.7.0
 
