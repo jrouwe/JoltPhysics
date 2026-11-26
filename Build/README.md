@@ -60,6 +60,7 @@ There are a number of user configurable C++ defines that turn on/off certain fea
 		<li>JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (default: on, x86/x64 only)</li>
 		<li>JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (default: on, x86/x64 only)</li>
 		<li>JPH_USE_TZCNT - Enable the tzcnt CPU instruction (default: on, x86/x64 only)</li>
+		<li>JPH_USE_VSX - Enable VSX on PowerPC (default: on for 64-bit PowerPC Little Endian, compile with -mno-vsx to turn off)</li>
 	</ul>
 </details>
 

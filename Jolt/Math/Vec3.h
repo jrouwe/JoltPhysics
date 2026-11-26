@@ -21,6 +21,8 @@ public:
 	// Underlying vector type
 #if defined(JPH_USE_SSE)
 	using Type = __m128;
+#elif defined(JPH_USE_VSX)
+	using Type = __vector float;
 #elif defined(JPH_USE_NEON)
 	using Type = float32x4_t;
 #else
@@ -119,6 +121,10 @@ public:
 	JPH_INLINE float			GetX() const									{ return _mm_cvtss_f32(mValue); }
 	JPH_INLINE float			GetY() const									{ return mF32[1]; }
 	JPH_INLINE float			GetZ() const									{ return mF32[2]; }
+#elif defined(JPH_USE_VSX)
+	JPH_INLINE float			GetX() const									{ return vec_extract(mValue, 0); }
+	JPH_INLINE float			GetY() const									{ return vec_extract(mValue, 1); }
+	JPH_INLINE float			GetZ() const									{ return vec_extract(mValue, 2); }
 #elif defined(JPH_USE_NEON)
 	JPH_INLINE float			GetX() const									{ return vgetq_lane_f32(mValue, 0); }
 	JPH_INLINE float			GetY() const									{ return vgetq_lane_f32(mValue, 1); }

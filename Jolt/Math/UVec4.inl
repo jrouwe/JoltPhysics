@@ -8,6 +8,8 @@ UVec4::UVec4(uint32 inX, uint32 inY, uint32 inZ, uint32 inW)
 {
 #if defined(JPH_USE_SSE)
 	mValue = _mm_set_epi32(int(inW), int(inZ), int(inY), int(inX));
+#elif defined(JPH_USE_VSX)
+	mValue = Type { inX, inY, inZ, inW };
 #elif defined(JPH_USE_NEON)
 	uint32x2_t xy = vcreate_u32(static_cast<uint64>(inX) | (static_cast<uint64>(inY) << 32));
 	uint32x2_t zw = vcreate_u32(static_cast<uint64>(inZ) | (static_cast<uint64>(inW) << 32));
@@ -41,6 +43,8 @@ UVec4 UVec4::Swizzle() const
 
 #if defined(JPH_USE_SSE)
 	return _mm_shuffle_epi32(mValue, _MM_SHUFFLE(SwizzleW, SwizzleZ, SwizzleY, SwizzleX));
+#elif defined(JPH_USE_VSX)
+	return __builtin_shufflevector(mValue, mValue, SwizzleX, SwizzleY, SwizzleZ, SwizzleW);
 #elif defined(JPH_USE_NEON)
 	return JPH_NEON_SHUFFLE_U32x4(mValue, mValue, SwizzleX, SwizzleY, SwizzleZ, SwizzleW);
 #elif defined(JPH_USE_RVV)
@@ -60,6 +64,8 @@ UVec4 UVec4::sZero()
 {
 #if defined(JPH_USE_SSE)
 	return _mm_setzero_si128();
+#elif defined(JPH_USE_VSX)
+	return vec_splats(uint32(0));
 #elif defined(JPH_USE_NEON)
 	return vdupq_n_u32(0);
 #elif defined(JPH_USE_RVV)
@@ -76,6 +82,8 @@ UVec4 UVec4::sReplicate(uint32 inV)
 {
 #if defined(JPH_USE_SSE)
 	return _mm_set1_epi32(int(inV));
+#elif defined(JPH_USE_VSX)
+	return vec_splats(inV);
 #elif defined(JPH_USE_NEON)
 	return vdupq_n_u32(inV);
 #elif defined(JPH_USE_RVV)
@@ -92,6 +100,8 @@ UVec4 UVec4::sLoadInt(const uint32 *inV)
 {
 #if defined(JPH_USE_SSE)
 	return _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(inV)));
+#elif defined(JPH_USE_VSX)
+	return Type { *inV, 0, 0, 0 };
 #elif defined(JPH_USE_NEON)
 	return vsetq_lane_u32(*inV, vdupq_n_u32(0), 0);
 #else
@@ -103,6 +113,8 @@ UVec4 UVec4::sLoadInt4(const uint32 *inV)
 {
 #if defined(JPH_USE_SSE)
 	return _mm_loadu_si128(reinterpret_cast<const __m128i *>(inV));
+#elif defined(JPH_USE_VSX)
+	return vec_xl(0, inV);
 #elif defined(JPH_USE_NEON)
 	return vld1q_u32(inV);
 #elif defined(JPH_USE_RVV)
@@ -119,6 +131,8 @@ UVec4 UVec4::sLoadInt4Aligned(const uint32 *inV)
 {
 #if defined(JPH_USE_SSE)
 	return _mm_load_si128(reinterpret_cast<const __m128i *>(inV));
+#elif defined(JPH_USE_VSX)
+	return vec_ld(0, inV);
 #elif defined(JPH_USE_NEON)
 	return vld1q_u32(inV); // ARM doesn't make distinction between aligned or not
 #elif defined(JPH_USE_RVV)
@@ -157,6 +171,8 @@ UVec4 UVec4::sMin(UVec4Arg inV1, UVec4Arg inV2)
 {
 #if defined(JPH_USE_SSE4_1)
 	return _mm_min_epu32(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	return vec_min(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vminq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -178,6 +194,8 @@ UVec4 UVec4::sMax(UVec4Arg inV1, UVec4Arg inV2)
 {
 #if defined(JPH_USE_SSE4_1)
 	return _mm_max_epu32(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	return vec_max(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vmaxq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -199,6 +217,8 @@ UVec4 UVec4::sEquals(UVec4Arg inV1, UVec4Arg inV2)
 {
 #if defined(JPH_USE_SSE)
 	return _mm_cmpeq_epi32(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	return (Type)vec_cmpeq(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vceqq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -225,6 +245,8 @@ UVec4 UVec4::sSelect(UVec4Arg inNotSet, UVec4Arg inSet, UVec4Arg inControl)
 #elif defined(JPH_USE_SSE)
 	__m128 is_set = _mm_castsi128_ps(_mm_srai_epi32(inControl.mValue, 31));
 	return _mm_castps_si128(_mm_or_ps(_mm_and_ps(is_set, _mm_castsi128_ps(inSet.mValue)), _mm_andnot_ps(is_set, _mm_castsi128_ps(inNotSet.mValue))));
+#elif defined(JPH_USE_VSX)
+	return vec_sel(inNotSet.mValue, inSet.mValue, (Type)vec_sra((__vector signed int)inControl.mValue, vec_splats(uint32(31))));
 #elif defined(JPH_USE_NEON)
 	return vbslq_u32(vreinterpretq_u32_s32(vshrq_n_s32(vreinterpretq_s32_u32(inControl.mValue), 31)), inSet.mValue, inNotSet.mValue);
 #elif defined(JPH_USE_RVV)
@@ -251,6 +273,8 @@ UVec4 UVec4::sOr(UVec4Arg inV1, UVec4Arg inV2)
 {
 #if defined(JPH_USE_SSE)
 	return _mm_or_si128(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	return vec_or(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vorrq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -272,6 +296,8 @@ UVec4 UVec4::sXor(UVec4Arg inV1, UVec4Arg inV2)
 {
 #if defined(JPH_USE_SSE)
 	return _mm_xor_si128(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	return vec_xor(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return veorq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -293,6 +319,8 @@ UVec4 UVec4::sAnd(UVec4Arg inV1, UVec4Arg inV2)
 {
 #if defined(JPH_USE_SSE)
 	return _mm_and_si128(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	return vec_and(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vandq_u32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -317,6 +345,8 @@ UVec4 UVec4::sNot(UVec4Arg inV1)
 	return _mm_ternarylogic_epi32(inV1.mValue, inV1.mValue, inV1.mValue, 0b01010101);
 #elif defined(JPH_USE_SSE)
 	return sXor(inV1, sReplicate(0xffffffff));
+#elif defined(JPH_USE_VSX)
+	return vec_nor(inV1.mValue, inV1.mValue);
 #elif defined(JPH_USE_NEON)
 	return vmvnq_u32(inV1.mValue);
 #elif defined(JPH_USE_RVV)
@@ -348,6 +378,8 @@ UVec4 UVec4::operator * (UVec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE4_1)
 	return _mm_mullo_epi32(mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	return vec_mul(mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vmulq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -369,6 +401,8 @@ UVec4 UVec4::operator + (UVec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_add_epi32(mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	return vec_add(mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vaddq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -390,6 +424,8 @@ UVec4 &UVec4::operator += (UVec4Arg inV2)
 {
 #if defined(JPH_USE_SSE)
 	mValue = _mm_add_epi32(mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	mValue = vec_add(mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	mValue = vaddq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -408,6 +444,8 @@ UVec4 UVec4::operator - (UVec4Arg inV2) const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_sub_epi32(mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	return vec_sub(mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vsubq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -429,6 +467,8 @@ UVec4 &UVec4::operator -= (UVec4Arg inV2)
 {
 #if defined(JPH_USE_SSE)
 	mValue = _mm_sub_epi32(mValue, inV2.mValue);
+#elif defined(JPH_USE_VSX)
+	mValue = vec_sub(mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	mValue = vsubq_u32(mValue, inV2.mValue);
 #elif defined(JPH_USE_RVV)
@@ -447,6 +487,8 @@ UVec4 UVec4::SplatX() const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_shuffle_epi32(mValue, _MM_SHUFFLE(0, 0, 0, 0));
+#elif defined(JPH_USE_VSX)
+	return vec_splat(mValue, 0);
 #elif defined(JPH_USE_NEON)
 	return vdupq_laneq_u32(mValue, 0);
 #elif defined(JPH_USE_RVV)
@@ -463,6 +505,8 @@ UVec4 UVec4::SplatY() const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_shuffle_epi32(mValue, _MM_SHUFFLE(1, 1, 1, 1));
+#elif defined(JPH_USE_VSX)
+	return vec_splat(mValue, 1);
 #elif defined(JPH_USE_NEON)
 	return vdupq_laneq_u32(mValue, 1);
 #elif defined(JPH_USE_RVV)
@@ -479,6 +523,8 @@ UVec4 UVec4::SplatZ() const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_shuffle_epi32(mValue, _MM_SHUFFLE(2, 2, 2, 2));
+#elif defined(JPH_USE_VSX)
+	return vec_splat(mValue, 2);
 #elif defined(JPH_USE_NEON)
 	return vdupq_laneq_u32(mValue, 2);
 #elif defined(JPH_USE_RVV)
@@ -495,6 +541,8 @@ UVec4 UVec4::SplatW() const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_shuffle_epi32(mValue, _MM_SHUFFLE(3, 3, 3, 3));
+#elif defined(JPH_USE_VSX)
+	return vec_splat(mValue, 3);
 #elif defined(JPH_USE_NEON)
 	return vdupq_laneq_u32(mValue, 3);
 #elif defined(JPH_USE_RVV)
@@ -511,6 +559,8 @@ Vec4 UVec4::ToFloat() const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_cvtepi32_ps(mValue);
+#elif defined(JPH_USE_VSX)
+	return vec_ctf(mValue, 0);
 #elif defined(JPH_USE_NEON)
 	return vcvtq_f32_u32(mValue);
 #elif defined(JPH_USE_RVV)
@@ -528,6 +578,8 @@ Vec4 UVec4::ReinterpretAsFloat() const
 {
 #if defined(JPH_USE_SSE)
 	return Vec4(_mm_castsi128_ps(mValue));
+#elif defined(JPH_USE_VSX)
+	return (Vec4::Type)mValue;
 #elif defined(JPH_USE_NEON)
 	return vreinterpretq_f32_u32(mValue);
 #else
@@ -541,6 +593,10 @@ UVec4 UVec4::DotV(UVec4Arg inV2) const
 	__m128i mul = _mm_mullo_epi32(mValue, inV2.mValue);
 	__m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
 	return _mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2)));
+#elif defined(JPH_USE_VSX)
+	Type mul = vec_mul(mValue, inV2.mValue);
+	Type sum = vec_add(mul, __builtin_shufflevector(mul, mul, 1, 0, 3, 2));
+	return vec_add(sum, __builtin_shufflevector(sum, sum, 2, 3, 0, 1));
 #elif defined(JPH_USE_NEON)
 	uint32x4_t mul = vmulq_u32(mValue, inV2.mValue);
 	return vdupq_n_u32(vaddvq_u32(mul));
@@ -566,6 +622,10 @@ uint32 UVec4::Dot(UVec4Arg inV2) const
 	__m128i mul = _mm_mullo_epi32(mValue, inV2.mValue);
 	__m128i sum = _mm_add_epi32(mul, _mm_shuffle_epi32(mul, _MM_SHUFFLE(2, 3, 0, 1)));
 	return _mm_cvtsi128_si32(_mm_add_epi32(sum, _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2))));
+#elif defined(JPH_USE_VSX)
+	Type mul = vec_mul(mValue, inV2.mValue);
+	Type sum = vec_add(mul, __builtin_shufflevector(mul, mul, 1, 0, 3, 2));
+	return vec_extract(vec_add(sum, __builtin_shufflevector(sum, sum, 2, 3, 0, 1)), 0);
 #elif defined(JPH_USE_NEON)
 	uint32x4_t mul = vmulq_u32(mValue, inV2.mValue);
 	return vaddvq_u32(mul);
@@ -585,6 +645,8 @@ void UVec4::StoreInt4(uint32 *outV) const
 {
 #if defined(JPH_USE_SSE)
 	_mm_storeu_si128(reinterpret_cast<__m128i *>(outV), mValue);
+#elif defined(JPH_USE_VSX)
+	vec_xst(mValue, 0, outV);
 #elif defined(JPH_USE_NEON)
 	vst1q_u32(outV, mValue);
 #elif defined(JPH_USE_RVV)
@@ -600,6 +662,8 @@ void UVec4::StoreInt4Aligned(uint32 *outV) const
 {
 #if defined(JPH_USE_SSE)
 	_mm_store_si128(reinterpret_cast<__m128i *>(outV), mValue);
+#elif defined(JPH_USE_VSX)
+	vec_st(mValue, 0, outV);
 #elif defined(JPH_USE_NEON)
 	vst1q_u32(outV, mValue); // ARM doesn't make distinction between aligned or not
 #elif defined(JPH_USE_RVV)
@@ -615,6 +679,8 @@ int UVec4::CountTrues() const
 {
 #if defined(JPH_USE_SSE)
 	return CountBits(_mm_movemask_ps(_mm_castsi128_ps(mValue)));
+#elif defined(JPH_USE_VSX)
+	return CountBits(uint32(GetTrues()));
 #elif defined(JPH_USE_NEON)
 	return vaddvq_u32(vshrq_n_u32(mValue, 31));
 #elif defined(JPH_USE_RVV)
@@ -631,6 +697,10 @@ int UVec4::GetTrues() const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_movemask_ps(_mm_castsi128_ps(mValue));
+#elif defined(JPH_USE_VSX)
+	// Gather the sign bit of every component, the bits of a vector are numbered starting at the most significant bit of W
+	const __vector unsigned char perm = { 96, 64, 32, 0, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128 };
+	return int(vec_extract((__vector unsigned long long)vec_vbpermq((__vector unsigned char)mValue, perm), 1));
 #elif defined(JPH_USE_NEON)
 	int32x4_t shift = JPH_NEON_INT32x4(0, 1, 2, 3);
 	return vaddvq_u32(vshlq_u32(vshrq_n_u32(mValue, 31), shift));
@@ -647,22 +717,38 @@ int UVec4::GetTrues() const
 
 bool UVec4::TestAnyTrue() const
 {
+#if defined(JPH_USE_VSX)
+	return vec_any_lt((__vector signed int)mValue, vec_splats(0));
+#else
 	return GetTrues() != 0;
+#endif
 }
 
 bool UVec4::TestAnyXYZTrue() const
 {
+#if defined(JPH_USE_VSX)
+	return vec_any_lt((__vector signed int)__builtin_shufflevector(mValue, mValue, 0, 1, 2, 2), vec_splats(0));
+#else
 	return (GetTrues() & 0b111) != 0;
+#endif
 }
 
 bool UVec4::TestAllTrue() const
 {
+#if defined(JPH_USE_VSX)
+	return vec_all_lt((__vector signed int)mValue, vec_splats(0));
+#else
 	return GetTrues() == 0b1111;
+#endif
 }
 
 bool UVec4::TestAllXYZTrue() const
 {
+#if defined(JPH_USE_VSX)
+	return vec_all_lt((__vector signed int)__builtin_shufflevector(mValue, mValue, 0, 1, 2, 2), vec_splats(0));
+#else
 	return (GetTrues() & 0b111) == 0b111;
+#endif
 }
 
 template <const uint Count>
@@ -672,6 +758,8 @@ UVec4 UVec4::LogicalShiftLeft() const
 
 #if defined(JPH_USE_SSE)
 	return _mm_slli_epi32(mValue, Count);
+#elif defined(JPH_USE_VSX)
+	return vec_sl(mValue, vec_splats(uint32(Count)));
 #elif defined(JPH_USE_NEON)
 	return vshlq_n_u32(mValue, Count);
 #elif defined(JPH_USE_RVV)
@@ -693,6 +781,8 @@ UVec4 UVec4::LogicalShiftRight() const
 
 #if defined(JPH_USE_SSE)
 	return _mm_srli_epi32(mValue, Count);
+#elif defined(JPH_USE_VSX)
+	return vec_sr(mValue, vec_splats(uint32(Count)));
 #elif defined(JPH_USE_NEON)
 	return vshrq_n_u32(mValue, Count);
 #elif defined(JPH_USE_RVV)
@@ -714,6 +804,8 @@ UVec4 UVec4::ArithmeticShiftRight() const
 
 #if defined(JPH_USE_SSE)
 	return _mm_srai_epi32(mValue, Count);
+#elif defined(JPH_USE_VSX)
+	return (Type)vec_sra((__vector signed int)mValue, vec_splats(uint32(Count)));
 #elif defined(JPH_USE_NEON)
 	return vreinterpretq_u32_s32(vshrq_n_s32(vreinterpretq_s32_u32(mValue), Count));
 #elif defined(JPH_USE_RVV)
@@ -735,6 +827,9 @@ UVec4 UVec4::Expand4Uint16Lo() const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_unpacklo_epi16(mValue, _mm_castps_si128(_mm_setzero_ps()));
+#elif defined(JPH_USE_VSX)
+	const __vector unsigned short zero = vec_splats((unsigned short)0);
+	return (Type)__builtin_shufflevector((__vector unsigned short)mValue, zero, 0, 8, 1, 8, 2, 8, 3, 8);
 #elif defined(JPH_USE_NEON)
 	uint16x4_t value = vget_low_u16(vreinterpretq_u16_u32(mValue));
 	uint16x4_t zero = vdup_n_u16(0);
@@ -758,6 +853,9 @@ UVec4 UVec4::Expand4Uint16Hi() const
 {
 #if defined(JPH_USE_SSE)
 	return _mm_unpackhi_epi16(mValue, _mm_castps_si128(_mm_setzero_ps()));
+#elif defined(JPH_USE_VSX)
+	const __vector unsigned short zero = vec_splats((unsigned short)0);
+	return (Type)__builtin_shufflevector((__vector unsigned short)mValue, zero, 4, 8, 5, 8, 6, 8, 7, 8);
 #elif defined(JPH_USE_NEON)
 	uint16x4_t value = vget_high_u16(vreinterpretq_u16_u32(mValue));
 	uint16x4_t zero = vdup_n_u16(0);
@@ -781,6 +879,9 @@ UVec4 UVec4::Expand4Byte0() const
 {
 #if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff03), int(0xffffff02), int(0xffffff01), int(0xffffff00)));
+#elif defined(JPH_USE_VSX)
+	const __vector unsigned char zero = vec_splats((unsigned char)0);
+	return (Type)__builtin_shufflevector((__vector unsigned char)mValue, zero, 0, 16, 16, 16, 1, 16, 16, 16, 2, 16, 16, 16, 3, 16, 16, 16);
 #elif defined(JPH_USE_NEON)
 	uint8x16_t idx = JPH_NEON_UINT8x16(0x00, 0x7f, 0x7f, 0x7f, 0x01, 0x7f, 0x7f, 0x7f, 0x02, 0x7f, 0x7f, 0x7f, 0x03, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
@@ -803,6 +904,9 @@ UVec4 UVec4::Expand4Byte4() const
 {
 #if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff07), int(0xffffff06), int(0xffffff05), int(0xffffff04)));
+#elif defined(JPH_USE_VSX)
+	const __vector unsigned char zero = vec_splats((unsigned char)0);
+	return (Type)__builtin_shufflevector((__vector unsigned char)mValue, zero, 4, 16, 16, 16, 5, 16, 16, 16, 6, 16, 16, 16, 7, 16, 16, 16);
 #elif defined(JPH_USE_NEON)
 	uint8x16_t idx = JPH_NEON_UINT8x16(0x04, 0x7f, 0x7f, 0x7f, 0x05, 0x7f, 0x7f, 0x7f, 0x06, 0x7f, 0x7f, 0x7f, 0x07, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
@@ -825,6 +929,9 @@ UVec4 UVec4::Expand4Byte8() const
 {
 #if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff0b), int(0xffffff0a), int(0xffffff09), int(0xffffff08)));
+#elif defined(JPH_USE_VSX)
+	const __vector unsigned char zero = vec_splats((unsigned char)0);
+	return (Type)__builtin_shufflevector((__vector unsigned char)mValue, zero, 8, 16, 16, 16, 9, 16, 16, 16, 10, 16, 16, 16, 11, 16, 16, 16);
 #elif defined(JPH_USE_NEON)
 	uint8x16_t idx = JPH_NEON_UINT8x16(0x08, 0x7f, 0x7f, 0x7f, 0x09, 0x7f, 0x7f, 0x7f, 0x0a, 0x7f, 0x7f, 0x7f, 0x0b, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
@@ -847,6 +954,9 @@ UVec4 UVec4::Expand4Byte12() const
 {
 #if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff0f), int(0xffffff0e), int(0xffffff0d), int(0xffffff0c)));
+#elif defined(JPH_USE_VSX)
+	const __vector unsigned char zero = vec_splats((unsigned char)0);
+	return (Type)__builtin_shufflevector((__vector unsigned char)mValue, zero, 12, 16, 16, 16, 13, 16, 16, 16, 14, 16, 16, 16, 15, 16, 16, 16);
 #elif defined(JPH_USE_NEON)
 	uint8x16_t idx = JPH_NEON_UINT8x16(0x0c, 0x7f, 0x7f, 0x7f, 0x0d, 0x7f, 0x7f, 0x7f, 0x0e, 0x7f, 0x7f, 0x7f, 0x0f, 0x7f, 0x7f, 0x7f);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
@@ -867,7 +977,7 @@ UVec4 UVec4::Expand4Byte12() const
 
 UVec4 UVec4::ShiftComponents4Minus(int inCount) const
 {
-#if defined(JPH_USE_SSE4_1) || defined(JPH_USE_NEON)
+#if defined(JPH_USE_SSE4_1) || defined(JPH_USE_VSX) || defined(JPH_USE_NEON)
 	alignas(UVec4) static constexpr uint32 sFourMinusXShuffle[5][4] =
 	{
 		{ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
@@ -880,6 +990,10 @@ UVec4 UVec4::ShiftComponents4Minus(int inCount) const
 
 #if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, *reinterpret_cast<const UVec4::Type *>(sFourMinusXShuffle[inCount]));
+#elif defined(JPH_USE_VSX)
+	// vec_perm only looks at the lowest 5 bits of an index so 0xff selects the last byte of the 2nd (zero) vector
+	__vector unsigned char idx = (__vector unsigned char)vec_ld(0, sFourMinusXShuffle[inCount]);
+	return (Type)vec_perm((__vector unsigned char)mValue, vec_splats((unsigned char)0), idx);
 #elif defined(JPH_USE_NEON)
 	uint8x16_t idx = vreinterpretq_u8_u32(*reinterpret_cast<const UVec4::Type *>(sFourMinusXShuffle[inCount]));
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));

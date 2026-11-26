@@ -244,7 +244,16 @@
 		#define JPH_CPU_BIG_ENDIAN
 	#endif
 	#define JPH_VECTOR_ALIGNMENT 16
-	#define JPH_DVECTOR_ALIGNMENT 8
+	#if defined(__VSX__) && defined(__POWER8_VECTOR__) && !defined(JPH_CPU_BIG_ENDIAN)
+		// VSX is only used on Little Endian (which implies POWER8 or newer)
+		#define JPH_USE_VSX
+		#define JPH_DVECTOR_ALIGNMENT 32
+		#if !defined(JPH_CROSS_PLATFORM_DETERMINISTIC) && !defined(JPH_USE_FMADD) // FMA is not compatible with cross platform determinism
+			#define JPH_USE_FMADD // All CPUs that support VSX support fused multiply add
+		#endif
+	#else
+		#define JPH_DVECTOR_ALIGNMENT 8
+	#endif
 #elif defined(__loongarch__)
 	// LoongArch CPU architecture
 	#define JPH_CPU_LOONGARCH
@@ -538,6 +547,12 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 	#endif
 #elif defined(JPH_USE_RVV)
 	#include <riscv_vector.h>
+#elif defined(JPH_USE_VSX)
+	#include <altivec.h>
+	// altivec.h can define these as macros which conflicts with C++
+	#undef vector
+	#undef pixel
+	#undef bool
 #endif
 JPH_SUPPRESS_WARNINGS_STD_END
 
