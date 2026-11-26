@@ -43,6 +43,32 @@ Quat Quat::operator * (QuatArg inRHS) const
 
 	// [(aw+bz)+(dx-cy),(bw+cx)+(dy-az),(cw+ay)+(dz-bx),-(ax+by)+(dw-cz)]
 	return Quat(Vec4(m7));
+#elif defined(JPH_USE_VSX)
+	Vec4::Type abcd = mValue.mValue;
+	Vec4::Type xyzw = inRHS.mValue.mValue;
+
+	Vec4::Type abca = __builtin_shufflevector(abcd, abcd, 0, 1, 2, 0);
+	Vec4::Type bcab = __builtin_shufflevector(abcd, abcd, 1, 2, 0, 1);
+	Vec4::Type cabc = __builtin_shufflevector(abcd, abcd, 2, 0, 1, 2);
+	Vec4::Type dddd = vec_splat(abcd, 3);
+
+	Vec4::Type wwwx = __builtin_shufflevector(xyzw, xyzw, 3, 3, 3, 0);
+	Vec4::Type zxyy = __builtin_shufflevector(xyzw, xyzw, 2, 0, 1, 1);
+	Vec4::Type yzxz = __builtin_shufflevector(xyzw, xyzw, 1, 2, 0, 2);
+
+	Vec4::Type m1 = vec_mul(abca, wwwx);
+	Vec4::Type m2 = vec_mul(bcab, zxyy);
+	Vec4::Type m3 = vec_add(m1, m2);
+
+	const UVec4::Type w_neg_mask = { 0, 0, 0, 0x80000000u };
+	m3 = (Vec4::Type)vec_xor((UVec4::Type)m3, w_neg_mask);
+
+	Vec4::Type m4 = vec_mul(dddd, xyzw);
+	Vec4::Type m5 = vec_mul(cabc, yzxz);
+	Vec4::Type m6 = vec_sub(m4, m5);
+	Vec4::Type m7 = vec_add(m3, m6);
+
+	return Quat(Vec4(m7));
 #elif defined(JPH_USE_NEON)
 	float32x4_t abcd = mValue.mValue;
 	float32x4_t xyzw = inRHS.mValue.mValue;
@@ -117,6 +143,29 @@ Quat Quat::sMultiplyImaginary(Vec3Arg inLHS, QuatArg inRHS)
 
 	// [(aw+bz)-cy,(bw+cx)-az,(cw+ay)-bx,-(ax+by)-cz]
 	return Quat(Vec4(_mm_sub_ps(m3, m4)));
+#elif defined(JPH_USE_VSX)
+	Vec4::Type abc0 = inLHS.mValue;
+	Vec4::Type xyzw = inRHS.mValue.mValue;
+
+	Vec4::Type abca = __builtin_shufflevector(abc0, abc0, 0, 1, 2, 0);
+	Vec4::Type bcab = __builtin_shufflevector(abc0, abc0, 1, 2, 0, 1);
+	Vec4::Type cabc = __builtin_shufflevector(abc0, abc0, 2, 0, 1, 2);
+
+	Vec4::Type wwwx = __builtin_shufflevector(xyzw, xyzw, 3, 3, 3, 0);
+	Vec4::Type zxyy = __builtin_shufflevector(xyzw, xyzw, 2, 0, 1, 1);
+	Vec4::Type yzxz = __builtin_shufflevector(xyzw, xyzw, 1, 2, 0, 2);
+
+	Vec4::Type m1 = vec_mul(abca, wwwx);
+	Vec4::Type m2 = vec_mul(bcab, zxyy);
+	Vec4::Type m3 = vec_add(m1, m2);
+
+	const UVec4::Type w_neg_mask = { 0, 0, 0, 0x80000000u };
+	m3 = (Vec4::Type)vec_xor((UVec4::Type)m3, w_neg_mask);
+
+	Vec4::Type m4 = vec_mul(cabc, yzxz);
+	Vec4::Type m7 = vec_sub(m3, m4);
+
+	return Quat(Vec4(m7));
 #elif defined(JPH_USE_NEON)
 	float32x4_t abc0 = inLHS.mValue;
 	float32x4_t xyzw = inRHS.mValue.mValue;
