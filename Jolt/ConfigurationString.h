@@ -44,6 +44,9 @@ inline const char *GetConfigurationString()
 #ifdef JPH_USE_NEON
 		"NEON "
 #endif
+#ifdef JPH_USE_VSX
+		"VSX "
+#endif
 #ifdef JPH_USE_SSE
 		"SSE2 "
 #endif
