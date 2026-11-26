@@ -19,6 +19,12 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * `TriangleShape` with a convex radius counted the convex radius twice in `ESupportMode::IncludeConvexRadius` and `ESupportMode::Default` mode, and ignored it in `ESupportMode::ExcludeConvexRadius` mode. This e.g. caused triangle vs plane collisions to report collisions too early with too large a penetration depth. The convex radius is now also scaled.
 * `RotatedTranslatedShape::CollideSoftBodyVertices` did not transform the scale before passing it to the inner shape, resulting in incorrect soft body collision when the shape was rotated and non-uniformly scaled.
 
+### Known issues
+
+* GCC 16 miscompiles Jolt on PowerPC. Both issues below are compiler bugs that are not present in GCC 14, clang is not affected. Until they're fixed in GCC you can work around them by adding compiler flags, e.g. `./cmake_linux_clang_gcc.sh Distribution g++ -DCMAKE_CXX_FLAGS="-fno-optimize-sibling-calls -fno-peephole2"`:
+	* The tail recursion optimization of `sCreateVertices` in `Vec3.cpp` overwrites variables of its caller, which corrupts `Vec3::sUnitSphere` (the `TestCapsuleVsConvexHullInertia` unit test fails). This may also affect other platforms that don't use SSE or NEON. Work around: `-fno-optimize-sibling-calls`.
+	* When compiling with `-mcpu=power9` or higher, clearing the sign bit of a float through integer operations gives a wrong result, which breaks e.g. `Quat::EnsureWPositive` and `Quat::GetAxisAngle` (the `TestQuatCompressUnitQuat` unit test fails). Work around: `-fno-peephole2`.
+
 ## v5.7.0
 
 ### New functionality
