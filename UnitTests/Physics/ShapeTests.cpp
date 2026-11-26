@@ -4,6 +4,7 @@
 
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
+#include "LoggingContactListener.h"
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
@@ -1199,5 +1200,103 @@ TEST_SUITE("ShapeTests")
 		CHECK(v.mCollidingShapeIndex == cCollidingShapeIndex);
 		CHECK_APPROX_EQUAL(v.mLargestPenetration, 0.5f);
 		CHECK_APPROX_EQUAL(v.mCollisionPlane.GetNormal(), Vec3::sAxisX());
+	}
+
+	// Test that the supporting face of a capsule reaches as far as the capsule does in the direction of the face
+	TEST_CASE("TestCapsuleShapeSupportingFace")
+	{
+		const float cRadius = 0.1f;
+
+		// A regular capsule and a capsule with a cylinder that is shorter than cCapsuleProjectionSlop
+		for (float half_height : { 0.3f, 0.005f })
+		{
+			CAPTURE(half_height);
+			RefConst<CapsuleShape> shape = new CapsuleShape(half_height, cRadius);
+
+			// Go from a direction along the axis of the capsule to a direction perpendicular to it
+			for (int angle = 0; angle <= 90; angle += 5)
+			{
+				CAPTURE(angle);
+				Vec3 direction(Sin(DegreesToRadians(float(angle))), Cos(DegreesToRadians(float(angle))), 0);
+				Shape::SupportingFace face;
+				shape->GetSupportingFace(SubShapeID(), direction, Vec3::sOne(), Mat44::sIdentity(), face);
+
+				// Along the axis there is only 1 point so no face, perpendicular to the axis the face is the side of the cylinder
+				if (angle == 0)
+					CHECK(face.empty());
+				else if (angle == 90)
+					CHECK(face.size() == 2);
+
+				// If there is a face, it should reach as far as the capsule does
+				if (!face.empty())
+				{
+					float capsule_max = half_height * abs(direction.GetY()) + cRadius;
+					float face_max = -FLT_MAX;
+					for (Vec3 v : face)
+						face_max = max(face_max, -v.Dot(direction));
+					CHECK_APPROX_EQUAL(face_max, capsule_max, 0.1f * cCapsuleProjectionSlop);
+				}
+			}
+		}
+	}
+
+	// Let a capsule intersect with the floor. Its contact points should be as deep as the capsule is and the penetration should be resolved until the penetration slop.
+	static void sTestCapsulePenetratingFloor(float inHalfHeight, float inRadius, float inAngle, bool inFloorIsPlane)
+	{
+		CAPTURE(inHalfHeight);
+		CAPTURE(inAngle);
+		CAPTURE(inFloorIsPlane);
+
+		const float cPenetration = 0.08f;
+
+		PhysicsTestContext c;
+		LoggingContactListener listener;
+		c.GetSystem()->SetContactListener(&listener);
+
+		// Create floor with its surface at Y = 0
+		Body &floor = inFloorIsPlane? c.CreateBody(BodyCreationSettings(new PlaneShape(Plane(Vec3::sAxisY(), 0.0f)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate) : c.CreateFloor();
+
+		// Create capsule with its axis at inAngle from the floor normal and its lowest point cPenetration below the floor, don't allow it to rotate so that it keeps this angle
+		float center_to_lowest_point = inHalfHeight * Cos(inAngle) + inRadius;
+		BodyCreationSettings capsule_settings(new CapsuleShape(inHalfHeight, inRadius), RVec3(0, center_to_lowest_point - cPenetration, 0), Quat::sRotation(Vec3::sAxisZ(), inAngle), EMotionType::Dynamic, Layers::MOVING);
+		capsule_settings.mAllowedDOFs = EAllowedDOFs::TranslationX | EAllowedDOFs::TranslationY | EAllowedDOFs::TranslationZ;
+		Body &capsule = c.CreateBody(capsule_settings, EActivation::Activate);
+		CHECK(floor.GetID() < capsule.GetID());
+
+		// Simulate a step and check the contact that was added
+		c.SimulateSingleStep();
+		int index = listener.Find(LoggingContactListener::EType::Add, floor.GetID(), capsule.GetID());
+		CHECK(index >= 0);
+		if (index >= 0)
+		{
+			const ContactManifold &manifold = listener.GetEntry(size_t(index)).mManifold;
+			CHECK_APPROX_EQUAL(manifold.mWorldSpaceNormal, Vec3::sAxisY(), 1.0e-3f); // Normal should move body 2 (the capsule) out of collision
+			CHECK_APPROX_EQUAL(manifold.mPenetrationDepth, cPenetration, 1.0e-3f);
+
+			// The deepest contact point should be as deep as the penetration depth
+			float max_penetration = -FLT_MAX;
+			for (ContactPoints::size_type i = 0; i < manifold.mRelativeContactPointsOn1.size(); ++i)
+				max_penetration = max(max_penetration, (manifold.mRelativeContactPointsOn1[i] - manifold.mRelativeContactPointsOn2[i]).Dot(manifold.mWorldSpaceNormal));
+			CHECK_APPROX_EQUAL(max_penetration, cPenetration, 1.0e-3f);
+		}
+
+		// Simulate and test that the penetration is resolved until the penetration slop
+		c.Simulate(1.0f);
+		float lowest_point = float(capsule.GetPosition().GetY()) - center_to_lowest_point;
+		CHECK_APPROX_EQUAL(lowest_point, -c.GetSystem()->GetPhysicsSettings().mPenetrationSlop, 1.0e-3f);
+	}
+
+	// Test that a capsule that intersects with a box / plane is pushed out, also when it has a very short cylinder and is resting on one of its ends
+	TEST_CASE("TestCapsuleShapePenetratingFloor")
+	{
+		for (bool floor_is_plane : { false, true })
+			for (float angle : { 10.0f, 45.0f, 90.0f }) // From resting on its end to lying on its side
+			{
+				// A capsule with a cylinder that is shorter than cCapsuleProjectionSlop
+				sTestCapsulePenetratingFloor(0.005f, 0.1f, DegreesToRadians(angle), floor_is_plane);
+
+				// A regular capsule
+				sTestCapsulePenetratingFloor(0.3f, 0.1f, DegreesToRadians(angle), floor_is_plane);
+			}
 	}
 }
