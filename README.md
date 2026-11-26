@@ -112,6 +112,7 @@ Why create yet another physics engine? Firstly, it has been a personal learning 
 
 * On x86/x64 the minimal requirements are SSE2. The library can be compiled using SSE4.1, SSE4.2, AVX, AVX2, or AVX512.
 * On ARM64 (AArch64) the library uses NEON and is compatible with Armv8-A. On ARM32 (AArch32) it doesn't use any special CPU instructions.
+* On PowerPC64 Little Endian the library uses VSX and requires a POWER8 or newer CPU.
 
 ## Documentation
 

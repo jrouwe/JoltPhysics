@@ -4,6 +4,10 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ## Unreleased changes
 
+### New functionality
+
+* Added support for PowerPC VSX, the SIMD extension for PowerPC. It is used automatically on 64-bit PowerPC Little Endian.
+
 ### Bug fixes
 
 * Floating point exceptions are now disabled while executing compute shaders on the CPU. GPUs don't raise FP exceptions and MSVC can vectorize the emulated shader code using SIMD lanes with uninitialized data, causing spurious FP exceptions (e.g. an overflow in `HairGridNormalize`).
