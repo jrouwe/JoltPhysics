@@ -201,11 +201,17 @@ void CapsuleShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inD
 	// Get projection on inDirection
 	// Note that inDirection is not normalized, so we need to divide by inDirection.Length() to get the actual projection
 	// We've multiplied both sides of the if below with inDirection.Length()
+	float direction_len = inDirection.Length();
 	float proj_top = support_top.Dot(inDirection);
 	float proj_bottom = support_bottom.Dot(inDirection);
 
-	// If projection is roughly equal then return line, otherwise we return nothing as there's only 1 point
-	if (abs(proj_top - proj_bottom) < cCapsuleProjectionSlop * inDirection.Length())
+	// If projection is roughly equal then return line, otherwise we return nothing as there's only 1 point.
+	// The line lies on the side of the cylinder while the support point of the capsule lies on one of the spheres,
+	// which is scaled_radius * (1 - len / direction_len) further away. We only return the line if this distance is small,
+	// otherwise a capsule with a cylinder shorter than cCapsuleProjectionSlop would return its side for every direction
+	// (e.g. when it is resting on one of its ends) and the contact points would not be at the deepest point of the capsule.
+	if (abs(proj_top - proj_bottom) < cCapsuleProjectionSlop * direction_len
+		&& scaled_radius * (direction_len - len) < 0.1f * cCapsuleProjectionSlop * direction_len)
 	{
 		outVertices.push_back(inCenterOfMassTransform * support_top);
 		outVertices.push_back(inCenterOfMassTransform * support_bottom);
