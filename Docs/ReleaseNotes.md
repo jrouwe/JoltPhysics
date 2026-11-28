@@ -19,6 +19,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * `TriangleShape` with a convex radius counted the convex radius twice in `ESupportMode::IncludeConvexRadius` and `ESupportMode::Default` mode, and ignored it in `ESupportMode::ExcludeConvexRadius` mode. This e.g. caused triangle vs plane collisions to report collisions too early with too large a penetration depth. The convex radius is now also scaled.
 * `RotatedTranslatedShape::CollideSoftBodyVertices` did not transform the scale before passing it to the inner shape, resulting in incorrect soft body collision when the shape was rotated and non-uniformly scaled.
 * `Vec3::ReinterpretAsInt`, `Vec4::ReinterpretAsInt` and `UVec4::ReinterpretAsFloat` violated the strict aliasing rule on platforms that don't use SSE or NEON (e.g. PowerPC, LoongArch and RISC-V). When compiled with GCC 16 and link time optimizations this caused the simulation to produce incorrect results (the `PhysicsDeterminismTests` failed and could hang on PowerPC 64-bit Little Endian).
+* `TaperedCapsuleShape::GetVolume` returned the volume of the bounding box of the shape. It now returns the exact volume.
 
 ## v5.7.0
 

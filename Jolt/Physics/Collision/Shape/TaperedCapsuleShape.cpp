@@ -253,6 +253,23 @@ void TaperedCapsuleShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3
 	}
 }
 
+float TaperedCapsuleShape::GetVolume() const
+{
+	// The shape consists of a spherical cap of the top sphere, a truncated cone and a spherical cap of the bottom sphere.
+	// The cone touches the spheres at angle alpha (see TaperedCapsuleShape.gliffy), so the planes separating the parts are
+	// at height sin(alpha) * radius above the sphere centers and the radii of the cone are cos(alpha) * radius.
+	float cos_alpha_sq = 1.0f - Square(mSinAlpha);
+	float top_cap_height = mTopRadius * (1.0f - mSinAlpha);
+	float bottom_cap_height = mBottomRadius * (1.0f + mSinAlpha);
+	float cone_height = (mTopCenter - mBottomCenter) * cos_alpha_sq;
+
+	// Volume of spherical cap: pi / 3 * h^2 * (3 * r - h)
+	// Volume of truncated cone: pi / 3 * h * (r1^2 + r1 * r2 + r2^2)
+	return JPH_PI / 3.0f * (Square(top_cap_height) * (3.0f * mTopRadius - top_cap_height)
+		+ Square(bottom_cap_height) * (3.0f * mBottomRadius - bottom_cap_height)
+		+ cone_height * cos_alpha_sq * (Square(mTopRadius) + mTopRadius * mBottomRadius + Square(mBottomRadius)));
+}
+
 MassProperties TaperedCapsuleShape::GetMassProperties() const
 {
 	AABox box = GetInertiaApproximation();
