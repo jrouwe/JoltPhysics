@@ -337,6 +337,12 @@ DYLD_INSERT_LIBRARIES=/usr/lib/libRPAC.dylib PERFC_SUPPRESSION_FILE=<path to>/Bu
 
 Note that the checker only reports an issue once per unique backtrace.
 
+## Known issues
+
+* GCC 16 miscompiles Jolt on PowerPC. Both issues below are compiler bugs that are not present in GCC 14, clang is not affected. Until they're fixed in GCC you can work around them by adding compiler flags, e.g. `./cmake_linux_clang_gcc.sh Distribution g++ -DCMAKE_CXX_FLAGS="-fno-optimize-sibling-calls -fno-peephole2"`:
+	* The tail recursion optimization of `sCreateVertices` in `Vec3.cpp` overwrites variables of its caller, which corrupts `Vec3::sUnitSphere` (the `TestCapsuleVsConvexHullInertia` unit test fails). This may also affect other platforms that don't use SSE or NEON. Work around: `-fno-optimize-sibling-calls`.
+	* When compiling with `-mcpu=power9` or higher, clearing the sign bit of a float through integer operations gives a wrong result, which breaks e.g. `Quat::EnsureWPositive` and `Quat::GetAxisAngle` (the `TestQuatCompressUnitQuat` unit test fails). Work around: `-fno-peephole2`.
+
 ## Doxygen on Windows
 
 Documentation can be generated through doxygen:
