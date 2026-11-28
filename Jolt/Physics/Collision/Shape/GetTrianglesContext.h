@@ -114,27 +114,46 @@ public:
 	}
 
 private:
-	/// Recursive helper function for creating a sphere
+	/// Helper function for creating a sphere, subdivides the triangle inV1, inV2, inV3 inLevel times.
 	template <class A>
 	static void		sCreateUnitSphereHelper(A &ioVertices, Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, int inLevel)
 	{
-		Vec3 center1 = (inV1 + inV2).Normalized();
-		Vec3 center2 = (inV2 + inV3).Normalized();
-		Vec3 center3 = (inV3 + inV1).Normalized();
+		struct Triangle
+		{
+			Vec3	mV1;
+			Vec3	mV2;
+			Vec3	mV3;
+			int		mLevel;
+		};
 
-		if (inLevel > 0)
+		// Every subdivision replaces 1 triangle with 4, so the stack grows by 3 per level
+		constexpr int cMaxLevel = 8;
+		JPH_ASSERT(inLevel >= 0 && inLevel <= cMaxLevel);
+		Triangle stack[3 * cMaxLevel + 1];
+		int stack_size = 0;
+		stack[stack_size++] = { inV1, inV2, inV3, inLevel };
+
+		while (stack_size > 0)
 		{
-			int new_level = inLevel - 1;
-			sCreateUnitSphereHelper(ioVertices, inV1, center1, center3, new_level);
-			sCreateUnitSphereHelper(ioVertices, center1, center2, center3, new_level);
-			sCreateUnitSphereHelper(ioVertices, center1, inV2, center2, new_level);
-			sCreateUnitSphereHelper(ioVertices, center3, center2, inV3, new_level);
-		}
-		else
-		{
-			ioVertices.push_back(inV1);
-			ioVertices.push_back(inV2);
-			ioVertices.push_back(inV3);
+			Triangle t = stack[--stack_size];
+			if (t.mLevel > 0)
+			{
+				Vec3 center1 = (t.mV1 + t.mV2).Normalized();
+				Vec3 center2 = (t.mV2 + t.mV3).Normalized();
+				Vec3 center3 = (t.mV3 + t.mV1).Normalized();
+
+				int new_level = t.mLevel - 1;
+				stack[stack_size++] = { center3, center2, t.mV3, new_level };
+				stack[stack_size++] = { center1, t.mV2, center2, new_level };
+				stack[stack_size++] = { center1, center2, center3, new_level };
+				stack[stack_size++] = { t.mV1, center1, center3, new_level };
+			}
+			else
+			{
+				ioVertices.push_back(t.mV1);
+				ioVertices.push_back(t.mV2);
+				ioVertices.push_back(t.mV3);
+			}
 		}
 	}
 

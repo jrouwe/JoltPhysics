@@ -97,7 +97,7 @@ public:
 	virtual Stats			GetStats() const override												{ return Stats(sizeof(*this), 0); }
 
 	// See Shape::GetVolume
-	virtual float			GetVolume() const override												{ return GetLocalBounds().GetVolume(); } // Volume is approximate!
+	virtual float			GetVolume() const override;
 
 	// See Shape::IsValidScale
 	virtual bool			IsValidScale(Vec3Arg inScale) const override;

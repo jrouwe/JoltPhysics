@@ -1200,4 +1200,159 @@ TEST_SUITE("ShapeTests")
 		CHECK_APPROX_EQUAL(v.mLargestPenetration, 0.5f);
 		CHECK_APPROX_EQUAL(v.mCollisionPlane.GetNormal(), Vec3::sAxisX());
 	}
+
+	// Checks that GetTrianglesStart / Next returns a closed, outward facing mesh with all vertices on the surface of the shape.
+	// inDistanceToSurface receives the vertex in shape space (i.e. not relative to the center of mass) and should return 0 if the vertex is on the surface.
+	// The volume of the mesh must be in the range [inMinVolume, inMaxVolume].
+	template <class F>
+	static void sCheckClosedTriangleMesh(const Shape *inShape, uint inExpectedNumTriangles, float inMinVolume, float inMaxVolume, const F &inDistanceToSurface)
+	{
+		Vec3 com = inShape->GetCenterOfMass();
+
+		Shape::GetTrianglesContext context;
+		inShape->GetTrianglesStart(context, AABox::sBiggest(), Vec3::sZero(), Quat::sIdentity(), Vec3::sOne());
+
+		Array<Vec3> unique_vertices;
+		Array<std::pair<int, int>> edges;
+		uint num_triangles = 0;
+		float volume = 0.0f;
+		for (;;)
+		{
+			constexpr int cMaxTriangles = Shape::cGetTrianglesMinTrianglesRequested;
+			Float3 vertices[cMaxTriangles * 3];
+			int count = inShape->GetTrianglesNext(context, cMaxTriangles, vertices);
+			if (count == 0)
+				break;
+			num_triangles += count;
+
+			for (int t = 0; t < count; ++t)
+			{
+				int idx[3];
+				Vec3 v[3];
+				for (int i = 0; i < 3; ++i)
+				{
+					// Check that the vertex is on the surface
+					v[i] = Vec3(vertices[3 * t + i]);
+					CHECK(abs(inDistanceToSurface(v[i] + com)) < 1.0e-5f);
+
+					// Find unique vertex index
+					idx[i] = -1;
+					for (int j = 0; j < (int)unique_vertices.size(); ++j)
+						if (unique_vertices[j].IsClose(v[i], 1.0e-10f))
+						{
+							idx[i] = j;
+							break;
+						}
+					if (idx[i] == -1)
+					{
+						idx[i] = (int)unique_vertices.size();
+						unique_vertices.push_back(v[i]);
+					}
+				}
+
+				// Check that the triangle is not degenerate and facing outwards
+				Vec3 normal = (v[1] - v[0]).Cross(v[2] - v[0]);
+				CHECK(normal.Length() > 1.0e-4f);
+				CHECK(normal.Dot(v[0] + v[1] + v[2]) > 0.0f);
+
+				// Accumulate volume (divergence theorem)
+				volume += v[0].Dot(v[1].Cross(v[2])) / 6.0f;
+
+				for (int i = 0; i < 3; ++i)
+					edges.push_back({ idx[i], idx[(i + 1) % 3] });
+			}
+		}
+		CHECK(num_triangles == inExpectedNumTriangles);
+
+		// Check that the mesh is closed: every edge is used exactly once in each direction
+		QuickSort(edges.begin(), edges.end());
+		for (size_t i = 0; i < edges.size(); ++i)
+		{
+			CHECK((i == 0 || edges[i] != edges[i - 1]));
+			CHECK(std::binary_search(edges.begin(), edges.end(), std::pair<int, int>(edges[i].second, edges[i].first)));
+		}
+
+		// Check the volume of the mesh
+		CHECK(volume >= inMinVolume);
+		CHECK(volume <= inMaxVolume);
+	}
+
+	TEST_CASE("TestConvexShapeGetTriangles")
+	{
+		const float cRadius = 2.0f;
+		const float cHalfHeight = 1.5f;
+
+		// The meshes of curved shapes are inscribed in the shape so their volume is slightly smaller
+		const float cMinVolumeFraction = 0.89f;
+
+		{
+			RefConst<Shape> sphere = new SphereShape(cRadius);
+			float v = sphere->GetVolume();
+			sCheckClosedTriangleMesh(sphere, 128, cMinVolumeFraction * v, v, [cRadius](Vec3Arg inV) { return inV.Length() - cRadius; });
+		}
+
+		{
+			const Vec3 cHalfExtent(1.0f, 2.0f, 3.0f);
+			RefConst<Shape> box = new BoxShape(cHalfExtent);
+			float v = box->GetVolume();
+			sCheckClosedTriangleMesh(box, 12, 0.9999f * v, 1.0001f * v, [cHalfExtent](Vec3Arg inV) { return (inV.Abs() - cHalfExtent).ReduceMax(); });
+		}
+
+		{
+			RefConst<Shape> cylinder = new CylinderShape(cHalfHeight, cRadius);
+			float v = cylinder->GetVolume();
+			sCheckClosedTriangleMesh(cylinder, 32, cMinVolumeFraction * v, v, [cHalfHeight, cRadius](Vec3Arg inV) { return max(abs(inV.GetY()) - cHalfHeight, Vec3(inV.GetX(), 0, inV.GetZ()).Length() - cRadius); });
+		}
+
+		{
+			RefConst<Shape> capsule = new CapsuleShape(cHalfHeight, cRadius);
+			float v = capsule->GetVolume();
+			sCheckClosedTriangleMesh(capsule, 160, cMinVolumeFraction * v, v, [cHalfHeight, cRadius](Vec3Arg inV) { return (inV - Vec3(0, Clamp(inV.GetY(), -cHalfHeight, cHalfHeight), 0)).Length() - cRadius; });
+		}
+
+		for (float top_radius : { 1.0f, 2.0f })
+		{
+			float bottom_radius = 3.0f - top_radius;
+
+			{
+				RefConst<Shape> tapered_cylinder = TaperedCylinderShapeSettings(cHalfHeight, top_radius, bottom_radius).Create().Get();
+				float v = tapered_cylinder->GetVolume();
+				sCheckClosedTriangleMesh(tapered_cylinder, 28, cMinVolumeFraction * v, v, [cHalfHeight, top_radius, bottom_radius](Vec3Arg inV) {
+					float fraction = (inV.GetY() + cHalfHeight) / (2.0f * cHalfHeight);
+					float radius = bottom_radius + fraction * (top_radius - bottom_radius);
+					return max(abs(inV.GetY()) - cHalfHeight, Vec3(inV.GetX(), 0, inV.GetZ()).Length() - radius);
+				});
+			}
+
+			{
+				RefConst<Shape> tapered_capsule = TaperedCapsuleShapeSettings(cHalfHeight, top_radius, bottom_radius).Create().Get();
+
+				float v = tapered_capsule->GetVolume();
+
+				// The vertices are the support points of the shape, so they lie on either the top or the bottom sphere
+				sCheckClosedTriangleMesh(tapered_capsule, 128, cMinVolumeFraction * v, v, [cHalfHeight, top_radius, bottom_radius](Vec3Arg inV) {
+					return min((inV - Vec3(0, cHalfHeight, 0)).Length() - top_radius, (inV - Vec3(0, -cHalfHeight, 0)).Length() - bottom_radius);
+				});
+			}
+		}
+	}
+
+	TEST_CASE("TestTaperedCapsuleVolume")
+	{
+		// With equal radii, the volume should equal that of a capsule
+		RefConst<Shape> tapered_capsule = TaperedCapsuleShapeSettings(1.5f, 2.0f, 2.0f).Create().Get();
+		CapsuleShape capsule(1.5f, 2.0f);
+		capsule.SetEmbedded();
+		CHECK_APPROX_EQUAL(tapered_capsule->GetVolume(), capsule.GetVolume(), 1.0e-4f);
+
+		// Swapping top and bottom radius should not change the volume
+		float v1 = TaperedCapsuleShapeSettings(1.5f, 1.0f, 2.0f).Create().Get()->GetVolume();
+		float v2 = TaperedCapsuleShapeSettings(1.5f, 2.0f, 1.0f).Create().Get()->GetVolume();
+		CHECK_APPROX_EQUAL(v1, v2, 1.0e-4f);
+
+		// The volume should be between the volume of the two spheres plus the cone between their centers and the volume of the bounding box
+		float lower_bound = 4.0f / 3.0f * JPH_PI * (Cubed(1.0f) + Cubed(2.0f)) / 2.0f + JPH_PI / 3.0f * 3.0f * (Square(1.0f) + 1.0f * 2.0f + Square(2.0f));
+		CHECK(v1 > lower_bound);
+		CHECK(v1 < TaperedCapsuleShapeSettings(1.5f, 1.0f, 2.0f).Create().Get()->GetLocalBounds().GetVolume());
+	}
 }
